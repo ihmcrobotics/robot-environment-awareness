@@ -17,7 +17,7 @@ import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
-import us.ihmc.robotEnvironmentAwareness.simulation.LidarPosePacket;
+import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeUIControlFactory;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeUIController;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeViewer;

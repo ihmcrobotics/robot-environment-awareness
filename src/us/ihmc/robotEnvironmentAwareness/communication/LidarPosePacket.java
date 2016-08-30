@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.simulation;
+package us.ihmc.robotEnvironmentAwareness.communication;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;

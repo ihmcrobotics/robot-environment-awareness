@@ -8,7 +8,7 @@ import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.octoMap.ocTree.NormalOcTree;
 import us.ihmc.octoMap.pointCloud.SweepCollection;
-import us.ihmc.robotEnvironmentAwareness.simulation.LidarPosePacket;
+import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
 import us.ihmc.robotics.time.TimeTools;
 import us.ihmc.tools.io.printing.PrintTools;
 

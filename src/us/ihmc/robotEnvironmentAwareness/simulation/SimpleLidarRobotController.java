@@ -11,6 +11,7 @@ import us.ihmc.graphics3DAdapter.GPULidarScanBuffer;
 import us.ihmc.graphics3DAdapter.Graphics3DAdapter;
 import us.ihmc.ihmcPerception.depthData.DepthDataFilter;
 import us.ihmc.ihmcPerception.depthData.PointCloudWorldPacketGenerator;
+import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
 import us.ihmc.robotics.dataStructures.listener.VariableChangedListener;
 import us.ihmc.robotics.dataStructures.registry.YoVariableRegistry;
 import us.ihmc.robotics.dataStructures.variable.BooleanYoVariable;

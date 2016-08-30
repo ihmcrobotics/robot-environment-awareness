@@ -11,7 +11,7 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
-import us.ihmc.robotEnvironmentAwareness.simulation.LidarSimulationNetClassList;
+import us.ihmc.robotEnvironmentAwareness.communication.LidarSimulationNetClassList;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeUIControlFactory;
 
 public class FootstepPlannerUI extends Application

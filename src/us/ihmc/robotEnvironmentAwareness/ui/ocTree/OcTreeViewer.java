@@ -17,6 +17,7 @@ import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
+import us.ihmc.robotics.geometry.BoundingBox3d;
 
 public class OcTreeViewer extends Group
 {
@@ -302,6 +303,81 @@ public class OcTreeViewer extends Group
          };
       }
       return maxProbabilityProperty;
+   }
+
+   private BooleanProperty enableBoundingBoxProperty;
+
+   public BooleanProperty enableBoundingBoxProperty()
+   {
+      if (enableBoundingBoxProperty == null)
+      {
+         enableBoundingBoxProperty = new SimpleBooleanProperty(this, "enableBoundingBoxProperty", controller.isBoundingBoxEnabled())
+         {
+            @Override
+            protected void invalidated()
+            {
+               controller.enableBoundingBox(get());
+            }
+         };
+      }
+      return enableBoundingBoxProperty;
+   }
+
+   private ObjectProperty<BoundingBox3d> boundingBoxProperty;
+
+   public ObjectProperty<BoundingBox3d> boundingBoxProperty()
+   {
+      if (boundingBoxProperty == null)
+      {
+         boundingBoxProperty = new SimpleObjectProperty<BoundingBox3d>(this, "ocTreeBoundingBoxProperty", controller.getBoundingBox())
+         {
+            @Override
+            protected void invalidated()
+            {
+               if (get() != null)
+                  controller.setBoundingBox(get());
+            }
+         };
+      }
+      return boundingBoxProperty;
+   }
+
+   private DoubleProperty ocTreeMinRangeProperty;
+
+   public DoubleProperty ocTreeMinRangeProperty()
+   {
+      if (ocTreeMinRangeProperty == null)
+      {
+         ocTreeMinRangeProperty = new SimpleDoubleProperty(this, "ocTreeMinRangeProperty", controller.getMinRange())
+         {
+            @Override
+            protected void invalidated()
+            {
+               if (!Double.isNaN(get()))
+                  controller.setMinRange(get());
+            }
+         };
+      }
+      return ocTreeMinRangeProperty;
+   }
+
+   private DoubleProperty ocTreeMaxRangeProperty;
+
+   public DoubleProperty ocTreeMaxRangeProperty()
+   {
+      if (ocTreeMaxRangeProperty == null)
+      {
+         ocTreeMaxRangeProperty = new SimpleDoubleProperty(this, "ocTreeMaxRangeProperty", controller.getMaxRange())
+         {
+            @Override
+            protected void invalidated()
+            {
+               if (!Double.isNaN(get()))
+                  controller.setMaxRange(get());
+            }
+         };
+      }
+      return ocTreeMaxRangeProperty;
    }
 
    private OcTreeUIControlFactory uiControlFactory;

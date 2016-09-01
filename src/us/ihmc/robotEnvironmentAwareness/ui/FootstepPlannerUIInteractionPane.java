@@ -65,6 +65,10 @@ public class FootstepPlannerUIInteractionPane extends GridPane
          add(advancedStageButton, 0, row);
          add(coloringTypeButton, 1, row);
          add(showEstimatedSurfacesButton, 2, row);
+         row++;
+         add(ocTreeUIControlFactory.createBoundingBoxPane(), 1, row);
+         row++;
+         add(ocTreeUIControlFactory.createLidarRangePane(), 1, row);
       }
    }
 

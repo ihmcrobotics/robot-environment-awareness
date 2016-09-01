@@ -22,12 +22,17 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
+import us.ihmc.robotics.geometry.BoundingBox3d;
+import us.ihmc.robotics.geometry.Direction;
 
 public class OcTreeUIControlFactory
 {
@@ -129,30 +134,30 @@ public class OcTreeUIControlFactory
 
    public Slider occupancyThresholdSlider(Orientation orientation)
    {
-      return ocTreeParameterSlider(orientation, ocTreeViewer.occupancyThresholdProperty());
+      return ocTreeProbabilityParameterSlider(orientation, ocTreeViewer.occupancyThresholdProperty());
    }
 
    public Slider hitUpdateSlider(Orientation orientation)
    {
-      return ocTreeParameterSlider(orientation, ocTreeViewer.hitUpdateProperty());
+      return ocTreeProbabilityParameterSlider(orientation, ocTreeViewer.hitUpdateProperty());
    }
 
    public Slider missUpdateSlider(Orientation orientation)
    {
-      return ocTreeParameterSlider(orientation, ocTreeViewer.missUpdateProperty());
+      return ocTreeProbabilityParameterSlider(orientation, ocTreeViewer.missUpdateProperty());
    }
 
    public Slider minProbabilitySlider(Orientation orientation)
    {
-      return ocTreeParameterSlider(orientation, ocTreeViewer.minProbabilityProperty());
+      return ocTreeProbabilityParameterSlider(orientation, ocTreeViewer.minProbabilityProperty());
    }
 
    public Slider maxProbabilitySlider(Orientation orientation)
    {
-      return ocTreeParameterSlider(orientation, ocTreeViewer.maxProbabilityProperty());
+      return ocTreeProbabilityParameterSlider(orientation, ocTreeViewer.maxProbabilityProperty());
    }
 
-   private Slider ocTreeParameterSlider(Orientation orientation, DoubleProperty property)
+   private Slider ocTreeProbabilityParameterSlider(Orientation orientation, DoubleProperty property)
    {
       Slider propertySlider = new Slider(SLIDER_MIN_PROBABILITY, SLIDER_MAX_PROBABILITY, property.doubleValue());
       propertySlider.setOrientation(orientation);
@@ -291,6 +296,138 @@ public class OcTreeUIControlFactory
       });
 
       return showAdvancedStage;
+   }
+
+   public Pane createBoundingBoxPane()
+   {
+      double min = -100.0;
+      double max = 100.0;
+      int preferredSpinnerWidth = 70;
+
+      GridPane gridPane = new GridPane();
+
+      int row = 0;
+
+      Label boundingBoxLabel = new Label("Bounding Box");
+      gridPane.add(boundingBoxLabel, 0, row);
+      row++;
+
+      BooleanProperty enableProperty = ocTreeViewer.enableBoundingBoxProperty();
+      ToggleButton enableBoundingBoxButton = new ToggleButton("Enable");
+      enableBoundingBoxButton.setSelected(enableProperty.get());
+      enableBoundingBoxButton.selectedProperty().bindBidirectional(enableProperty);
+      gridPane.add(enableBoundingBoxButton, 0, row);
+
+
+      ObjectProperty<BoundingBox3d> boundingBoxProperty = ocTreeViewer.boundingBoxProperty();
+      double[] initialMinValue = new double[3];
+      double[] initialMaxValue = new double[3];
+      boundingBoxProperty.get().getMinPoint(initialMinValue);
+      boundingBoxProperty.get().getMaxPoint(initialMaxValue);
+
+      for (int i = 0; i < 3; i++)
+      {
+         int index = i;
+         SpinnerValueFactory.DoubleSpinnerValueFactory minSpinnerValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(min, max, initialMinValue[index], 0.1);
+         minSpinnerValueFactory.valueProperty().addListener(new ChangeListener<Double>()
+         {
+            @Override
+            public void changed(ObservableValue<? extends Double> observable, Double oldValue, Double newValue)
+            {
+               double[] minPoint = new double[3];
+               double[] maxPoint = new double[3];
+
+               if (!newValue.isNaN())
+               {
+                  BoundingBox3d oldBoundingBox = boundingBoxProperty.get();
+                  oldBoundingBox.getMinPoint(minPoint);
+                  oldBoundingBox.getMaxPoint(maxPoint);
+                  minPoint[index] = newValue;
+                  boundingBoxProperty.set(new BoundingBox3d(minPoint, maxPoint));
+               }
+            }
+         });
+
+         SpinnerValueFactory.DoubleSpinnerValueFactory maxSpinnerValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(min, max, initialMaxValue[index], 0.1);
+         maxSpinnerValueFactory.valueProperty().addListener(new ChangeListener<Double>()
+         {
+            @Override
+            public void changed(ObservableValue<? extends Double> observable, Double oldValue, Double newValue)
+            {
+               double[] minPoint = new double[3];
+               double[] maxPoint = new double[3];
+
+               if (!newValue.isNaN())
+               {
+                  BoundingBox3d oldBoundingBox = boundingBoxProperty.get();
+                  oldBoundingBox.getMinPoint(minPoint);
+                  oldBoundingBox.getMaxPoint(maxPoint);
+                  maxPoint[index] = newValue;
+                  boundingBoxProperty.set(new BoundingBox3d(minPoint, maxPoint));
+               }
+            }
+         });
+         
+
+         Spinner<Double> minSpinner = new Spinner<>(minSpinnerValueFactory);
+         Spinner<Double> maxSpinner = new Spinner<>(maxSpinnerValueFactory);
+         minSpinner.setPrefWidth(preferredSpinnerWidth);
+         maxSpinner.setPrefWidth(preferredSpinnerWidth);
+         minSpinner.setEditable(true);
+         maxSpinner.setEditable(true);
+
+         Label minAxisLabel = new Label(" min" + Direction.values[i].toString() + ": ");
+         Label maxAxisLabel = new Label(" max" + Direction.values[i].toString() + ": ");
+         gridPane.add(minAxisLabel, 2 * index + 1, row);
+         gridPane.add(maxAxisLabel, 2 * index + 1, row + 1);
+         gridPane.add(minSpinner, 2 * index + 2, row);
+         gridPane.add(maxSpinner, 2 * index + 2, row + 1);
+      }
+      return gridPane;
+   }
+
+   public Pane createLidarRangePane()
+   {
+      DoubleProperty minRangeProperty = ocTreeViewer.ocTreeMinRangeProperty();
+      DoubleProperty maxRangeProperty = ocTreeViewer.ocTreeMaxRangeProperty();
+      
+      GridPane gridPane = new GridPane();
+      int row = 0;
+      Label label = new Label("LIDAR Range: ");
+      gridPane.add(label, 0, row);
+
+      row++;
+      
+      Label minRangeLabel = new Label("minRange: ");
+      gridPane.add(minRangeLabel, 0, row);
+
+      Slider minRangeSlider = new Slider(0.0, 1.0, minRangeProperty.doubleValue());
+      minRangeSlider.setOrientation(Orientation.HORIZONTAL);
+      minRangeSlider.setShowTickLabels(true);
+      minRangeSlider.setShowTickMarks(true);
+      minRangeSlider.setMajorTickUnit(0.20);
+      minRangeSlider.setBlockIncrement(0.02);
+      minRangeSlider.setPrefWidth(300.0);
+      minRangeSlider.valueProperty().bindBidirectional(minRangeProperty);
+      gridPane.add(minRangeSlider, 1, row);
+
+      row++;
+      
+      Label maxRangeLabel = new Label("maxRange: ");
+      gridPane.add(maxRangeLabel, 0, row);
+
+      Slider maxRangeSlider = new Slider(1.0, 15.0, maxRangeProperty.doubleValue());
+      maxRangeSlider.setOrientation(Orientation.HORIZONTAL);
+      maxRangeSlider.setShowTickLabels(true);
+      maxRangeSlider.setShowTickMarks(true);
+      maxRangeSlider.setMajorTickUnit(1.00);
+      maxRangeSlider.setBlockIncrement(0.5);
+      maxRangeSlider.setPrefWidth(300.0);
+      maxRangeSlider.valueProperty().bindBidirectional(maxRangeProperty);
+      gridPane.add(maxRangeSlider, 1, row);
+
+
+      return gridPane;
    }
 
    private Stage advancedStage()

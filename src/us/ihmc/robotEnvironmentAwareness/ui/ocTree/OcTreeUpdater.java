@@ -3,6 +3,8 @@ package us.ihmc.robotEnvironmentAwareness.ui.ocTree;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.google.common.util.concurrent.AtomicDouble;
+
 import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
@@ -18,10 +20,14 @@ public class OcTreeUpdater
    private final NormalOcTree octree;
 
    private final AtomicReference<LidarPosePacket> latestLidarPoseReference = new AtomicReference<>(null);
+   private final AtomicReference<PointCloudWorldPacket> latestPointCloudWorldPacket = new AtomicReference<>(null);
    private final AtomicReference<SweepCollection> newFullScanReference = new AtomicReference<>(null);
 
    private final AtomicBoolean enable;
    private final AtomicBoolean clear = new AtomicBoolean(false);
+
+   private final AtomicDouble minRange = new AtomicDouble(0.10);
+   private final AtomicDouble maxRange = new AtomicDouble(15.0);
 
    public OcTreeUpdater(NormalOcTree octree, boolean enableInitialValue)
    {
@@ -40,13 +46,50 @@ public class OcTreeUpdater
       if (!enable.get())
          return;
 
+      updateSweep();
+
       SweepCollection newScan = newFullScanReference.getAndSet(null);
 
       if (newScan == null)
          return;
 
-      octree.insertSweepCollection(newScan);
+      octree.insertSweepCollection(newScan, minRange.get(), maxRange.get());
       octree.updateNormals();
+   }
+
+   private static final boolean DEBUG = false;
+   private static final boolean WAIT_FOR_FULL_SCAN = false;
+
+   private int currentSweepId = Integer.MAX_VALUE;
+   private SweepCollection sweepCollection = new SweepCollection();
+
+
+   private void updateSweep()
+   {
+      LidarPosePacket lidarPosePacket = latestLidarPoseReference.get();
+      PointCloudWorldPacket pointCloudPacket = latestPointCloudWorldPacket.getAndSet(null);
+      
+      if (!enable.get() || lidarPosePacket == null || pointCloudPacket == null)
+         return;
+
+      long startTime = System.nanoTime();
+
+      int newSweepId = (int) (lidarPosePacket.getLidarJointAngle() / Math.PI);
+      if (DEBUG)
+         System.out.println("New sweep id = " + newSweepId + ", lidar joint angle = " + lidarPosePacket.getLidarJointAngle());
+
+      if (!WAIT_FOR_FULL_SCAN || (newSweepId != currentSweepId && sweepCollection != null))
+      {
+         sweepCollection = new SweepCollection();
+         newFullScanReference.set(sweepCollection);
+         sweepCollection.setSubSampleSize(NUMBER_OF_SAMPLES);
+         currentSweepId = newSweepId;
+      }
+      sweepCollection.addSweep(pointCloudPacket.decayingWorldScan, lidarPosePacket.position);
+
+      long endTime = System.nanoTime();
+      if (DEBUG)
+         PrintTools.info(PacketConsumer.class, "Took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));      
    }
 
    public void setEnable(boolean enable)
@@ -62,6 +105,26 @@ public class OcTreeUpdater
    public boolean hasProcessedClear()
    {
       return !clear.get();
+   }
+
+   public void setMinRange(double minRange)
+   {
+      this.minRange.set(minRange);
+   }
+
+   public double getMinRange()
+   {
+      return minRange.get();
+   }
+
+   public void setMaxRange(double maxRange)
+   {
+      this.maxRange.set(maxRange);
+   }
+
+   public double getMaxRange()
+   {
+      return maxRange.get();
    }
 
    public NormalOcTree getOctree()
@@ -95,39 +158,11 @@ public class OcTreeUpdater
    {
       PacketConsumer<PointCloudWorldPacket> packetConsumer = new PacketConsumer<PointCloudWorldPacket>()
       {
-         private static final boolean DEBUG = false;
-         private static final boolean WAIT_FOR_FULL_SCAN = false;
-
-         private int currentSweepId = Integer.MAX_VALUE;
-         private SweepCollection sweepCollection = new SweepCollection();
-
          @Override
          public void receivedPacket(PointCloudWorldPacket packet)
          {
-            LidarPosePacket lidarPosePacket = latestLidarPoseReference.get();
-            if (packet == null || !enable.get() || lidarPosePacket == null)
-               return;
-
-            long startTime = System.nanoTime();
-
-            latestLidarPoseReference.get();
-
-            int newSweepId = (int) (lidarPosePacket.getLidarJointAngle() / Math.PI);
-            if (DEBUG)
-               System.out.println("New sweep id = " + newSweepId + ", lidar joint angle = " + lidarPosePacket.getLidarJointAngle());
-
-            if (!WAIT_FOR_FULL_SCAN || (newSweepId != currentSweepId && sweepCollection != null))
-            {
-               newFullScanReference.set(sweepCollection);
-               sweepCollection = new SweepCollection();
-               sweepCollection.setSubSampleSize(NUMBER_OF_SAMPLES);
-               currentSweepId = newSweepId;
-            }
-            sweepCollection.addSweep(packet.decayingWorldScan, lidarPosePacket.position);
-
-            long endTime = System.nanoTime();
-            if (DEBUG)
-               PrintTools.info(PacketConsumer.class, "Took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
+            if (packet != null)
+               latestPointCloudWorldPacket.set(packet);
          }
       };
       return packetConsumer;

@@ -14,6 +14,7 @@ import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.octoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 import us.ihmc.robotics.MathTools;
+import us.ihmc.robotics.geometry.BoundingBox3d;
 import us.ihmc.tools.io.printing.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;
 
@@ -136,6 +137,26 @@ public class OcTreeUIController
       return updater.hasProcessedClear() && graphicsBuilder.hasProcessedClear();
    }
 
+   public void setMinRange(double minRange)
+   {
+      updater.setMinRange(minRange);
+   }
+
+   public double getMinRange()
+   {
+      return updater.getMinRange();
+   }
+
+   public void setMaxRange(double maxRange)
+   {
+      updater.setMaxRange(maxRange);
+   }
+
+   public double getMaxRange()
+   {
+      return updater.getMaxRange();
+   }
+
    public void setTreeDepthForDisplay(int newDepth)
    {
       graphicsBuilder.setTreeDepthForDisplay(newDepth);
@@ -194,6 +215,26 @@ public class OcTreeUIController
    public Pair<Mesh, Material> pollFreeMesh()
    {
       return graphicsBuilder.pollFreeMesh();
+   }
+
+   public boolean isBoundingBoxEnabled()
+   {
+      return graphicsBuilder.isBoundingBoxEnabled();
+   }
+
+   public void enableBoundingBox(boolean enable)
+   {
+      graphicsBuilder.enableBoundingBox(enable);
+   }
+
+   public BoundingBox3d getBoundingBox()
+   {
+      return graphicsBuilder.getBoundingBox();
+   }
+
+   public void setBoundingBox(BoundingBox3d boundingBox3d)
+   {
+      graphicsBuilder.setBoundingBox(boundingBox3d);
    }
 
    public int getMaximumTreeDepth()

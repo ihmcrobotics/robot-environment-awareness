@@ -16,9 +16,11 @@ import javafx.util.Pair;
 import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
+import us.ihmc.octoMap.iterators.LeafBoundingBoxIterable;
 import us.ihmc.octoMap.iterators.OcTreeSuperNode;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.NormalOcTree;
+import us.ihmc.robotics.geometry.BoundingBox3d;
 
 public class OcTreeGraphicsBuilder
 {
@@ -51,6 +53,11 @@ public class OcTreeGraphicsBuilder
    private final TextureColorPalette1D normalBasedColorPalette1D = new TextureColorPalette1D();
    private final TextureColorPalette1D normalVariationBasedColorPalette1D = new TextureColorPalette1D();
 
+   private final AtomicBoolean useBoundingBox = new AtomicBoolean(true);
+   private final Point3d boundingBoxMin = new Point3d(-0.0, -2.0, -1.0);
+   private final Point3d boundingBoxMax = new Point3d(10.0, 2.0, 1.0);
+   private final AtomicReference<BoundingBox3d> atomicBoundingBox = new AtomicReference<>(new BoundingBox3d(boundingBoxMin, boundingBoxMax));
+
    public OcTreeGraphicsBuilder(NormalOcTree octree, boolean enableInitialValue)
    {
       this.octree = octree;
@@ -81,7 +88,17 @@ public class OcTreeGraphicsBuilder
       freeMeshBuilder.clear();
       boolean showSurfaces = showEstimatedSurfaces.get();
 
-      for (OcTreeSuperNode<NormalOcTreeNode> superNode : octree.leafIterable(currentDepth))
+      Iterable<OcTreeSuperNode<NormalOcTreeNode>> iterator = octree.leafIterable(currentDepth);
+
+      if (!useBoundingBox.get())
+         iterator = octree.leafIterable(currentDepth);
+      else
+      {
+         updateBoundingBox();
+         iterator = new LeafBoundingBoxIterable<>(octree, boundingBoxMin, boundingBoxMax, currentDepth);
+      }
+
+      for (OcTreeSuperNode<NormalOcTreeNode> superNode : iterator)
       {
          NormalOcTreeNode node = superNode.getNode();
          if (octree.isNodeOccupied(node))
@@ -109,6 +126,15 @@ public class OcTreeGraphicsBuilder
 
       Mesh freeLeafMesh = showFreeSpace.get() ? freeMeshBuilder.generateMesh() : null;
       newFreeMeshToRender.set(new Pair<Mesh, Material>(freeLeafMesh, defaultFreeMaterial));
+   }
+
+   public void updateBoundingBox()
+   {
+      if (atomicBoundingBox.get() == null)
+         return;
+      BoundingBox3d newBoundingBox = atomicBoundingBox.get();
+      newBoundingBox.getMinPoint(boundingBoxMin);
+      newBoundingBox.getMaxPoint(boundingBoxMax);
    }
 
    public void setEnable(boolean enable)
@@ -252,5 +278,25 @@ public class OcTreeGraphicsBuilder
       default:
          throw new RuntimeException("Unhandled ColoringType value: " + coloringType.get());
       }
+   }
+
+   public boolean isBoundingBoxEnabled()
+   {
+      return useBoundingBox.get();
+   }
+
+   public void enableBoundingBox(boolean enable)
+   {
+      useBoundingBox.set(enable);
+   }
+
+   public BoundingBox3d getBoundingBox()
+   {
+      return atomicBoundingBox.get();
+   }
+
+   public void setBoundingBox(BoundingBox3d boundingBox3d)
+   {
+      atomicBoundingBox.set(boundingBox3d);
    }
 }

@@ -53,6 +53,7 @@ public class OcTreeUpdater
       if (newScan == null)
          return;
 
+      octree.ensureCapacityUnusedPools(2000000);
       octree.insertSweepCollection(newScan, minRange.get(), maxRange.get());
       octree.updateNormals();
    }

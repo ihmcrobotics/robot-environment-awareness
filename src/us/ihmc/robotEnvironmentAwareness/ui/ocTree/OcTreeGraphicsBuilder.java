@@ -1,6 +1,5 @@
 package us.ihmc.robotEnvironmentAwareness.ui.ocTree;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -20,7 +19,10 @@ import us.ihmc.octoMap.iterators.LeafBoundingBoxIterable;
 import us.ihmc.octoMap.iterators.OcTreeSuperNode;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.NormalOcTree;
+import us.ihmc.octoMap.tools.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotics.geometry.BoundingBox3d;
+import us.ihmc.robotics.lists.GenericTypeBuilder;
+import us.ihmc.robotics.lists.RecyclingArrayList;
 
 public class OcTreeGraphicsBuilder
 {
@@ -69,6 +71,9 @@ public class OcTreeGraphicsBuilder
       occupiedMeshBuilder = new MultiColorMeshBuilder(normalBasedColorPalette1D);
    }
 
+   private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
+   private final IntersectionPlaneBoxCalculator intersectionPlaneBoxCalculator = new IntersectionPlaneBoxCalculator();
+
    public void update()
    {
       if (clear.getAndSet(false))
@@ -106,9 +111,13 @@ public class OcTreeGraphicsBuilder
             double size = superNode.getSize();
             Point3d position = superNode.getCoordinate();
             Color color = getNodeColor(superNode);
-            List<Point3d> plane = node.getPlane();
-            if (plane != null && showSurfaces)
+            if (node.isNormalSet() && showSurfaces)
+            {
+               intersectionPlaneBoxCalculator.setCube(size, position);
+               intersectionPlaneBoxCalculator.setPlane(position, node.getNormal());
+               intersectionPlaneBoxCalculator.computeIntersections(plane);
                occupiedMeshBuilder.addPolyon(plane, color);
+            }
             else
                occupiedMeshBuilder.addCubeMesh(size, position, color);
          }
@@ -235,9 +244,9 @@ public class OcTreeGraphicsBuilder
       switch (coloringType.get())
       {
       case NORMAL:
-         Vector3d normal = node.getNormal();
-         if (normal != null)
+         if (node.isNormalSet())
          {
+            Vector3d normal = node.getNormal();
             Vector3d zUp = new Vector3d(0.0, 0.0, 1.0);
             normal.normalize();
             double angle = Math.abs(zUp.dot(normal));

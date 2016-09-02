@@ -103,6 +103,8 @@ public class OcTreeGraphicsBuilder
          iterator = new LeafBoundingBoxIterable<>(octree, boundingBoxMin, boundingBoxMax, currentDepth);
       }
 
+      Vector3d nodeNormal = new Vector3d();
+
       for (OcTreeSuperNode<NormalOcTreeNode> superNode : iterator)
       {
          NormalOcTreeNode node = superNode.getNode();
@@ -113,8 +115,9 @@ public class OcTreeGraphicsBuilder
             Color color = getNodeColor(superNode);
             if (node.isNormalSet() && showSurfaces)
             {
+               node.getNormal(nodeNormal);
                intersectionPlaneBoxCalculator.setCube(size, position);
-               intersectionPlaneBoxCalculator.setPlane(position, node.getNormal());
+               intersectionPlaneBoxCalculator.setPlane(position, nodeNormal);
                intersectionPlaneBoxCalculator.computeIntersections(plane);
                occupiedMeshBuilder.addPolyon(plane, color);
             }
@@ -246,7 +249,8 @@ public class OcTreeGraphicsBuilder
       case NORMAL:
          if (node.isNormalSet())
          {
-            Vector3d normal = node.getNormal();
+            Vector3d normal = new Vector3d();
+            node.getNormal(normal);
             Vector3d zUp = new Vector3d(0.0, 0.0, 1.0);
             normal.normalize();
             double angle = Math.abs(zUp.dot(normal));

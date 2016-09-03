@@ -115,8 +115,8 @@ public class OcTreeGraphicsBuilder
          iterable = leafBoundingBoxIterable;
       }
 
-      Vector3d nodeNormal = new Vector3d();
-      Point3d nodeCenter = new Point3d();
+      Vector3d planeNormal = new Vector3d();
+      Point3d pointOnPlane = new Point3d();
 
       for (OcTreeSuperNode<NormalOcTreeNode> superNode : iterable)
       {
@@ -124,18 +124,22 @@ public class OcTreeGraphicsBuilder
          if (octree.isNodeOccupied(node))
          {
             double size = superNode.getSize();
-            Point3d position = superNode.getCoordinate();
+            Point3d nodeCenter = superNode.getCoordinate();
             Color color = getNodeColor(superNode);
             if (node.isNormalSet() && showSurfaces)
             {
-               node.getNormal(nodeNormal);
-               intersectionPlaneBoxCalculator.setCube(size, position);
-               intersectionPlaneBoxCalculator.setPlane(position, nodeNormal);
+               node.getNormal(planeNormal);
+               if (node.isCenterSet())
+                  node.getCenter(pointOnPlane);
+               else
+                  pointOnPlane.set(nodeCenter);
+               intersectionPlaneBoxCalculator.setCube(size, nodeCenter);
+               intersectionPlaneBoxCalculator.setPlane(pointOnPlane, planeNormal);
                intersectionPlaneBoxCalculator.computeIntersections(plane);
                occupiedMeshBuilder.addPolyon(plane, color);
             }
             else
-               occupiedMeshBuilder.addCubeMesh(size, position, color);
+               occupiedMeshBuilder.addCubeMesh(size, nodeCenter, color);
          }
          else if (showFreeSpace.get())
          {

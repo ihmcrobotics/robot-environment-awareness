@@ -11,12 +11,13 @@ import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPac
 import us.ihmc.octoMap.ocTree.NormalOcTree;
 import us.ihmc.octoMap.pointCloud.SweepCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
+import us.ihmc.robotics.geometry.BoundingBox3d;
 import us.ihmc.robotics.time.TimeTools;
 import us.ihmc.tools.io.printing.PrintTools;
 
 public class OcTreeUpdater
 {
-   private static final int NUMBER_OF_SAMPLES = 50000;
+   private static final int NUMBER_OF_SAMPLES = 100000;
    private final NormalOcTree octree;
 
    private final AtomicReference<LidarPosePacket> latestLidarPoseReference = new AtomicReference<>(null);
@@ -26,8 +27,13 @@ public class OcTreeUpdater
    private final AtomicBoolean enable;
    private final AtomicBoolean clear = new AtomicBoolean(false);
 
-   private final AtomicDouble minRange = new AtomicDouble(0.10);
-   private final AtomicDouble maxRange = new AtomicDouble(15.0);
+   private final AtomicDouble minRange = new AtomicDouble(0.20);
+   private final AtomicDouble maxRange = new AtomicDouble(5.0);
+
+   private final AtomicBoolean useBoundingBox = new AtomicBoolean(true);
+   private final Point3d boundingBoxMin = new Point3d(-0.0, -2.0, -1.0);
+   private final Point3d boundingBoxMax = new Point3d(10.0, 2.0, 1.0);
+   private final AtomicReference<BoundingBox3d> atomicBoundingBox = new AtomicReference<>(new BoundingBox3d(boundingBoxMin, boundingBoxMax));
 
    public OcTreeUpdater(NormalOcTree octree, boolean enableInitialValue)
    {
@@ -53,8 +59,13 @@ public class OcTreeUpdater
       if (newScan == null)
          return;
 
+      octree.useBoundingBoxLimit(useBoundingBox.get());
+      octree.setBoundingBoxMin(boundingBoxMin);
+      octree.setBoundingBoxMax(boundingBoxMax);
+      
       octree.ensureCapacityUnusedPools(2000000);
       octree.insertSweepCollection(newScan, minRange.get(), maxRange.get());
+      octree.updateSweepCollectionHitLocations(newScan, 0.1, false);
       octree.updateNormals();
    }
 
@@ -83,9 +94,9 @@ public class OcTreeUpdater
       {
          sweepCollection = new SweepCollection();
          newFullScanReference.set(sweepCollection);
-         sweepCollection.setSubSampleSize(NUMBER_OF_SAMPLES);
          currentSweepId = newSweepId;
       }
+      sweepCollection.setSubSampleSize(NUMBER_OF_SAMPLES);
       sweepCollection.addSweep(pointCloudPacket.decayingWorldScan, lidarPosePacket.position);
 
       long endTime = System.nanoTime();

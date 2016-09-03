@@ -20,9 +20,9 @@ import us.ihmc.tools.thread.ThreadTools;
 
 public class OcTreeUIController
 {
-   private static final int THREAD_PERIOD_MILLISECONDS = 100;
+   private static final int THREAD_PERIOD_MILLISECONDS = 1000;
    private static final double OCTREE_RESOLUTION = 0.025;
-   protected static final boolean DEBUG = false;
+   protected static final boolean DEBUG = true;
 
    private static final double DEFAULT_HIT_UPDATE = 0.7;
    private static final double DEFAULT_MISS_UPDATE = 0.4;
@@ -256,6 +256,10 @@ public class OcTreeUIController
             {
                updateOcTreeSettings();
                updater.update();
+
+               if (Thread.interrupted())
+                  return;
+
                graphicsBuilder.update();
             }
             catch (Exception e)

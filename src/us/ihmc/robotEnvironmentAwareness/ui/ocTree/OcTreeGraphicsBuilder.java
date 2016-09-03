@@ -16,6 +16,7 @@ import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.octoMap.iterators.LeafBoundingBoxIterable;
+import us.ihmc.octoMap.iterators.LeafIterable;
 import us.ihmc.octoMap.iterators.OcTreeSuperNode;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.NormalOcTree;
@@ -60,6 +61,9 @@ public class OcTreeGraphicsBuilder
    private final Point3d boundingBoxMax = new Point3d(10.0, 2.0, 1.0);
    private final AtomicReference<BoundingBox3d> atomicBoundingBox = new AtomicReference<>(new BoundingBox3d(boundingBoxMin, boundingBoxMax));
 
+   private final LeafIterable<NormalOcTreeNode> leafIterable;
+   private final LeafBoundingBoxIterable<NormalOcTreeNode> leafBoundingBoxIterable;
+
    public OcTreeGraphicsBuilder(NormalOcTree octree, boolean enableInitialValue)
    {
       this.octree = octree;
@@ -69,6 +73,9 @@ public class OcTreeGraphicsBuilder
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);
       occupiedMeshBuilder = new MultiColorMeshBuilder(normalBasedColorPalette1D);
+
+      leafIterable = new LeafIterable<>(octree, true);
+      leafBoundingBoxIterable = new LeafBoundingBoxIterable<>(octree, true);
    }
 
    private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
@@ -93,19 +100,25 @@ public class OcTreeGraphicsBuilder
       freeMeshBuilder.clear();
       boolean showSurfaces = showEstimatedSurfaces.get();
 
-      Iterable<OcTreeSuperNode<NormalOcTreeNode>> iterator = octree.leafIterable(currentDepth);
+      Iterable<OcTreeSuperNode<NormalOcTreeNode>> iterable;
 
       if (!useBoundingBox.get())
-         iterator = octree.leafIterable(currentDepth);
+      {
+         leafIterable.setMaxDepth(currentDepth);
+         iterable = leafIterable;
+      }
       else
       {
          updateBoundingBox();
-         iterator = new LeafBoundingBoxIterable<>(octree, boundingBoxMin, boundingBoxMax, currentDepth);
+         leafBoundingBoxIterable.setMaxDepth(currentDepth);
+         leafBoundingBoxIterable.setBoundingBox(boundingBoxMin, boundingBoxMax);
+         iterable = leafBoundingBoxIterable;
       }
 
       Vector3d nodeNormal = new Vector3d();
+      Point3d nodeCenter = new Point3d();
 
-      for (OcTreeSuperNode<NormalOcTreeNode> superNode : iterator)
+      for (OcTreeSuperNode<NormalOcTreeNode> superNode : iterable)
       {
          NormalOcTreeNode node = superNode.getNode();
          if (octree.isNodeOccupied(node))

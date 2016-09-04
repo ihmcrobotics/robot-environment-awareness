@@ -1,6 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.ui.ocTree;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.vecmath.Point3d;
@@ -32,7 +33,9 @@ public class OcTreeUpdater
    private final AtomicDouble minRange = new AtomicDouble(0.20);
    private final AtomicDouble maxRange = new AtomicDouble(5.0);
 
-   private final AtomicBoolean useBoundingBox = new AtomicBoolean(true);
+   private final AtomicInteger depthUsedForDisplay = new AtomicInteger(-1);
+
+   private final AtomicBoolean useBoundingBox = new AtomicBoolean(false);
    private final Point3d boundingBoxMin = new Point3d(-0.0, -2.0, -1.0);
    private final Point3d boundingBoxMax = new Point3d(10.0, 2.0, 1.0);
    private final AtomicReference<BoundingBox3d> atomicBoundingBox = new AtomicReference<>(new BoundingBox3d(boundingBoxMin, boundingBoxMax));
@@ -67,8 +70,21 @@ public class OcTreeUpdater
       
       octree.ensureCapacityUnusedPools(2000000);
       octree.insertSweepCollection(newScan, minRange.get(), maxRange.get());
+      
+      long startTime = System.nanoTime();
       octree.updateSweepCollectionHitLocations(newScan, 0.1, false);
+      long endTime = System.nanoTime();
+      System.out.println("Exiting  updateSweepCollectionHitLocations took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
+      
+      startTime = System.nanoTime();
       octree.updateNormals();
+      endTime = System.nanoTime();
+      System.out.println("Exiting  updateNormals took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
+      
+      startTime = System.nanoTime();
+      octree.updatePlanarRegionSegmentation(depthUsedForDisplay.get());
+      endTime = System.nanoTime();
+      System.out.println("Exiting  updatePlanarRegionSegmentation took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
    }
 
    private static final boolean DEBUG = false;
@@ -182,4 +198,8 @@ public class OcTreeUpdater
       return packetConsumer;
    }
 
+   public void setTreeDepthUsedForDisplay(int newDepth)
+   {
+      depthUsedForDisplay.set(newDepth);
+   }
 }

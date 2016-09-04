@@ -48,6 +48,8 @@ public class OcTreeUIController
    {
       updater = new OcTreeUpdater(octree, enableInitialValue);
       graphicsBuilder = new OcTreeGraphicsBuilder(octree, enableInitialValue);
+
+      updater.setTreeDepthUsedForDisplay(graphicsBuilder.getCurrentTreeDepthForDisplay());
    }
 
    public void attachListeners(PacketCommunicator packetCommunicator)
@@ -160,6 +162,7 @@ public class OcTreeUIController
    public void setTreeDepthForDisplay(int newDepth)
    {
       graphicsBuilder.setTreeDepthForDisplay(newDepth);
+      updater.setTreeDepthUsedForDisplay(newDepth);
    }
 
    public int getCurrentTreeDepthForDisplay()

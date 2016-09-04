@@ -30,7 +30,7 @@ public class FootstepPlanningFastSimulation
       SimpleLidarRobot robot = new SimpleLidarRobot();
       SimulationConstructionSetParameters parameters = new SimulationConstructionSetParameters(true, RealtimeTools.nextPowerOfTwo(200000));
       SimulationConstructionSet scs = new SimulationConstructionSet(robot, parameters);
-      scs.setDT(0.0001, 10);
+      scs.setDT(0.00005, 10);
 
       double dt = scs.getDT();
       Graphics3DAdapter graphics3dAdapter = scs.getGraphics3dAdapter();

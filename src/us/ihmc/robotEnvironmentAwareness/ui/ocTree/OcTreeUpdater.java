@@ -3,6 +3,8 @@ package us.ihmc.robotEnvironmentAwareness.ui.ocTree;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.vecmath.Point3d;
+
 import com.google.common.util.concurrent.AtomicDouble;
 
 import us.ihmc.communication.net.PacketConsumer;

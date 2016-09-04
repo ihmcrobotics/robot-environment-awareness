@@ -23,8 +23,9 @@ public class MultisensePointCloudReceiver extends RosPointCloudSubscriber
    public MultisensePointCloudReceiver() throws URISyntaxException, IOException
    {
       URI rosMasterURI = new URI("http://10.6.192.14:11311");
+//      URI rosMasterURI = new URI("http://10.7.4.100:11311");
       RosMainNode rosMainNode = new RosMainNode(rosMasterURI, "atlas/AtlasMinimalMultisenseMocapNetworkProcessor", true);
-//      rosMainNode.attachSubscriber("/multisense/lidar_points2", this);
+//      rosMainNode.attachSubscriber("/lidar_to_point_cloud_transformer/assembled_lidar_point_cloud_z_clipped", this);
       rosMainNode.attachSubscriber("/assembled_cloud", this);
       rosMainNode.execute();
       packetCommunicator.connect();

@@ -31,7 +31,7 @@ public class OcTreeUpdater
    private final AtomicBoolean clear = new AtomicBoolean(false);
 
    private final AtomicDouble minRange = new AtomicDouble(0.20);
-   private final AtomicDouble maxRange = new AtomicDouble(5.0);
+   private final AtomicDouble maxRange = new AtomicDouble(3.0);
 
    private final AtomicInteger depthUsedForDisplay = new AtomicInteger(-1);
 
@@ -48,9 +48,10 @@ public class OcTreeUpdater
 
    public void update()
    {
-      if (clear.getAndSet(false))
+      if (clear.get())
       {
          octree.clear();
+         clear.set(false);
          return;
       }
 
@@ -67,24 +68,52 @@ public class OcTreeUpdater
       octree.useBoundingBoxLimit(useBoundingBox.get());
       octree.setBoundingBoxMin(boundingBoxMin);
       octree.setBoundingBoxMax(boundingBoxMax);
-      
+
       octree.ensureCapacityUnusedPools(2000000);
       octree.insertSweepCollection(newScan, minRange.get(), maxRange.get());
-      
+
+      if (clear.get())
+      {
+         octree.clear();
+         clear.set(false);
+         return;
+      }
+
       long startTime = System.nanoTime();
       octree.updateSweepCollectionHitLocations(newScan, 0.1, false);
       long endTime = System.nanoTime();
       System.out.println("Exiting  updateSweepCollectionHitLocations took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
-      
+
+      if (clear.get())
+      {
+         octree.clear();
+         clear.set(false);
+         return;
+      }
+
       startTime = System.nanoTime();
       octree.updateNormals();
       endTime = System.nanoTime();
       System.out.println("Exiting  updateNormals took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
-      
+
+      if (clear.get())
+      {
+         octree.clear();
+         clear.set(false);
+         return;
+      }
+
       startTime = System.nanoTime();
       octree.updatePlanarRegionSegmentation(depthUsedForDisplay.get());
       endTime = System.nanoTime();
       System.out.println("Exiting  updatePlanarRegionSegmentation took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
+
+      if (clear.get())
+      {
+         octree.clear();
+         clear.set(false);
+         return;
+      }
    }
 
    private static final boolean DEBUG = false;

@@ -55,7 +55,7 @@ public class OcTreeUpdater
          return;
       }
 
-      if (!enable.get())
+      if (!enable.get() || Thread.interrupted())
          return;
 
       updateSweep();
@@ -72,6 +72,9 @@ public class OcTreeUpdater
       octree.ensureCapacityUnusedPools(2000000);
       octree.insertSweepCollection(newScan, minRange.get(), maxRange.get());
 
+      if (Thread.interrupted())
+         return;
+
       if (clear.get())
       {
          octree.clear();
@@ -84,17 +87,8 @@ public class OcTreeUpdater
       long endTime = System.nanoTime();
       System.out.println("Exiting  updateSweepCollectionHitLocations took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
 
-      if (clear.get())
-      {
-         octree.clear();
-         clear.set(false);
+      if (Thread.interrupted())
          return;
-      }
-
-      startTime = System.nanoTime();
-      octree.updateNormals();
-      endTime = System.nanoTime();
-      System.out.println("Exiting  updateNormals took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
 
       if (clear.get())
       {
@@ -103,10 +97,10 @@ public class OcTreeUpdater
          return;
       }
 
-      startTime = System.nanoTime();
-      octree.updatePlanarRegionSegmentation(depthUsedForDisplay.get());
-      endTime = System.nanoTime();
-      System.out.println("Exiting  updatePlanarRegionSegmentation took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
+      octree.updateNormalsAndPlanarRegions(depthUsedForDisplay.get());
+
+      if (Thread.interrupted())
+         return;
 
       if (clear.get())
       {

@@ -20,8 +20,8 @@ import us.ihmc.tools.thread.ThreadTools;
 
 public class OcTreeUIController
 {
-   private static final int THREAD_PERIOD_MILLISECONDS = 1000;
-   private static final double OCTREE_RESOLUTION = 0.025;
+   private static final int THREAD_PERIOD_MILLISECONDS = 100;
+   private static final double OCTREE_RESOLUTION = 0.01;
    protected static final boolean DEBUG = true;
 
    private static final double DEFAULT_HIT_UPDATE = 0.7;

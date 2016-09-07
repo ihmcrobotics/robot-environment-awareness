@@ -56,7 +56,7 @@ public class OcTreeGraphicsBuilder
    private final TextureColorPalette1D normalBasedColorPalette1D = new TextureColorPalette1D();
    private final TextureColorPalette1D normalVariationBasedColorPalette1D = new TextureColorPalette1D();
 
-   private final AtomicBoolean useBoundingBox = new AtomicBoolean(true);
+   private final AtomicBoolean useBoundingBox = new AtomicBoolean(false);
    private final Point3d boundingBoxMin = new Point3d(-0.0, -2.0, -1.0);
    private final Point3d boundingBoxMax = new Point3d(10.0, 2.0, 1.0);
    private final AtomicReference<BoundingBox3d> atomicBoundingBox = new AtomicReference<>(new BoundingBox3d(boundingBoxMin, boundingBoxMax));
@@ -68,7 +68,7 @@ public class OcTreeGraphicsBuilder
    {
       this.octree = octree;
       enable = new AtomicBoolean(enableInitialValue);
-      treeDepthForDisplay = new AtomicInteger(octree.getTreeDepth() - 2);
+      treeDepthForDisplay = new AtomicInteger(octree.getTreeDepth() - 0);
 
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);
@@ -148,6 +148,9 @@ public class OcTreeGraphicsBuilder
             freeMeshBuilder.addCubeMesh(size, position);
          }
       }
+
+      if (Thread.interrupted())
+         return;
 
       Material occupiedLeafMaterial = getOccupiedMeshMaterial();
       Pair<Mesh, Material> meshAndMaterial = new Pair<Mesh, Material>(occupiedMeshBuilder.generateMesh(), occupiedLeafMaterial);

@@ -36,9 +36,9 @@ public class OcTreeGraphicsBuilder
    private final AtomicBoolean clear = new AtomicBoolean(false);
    private final AtomicInteger treeDepthForDisplay;
 
-   public enum ColoringType {DEFAULT, NORMAL, NORMAL_VARIATION, REGION};
+   public enum ColoringType {DEFAULT, NORMAL, NORMAL_VARIATION, HAS_CENTER, REGION};
 
-   private final AtomicReference<ColoringType> coloringType = new AtomicReference<>(ColoringType.DEFAULT);
+   private final AtomicReference<ColoringType> coloringType = new AtomicReference<>(ColoringType.REGION);
 
    private final AtomicBoolean showFreeSpace = new AtomicBoolean(false);
    private final AtomicBoolean showEstimatedSurfaces = new AtomicBoolean(true);
@@ -273,6 +273,8 @@ public class OcTreeGraphicsBuilder
             return Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
          }
          return DEFAULT_COLOR;
+      case HAS_CENTER:
+         return node.isCenterSet() ? Color.DARKGREEN : Color.RED;
       case NORMAL:
          if (node.isNormalSet())
          {
@@ -311,6 +313,7 @@ public class OcTreeGraphicsBuilder
          return defaultOccupiedMaterial;
       case REGION:
       case NORMAL:
+      case HAS_CENTER:
          occupiedMeshBuilder.changeColorPalette(normalBasedColorPalette1D);
          return occupiedMeshBuilder.generateMaterial();
       case NORMAL_VARIATION:

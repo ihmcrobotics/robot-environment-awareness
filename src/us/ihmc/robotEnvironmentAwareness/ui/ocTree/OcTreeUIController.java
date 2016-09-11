@@ -12,9 +12,9 @@ import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.octoMap.ocTree.NormalOcTree;
+import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 import us.ihmc.robotics.MathTools;
-import us.ihmc.robotics.geometry.BoundingBox3d;
 import us.ihmc.tools.io.printing.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;
 
@@ -230,12 +230,12 @@ public class OcTreeUIController
       graphicsBuilder.enableBoundingBox(enable);
    }
 
-   public BoundingBox3d getBoundingBox()
+   public OcTreeBoundingBox getBoundingBox()
    {
       return graphicsBuilder.getBoundingBox();
    }
 
-   public void setBoundingBox(BoundingBox3d boundingBox3d)
+   public void setBoundingBox(OcTreeBoundingBox boundingBox3d)
    {
       graphicsBuilder.setBoundingBox(boundingBox3d);
    }

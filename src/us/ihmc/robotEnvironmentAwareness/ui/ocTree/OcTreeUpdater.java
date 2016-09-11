@@ -12,9 +12,9 @@ import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.octoMap.ocTree.NormalOcTree;
+import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
 import us.ihmc.octoMap.pointCloud.SweepCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
-import us.ihmc.robotics.geometry.BoundingBox3d;
 import us.ihmc.robotics.time.TimeTools;
 import us.ihmc.tools.io.printing.PrintTools;
 
@@ -38,7 +38,7 @@ public class OcTreeUpdater
    private final AtomicBoolean useBoundingBox = new AtomicBoolean(false);
    private final Point3d boundingBoxMin = new Point3d(-0.0, -2.0, -1.0);
    private final Point3d boundingBoxMax = new Point3d(10.0, 2.0, 1.0);
-   private final AtomicReference<BoundingBox3d> atomicBoundingBox = new AtomicReference<>(new BoundingBox3d(boundingBoxMin, boundingBoxMax));
+   private final AtomicReference<OcTreeBoundingBox> atomicBoundingBox = new AtomicReference<>(new OcTreeBoundingBox(boundingBoxMin, boundingBoxMax));
 
    public OcTreeUpdater(NormalOcTree octree, boolean enableInitialValue)
    {
@@ -65,9 +65,14 @@ public class OcTreeUpdater
       if (newScan == null)
          return;
 
-      octree.useBoundingBoxLimit(useBoundingBox.get());
-      octree.setBoundingBoxMin(boundingBoxMin);
-      octree.setBoundingBoxMax(boundingBoxMax);
+      if (useBoundingBox.get())
+      {
+         OcTreeBoundingBox newBoundingBox = atomicBoundingBox.get();
+         newBoundingBox.update(octree.getResolution(), octree.getTreeDepth());
+         octree.setBoundingBox(newBoundingBox);
+      }
+      else
+         octree.disableBoundingBox();
 
       octree.updateNodeFromSweepCollection(newScan, minRange.get(), maxRange.get());
 

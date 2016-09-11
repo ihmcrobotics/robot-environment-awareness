@@ -30,8 +30,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
-import us.ihmc.robotics.geometry.BoundingBox3d;
 import us.ihmc.robotics.geometry.Direction;
 
 public class OcTreeUIControlFactory
@@ -319,11 +319,11 @@ public class OcTreeUIControlFactory
       gridPane.add(enableBoundingBoxButton, 0, row);
 
 
-      ObjectProperty<BoundingBox3d> boundingBoxProperty = ocTreeViewer.boundingBoxProperty();
+      ObjectProperty<OcTreeBoundingBox> boundingBoxProperty = ocTreeViewer.boundingBoxProperty();
       double[] initialMinValue = new double[3];
       double[] initialMaxValue = new double[3];
-      boundingBoxProperty.get().getMinPoint(initialMinValue);
-      boundingBoxProperty.get().getMaxPoint(initialMaxValue);
+      boundingBoxProperty.get().getMinCoordinate(initialMinValue);
+      boundingBoxProperty.get().getMaxCoordinate(initialMaxValue);
 
       for (int i = 0; i < 3; i++)
       {
@@ -339,11 +339,11 @@ public class OcTreeUIControlFactory
 
                if (!newValue.isNaN())
                {
-                  BoundingBox3d oldBoundingBox = boundingBoxProperty.get();
-                  oldBoundingBox.getMinPoint(minPoint);
-                  oldBoundingBox.getMaxPoint(maxPoint);
+                  OcTreeBoundingBox oldBoundingBox = boundingBoxProperty.get();
+                  oldBoundingBox.getMinCoordinate(minPoint);
+                  oldBoundingBox.getMaxCoordinate(maxPoint);
                   minPoint[index] = newValue;
-                  boundingBoxProperty.set(new BoundingBox3d(minPoint, maxPoint));
+                  boundingBoxProperty.set(new OcTreeBoundingBox(minPoint, maxPoint));
                }
             }
          });
@@ -359,11 +359,11 @@ public class OcTreeUIControlFactory
 
                if (!newValue.isNaN())
                {
-                  BoundingBox3d oldBoundingBox = boundingBoxProperty.get();
-                  oldBoundingBox.getMinPoint(minPoint);
-                  oldBoundingBox.getMaxPoint(maxPoint);
+                  OcTreeBoundingBox oldBoundingBox = boundingBoxProperty.get();
+                  oldBoundingBox.getMinCoordinate(minPoint);
+                  oldBoundingBox.getMaxCoordinate(maxPoint);
                   maxPoint[index] = newValue;
-                  boundingBoxProperty.set(new BoundingBox3d(minPoint, maxPoint));
+                  boundingBoxProperty.set(new OcTreeBoundingBox(minPoint, maxPoint));
                }
             }
          });

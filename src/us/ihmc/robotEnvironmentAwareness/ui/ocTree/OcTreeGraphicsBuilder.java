@@ -331,6 +331,7 @@ public class OcTreeGraphicsBuilder
 
    public void enableBoundingBox(boolean enable)
    {
+      processPropertyChange.set(true);
       useBoundingBox.set(enable);
    }
 
@@ -341,6 +342,8 @@ public class OcTreeGraphicsBuilder
 
    public void setBoundingBox(BoundingBox3d boundingBox3d)
    {
+      if (useBoundingBox.get())
+         processPropertyChange.set(true);
       atomicBoundingBox.set(boundingBox3d);
    }
 }

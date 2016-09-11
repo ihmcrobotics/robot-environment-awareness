@@ -69,23 +69,7 @@ public class OcTreeUpdater
       octree.setBoundingBoxMin(boundingBoxMin);
       octree.setBoundingBoxMax(boundingBoxMax);
 
-      octree.ensureCapacityUnusedPools(2000000);
-      octree.insertSweepCollection(newScan, minRange.get(), maxRange.get());
-
-      if (Thread.interrupted())
-         return;
-
-      if (clear.get())
-      {
-         octree.clear();
-         clear.set(false);
-         return;
-      }
-
-      long startTime = System.nanoTime();
-      octree.updateSweepCollectionHitLocations(newScan, 0.1, false);
-      long endTime = System.nanoTime();
-      System.out.println("Exiting  updateSweepCollectionHitLocations took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
+      octree.updateNodeFromSweepCollection(newScan, minRange.get(), maxRange.get());
 
       if (Thread.interrupted())
          return;

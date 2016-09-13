@@ -30,8 +30,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
+import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
-import us.ihmc.robotics.geometry.BoundingBox3d;
 import us.ihmc.robotics.geometry.Direction;
 
 public class OcTreeUIControlFactory
@@ -175,30 +176,30 @@ public class OcTreeUIControlFactory
 
    public Button resetOccupancyThresholdButton()
    {
-      return ocTreeResetParameterButton("Reset occupancy threshold", ocTreeViewer.occupancyThresholdProperty());
+      return ocTreeResetParameterButton("Reset occupancy threshold", ocTreeViewer.occupancyThresholdProperty(), OccupancyParameters.DEFAULT_OCCUPANCY_THRESHOLD);
    }
 
    public Button resetHitUpdateButton()
    {
-      return ocTreeResetParameterButton("Reset hit update", ocTreeViewer.hitUpdateProperty());
+      return ocTreeResetParameterButton("Reset hit update", ocTreeViewer.hitUpdateProperty(), OccupancyParameters.DEFAULT_HIT_UPDATE);
    }
 
    public Button resetMissUpdateButton()
    {
-      return ocTreeResetParameterButton("Reset miss update", ocTreeViewer.missUpdateProperty());
+      return ocTreeResetParameterButton("Reset miss update", ocTreeViewer.missUpdateProperty(), OccupancyParameters.DEFAULT_MISS_UPDATE);
    }
 
    public Button resetMinProbabilityButton()
    {
-      return ocTreeResetParameterButton("Reset min probability", ocTreeViewer.minProbabilityProperty());
+      return ocTreeResetParameterButton("Reset min probability", ocTreeViewer.minProbabilityProperty(), OccupancyParameters.DEFAULT_MIN_PROBABILITY);
    }
 
    public Button resetMaxProbabilityButton()
    {
-      return ocTreeResetParameterButton("Reset max probability", ocTreeViewer.maxProbabilityProperty());
+      return ocTreeResetParameterButton("Reset max probability", ocTreeViewer.maxProbabilityProperty(), OccupancyParameters.DEFAULT_MAX_PROBABILITY);
    }
 
-   private Button ocTreeResetParameterButton(String name, DoubleProperty property)
+   private Button ocTreeResetParameterButton(String name, DoubleProperty property, double defaultValue)
    {
       Button propertyButton = new Button(name);
       propertyButton.setOnAction(new EventHandler<ActionEvent>()
@@ -206,7 +207,7 @@ public class OcTreeUIControlFactory
          @Override
          public void handle(ActionEvent event)
          {
-            property.set(Double.NaN);
+            property.set(defaultValue);
          }
       });
 
@@ -319,11 +320,11 @@ public class OcTreeUIControlFactory
       gridPane.add(enableBoundingBoxButton, 0, row);
 
 
-      ObjectProperty<BoundingBox3d> boundingBoxProperty = ocTreeViewer.boundingBoxProperty();
+      ObjectProperty<OcTreeBoundingBox> boundingBoxProperty = ocTreeViewer.boundingBoxProperty();
       double[] initialMinValue = new double[3];
       double[] initialMaxValue = new double[3];
-      boundingBoxProperty.get().getMinPoint(initialMinValue);
-      boundingBoxProperty.get().getMaxPoint(initialMaxValue);
+      boundingBoxProperty.get().getMinCoordinate(initialMinValue);
+      boundingBoxProperty.get().getMaxCoordinate(initialMaxValue);
 
       for (int i = 0; i < 3; i++)
       {
@@ -339,11 +340,11 @@ public class OcTreeUIControlFactory
 
                if (!newValue.isNaN())
                {
-                  BoundingBox3d oldBoundingBox = boundingBoxProperty.get();
-                  oldBoundingBox.getMinPoint(minPoint);
-                  oldBoundingBox.getMaxPoint(maxPoint);
+                  OcTreeBoundingBox oldBoundingBox = boundingBoxProperty.get();
+                  oldBoundingBox.getMinCoordinate(minPoint);
+                  oldBoundingBox.getMaxCoordinate(maxPoint);
                   minPoint[index] = newValue;
-                  boundingBoxProperty.set(new BoundingBox3d(minPoint, maxPoint));
+                  boundingBoxProperty.set(new OcTreeBoundingBox(minPoint, maxPoint));
                }
             }
          });
@@ -359,11 +360,11 @@ public class OcTreeUIControlFactory
 
                if (!newValue.isNaN())
                {
-                  BoundingBox3d oldBoundingBox = boundingBoxProperty.get();
-                  oldBoundingBox.getMinPoint(minPoint);
-                  oldBoundingBox.getMaxPoint(maxPoint);
+                  OcTreeBoundingBox oldBoundingBox = boundingBoxProperty.get();
+                  oldBoundingBox.getMinCoordinate(minPoint);
+                  oldBoundingBox.getMaxCoordinate(maxPoint);
                   maxPoint[index] = newValue;
-                  boundingBoxProperty.set(new BoundingBox3d(minPoint, maxPoint));
+                  boundingBoxProperty.set(new OcTreeBoundingBox(minPoint, maxPoint));
                }
             }
          });

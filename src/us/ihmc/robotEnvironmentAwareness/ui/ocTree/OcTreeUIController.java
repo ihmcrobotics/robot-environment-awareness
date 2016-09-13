@@ -4,6 +4,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.util.concurrent.AtomicDouble;
 
@@ -11,32 +12,24 @@ import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.octoMap.ocTree.NormalOcTree;
+import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
+import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
+import us.ihmc.octoMap.occupancy.OccupancyParameters;
+import us.ihmc.octoMap.tools.OctoMapTools;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
-import us.ihmc.robotics.MathTools;
-import us.ihmc.robotics.geometry.BoundingBox3d;
 import us.ihmc.tools.io.printing.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;
 
 public class OcTreeUIController
 {
-   private static final int THREAD_PERIOD_MILLISECONDS = 100;
+   private static final int THREAD_PERIOD_MILLISECONDS = 3000;
+   private static final double GRAPHICS_REFRESH_PERIOD = 5.0; // in seconds
    private static final double OCTREE_RESOLUTION = 0.01;
    protected static final boolean DEBUG = true;
 
-   private static final double DEFAULT_HIT_UPDATE = 0.7;
-   private static final double DEFAULT_MISS_UPDATE = 0.4;
-   private static final double DEFAULT_MIN_PROBABILITY = 0.1192;
-   private static final double DEFAULT_MAX_PROBABILITY = 0.971;
-   private static final double DEFAULT_OCCUPANCY_THRESHOLD = 0.5;
-
    private final NormalOcTree octree = new NormalOcTree(OCTREE_RESOLUTION);
 
-   private final AtomicDouble hitUpdate = new AtomicDouble(DEFAULT_HIT_UPDATE);
-   private final AtomicDouble missUpdate = new AtomicDouble(DEFAULT_MISS_UPDATE);
-   private final AtomicDouble minProbability = new AtomicDouble(DEFAULT_MIN_PROBABILITY);
-   private final AtomicDouble maxProbability = new AtomicDouble(DEFAULT_MAX_PROBABILITY);
-   private final AtomicDouble occupancyThreshold = new AtomicDouble(DEFAULT_OCCUPANCY_THRESHOLD);
+   private final AtomicReference<OccupancyParameters> atomicOccupancyParameters = new AtomicReference<OccupancyParameters>(new OccupancyParameters());
 
    private final OcTreeUpdater updater;
    private final OcTreeGraphicsBuilder graphicsBuilder;
@@ -57,69 +50,14 @@ public class OcTreeUIController
       updater.attachListeners(packetCommunicator);
    }
 
-   public void setOcTreeOccupancyThreshold(double probabilityThreshold)
+   public void setOcTreeOccupancyParameters(OccupancyParameters occupancyParameters)
    {
-      if (Double.isNaN(probabilityThreshold))
-         occupancyThreshold.set(DEFAULT_OCCUPANCY_THRESHOLD);
-      else if (MathTools.isInsideBoundsExclusive(probabilityThreshold, 0.0, 1.0))
-         occupancyThreshold.set(probabilityThreshold);
+      atomicOccupancyParameters.set(occupancyParameters);
    }
 
-   public double getOcTreeOccupancyThreshold()
+   public OccupancyParameters getOcTreeOccupancyParameters()
    {
-      return occupancyThreshold.get();
-   }
-
-   public void setOcTreeHitUpdate(double probabilityUpdate)
-   {
-      if (Double.isNaN(probabilityUpdate))
-         hitUpdate.set(DEFAULT_HIT_UPDATE);
-      else if (MathTools.isInsideBoundsExclusive(probabilityUpdate, 0.0, 1.0))
-         hitUpdate.set(probabilityUpdate);
-   }
-
-   public double getOcTreeHitUpdate()
-   {
-      return hitUpdate.get();
-   }
-
-   public void setOcTreeMissUpdate(double probabilityUpdate)
-   {
-      if (Double.isNaN(probabilityUpdate))
-         missUpdate.set(DEFAULT_MISS_UPDATE);
-      else if (MathTools.isInsideBoundsExclusive(probabilityUpdate, 0.0, 1.0))
-         missUpdate.set(probabilityUpdate);
-   }
-
-   public double getOcTreeMissUpdate()
-   {
-      return missUpdate.get();
-   }
-
-   public void setOcTreeMinimumProbability(double minProbability)
-   {
-      if (Double.isNaN(minProbability))
-         this.minProbability.set(DEFAULT_MIN_PROBABILITY);
-      else if (MathTools.isInsideBoundsExclusive(minProbability, 0.0, 1.0))
-         this.minProbability.set(minProbability);
-   }
-
-   public double getOcTreeMinimumProbability()
-   {
-      return minProbability.get();
-   }
-
-   public void setOcTreeMaximumProbability(double maxProbability)
-   {
-      if (Double.isNaN(maxProbability))
-         this.maxProbability.set(DEFAULT_MAX_PROBABILITY);
-      else if (MathTools.isInsideBoundsExclusive(maxProbability, 0.0, 1.0))
-         this.maxProbability.set(maxProbability);
-   }
-
-   public double getOcTreeMaximumProbability()
-   {
-      return maxProbability.get();
+      return atomicOccupancyParameters.get();
    }
 
    public void setEnable(boolean enable)
@@ -230,12 +168,12 @@ public class OcTreeUIController
       graphicsBuilder.enableBoundingBox(enable);
    }
 
-   public BoundingBox3d getBoundingBox()
+   public OcTreeBoundingBox getBoundingBox()
    {
       return graphicsBuilder.getBoundingBox();
    }
 
-   public void setBoundingBox(BoundingBox3d boundingBox3d)
+   public void setBoundingBox(OcTreeBoundingBox boundingBox3d)
    {
       graphicsBuilder.setBoundingBox(boundingBox3d);
    }
@@ -249,6 +187,8 @@ public class OcTreeUIController
    {
       Runnable runnable = new Runnable()
       {
+         private final AtomicDouble lastGraphicsUpdate = new AtomicDouble(Double.NaN);
+
          @Override
          public void run()
          {
@@ -263,7 +203,13 @@ public class OcTreeUIController
                if (Thread.interrupted())
                   return;
 
-               graphicsBuilder.update();
+               double currentTime = OctoMapTools.nanoSecondsToSeconds(System.nanoTime());
+
+               if (Double.isNaN(lastGraphicsUpdate.get()) || currentTime - lastGraphicsUpdate.get() >= GRAPHICS_REFRESH_PERIOD)
+               {
+                  lastGraphicsUpdate.set(currentTime);
+                  graphicsBuilder.update();
+               }
             }
             catch (Exception e)
             {
@@ -283,13 +229,9 @@ public class OcTreeUIController
 
    private void updateOcTreeSettings()
    {
-      octree.setOccupancyThreshold(occupancyThreshold.get());
-
-      octree.setHitProbabilityUpdate(hitUpdate.get());
-      octree.setMissProbabilityUpdate(missUpdate.get());
-
-      octree.setMinProbability(minProbability.get());
-      octree.setMaxProbability(maxProbability.get());
+      OccupancyParameters occupancyParameters = atomicOccupancyParameters.get();
+      if (occupancyParameters != null)
+         octree.setOccupancyParameters(occupancyParameters);
    }
 
    public void start()

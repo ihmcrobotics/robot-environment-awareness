@@ -16,8 +16,9 @@ import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
+import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
+import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
-import us.ihmc.robotics.geometry.BoundingBox3d;
 
 public class OcTreeViewer extends Group
 {
@@ -211,14 +212,14 @@ public class OcTreeViewer extends Group
    {
       if (occupancyThresholdProperty == null)
       {
-         occupancyThresholdProperty = new SimpleDoubleProperty(this, "ocTreeOccupancyThresholdProperty", controller.getOcTreeOccupancyThreshold())
+         occupancyThresholdProperty = new SimpleDoubleProperty(this, "ocTreeOccupancyThresholdProperty", controller.getOcTreeOccupancyParameters().getOccupancyThreshold())
          {
             @Override
             protected void invalidated()
             {
-               controller.setOcTreeOccupancyThreshold(get());
-               if (Double.isNaN(get()))
-                  set(controller.getOcTreeOccupancyThreshold());
+               OccupancyParameters newParameters = new OccupancyParameters(controller.getOcTreeOccupancyParameters());
+               newParameters.setOccupancyThreshold(get());
+               controller.setOcTreeOccupancyParameters(newParameters);
             }
          };
       }
@@ -231,14 +232,14 @@ public class OcTreeViewer extends Group
    {
       if (hitUpdateProperty == null)
       {
-         hitUpdateProperty = new SimpleDoubleProperty(this, "ocTreeHitUpdateProperty", controller.getOcTreeHitUpdate())
+         hitUpdateProperty = new SimpleDoubleProperty(this, "ocTreeHitUpdateProperty", controller.getOcTreeOccupancyParameters().getHitProbability())
          {
             @Override
             protected void invalidated()
             {
-               controller.setOcTreeHitUpdate(get());
-               if (Double.isNaN(get()))
-                  set(controller.getOcTreeHitUpdate());
+               OccupancyParameters newParameters = new OccupancyParameters(controller.getOcTreeOccupancyParameters());
+               newParameters.setHitProbabilityUpdate(get());
+               controller.setOcTreeOccupancyParameters(newParameters);
             }
          };
       }
@@ -251,14 +252,14 @@ public class OcTreeViewer extends Group
    {
       if (missUpdateProperty == null)
       {
-         missUpdateProperty = new SimpleDoubleProperty(this, "ocTreeMissUpdateProperty", controller.getOcTreeMissUpdate())
+         missUpdateProperty = new SimpleDoubleProperty(this, "ocTreeMissUpdateProperty", controller.getOcTreeOccupancyParameters().getMissProbability())
          {
             @Override
             protected void invalidated()
             {
-               controller.setOcTreeMissUpdate(get());
-               if (Double.isNaN(get()))
-                  set(controller.getOcTreeMissUpdate());
+               OccupancyParameters newParameters = new OccupancyParameters(controller.getOcTreeOccupancyParameters());
+               newParameters.setMissProbabilityUpdate(get());
+               controller.setOcTreeOccupancyParameters(newParameters);
             }
          };
       }
@@ -271,14 +272,14 @@ public class OcTreeViewer extends Group
    {
       if (minProbabilityProperty == null)
       {
-         minProbabilityProperty = new SimpleDoubleProperty(this, "ocTreeMinimumProbabilityProperty", controller.getOcTreeMinimumProbability())
+         minProbabilityProperty = new SimpleDoubleProperty(this, "ocTreeMinimumProbabilityProperty", controller.getOcTreeOccupancyParameters().getMinProbability())
          {
             @Override
             protected void invalidated()
             {
-               controller.setOcTreeMinimumProbability(get());
-               if (Double.isNaN(get()))
-                  set(controller.getOcTreeMinimumProbability());
+               OccupancyParameters newParameters = new OccupancyParameters(controller.getOcTreeOccupancyParameters());
+               newParameters.setMinProbability(get());
+               controller.setOcTreeOccupancyParameters(newParameters);
             }
          };
       }
@@ -291,14 +292,14 @@ public class OcTreeViewer extends Group
    {
       if (maxProbabilityProperty == null)
       {
-         maxProbabilityProperty = new SimpleDoubleProperty(this, "ocTreeMaximumProbabilityProperty", controller.getOcTreeMaximumProbability())
+         maxProbabilityProperty = new SimpleDoubleProperty(this, "ocTreeMaximumProbabilityProperty", controller.getOcTreeOccupancyParameters().getMaxProbability())
          {
             @Override
             protected void invalidated()
             {
-               controller.setOcTreeMaximumProbability(get());
-               if (Double.isNaN(get()))
-                  set(controller.getOcTreeMaximumProbability());
+               OccupancyParameters newParameters = new OccupancyParameters(controller.getOcTreeOccupancyParameters());
+               newParameters.setMaxProbability(get());
+               controller.setOcTreeOccupancyParameters(newParameters);
             }
          };
       }
@@ -323,13 +324,13 @@ public class OcTreeViewer extends Group
       return enableBoundingBoxProperty;
    }
 
-   private ObjectProperty<BoundingBox3d> boundingBoxProperty;
+   private ObjectProperty<OcTreeBoundingBox> boundingBoxProperty;
 
-   public ObjectProperty<BoundingBox3d> boundingBoxProperty()
+   public ObjectProperty<OcTreeBoundingBox> boundingBoxProperty()
    {
       if (boundingBoxProperty == null)
       {
-         boundingBoxProperty = new SimpleObjectProperty<BoundingBox3d>(this, "ocTreeBoundingBoxProperty", controller.getBoundingBox())
+         boundingBoxProperty = new SimpleObjectProperty<OcTreeBoundingBox>(this, "ocTreeBoundingBoxProperty", controller.getBoundingBox())
          {
             @Override
             protected void invalidated()

@@ -19,9 +19,9 @@ import us.ihmc.octoMap.iterators.LeafBoundingBoxIterable;
 import us.ihmc.octoMap.iterators.LeafIterable;
 import us.ihmc.octoMap.iterators.OcTreeSuperNode;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
-import us.ihmc.octoMap.ocTree.NormalOcTree;
+import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
+import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.tools.IntersectionPlaneBoxCalculator;
-import us.ihmc.robotics.geometry.BoundingBox3d;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
 
@@ -59,7 +59,7 @@ public class OcTreeGraphicsBuilder
    private final AtomicBoolean useBoundingBox = new AtomicBoolean(false);
    private final Point3d boundingBoxMin = new Point3d(-0.0, -2.0, -1.0);
    private final Point3d boundingBoxMax = new Point3d(10.0, 2.0, 1.0);
-   private final AtomicReference<BoundingBox3d> atomicBoundingBox = new AtomicReference<>(new BoundingBox3d(boundingBoxMin, boundingBoxMax));
+   private final AtomicReference<OcTreeBoundingBox> atomicBoundingBox;
 
    private final LeafIterable<NormalOcTreeNode> leafIterable;
    private final LeafBoundingBoxIterable<NormalOcTreeNode> leafBoundingBoxIterable;
@@ -76,6 +76,10 @@ public class OcTreeGraphicsBuilder
 
       leafIterable = new LeafIterable<>(octree, true);
       leafBoundingBoxIterable = new LeafBoundingBoxIterable<>(octree, true);
+
+      double resolution = octree.getResolution();
+      int treeDepth = octree.getTreeDepth();
+      atomicBoundingBox = new AtomicReference<>(new OcTreeBoundingBox(boundingBoxMin, boundingBoxMax, resolution, treeDepth));
    }
 
    private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
@@ -164,9 +168,10 @@ public class OcTreeGraphicsBuilder
    {
       if (atomicBoundingBox.get() == null)
          return;
-      BoundingBox3d newBoundingBox = atomicBoundingBox.get();
-      newBoundingBox.getMinPoint(boundingBoxMin);
-      newBoundingBox.getMaxPoint(boundingBoxMax);
+      OcTreeBoundingBox newBoundingBox = atomicBoundingBox.get();
+      newBoundingBox.update(octree.getResolution(), octree.getTreeDepth());
+      newBoundingBox.getMinCoordinate(boundingBoxMin);
+      newBoundingBox.getMaxCoordinate(boundingBoxMax);
    }
 
    public void setEnable(boolean enable)
@@ -335,15 +340,15 @@ public class OcTreeGraphicsBuilder
       useBoundingBox.set(enable);
    }
 
-   public BoundingBox3d getBoundingBox()
+   public OcTreeBoundingBox getBoundingBox()
    {
       return atomicBoundingBox.get();
    }
 
-   public void setBoundingBox(BoundingBox3d boundingBox3d)
+   public void setBoundingBox(OcTreeBoundingBox boundingBox)
    {
       if (useBoundingBox.get())
          processPropertyChange.set(true);
-      atomicBoundingBox.set(boundingBox3d);
+      atomicBoundingBox.set(boundingBox);
    }
 }

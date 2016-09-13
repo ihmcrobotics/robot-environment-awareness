@@ -12,7 +12,7 @@ import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
+import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.octoMap.tools.OctoMapTools;
@@ -168,12 +168,12 @@ public class OcTreeUIController
       graphicsBuilder.enableBoundingBox(enable);
    }
 
-   public OcTreeSimpleBoundingBox getBoundingBox()
+   public OcTreeBoundingBoxWithCenterAndYaw getBoundingBox()
    {
       return graphicsBuilder.getBoundingBox();
    }
 
-   public void setBoundingBox(OcTreeSimpleBoundingBox boundingBox3d)
+   public void setBoundingBox(OcTreeBoundingBoxWithCenterAndYaw boundingBox3d)
    {
       graphicsBuilder.setBoundingBox(boundingBox3d);
    }

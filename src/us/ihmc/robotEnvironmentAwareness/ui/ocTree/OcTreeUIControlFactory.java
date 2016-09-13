@@ -30,7 +30,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
+import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 import us.ihmc.robotics.geometry.Direction;
@@ -320,69 +320,40 @@ public class OcTreeUIControlFactory
       gridPane.add(enableBoundingBoxButton, 0, row);
 
 
-      ObjectProperty<OcTreeSimpleBoundingBox> boundingBoxProperty = ocTreeViewer.boundingBoxProperty();
-      double[] initialMinValue = new double[3];
-      double[] initialMaxValue = new double[3];
-      boundingBoxProperty.get().getMinCoordinate(initialMinValue);
-      boundingBoxProperty.get().getMaxCoordinate(initialMaxValue);
+      ObjectProperty<OcTreeBoundingBoxWithCenterAndYaw> boundingBoxProperty = ocTreeViewer.boundingBoxProperty();
+      double[] initialHalfSizeValue = new double[3];
+      boundingBoxProperty.get().getBoundingBoxHalfSize(initialHalfSizeValue);
 
       for (int i = 0; i < 3; i++)
       {
          int index = i;
-         SpinnerValueFactory.DoubleSpinnerValueFactory minSpinnerValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(min, max, initialMinValue[index], 0.1);
+         SpinnerValueFactory.DoubleSpinnerValueFactory minSpinnerValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(min, max, initialHalfSizeValue[index], 0.1);
          minSpinnerValueFactory.valueProperty().addListener(new ChangeListener<Double>()
          {
             @Override
             public void changed(ObservableValue<? extends Double> observable, Double oldValue, Double newValue)
             {
-               double[] minPoint = new double[3];
-               double[] maxPoint = new double[3];
+               double[] halfSize = new double[3];
 
                if (!newValue.isNaN())
                {
-                  OcTreeSimpleBoundingBox oldBoundingBox = boundingBoxProperty.get();
-                  oldBoundingBox.getMinCoordinate(minPoint);
-                  oldBoundingBox.getMaxCoordinate(maxPoint);
-                  minPoint[index] = newValue;
-                  boundingBoxProperty.set(new OcTreeSimpleBoundingBox(minPoint, maxPoint));
+                  OcTreeBoundingBoxWithCenterAndYaw oldBoundingBox = boundingBoxProperty.get();
+                  oldBoundingBox.getBoundingBoxHalfSize(halfSize);
+                  halfSize[index] = newValue;
+                  OcTreeBoundingBoxWithCenterAndYaw newBoundingBox = oldBoundingBox.getCopy();
+                  newBoundingBox.setHalfSize(halfSize);
+                  boundingBoxProperty.set(newBoundingBox);
                }
             }
          });
-
-         SpinnerValueFactory.DoubleSpinnerValueFactory maxSpinnerValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(min, max, initialMaxValue[index], 0.1);
-         maxSpinnerValueFactory.valueProperty().addListener(new ChangeListener<Double>()
-         {
-            @Override
-            public void changed(ObservableValue<? extends Double> observable, Double oldValue, Double newValue)
-            {
-               double[] minPoint = new double[3];
-               double[] maxPoint = new double[3];
-
-               if (!newValue.isNaN())
-               {
-                  OcTreeSimpleBoundingBox oldBoundingBox = boundingBoxProperty.get();
-                  oldBoundingBox.getMinCoordinate(minPoint);
-                  oldBoundingBox.getMaxCoordinate(maxPoint);
-                  maxPoint[index] = newValue;
-                  boundingBoxProperty.set(new OcTreeSimpleBoundingBox(minPoint, maxPoint));
-               }
-            }
-         });
-         
 
          Spinner<Double> minSpinner = new Spinner<>(minSpinnerValueFactory);
-         Spinner<Double> maxSpinner = new Spinner<>(maxSpinnerValueFactory);
          minSpinner.setPrefWidth(preferredSpinnerWidth);
-         maxSpinner.setPrefWidth(preferredSpinnerWidth);
          minSpinner.setEditable(true);
-         maxSpinner.setEditable(true);
 
-         Label minAxisLabel = new Label(" min" + Direction.values[i].toString() + ": ");
-         Label maxAxisLabel = new Label(" max" + Direction.values[i].toString() + ": ");
+         Label minAxisLabel = new Label(" size" + Direction.values[i].toString() + ": ");
          gridPane.add(minAxisLabel, 2 * index + 1, row);
-         gridPane.add(maxAxisLabel, 2 * index + 1, row + 1);
          gridPane.add(minSpinner, 2 * index + 2, row);
-         gridPane.add(maxSpinner, 2 * index + 2, row + 1);
       }
       return gridPane;
    }

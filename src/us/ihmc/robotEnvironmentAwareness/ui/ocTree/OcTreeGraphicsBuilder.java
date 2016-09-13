@@ -115,7 +115,7 @@ public class OcTreeGraphicsBuilder
       {
          updateBoundingBox();
          leafBoundingBoxIterable.setMaxDepth(currentDepth);
-         leafBoundingBoxIterable.setBoundingBox(boundingBoxMin, boundingBoxMax);
+         leafBoundingBoxIterable.setBoundingBox(atomicBoundingBox.get());
          iterable = leafBoundingBoxIterable;
       }
 

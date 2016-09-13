@@ -16,7 +16,7 @@ import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
-import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
+import us.ihmc.octoMap.boundingBox.OcTreeBoundingBox;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 

@@ -12,7 +12,7 @@ import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
+import us.ihmc.octoMap.boundingBox.OcTreeBoundingBox;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.octoMap.tools.OctoMapTools;

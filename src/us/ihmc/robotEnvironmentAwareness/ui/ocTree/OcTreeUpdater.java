@@ -11,7 +11,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
-import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
+import us.ihmc.octoMap.boundingBox.OcTreeBoundingBox;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.pointCloud.SweepCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;

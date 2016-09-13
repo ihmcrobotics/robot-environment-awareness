@@ -6,6 +6,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.google.common.util.concurrent.AtomicDouble;
+
 import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
@@ -13,6 +15,7 @@ import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
+import us.ihmc.octoMap.tools.OctoMapTools;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 import us.ihmc.tools.io.printing.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;
@@ -20,6 +23,7 @@ import us.ihmc.tools.thread.ThreadTools;
 public class OcTreeUIController
 {
    private static final int THREAD_PERIOD_MILLISECONDS = 100;
+   private static final double GRAPHICS_REFRESH_PERIOD = 5.0; // in seconds
    private static final double OCTREE_RESOLUTION = 0.01;
    protected static final boolean DEBUG = true;
 
@@ -183,6 +187,8 @@ public class OcTreeUIController
    {
       Runnable runnable = new Runnable()
       {
+         private final AtomicDouble lastGraphicsUpdate = new AtomicDouble(Double.NaN);
+
          @Override
          public void run()
          {
@@ -197,7 +203,13 @@ public class OcTreeUIController
                if (Thread.interrupted())
                   return;
 
-               graphicsBuilder.update();
+               double currentTime = OctoMapTools.nanoSecondsToSeconds(System.nanoTime());
+
+               if (Double.isNaN(lastGraphicsUpdate.get()) || currentTime - lastGraphicsUpdate.get() >= GRAPHICS_REFRESH_PERIOD)
+               {
+                  lastGraphicsUpdate.set(currentTime);
+                  graphicsBuilder.update();
+               }
             }
             catch (Exception e)
             {

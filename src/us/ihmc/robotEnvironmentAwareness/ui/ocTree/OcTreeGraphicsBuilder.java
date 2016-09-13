@@ -7,14 +7,18 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
+import javafx.geometry.Point3D;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
+import javafx.scene.shape.Box;
 import javafx.scene.shape.Mesh;
+import javafx.scene.transform.Rotate;
 import javafx.util.Pair;
 import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
+import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxInterface;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.octoMap.iterators.LeafBoundingBoxIterable;
 import us.ihmc.octoMap.iterators.LeafIterable;
@@ -29,6 +33,7 @@ public class OcTreeGraphicsBuilder
 {
    private static final Color DEFAULT_COLOR = Color.DARKCYAN;
    private static final Color FREE_COLOR = new Color(Color.YELLOW.getRed(), Color.YELLOW.getGreen(), Color.YELLOW.getBlue(), 0.01);
+   private static final Color OCTREE_BBX_COLOR = new Color(Color.DARKGREY.getRed(), Color.DARKGREY.getGreen(), Color.DARKGREY.getBlue(), 0.0);
 
    private final NormalOcTree octree;
 
@@ -48,6 +53,13 @@ public class OcTreeGraphicsBuilder
    private final MultiColorMeshBuilder occupiedMeshBuilder;
    private final MeshBuilder freeMeshBuilder = new MeshBuilder();
 
+   private final Vector3d ocTreeBoundingBoxSize = new Vector3d();
+   private final Point3d ocTreeBoundingBoxCenter = new Point3d();
+   private final Point3D ocTreeBoudingBoxRotationAxis = Rotate.Z_AXIS;
+
+   private final Material ocTreeBoundingBoxMaterial = new PhongMaterial(OCTREE_BBX_COLOR);
+   private final AtomicReference<Box> newOcTreeBoudingBoxToRender = new AtomicReference<>(null);
+
    private final AtomicReference<Pair<Mesh, Material>> newOccupiedMeshToRender = new AtomicReference<>(null);
    private final AtomicReference<Pair<Mesh, Material>> newFreeMeshToRender = new AtomicReference<>(null);
    private final Material defaultOccupiedMaterial = new PhongMaterial(DEFAULT_COLOR);
@@ -57,9 +69,10 @@ public class OcTreeGraphicsBuilder
    private final TextureColorPalette1D normalVariationBasedColorPalette1D = new TextureColorPalette1D();
 
    private final AtomicBoolean useBoundingBox = new AtomicBoolean(false);
-   private final Point3d boundingBoxMin = new Point3d(-0.0, -2.0, -1.0);
+   private final Point3d boundingBoxMin = new Point3d(-0.0, -2.0, -1.1);
    private final Point3d boundingBoxMax = new Point3d(10.0, 2.0, 1.0);
    private final AtomicReference<OcTreeBoundingBoxWithCenterAndYaw> atomicBoundingBox;
+   private final AtomicBoolean showOcTreeBoundingBox = new AtomicBoolean(false);
 
    private final LeafIterable<NormalOcTreeNode> leafIterable;
    private final LeafBoundingBoxIterable<NormalOcTreeNode> leafBoundingBoxIterable;
@@ -115,7 +128,9 @@ public class OcTreeGraphicsBuilder
       {
          updateBoundingBox();
          leafBoundingBoxIterable.setMaxDepth(currentDepth);
-         leafBoundingBoxIterable.setBoundingBox(atomicBoundingBox.get());
+         OcTreeBoundingBoxInterface boundingBox = atomicBoundingBox.getAndSet(null);
+         if (boundingBox != null)
+            leafBoundingBoxIterable.setBoundingBox(boundingBox);
          iterable = leafBoundingBoxIterable;
       }
 
@@ -162,6 +177,37 @@ public class OcTreeGraphicsBuilder
 
       Mesh freeLeafMesh = showFreeSpace.get() ? freeMeshBuilder.generateMesh() : null;
       newFreeMeshToRender.set(new Pair<Mesh, Material>(freeLeafMesh, defaultFreeMaterial));
+
+      handleOcTreeBoundingBox();
+   }
+
+   private void handleOcTreeBoundingBox()
+   {
+      OcTreeBoundingBoxWithCenterAndYaw boundingBox = (OcTreeBoundingBoxWithCenterAndYaw) octree.getBoundingBox();
+      if (!showOcTreeBoundingBox.get() || boundingBox == null)
+      {
+         newOcTreeBoudingBoxToRender.set(null);
+         return;
+      }
+
+      boundingBox.getLocalSize(ocTreeBoundingBoxSize);
+      boundingBox.getCenterCoordinate(ocTreeBoundingBoxCenter);
+
+      double yaw = boundingBox.getYaw();
+      System.out.println("BBX yaw: " + yaw);
+
+      Box ocTreeBoundingBoxGraphics = new Box();
+      ocTreeBoundingBoxGraphics.setWidth(ocTreeBoundingBoxSize.getX());
+      ocTreeBoundingBoxGraphics.setHeight(ocTreeBoundingBoxSize.getY());
+      ocTreeBoundingBoxGraphics.setDepth(ocTreeBoundingBoxSize.getZ());
+      ocTreeBoundingBoxGraphics.setTranslateX(ocTreeBoundingBoxCenter.getX());
+      ocTreeBoundingBoxGraphics.setTranslateY(ocTreeBoundingBoxCenter.getY());
+      ocTreeBoundingBoxGraphics.setTranslateZ(ocTreeBoundingBoxCenter.getZ());
+      ocTreeBoundingBoxGraphics.setRotationAxis(ocTreeBoudingBoxRotationAxis);
+      ocTreeBoundingBoxGraphics.setRotate(Math.toDegrees(yaw));
+
+      ocTreeBoundingBoxGraphics.setMaterial(ocTreeBoundingBoxMaterial);
+      newOcTreeBoudingBoxToRender.set(ocTreeBoundingBoxGraphics);
    }
 
    public void updateBoundingBox()
@@ -197,6 +243,11 @@ public class OcTreeGraphicsBuilder
       return newFreeMeshToRender.get() != null;
    }
 
+   public boolean hasNewOcTreeBoundingBoxToRender()
+   {
+      return newOcTreeBoudingBoxToRender.get() != null;
+   }
+
    public Pair<Mesh, Material> pollOccupiedMesh()
    {
       return newOccupiedMeshToRender.getAndSet(null);
@@ -205,6 +256,11 @@ public class OcTreeGraphicsBuilder
    public Pair<Mesh, Material> pollFreeMesh()
    {
       return newFreeMeshToRender.getAndSet(null);
+   }
+
+   public Box pollOcTreeBoundingBoxGraphics()
+   {
+      return newOcTreeBoudingBoxToRender.get();
    }
 
    public void setTreeDepthForDisplay(int newDepth)
@@ -261,6 +317,20 @@ public class OcTreeGraphicsBuilder
    public boolean isShowingEstimatedSurfaces()
    {
       return showEstimatedSurfaces.get();
+   }
+
+   public void showOcTreeBoundingBox(boolean show)
+   {
+      if (show != showOcTreeBoundingBox.get())
+      {
+         processPropertyChange.set(true);
+         showOcTreeBoundingBox.set(show);
+      }
+   }
+
+   public boolean isShowingOcTreeBoundingBox()
+   {
+      return showOcTreeBoundingBox.get();
    }
 
    private Color getNodeColor(OcTreeSuperNode<NormalOcTreeNode> superNode)

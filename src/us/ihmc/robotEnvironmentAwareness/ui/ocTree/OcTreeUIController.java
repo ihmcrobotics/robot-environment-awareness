@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.google.common.util.concurrent.AtomicDouble;
 
 import javafx.scene.paint.Material;
+import javafx.scene.shape.Box;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
@@ -23,7 +24,7 @@ import us.ihmc.tools.thread.ThreadTools;
 public class OcTreeUIController
 {
    private static final int THREAD_PERIOD_MILLISECONDS = 3000;
-   private static final double GRAPHICS_REFRESH_PERIOD = 5.0; // in seconds
+   private static final double GRAPHICS_REFRESH_PERIOD = 1.0; // in seconds
    private static final double OCTREE_RESOLUTION = 0.01;
    protected static final boolean DEBUG = true;
 
@@ -97,6 +98,26 @@ public class OcTreeUIController
       return updater.getMaxRange();
    }
 
+   public boolean isBoundingBoxEnabled()
+   {
+      return updater.isBoundingBoxEnabled();
+   }
+
+   public void enableBoundingBox(boolean enable)
+   {
+      updater.enableBoundingBox(enable);
+   }
+
+   public OcTreeBoundingBoxWithCenterAndYaw getBoundingBox()
+   {
+      return updater.getBoundingBox();
+   }
+
+   public void setBoundingBox(OcTreeBoundingBoxWithCenterAndYaw boundingBox)
+   {
+      updater.setBoundingBox(boundingBox);
+   }
+
    public void setTreeDepthForDisplay(int newDepth)
    {
       graphicsBuilder.setTreeDepthForDisplay(newDepth);
@@ -158,24 +179,24 @@ public class OcTreeUIController
       return graphicsBuilder.pollFreeMesh();
    }
 
-   public boolean isBoundingBoxEnabled()
+   public void showOcTreeBoundingBox(boolean show)
    {
-      return graphicsBuilder.isBoundingBoxEnabled();
+      graphicsBuilder.showOcTreeBoundingBox(show);
    }
 
-   public void enableBoundingBox(boolean enable)
+   public boolean isShowingOcTreeBoundingBox()
    {
-      graphicsBuilder.enableBoundingBox(enable);
+      return graphicsBuilder.isShowingOcTreeBoundingBox();
    }
 
-   public OcTreeBoundingBoxWithCenterAndYaw getBoundingBox()
+   public boolean hasNewOcTreeBoundingBoxToRender()
    {
-      return graphicsBuilder.getBoundingBox();
+      return graphicsBuilder.hasNewOcTreeBoundingBoxToRender();
    }
 
-   public void setBoundingBox(OcTreeBoundingBoxWithCenterAndYaw boundingBox3d)
+   public Box pollOcTreeBoundingBoxGraphics()
    {
-      graphicsBuilder.setBoundingBox(boundingBox3d);
+      return graphicsBuilder.pollOcTreeBoundingBoxGraphics();
    }
 
    public int getMaximumTreeDepth()

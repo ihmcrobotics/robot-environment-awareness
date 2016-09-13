@@ -13,11 +13,11 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Group;
 import javafx.scene.paint.Material;
+import javafx.scene.shape.Box;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
-import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 
@@ -28,6 +28,7 @@ public class OcTreeViewer extends Group
 
    private final MeshView occupiedLeafsMeshView = new MeshView();
    private final MeshView freeLeafsMeshView = new MeshView();
+   private Box ocTreeBoundingBoxGraphics = null;
 
    private final OcTreeUIController controller;
    private final AnimationTimer renderMeshAnimation;
@@ -65,6 +66,18 @@ public class OcTreeViewer extends Group
             if (controller.hasNewFreeMeshToRender())
             {
                updateMeshView(freeLeafsMeshView, controller.pollFreeMesh());
+            }
+
+            if (ocTreeBoundingBoxGraphics != null)
+            {
+               getChildren().remove(ocTreeBoundingBoxGraphics);
+               ocTreeBoundingBoxGraphics = null;
+            }
+
+            if (controller.hasNewOcTreeBoundingBoxToRender())
+            {
+               ocTreeBoundingBoxGraphics = controller.pollOcTreeBoundingBoxGraphics();
+               getChildren().add(ocTreeBoundingBoxGraphics);
             }
          }
       };
@@ -342,6 +355,24 @@ public class OcTreeViewer extends Group
          };
       }
       return boundingBoxProperty;
+   }
+
+   private BooleanProperty showOcTreeBoundingBoxProperty;
+
+   public BooleanProperty showOcTreeBoundingBoxProperty()
+   {
+      if (showOcTreeBoundingBoxProperty == null)
+      {
+         showOcTreeBoundingBoxProperty = new SimpleBooleanProperty(this, "showOcTreeBoundingBox", controller.isShowingOcTreeBoundingBox())
+         {
+            @Override
+            protected void invalidated()
+            {
+               controller.showOcTreeBoundingBox(get());
+            }
+         };
+      }
+      return showOcTreeBoundingBoxProperty;
    }
 
    private DoubleProperty ocTreeMinRangeProperty;

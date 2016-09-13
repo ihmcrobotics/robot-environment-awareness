@@ -75,7 +75,7 @@ public class OcTreeUpdater
          octree.disableBoundingBox();
 
       octree.setBoundsInsertRange(minRange.get(), maxRange.get());
-      octree.updateNodeFromSweepCollection(newScan);
+      octree.insertSweepCollection(newScan);
 
       if (Thread.interrupted())
          return;

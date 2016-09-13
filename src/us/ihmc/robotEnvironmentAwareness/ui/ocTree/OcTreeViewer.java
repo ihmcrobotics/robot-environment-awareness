@@ -16,7 +16,7 @@ import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
-import us.ihmc.octoMap.boundingBox.OcTreeBoundingBox;
+import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 
@@ -324,13 +324,13 @@ public class OcTreeViewer extends Group
       return enableBoundingBoxProperty;
    }
 
-   private ObjectProperty<OcTreeBoundingBox> boundingBoxProperty;
+   private ObjectProperty<OcTreeSimpleBoundingBox> boundingBoxProperty;
 
-   public ObjectProperty<OcTreeBoundingBox> boundingBoxProperty()
+   public ObjectProperty<OcTreeSimpleBoundingBox> boundingBoxProperty()
    {
       if (boundingBoxProperty == null)
       {
-         boundingBoxProperty = new SimpleObjectProperty<OcTreeBoundingBox>(this, "ocTreeBoundingBoxProperty", controller.getBoundingBox())
+         boundingBoxProperty = new SimpleObjectProperty<OcTreeSimpleBoundingBox>(this, "ocTreeBoundingBoxProperty", controller.getBoundingBox())
          {
             @Override
             protected void invalidated()

@@ -15,7 +15,7 @@ import javafx.util.Pair;
 import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
-import us.ihmc.octoMap.boundingBox.OcTreeBoundingBox;
+import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.octoMap.iterators.LeafBoundingBoxIterable;
 import us.ihmc.octoMap.iterators.LeafIterable;
 import us.ihmc.octoMap.iterators.OcTreeSuperNode;
@@ -59,7 +59,7 @@ public class OcTreeGraphicsBuilder
    private final AtomicBoolean useBoundingBox = new AtomicBoolean(false);
    private final Point3d boundingBoxMin = new Point3d(-0.0, -2.0, -1.0);
    private final Point3d boundingBoxMax = new Point3d(10.0, 2.0, 1.0);
-   private final AtomicReference<OcTreeBoundingBox> atomicBoundingBox;
+   private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
 
    private final LeafIterable<NormalOcTreeNode> leafIterable;
    private final LeafBoundingBoxIterable<NormalOcTreeNode> leafBoundingBoxIterable;
@@ -79,7 +79,7 @@ public class OcTreeGraphicsBuilder
 
       double resolution = octree.getResolution();
       int treeDepth = octree.getTreeDepth();
-      atomicBoundingBox = new AtomicReference<>(new OcTreeBoundingBox(boundingBoxMin, boundingBoxMax, resolution, treeDepth));
+      atomicBoundingBox = new AtomicReference<>(new OcTreeSimpleBoundingBox(boundingBoxMin, boundingBoxMax, resolution, treeDepth));
    }
 
    private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
@@ -168,7 +168,7 @@ public class OcTreeGraphicsBuilder
    {
       if (atomicBoundingBox.get() == null)
          return;
-      OcTreeBoundingBox newBoundingBox = atomicBoundingBox.get();
+      OcTreeSimpleBoundingBox newBoundingBox = atomicBoundingBox.get();
       newBoundingBox.update(octree.getResolution(), octree.getTreeDepth());
       newBoundingBox.getMinCoordinate(boundingBoxMin);
       newBoundingBox.getMaxCoordinate(boundingBoxMax);
@@ -340,12 +340,12 @@ public class OcTreeGraphicsBuilder
       useBoundingBox.set(enable);
    }
 
-   public OcTreeBoundingBox getBoundingBox()
+   public OcTreeSimpleBoundingBox getBoundingBox()
    {
       return atomicBoundingBox.get();
    }
 
-   public void setBoundingBox(OcTreeBoundingBox boundingBox)
+   public void setBoundingBox(OcTreeSimpleBoundingBox boundingBox)
    {
       if (useBoundingBox.get())
          processPropertyChange.set(true);

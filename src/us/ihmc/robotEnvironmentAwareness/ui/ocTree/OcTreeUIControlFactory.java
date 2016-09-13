@@ -30,7 +30,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import us.ihmc.octoMap.boundingBox.OcTreeBoundingBox;
+import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 import us.ihmc.robotics.geometry.Direction;
@@ -320,7 +320,7 @@ public class OcTreeUIControlFactory
       gridPane.add(enableBoundingBoxButton, 0, row);
 
 
-      ObjectProperty<OcTreeBoundingBox> boundingBoxProperty = ocTreeViewer.boundingBoxProperty();
+      ObjectProperty<OcTreeSimpleBoundingBox> boundingBoxProperty = ocTreeViewer.boundingBoxProperty();
       double[] initialMinValue = new double[3];
       double[] initialMaxValue = new double[3];
       boundingBoxProperty.get().getMinCoordinate(initialMinValue);
@@ -340,11 +340,11 @@ public class OcTreeUIControlFactory
 
                if (!newValue.isNaN())
                {
-                  OcTreeBoundingBox oldBoundingBox = boundingBoxProperty.get();
+                  OcTreeSimpleBoundingBox oldBoundingBox = boundingBoxProperty.get();
                   oldBoundingBox.getMinCoordinate(minPoint);
                   oldBoundingBox.getMaxCoordinate(maxPoint);
                   minPoint[index] = newValue;
-                  boundingBoxProperty.set(new OcTreeBoundingBox(minPoint, maxPoint));
+                  boundingBoxProperty.set(new OcTreeSimpleBoundingBox(minPoint, maxPoint));
                }
             }
          });
@@ -360,11 +360,11 @@ public class OcTreeUIControlFactory
 
                if (!newValue.isNaN())
                {
-                  OcTreeBoundingBox oldBoundingBox = boundingBoxProperty.get();
+                  OcTreeSimpleBoundingBox oldBoundingBox = boundingBoxProperty.get();
                   oldBoundingBox.getMinCoordinate(minPoint);
                   oldBoundingBox.getMaxCoordinate(maxPoint);
                   maxPoint[index] = newValue;
-                  boundingBoxProperty.set(new OcTreeBoundingBox(minPoint, maxPoint));
+                  boundingBoxProperty.set(new OcTreeSimpleBoundingBox(minPoint, maxPoint));
                }
             }
          });

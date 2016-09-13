@@ -3,7 +3,7 @@ package us.ihmc.robotEnvironmentAwareness.communication;
 import javax.vecmath.Vector3f;
 
 import us.ihmc.octoMap.node.NormalOcTreeNode;
-import us.ihmc.octoMap.ocTree.PlanarRegion;
+import us.ihmc.octoMap.planarRegions.PlanarRegion;
 
 public class NormalOcTreeNodeMessage extends AbstractOccupancyOcTreeNodeMessage<NormalOcTreeNodeMessage, NormalOcTreeNode>
 {

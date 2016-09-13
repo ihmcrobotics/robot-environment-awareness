@@ -31,7 +31,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
-import us.ihmc.octoMap.ocTree.baseImplementation.OccupancyParameters;
+import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 import us.ihmc.robotics.geometry.Direction;
 

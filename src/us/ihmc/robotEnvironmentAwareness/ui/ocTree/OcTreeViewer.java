@@ -17,7 +17,7 @@ import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
 import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
-import us.ihmc.octoMap.ocTree.baseImplementation.OccupancyParameters;
+import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 
 public class OcTreeViewer extends Group

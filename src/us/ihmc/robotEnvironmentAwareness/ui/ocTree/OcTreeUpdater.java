@@ -11,8 +11,8 @@ import com.google.common.util.concurrent.AtomicDouble;
 import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
-import us.ihmc.octoMap.ocTree.NormalOcTree;
 import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
+import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.pointCloud.SweepCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
 import us.ihmc.robotics.time.TimeTools;
@@ -74,7 +74,8 @@ public class OcTreeUpdater
       else
          octree.disableBoundingBox();
 
-      octree.updateNodeFromSweepCollection(newScan, minRange.get(), maxRange.get());
+      octree.setBoundsInsertRange(minRange.get(), maxRange.get());
+      octree.updateNodeFromSweepCollection(newScan);
 
       if (Thread.interrupted())
          return;

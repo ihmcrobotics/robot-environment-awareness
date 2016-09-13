@@ -22,7 +22,7 @@ import us.ihmc.tools.thread.ThreadTools;
 
 public class OcTreeUIController
 {
-   private static final int THREAD_PERIOD_MILLISECONDS = 100;
+   private static final int THREAD_PERIOD_MILLISECONDS = 3000;
    private static final double GRAPHICS_REFRESH_PERIOD = 5.0; // in seconds
    private static final double OCTREE_RESOLUTION = 0.01;
    protected static final boolean DEBUG = true;

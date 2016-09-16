@@ -41,7 +41,7 @@ public class OcTreeGraphicsBuilder
    private final AtomicBoolean clear = new AtomicBoolean(false);
    private final AtomicInteger treeDepthForDisplay;
 
-   public enum ColoringType {DEFAULT, NORMAL, NORMAL_VARIATION, HAS_CENTER, REGION};
+   public enum ColoringType {DEFAULT, NORMAL, HAS_CENTER, REGION};
 
    private final AtomicReference<ColoringType> coloringType = new AtomicReference<>(ColoringType.REGION);
 
@@ -362,16 +362,6 @@ public class OcTreeGraphicsBuilder
          else
             return DEFAULT_COLOR;
 
-      case NORMAL_VARIATION:
-         double neighborNormalMeanDifference = octree.computeNodeNeighborNormalDifference(superNode.getKey(), superNode.getDepth());
-         if (!Double.isNaN(neighborNormalMeanDifference))
-         {
-            double brightness = neighborNormalMeanDifference;
-            brightness = Math.min(1.0, Math.max(0.0, brightness));
-            return Color.hsb(0.0, 0.0, brightness);
-         }
-         else
-            return DEFAULT_COLOR;
       case DEFAULT:
       default:
          return DEFAULT_COLOR;
@@ -388,9 +378,6 @@ public class OcTreeGraphicsBuilder
       case NORMAL:
       case HAS_CENTER:
          occupiedMeshBuilder.changeColorPalette(normalBasedColorPalette1D);
-         return occupiedMeshBuilder.generateMaterial();
-      case NORMAL_VARIATION:
-         occupiedMeshBuilder.changeColorPalette(normalVariationBasedColorPalette1D);
          return occupiedMeshBuilder.generateMaterial();
       default:
          throw new RuntimeException("Unhandled ColoringType value: " + coloringType.get());

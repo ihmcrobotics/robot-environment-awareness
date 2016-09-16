@@ -5,6 +5,8 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -30,7 +32,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import us.ihmc.octoMap.ocTree.baseImplementation.OcTreeBoundingBox;
+import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 import us.ihmc.robotics.geometry.Direction;
@@ -319,56 +321,56 @@ public class OcTreeUIControlFactory
       enableBoundingBoxButton.selectedProperty().bindBidirectional(enableProperty);
       gridPane.add(enableBoundingBoxButton, 0, row);
 
+      BooleanProperty showOcTreeBoundingBoxProperty = ocTreeViewer.showOcTreeBoundingBoxProperty();
+      ToggleButton showOcTreeBoundingBoxPropertyButton = new ToggleButton("Show BBX");
+      showOcTreeBoundingBoxPropertyButton.setSelected(showOcTreeBoundingBoxProperty.get());
+      showOcTreeBoundingBoxPropertyButton.selectedProperty().bindBidirectional(showOcTreeBoundingBoxProperty);
+      gridPane.add(showOcTreeBoundingBoxPropertyButton, 0, row + 1);
 
-      ObjectProperty<OcTreeBoundingBox> boundingBoxProperty = ocTreeViewer.boundingBoxProperty();
+
+      ObjectProperty<OcTreeBoundingBoxWithCenterAndYaw> boundingBoxProperty = ocTreeViewer.boundingBoxProperty();
       double[] initialMinValue = new double[3];
       double[] initialMaxValue = new double[3];
-      boundingBoxProperty.get().getMinCoordinate(initialMinValue);
-      boundingBoxProperty.get().getMaxCoordinate(initialMaxValue);
+      boundingBoxProperty.get().getLocalMinCoordinate(initialMinValue);
+      boundingBoxProperty.get().getLocalMaxCoordinate(initialMaxValue);
+
+      List<ObjectProperty<Double>> minSpinnerValueProperties = new ArrayList<>();
+      List<ObjectProperty<Double>> maxSpinnerValueProperties = new ArrayList<>();
+
+      InvalidationListener boundingBoxUpdater = new InvalidationListener()
+      {
+         @Override
+         public void invalidated(Observable observable)
+         {
+            double[] minPoint = new double[3];
+            double[] maxPoint = new double[3];
+
+            OcTreeBoundingBoxWithCenterAndYaw oldBoundingBox = boundingBoxProperty.get();
+
+            for (int i = 0; i < 3; i++)
+            {
+               minPoint[i] = minSpinnerValueProperties.get(i).get();
+               maxPoint[i] = maxSpinnerValueProperties.get(i).get();
+            }
+
+            OcTreeBoundingBoxWithCenterAndYaw newBoundingBox = oldBoundingBox.getCopy();
+            newBoundingBox.setLocalMinMaxCoordinates(minPoint, maxPoint);
+            boundingBoxProperty.set(newBoundingBox);
+         }
+      };
+
+      enableBoundingBoxButton.selectedProperty().addListener(boundingBoxUpdater);
 
       for (int i = 0; i < 3; i++)
       {
          int index = i;
          SpinnerValueFactory.DoubleSpinnerValueFactory minSpinnerValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(min, max, initialMinValue[index], 0.1);
-         minSpinnerValueFactory.valueProperty().addListener(new ChangeListener<Double>()
-         {
-            @Override
-            public void changed(ObservableValue<? extends Double> observable, Double oldValue, Double newValue)
-            {
-               double[] minPoint = new double[3];
-               double[] maxPoint = new double[3];
-
-               if (!newValue.isNaN())
-               {
-                  OcTreeBoundingBox oldBoundingBox = boundingBoxProperty.get();
-                  oldBoundingBox.getMinCoordinate(minPoint);
-                  oldBoundingBox.getMaxCoordinate(maxPoint);
-                  minPoint[index] = newValue;
-                  boundingBoxProperty.set(new OcTreeBoundingBox(minPoint, maxPoint));
-               }
-            }
-         });
+         minSpinnerValueProperties.add(minSpinnerValueFactory.valueProperty());
+         minSpinnerValueFactory.valueProperty().addListener(boundingBoxUpdater);
 
          SpinnerValueFactory.DoubleSpinnerValueFactory maxSpinnerValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(min, max, initialMaxValue[index], 0.1);
-         maxSpinnerValueFactory.valueProperty().addListener(new ChangeListener<Double>()
-         {
-            @Override
-            public void changed(ObservableValue<? extends Double> observable, Double oldValue, Double newValue)
-            {
-               double[] minPoint = new double[3];
-               double[] maxPoint = new double[3];
-
-               if (!newValue.isNaN())
-               {
-                  OcTreeBoundingBox oldBoundingBox = boundingBoxProperty.get();
-                  oldBoundingBox.getMinCoordinate(minPoint);
-                  oldBoundingBox.getMaxCoordinate(maxPoint);
-                  maxPoint[index] = newValue;
-                  boundingBoxProperty.set(new OcTreeBoundingBox(minPoint, maxPoint));
-               }
-            }
-         });
-         
+         maxSpinnerValueProperties.add(maxSpinnerValueFactory.valueProperty());
+         maxSpinnerValueFactory.valueProperty().addListener(boundingBoxUpdater);
 
          Spinner<Double> minSpinner = new Spinner<>(minSpinnerValueFactory);
          Spinner<Double> maxSpinner = new Spinner<>(maxSpinnerValueFactory);

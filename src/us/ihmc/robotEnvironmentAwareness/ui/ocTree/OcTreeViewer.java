@@ -18,6 +18,8 @@ import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
+import us.ihmc.octoMap.ocTree.implementations.NormalEstimationParameters;
+import us.ihmc.octoMap.ocTree.implementations.PlanarRegionSegmentationParameters;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 
@@ -411,6 +413,44 @@ public class OcTreeViewer extends Group
          };
       }
       return ocTreeMaxRangeProperty;
+   }
+
+   private ObjectProperty<NormalEstimationParameters> normalEstimationParametersProperty;
+
+   public ObjectProperty<NormalEstimationParameters> normalEstimationParametersProperty()
+   {
+      if (normalEstimationParametersProperty == null)
+      {
+         normalEstimationParametersProperty = new SimpleObjectProperty<NormalEstimationParameters>(this, "ocTreeBoundingBoxProperty", controller.getOcTreeNormalEstimationParameters())
+         {
+            @Override
+            protected void invalidated()
+            {
+               if (get() != null)
+                  controller.setOcTreeNormalEstimationParameters(get());
+            }
+         };
+      }
+      return normalEstimationParametersProperty;
+   }
+
+   private ObjectProperty<PlanarRegionSegmentationParameters> planarRegionSegmentationParametersProperty;
+
+   public ObjectProperty<PlanarRegionSegmentationParameters> planarRegionSegmentationParametersProperty()
+   {
+      if (planarRegionSegmentationParametersProperty == null)
+      {
+         planarRegionSegmentationParametersProperty = new SimpleObjectProperty<PlanarRegionSegmentationParameters>(this, "ocTreeBoundingBoxProperty", controller.getOcTreePlanarRegionSegmentationParameters())
+         {
+            @Override
+            protected void invalidated()
+            {
+               if (get() != null)
+                  controller.setOcTreePlanarRegionSegmentationParameters(get());
+            }
+         };
+      }
+      return planarRegionSegmentationParametersProperty;
    }
 
    private OcTreeUIControlFactory uiControlFactory;

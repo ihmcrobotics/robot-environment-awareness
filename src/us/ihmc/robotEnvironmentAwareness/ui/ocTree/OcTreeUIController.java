@@ -14,7 +14,9 @@ import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
+import us.ihmc.octoMap.ocTree.implementations.NormalEstimationParameters;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
+import us.ihmc.octoMap.ocTree.implementations.PlanarRegionSegmentationParameters;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.octoMap.tools.OctoMapTools;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
@@ -23,14 +25,16 @@ import us.ihmc.tools.thread.ThreadTools;
 
 public class OcTreeUIController
 {
-   private static final int THREAD_PERIOD_MILLISECONDS = 3000;
-   private static final double GRAPHICS_REFRESH_PERIOD = 1.0; // in seconds
+   private static final int THREAD_PERIOD_MILLISECONDS = 1000;
+   private static final double GRAPHICS_REFRESH_PERIOD = 0.5; // in seconds
    private static final double OCTREE_RESOLUTION = 0.01;
    protected static final boolean DEBUG = true;
 
    private final NormalOcTree octree = new NormalOcTree(OCTREE_RESOLUTION);
 
-   private final AtomicReference<OccupancyParameters> atomicOccupancyParameters = new AtomicReference<OccupancyParameters>(new OccupancyParameters());
+   private final AtomicReference<OccupancyParameters> atomicOccupancyParameters = new AtomicReference<>(new OccupancyParameters());
+   private final AtomicReference<NormalEstimationParameters> atomicNormalEstimationParameters = new AtomicReference<>(new NormalEstimationParameters());
+   private final AtomicReference<PlanarRegionSegmentationParameters> atomicPlanarRegionSegmentationParameters = new AtomicReference<>(new PlanarRegionSegmentationParameters());
 
    private final OcTreeUpdater updater;
    private final OcTreeGraphicsBuilder graphicsBuilder;
@@ -51,14 +55,34 @@ public class OcTreeUIController
       updater.attachListeners(packetCommunicator);
    }
 
-   public void setOcTreeOccupancyParameters(OccupancyParameters occupancyParameters)
+   public void setOcTreeOccupancyParameters(OccupancyParameters parameters)
    {
-      atomicOccupancyParameters.set(occupancyParameters);
+      atomicOccupancyParameters.set(parameters);
    }
 
    public OccupancyParameters getOcTreeOccupancyParameters()
    {
       return atomicOccupancyParameters.get();
+   }
+
+   public void setOcTreeNormalEstimationParameters(NormalEstimationParameters parameters)
+   {
+      atomicNormalEstimationParameters.set(parameters);
+   }
+
+   public NormalEstimationParameters getOcTreeNormalEstimationParameters()
+   {
+      return atomicNormalEstimationParameters.get();
+   }
+
+   public void setOcTreePlanarRegionSegmentationParameters(PlanarRegionSegmentationParameters parameters)
+   {
+      atomicPlanarRegionSegmentationParameters.set(parameters);
+   }
+
+   public PlanarRegionSegmentationParameters getOcTreePlanarRegionSegmentationParameters()
+   {
+      return atomicPlanarRegionSegmentationParameters.get();
    }
 
    public void setEnable(boolean enable)
@@ -253,6 +277,12 @@ public class OcTreeUIController
       OccupancyParameters occupancyParameters = atomicOccupancyParameters.get();
       if (occupancyParameters != null)
          octree.setOccupancyParameters(occupancyParameters);
+      NormalEstimationParameters normalEstimationParameters = atomicNormalEstimationParameters.get();
+      if (normalEstimationParameters != null)
+         octree.setNormalEstimationParameters(normalEstimationParameters);
+      PlanarRegionSegmentationParameters planarRegionSegmentationParameters = atomicPlanarRegionSegmentationParameters.get();
+      if (planarRegionSegmentationParameters != null)
+         octree.setPlanarRegionSegmentationParameters(planarRegionSegmentationParameters);
    }
 
    public void start()

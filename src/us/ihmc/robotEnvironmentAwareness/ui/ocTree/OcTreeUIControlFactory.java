@@ -25,7 +25,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
@@ -33,6 +33,8 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
+import us.ihmc.octoMap.ocTree.implementations.NormalEstimationParameters;
+import us.ihmc.octoMap.ocTree.implementations.PlanarRegionSegmentationParameters;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
 import us.ihmc.robotics.geometry.Direction;
@@ -178,7 +180,8 @@ public class OcTreeUIControlFactory
 
    public Button resetOccupancyThresholdButton()
    {
-      return ocTreeResetParameterButton("Reset occupancy threshold", ocTreeViewer.occupancyThresholdProperty(), OccupancyParameters.DEFAULT_OCCUPANCY_THRESHOLD);
+      return ocTreeResetParameterButton("Reset occupancy threshold", ocTreeViewer.occupancyThresholdProperty(),
+            OccupancyParameters.DEFAULT_OCCUPANCY_THRESHOLD);
    }
 
    public Button resetHitUpdateButton()
@@ -327,7 +330,6 @@ public class OcTreeUIControlFactory
       showOcTreeBoundingBoxPropertyButton.selectedProperty().bindBidirectional(showOcTreeBoundingBoxProperty);
       gridPane.add(showOcTreeBoundingBoxPropertyButton, 0, row + 1);
 
-
       ObjectProperty<OcTreeBoundingBoxWithCenterAndYaw> boundingBoxProperty = ocTreeViewer.boundingBoxProperty();
       double[] initialMinValue = new double[3];
       double[] initialMaxValue = new double[3];
@@ -364,11 +366,11 @@ public class OcTreeUIControlFactory
       for (int i = 0; i < 3; i++)
       {
          int index = i;
-         SpinnerValueFactory.DoubleSpinnerValueFactory minSpinnerValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(min, max, initialMinValue[index], 0.1);
+         DoubleSpinnerValueFactory minSpinnerValueFactory = new DoubleSpinnerValueFactory(min, max, initialMinValue[index], 0.1);
          minSpinnerValueProperties.add(minSpinnerValueFactory.valueProperty());
          minSpinnerValueFactory.valueProperty().addListener(boundingBoxUpdater);
 
-         SpinnerValueFactory.DoubleSpinnerValueFactory maxSpinnerValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(min, max, initialMaxValue[index], 0.1);
+         DoubleSpinnerValueFactory maxSpinnerValueFactory = new DoubleSpinnerValueFactory(min, max, initialMaxValue[index], 0.1);
          maxSpinnerValueProperties.add(maxSpinnerValueFactory.valueProperty());
          maxSpinnerValueFactory.valueProperty().addListener(boundingBoxUpdater);
 
@@ -393,14 +395,14 @@ public class OcTreeUIControlFactory
    {
       DoubleProperty minRangeProperty = ocTreeViewer.ocTreeMinRangeProperty();
       DoubleProperty maxRangeProperty = ocTreeViewer.ocTreeMaxRangeProperty();
-      
+
       GridPane gridPane = new GridPane();
       int row = 0;
       Label label = new Label("LIDAR Range: ");
       gridPane.add(label, 0, row);
 
       row++;
-      
+
       Label minRangeLabel = new Label("minRange: ");
       gridPane.add(minRangeLabel, 0, row);
 
@@ -415,7 +417,7 @@ public class OcTreeUIControlFactory
       gridPane.add(minRangeSlider, 1, row);
 
       row++;
-      
+
       Label maxRangeLabel = new Label("maxRange: ");
       gridPane.add(maxRangeLabel, 0, row);
 
@@ -429,6 +431,131 @@ public class OcTreeUIControlFactory
       maxRangeSlider.valueProperty().bindBidirectional(maxRangeProperty);
       gridPane.add(maxRangeSlider, 1, row);
 
+      return gridPane;
+   }
+
+   public Pane createNormalEstimationParametersPane()
+   {
+      ObjectProperty<NormalEstimationParameters> normalEstimationParametersProperty = ocTreeViewer.normalEstimationParametersProperty();
+      NormalEstimationParameters normalEstimationParameters = normalEstimationParametersProperty.get();
+      double initialSearchRadius = normalEstimationParameters.getSearchRadius();
+      double initialMaxDistanceFromPlane = normalEstimationParameters.getMaxDistanceFromPlane();
+
+      GridPane gridPane = new GridPane();
+      int row = 0;
+      Label label = new Label("Normal estimation params: ");
+      gridPane.add(label, 0, row);
+
+      row++;
+
+      Label searchRadiusLabel = new Label("Search radius: ");
+      Label maxDistanceFromPlaneLabel = new Label("Max distance from plane: ");
+
+      DoubleSpinnerValueFactory searchRadiusSpinnerValueFactory = new DoubleSpinnerValueFactory(0.0, 0.2, initialSearchRadius, 0.005);
+      DoubleSpinnerValueFactory maxDistanceFromPlaneSpinnerValueFactory = new DoubleSpinnerValueFactory(0.0, 0.2, initialMaxDistanceFromPlane, 0.005);
+      ObjectProperty<Double> searchRadiusSpinnerProperty = searchRadiusSpinnerValueFactory.valueProperty();
+      ObjectProperty<Double> maxDistanceFromPlaneSpinnerProperty = maxDistanceFromPlaneSpinnerValueFactory.valueProperty();
+
+      InvalidationListener parametersUpdater = new InvalidationListener()
+      {
+         
+         @Override
+         public void invalidated(Observable observable)
+         {
+            NormalEstimationParameters newParameters = new NormalEstimationParameters();
+            newParameters.setSearchRadius(searchRadiusSpinnerProperty.get());
+            newParameters.setMaxDistanceFromPlane(maxDistanceFromPlaneSpinnerProperty.get());
+            normalEstimationParametersProperty.set(newParameters);
+         }
+      };
+
+      searchRadiusSpinnerProperty.addListener(parametersUpdater);
+      maxDistanceFromPlaneSpinnerProperty.addListener(parametersUpdater);
+
+      Spinner<Double> searchRadiusSpinner = new Spinner<>(searchRadiusSpinnerValueFactory);
+      searchRadiusSpinner.setEditable(true);
+      Spinner<Double> maxDistanceFromPlaneSpinner = new Spinner<>(maxDistanceFromPlaneSpinnerValueFactory);
+      maxDistanceFromPlaneSpinner.setEditable(true);
+
+      gridPane.add(searchRadiusLabel, 0, row);
+      gridPane.add(searchRadiusSpinner, 1, row);
+      row++;
+      gridPane.add(maxDistanceFromPlaneLabel, 0, row);
+      gridPane.add(maxDistanceFromPlaneSpinner, 1, row);
+
+      return gridPane;
+   }
+
+   public Pane createPlanarRegionSegmentationParametersPane()
+   {
+      ObjectProperty<PlanarRegionSegmentationParameters> planarRegionSegmentationParametersProperty = ocTreeViewer.planarRegionSegmentationParametersProperty();
+      PlanarRegionSegmentationParameters initialParameters = planarRegionSegmentationParametersProperty.get();
+      double initialSearchRadius = initialParameters.getSearchRadius();
+      double initialMaxDistanceFromPlane = initialParameters.getMaxDistanceFromPlane();
+      double initialMaxAngleFromPlane = initialParameters.getMaxAngleFromPlane();
+      double initialMinNormalQuality = initialParameters.getMinNormalQuality();
+
+      GridPane gridPane = new GridPane();
+      int row = 0;
+      Label label = new Label("Planar seg. params: ");
+      gridPane.add(label, 0, row);
+
+      row++;
+
+      Label searchRadiusLabel = new Label("Search radius: ");
+      Label maxDistanceFromPlaneLabel = new Label("Max distance from plane: ");
+      Label maxAngleFromPlaneLabel = new Label("Max angle from plane: ");
+      Label minNormalQualityLabel = new Label("Min normal quality: ");
+
+      DoubleSpinnerValueFactory searchRadiusSpinnerValueFactory = new DoubleSpinnerValueFactory(0.0, 0.2, initialSearchRadius, 0.005);
+      DoubleSpinnerValueFactory maxDistanceFromPlaneSpinnerValueFactory = new DoubleSpinnerValueFactory(0.0, 0.2, initialMaxDistanceFromPlane, 0.005);
+      DoubleSpinnerValueFactory maxAngleFromPlaneSpinnerValueFactory = new DoubleSpinnerValueFactory(0.0, 25.0, Math.toDegrees(initialMaxAngleFromPlane), 1.0);
+      DoubleSpinnerValueFactory minNormalQualitySpinnerValueFactory = new DoubleSpinnerValueFactory(0.0, 0.1, initialMinNormalQuality, 0.0005);
+
+      ObjectProperty<Double> searchRadiusSpinnerProperty = searchRadiusSpinnerValueFactory.valueProperty();
+      ObjectProperty<Double> maxDistanceFromPlaneSpinnerProperty = maxDistanceFromPlaneSpinnerValueFactory.valueProperty();
+      ObjectProperty<Double> maxAngleFromPlaneSpinnerProperty = maxAngleFromPlaneSpinnerValueFactory.valueProperty();
+      ObjectProperty<Double> minNormalQualitySpinnerProperty = minNormalQualitySpinnerValueFactory.valueProperty();
+
+      InvalidationListener parametersUpdater = new InvalidationListener()
+      {
+         @Override
+         public void invalidated(Observable observable)
+         {
+            PlanarRegionSegmentationParameters newParameters = new PlanarRegionSegmentationParameters();
+            newParameters.setSearchRadius(searchRadiusSpinnerProperty.get());
+            newParameters.setMaxDistanceFromPlane(maxDistanceFromPlaneSpinnerProperty.get());
+            newParameters.setMaxAngleFromPlane(Math.toRadians(maxAngleFromPlaneSpinnerProperty.get()));
+            newParameters.setMinNormalQuality(minNormalQualitySpinnerProperty.get());
+            planarRegionSegmentationParametersProperty.set(newParameters);
+         }
+      };
+
+      searchRadiusSpinnerProperty.addListener(parametersUpdater);
+      maxDistanceFromPlaneSpinnerProperty.addListener(parametersUpdater);
+      maxAngleFromPlaneSpinnerProperty.addListener(parametersUpdater);
+      minNormalQualitySpinnerProperty.addListener(parametersUpdater);
+
+      Spinner<Double> searchRadiusSpinner = new Spinner<>(searchRadiusSpinnerValueFactory);
+      searchRadiusSpinner.setEditable(true);
+      Spinner<Double> maxDistanceFromPlaneSpinner = new Spinner<>(maxDistanceFromPlaneSpinnerValueFactory);
+      maxDistanceFromPlaneSpinner.setEditable(true);
+      Spinner<Double> maxAngleFromPlaneSpinner = new Spinner<>(maxAngleFromPlaneSpinnerValueFactory);
+      maxAngleFromPlaneSpinner.setEditable(true);
+      Spinner<Double> minNormalQualitySpinner = new Spinner<>(minNormalQualitySpinnerValueFactory);
+      minNormalQualitySpinner.setEditable(true);
+
+      gridPane.add(searchRadiusLabel, 0, row);
+      gridPane.add(searchRadiusSpinner, 1, row);
+      row++;
+      gridPane.add(maxDistanceFromPlaneLabel, 0, row);
+      gridPane.add(maxDistanceFromPlaneSpinner, 1, row);
+      row++;
+      gridPane.add(maxAngleFromPlaneLabel, 0, row);
+      gridPane.add(maxAngleFromPlaneSpinner, 1, row);
+      row++;
+      gridPane.add(minNormalQualityLabel, 0, row);
+      gridPane.add(minNormalQualitySpinner, 1, row);
 
       return gridPane;
    }
@@ -516,6 +643,12 @@ public class OcTreeUIControlFactory
       gridPane.add(resetMissUpdateButton(), col++, row);
       gridPane.add(resetMinProbabilityButton(), col++, row);
       gridPane.add(resetMaxProbabilityButton(), col++, row);
+
+      row++;
+      row++;
+
+      gridPane.add(createNormalEstimationParametersPane(), 0, row, 2, 1);
+      gridPane.add(createPlanarRegionSegmentationParametersPane(), 2, row, 2, 1);
 
       gridPane.prefHeightProperty().bind(scene.heightProperty());
       gridPane.prefWidthProperty().bind(scene.widthProperty());

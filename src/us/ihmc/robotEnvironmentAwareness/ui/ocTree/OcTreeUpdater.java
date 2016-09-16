@@ -69,19 +69,7 @@ public class OcTreeUpdater
       handleBoundingBox();
 
       octree.setBoundsInsertRange(minRange.get(), maxRange.get());
-      octree.insertSweepCollection(newScan);
-
-      if (Thread.interrupted())
-         return;
-
-      if (clear.get())
-      {
-         octree.clear();
-         clear.set(false);
-         return;
-      }
-
-      octree.updateNormalsAndPlanarRegions(depthUsedForDisplay.get());
+      octree.update(newScan);
 
       if (Thread.interrupted())
          return;

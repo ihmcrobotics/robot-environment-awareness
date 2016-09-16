@@ -33,9 +33,9 @@ public class OcTreeUpdater
 
    private final AtomicInteger depthUsedForDisplay = new AtomicInteger(-1);
 
-   private final AtomicBoolean useBoundingBox = new AtomicBoolean(false);
+   private final AtomicBoolean useBoundingBox = new AtomicBoolean(true);
    private final Point3d boundingBoxMin = new Point3d(-0.0, -2.0, -1.0);
-   private final Point3d boundingBoxMax = new Point3d(10.0, 2.0, 1.0);
+   private final Point3d boundingBoxMax = new Point3d(5.0, 2.0, 1.0);
    private final AtomicReference<OcTreeBoundingBoxWithCenterAndYaw> atomicBoundingBox;
 
    public OcTreeUpdater(NormalOcTree octree, boolean enableInitialValue)

@@ -4,7 +4,6 @@ import javax.vecmath.Vector3d;
 
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.scene.AmbientLight;
 import javafx.scene.Group;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.SceneAntialiasing;
@@ -114,11 +113,6 @@ public class FootstepPlannerUI3DPane extends Pane
       this.getChildren().add(subScene3D);
       subScene3D.heightProperty().bind(this.heightProperty());
       subScene3D.widthProperty().bind(this.widthProperty());
-      
-      AmbientLight ambientLight = new AmbientLight(Color.WHITE.darker());
-      ambientLight.setTranslateX(0.0);
-      ambientLight.setTranslateY(0.0);
-      ambientLight.setTranslateZ(1.0);
    }
 
    public void stop()

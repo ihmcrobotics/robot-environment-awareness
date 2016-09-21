@@ -1,7 +1,5 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -47,6 +45,7 @@ public class ConcaveHullVisualizer extends Application
 {
    private final List<Point2d> pointCloud = new ArrayList<>();
    private final List<Point2d> concaveHullVertices = new ArrayList<>();
+   private final List<Point2d> originalConcaveHullVertices = new ArrayList<>();
    private final MultiColorMeshBuilder meshBuilder = new MultiColorMeshBuilder();
    private ConvexPolygon2d convexPolygon2d;
 
@@ -72,6 +71,7 @@ public class ConcaveHullVisualizer extends Application
       Geometry concaveHullGeometry = concaveHull.getConcaveHull();
 
       concaveHullVertices.addAll(getGeometryVertices(concaveHullGeometry));
+      originalConcaveHullVertices.addAll(getGeometryVertices(concaveHullGeometry));
 
       ensureClockwiseOrdering();
 
@@ -87,15 +87,23 @@ public class ConcaveHullVisualizer extends Application
       double concaveAngleLimit = Math.toRadians(10.0);
       double shallowAngleThreshold = Math.toRadians(1.0);
       double peakAngleThreshold = Math.toRadians(120.0);
+      double lengthThreshold = sd / 10.0;
+      double areaThreshold = 0.001;
 
-      for (int i = 0; i < 3; i++)
+      int nVerticesRemoved = 0;
+
+      startTime = System.nanoTime();
+      for (int i = 0; i < 10; i++)
       {
-//         filter2(sd / 5.0);
-         int nVerticesRemoved = filterOutPeaksAndShallowAngles(concaveAngleLimit, shallowAngleThreshold, peakAngleThreshold, concaveHullVertices);
-         System.out.println("Number of vertices removed: " + nVerticesRemoved);
-//         filterOutShortEdges(sd / 10.0);
+         //         filter2(sd / 5.0);
+//         nVerticesRemoved += filterOutPeaksAndShallowAngles(concaveAngleLimit, shallowAngleThreshold, peakAngleThreshold, concaveHullVertices);
+//         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutShortEdges(concaveAngleLimit, lengthThreshold, concaveHullVertices);
+         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutSmallTriangles(concaveAngleLimit, areaThreshold, concaveHullVertices);
+//         filterOutShortEdges(lengthThreshold);
 //         filterOutSmallTriangles();
       }
+      endTime = System.nanoTime();
+      System.out.println("filtering Took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime) + ", number of vertices removed: " + nVerticesRemoved);
 
       convexPolygon2d = new ConvexPolygon2d(concaveHullVertices);
 
@@ -404,71 +412,6 @@ public class ConcaveHullVisualizer extends Application
       return ret;
    }
 
-   private void filterOutShortEdges(double threshold)
-   {
-      long startTime = System.nanoTime();
-      int nVerticesRemoved = 0;
-
-      for (int i = 0; i < concaveHullVertices.size(); i++)
-         nVerticesRemoved += throwShortEdgesRecursively(i, i + 1, threshold);
-      long endTime = System.nanoTime();
-      System.out.println("filtering short edges took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime) + ", removed " + nVerticesRemoved + " vertices.");
-   }
-
-   public int throwShortEdgesRecursively(int currentIndex, int nextIndex, double threshold)
-   {
-      int verticesRemoved = 0;
-      Point2d a = concaveHullVertices.get(currentIndex);
-      Point2d b = concaveHullVertices.get((nextIndex) % concaveHullVertices.size());
-      Point2d c = concaveHullVertices.get((nextIndex + 1) % concaveHullVertices.size());
-
-      Vector2d ab = new Vector2d();
-      Vector2d ac = new Vector2d();
-      ab.sub(b, a);
-      ac.sub(c, a);
-      double abLength = ab.length();
-      ab.normalize();
-      ac.normalize();
-
-      if (abLength < threshold && cross(ab, ac) < Math.sin(Math.toRadians(10.0)))
-      {
-         verticesRemoved += throwShortEdgesRecursively(currentIndex, nextIndex + 1, threshold);
-         if (verticesRemoved == 0)
-         {
-            concaveHullVertices.remove((nextIndex) % concaveHullVertices.size());
-            verticesRemoved++;
-         }
-      }
-
-      return verticesRemoved;
-   }
-
-   private void filterOutSmallTriangles()
-   {
-      long startTime = System.nanoTime();
-      for (int i = 0; i < concaveHullVertices.size() - 2;)
-      {
-         Point2d a = concaveHullVertices.get(i);
-         Point2d b = concaveHullVertices.get((i + 1) % concaveHullVertices.size());
-         Point2d c = concaveHullVertices.get((i + 2) % concaveHullVertices.size());
-
-         Vector2d ab = new Vector2d();
-         Vector2d ac = new Vector2d();
-         ab.sub(b, a);
-         ac.sub(c, a);
-         ab.normalize();
-         ac.normalize();
-
-         double area = Math.abs(a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y) / 2.0);
-         if (area < 0.2 && cross(ab, ac) < Math.sin(Math.toRadians(1.0)))
-            concaveHullVertices.remove(i + 1);
-         else
-            i++;
-      }
-      long endTime = System.nanoTime();
-      System.out.println("filtering took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
-   }
-
    private void filter2(double threshold)
    {
       int nVerticesRemoved = 0;
@@ -591,7 +534,9 @@ public class ConcaveHullVisualizer extends Application
       for (Point2d vertex : pointCloud)
       {
          Box box = new Box(0.01, 0.01, 0.01);
-         box.setMaterial(new PhongMaterial(Color.BLUEVIOLET));
+         boolean partOfOriginalHull = originalConcaveHullVertices.contains(vertex);
+         Color color = partOfOriginalHull ? Color.CRIMSON : Color.BLUEVIOLET;
+         box.setMaterial(new PhongMaterial(color));
          box.setTranslateX(vertex.getX());
          box.setTranslateY(vertex.getY());
          rootNode.getChildren().add(box);

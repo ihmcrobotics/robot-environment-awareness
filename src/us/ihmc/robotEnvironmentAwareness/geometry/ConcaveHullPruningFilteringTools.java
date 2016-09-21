@@ -20,13 +20,14 @@ import javax.vecmath.Vector2d;
 public class ConcaveHullPruningFilteringTools
 {
    /**
-    * Filter out vertices that create "peaks" or barely stick out the line described by the previous and next vertices..
+    * Filter out vertices that create "peaks" or barely stick out the line described by the previous and next vertices.
     * Peaks are identified by a threshold on the angle between two consecutive edges.
     * Only convex peaks or shallow angles are removed, meaning this filter only reduces the area of the concave hull.
-    * @param concaveAngleLimit
-    * @param peakAngleThreshold
-    * @param concaveHullVerticesToFilter
-    * @return the number of vertices removed
+    * @param concaveAngleLimit threshold to define a concavity. 0 rad being flat, negative convex, positive concave.
+    * @param shallowAngleThreshold should be a small positive angle in radians. 0 will not remove any vertex.
+    * @param peakAngleThreshold should be close to {@link Math#PI}.
+    * @param concaveHullVerticesToFilter the vertices of the concave hull to filter. 
+    * @return the number of vertices removed.
     */
    public static int filterOutPeaksAndShallowAngles(double concaveAngleLimit, double shallowAngleThreshold, double peakAngleThreshold,
          List<Point2d> concaveHullVerticesToFilter)
@@ -88,10 +89,10 @@ public class ConcaveHullPruningFilteringTools
    /**
     * By looking at each triplet of successive vertices, a triangle is formed.
     * The area of the triangle is computed and if below the given threshold, the middle vertex is removed.
-    * @param concaveAngleLimit
-    * @param areaThreshold
-    * @param concaveHullVerticesToFilter
-    * @return
+    * @param concaveAngleLimit threshold to define a concavity. 0 rad being flat, negative convex, positive concave.
+    * @param areaThreshold a vertex forming a triangle with an area smaller than that parameter will be removed, if possible.
+    * @param concaveHullVerticesToFilter the vertices of the concave hull to filter. 
+    * @return the number of vertices removed.
     */
    public static int filterOutSmallTriangles(double concaveAngleLimit, double areaThreshold, List<Point2d> concaveHullVerticesToFilter)
    {
@@ -143,10 +144,10 @@ public class ConcaveHullPruningFilteringTools
 
    /**
     * Removes vertices to filter short edges. Only convex vertices are removed, meaning the polygon area can only decrease when calling this method.
-    * @param concaveAngleLimit
-    * @param lengthThreshold
-    * @param concaveHullVerticesToFilter
-    * @return The number of vertices removed.
+    * @param concaveAngleLimit threshold to define a concavity. 0 rad being flat, negative convex, positive concave.
+    * @param lengthThreshold any edge shorter than that will be removed, if possible.
+    * @param concaveHullVerticesToFilter the vertices of the concave hull to filter.
+    * @return the number of vertices removed.
     */
    public static int filterOutShortEdges(double concaveAngleLimit, double lengthThreshold, List<Point2d> concaveHullVerticesToFilter)
    {

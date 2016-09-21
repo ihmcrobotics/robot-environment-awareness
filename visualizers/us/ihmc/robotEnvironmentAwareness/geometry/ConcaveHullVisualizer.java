@@ -1,5 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
+import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -66,7 +68,7 @@ public class ConcaveHullVisualizer extends Application
 
       long startTime = System.nanoTime();
 
-      ConcaveHull concaveHull = new ConcaveHull(convertPoint2dToMultipoint(pointCloud), 0.025);
+      ConcaveHull concaveHull = new ConcaveHull(convertPoint2dToMultipoint(pointCloud), 0.05);
       Geometry concaveHullGeometry = concaveHull.getConcaveHull();
 
       concaveHullVertices.addAll(getGeometryVertices(concaveHullGeometry));
@@ -82,11 +84,16 @@ public class ConcaveHullVisualizer extends Application
       double sd = computeMaxStandardDeviation();
       System.out.println("Standard dev: " + sd);
 
+      double concaveAngleLimit = Math.toRadians(10.0);
+      double shallowAngleThreshold = Math.toRadians(1.0);
+      double peakAngleThreshold = Math.toRadians(120.0);
+
       for (int i = 0; i < 3; i++)
       {
-         filter2(sd / 5.0);
-         filterOutPeaks();
-         filterOutShortEdges(sd / 10.0);
+//         filter2(sd / 5.0);
+         int nVerticesRemoved = filterOutPeaksAndShallowAngles(concaveAngleLimit, shallowAngleThreshold, peakAngleThreshold, concaveHullVertices);
+         System.out.println("Number of vertices removed: " + nVerticesRemoved);
+//         filterOutShortEdges(sd / 10.0);
 //         filterOutSmallTriangles();
       }
 
@@ -112,14 +119,14 @@ public class ConcaveHullVisualizer extends Application
       ConvexPolygon2d convexHull = new ConvexPolygon2d(concaveHullVertices);
 
       // The concave hull is actually convex, end of recursion
-      if (convexHull.getNumberOfVertices() == concaveHullVertices.size())// || decompositionDepth == 2 || convexPolygons.size() == 4)
+      if (convexHull.getNumberOfVertices() == concaveHullVertices.size())
       {
          convexPolygons.add(convexHull);
          return;
       }
 
       // Find first common vertex between the two hulls. 
-      int convexStartIndex = -1;
+      int convexStartIndex = 0;
       int concaveStartIndex = -1;
 
       for (int i = 0; i < convexHull.getNumberOfVertices(); i++)
@@ -132,7 +139,6 @@ public class ConcaveHullVisualizer extends Application
 
             if (currentConcaveVertex.epsilonEquals(currentConvexVertex, 1.0e-7))
             {
-               convexStartIndex = i;
                concaveStartIndex = j;
                break;
             }
@@ -396,39 +402,6 @@ public class ConcaveHullVisualizer extends Application
          ret.add(new Point3d(point2d.x, point2d.y, z));
       }
       return ret;
-   }
-
-   private void filterOutPeaks()
-   {
-      long startTime = System.nanoTime();
-      int nVerticesRemoved = 0;
-
-      for (int i = 0; i < concaveHullVertices.size() - 2;)
-      {
-         Point2d a = concaveHullVertices.get(i);
-         Point2d b = concaveHullVertices.get((i + 1) % concaveHullVertices.size());
-         Point2d c = concaveHullVertices.get((i + 2) % concaveHullVertices.size());
-
-         Vector2d ab = new Vector2d();
-         Vector2d ac = new Vector2d();
-         Vector2d bc = new Vector2d();
-         ab.sub(b, a);
-         ac.sub(c, a);
-         bc.sub(c, b);
-         ab.normalize();
-         ac.normalize();
-         bc.normalize();
-
-         if (cross(ab, ac) < Math.sin(Math.toRadians(10.0)) && (Math.abs(ab.angle(bc)) > Math.toRadians(120.0) || Math.abs(ab.angle(bc)) < Math.toRadians(1.0)))
-         {
-            concaveHullVertices.remove(i + 1);
-            nVerticesRemoved++;
-         }
-         else
-            i++;
-      }
-      long endTime = System.nanoTime();
-      System.out.println("filtering peaks took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime) + ", removed " + nVerticesRemoved + " vertices.");
    }
 
    private void filterOutShortEdges(double threshold)

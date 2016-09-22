@@ -115,13 +115,44 @@ public class ConcaveHullTools
       return numberOfVerticesRemoved;
    }
 
+   public static boolean computeConcaveHullPocket(int concaveVertexIndex, ConcaveHullPocket pocketToPack, List<Point2d> concaveHullVertices)
+   {
+      pocketToPack.clear();
+      boolean success = findBridgeVertices(concaveVertexIndex, pocketToPack, concaveHullVertices);
+      if (!success)
+      {
+         pocketToPack.clear();
+         return false;
+      }
+      success = findDeepestVertexInPocket(pocketToPack, concaveHullVertices);
+      if (!success)
+      {
+         pocketToPack.clear();
+         return false;
+      }
+      return true;
+   }
+
+   public static ConcaveHullPocket computeConcaveHullPocket(int concaveVertexIndex, List<Point2d> concaveHullVertices)
+   {
+      ConcaveHullPocket pocketToReturn = new ConcaveHullPocket();
+      boolean success = findBridgeVertices(concaveVertexIndex, pocketToReturn, concaveHullVertices);
+      if (!success)
+         return null;
+      success = findDeepestVertexInPocket(pocketToReturn, concaveHullVertices);
+      if (!success)
+         return null;
+      return pocketToReturn;
+   }
+
    /**
     * Find the two vertices that forms a bridge over the pocket that the concaveVertex belongs to.
     * @param concaveVertexIndex
+    * @param pocketToPack
     * @param concaveHullVertices
     * @return {firstBridgeIndex, secondBridgeIndex} or null if the polygon is actually convex at the given vertex.
     */
-   public static int[] findBridgeIndices(int concaveVertexIndex, List<Point2d> concaveHullVertices)
+   public static boolean findBridgeVertices(int concaveVertexIndex, ConcaveHullPocket pocketToPack, List<Point2d> concaveHullVertices)
    {
       concaveVertexIndex %= concaveHullVertices.size();
       Point2d concaveVertex = concaveHullVertices.get(concaveVertexIndex);
@@ -134,7 +165,7 @@ public class ConcaveHullTools
 
       // The polygon is convex at this vertex => no pocket => no bridge
       if (GeometryTools.isPointOnLeftSideOfLine(concaveVertex, firstBridgeVertex, secondBridgeVertex))
-         return null;
+         return false;
 
       int startIndexCandidate = firstBridgeIndex;
       int endIndexCandidate = secondBridgeIndex;
@@ -171,7 +202,43 @@ public class ConcaveHullTools
          }
       }
 
-      return new int[] {firstBridgeIndex, secondBridgeIndex};
+      pocketToPack.setBridgeIndices(firstBridgeIndex, secondBridgeIndex);
+
+      return true;
+   }
+
+   /**
+    * Find the deepest vertex in the given pocket.
+    * It updates {@link ConcaveHullPocket} fields accordingly.
+    * The bridge indices are required to call this method.
+    * @param pocketToModify
+    * @param concaveHullVertices
+    * @return
+    */
+   public static boolean findDeepestVertexInPocket(ConcaveHullPocket pocketToModify, List<Point2d> concaveHullVertices)
+   {
+      pocketToModify.clearDepthParameters();
+
+      int startBridgeIndex = pocketToModify.getStartBridgeIndex();
+      int endBridgeIndex = pocketToModify.getEndBridgeIndex();
+
+      Point2d startBridgeVertex = concaveHullVertices.get(startBridgeIndex);
+      Point2d endBridgeVertex = concaveHullVertices.get(endBridgeIndex);
+
+      for (int index = increment(startBridgeIndex, concaveHullVertices); index != endBridgeIndex; index = increment(index, concaveHullVertices))
+      {
+         Point2d vertex = concaveHullVertices.get(index);
+         double depth = GeometryTools.distanceFromPointToLine(vertex, startBridgeVertex, endBridgeVertex);
+
+         if (depth > pocketToModify.getMaxDepth())
+         {
+            pocketToModify.setDeepestVertexIndex(index);
+            pocketToModify.setDeepestVertex(vertex);
+            pocketToModify.setMaxDepth(depth);
+         }
+      }
+
+      return pocketToModify.getDeepestVertexIndex() >= 0;
    }
 
    public static int increment(int index, List<Point2d> concaveHullVertices)

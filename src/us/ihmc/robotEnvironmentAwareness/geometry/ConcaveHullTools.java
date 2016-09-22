@@ -114,4 +114,73 @@ public class ConcaveHullTools
       }
       return numberOfVerticesRemoved;
    }
+
+   /**
+    * Find the two vertices that forms a bridge over the pocket that the concaveVertex belongs to.
+    * @param concaveVertexIndex
+    * @param concaveHullVertices
+    * @return {firstBridgeIndex, secondBridgeIndex} or null if the polygon is actually convex at the given vertex.
+    */
+   public static int[] findBridgeIndices(int concaveVertexIndex, List<Point2d> concaveHullVertices)
+   {
+      concaveVertexIndex %= concaveHullVertices.size();
+      Point2d concaveVertex = concaveHullVertices.get(concaveVertexIndex);
+
+      int firstBridgeIndex = (concaveVertexIndex - 1 + concaveHullVertices.size()) % concaveHullVertices.size();
+      int secondBridgeIndex = (concaveVertexIndex + 1) % concaveHullVertices.size();
+
+      Point2d firstBridgeVertex = concaveHullVertices.get(firstBridgeIndex);
+      Point2d secondBridgeVertex = concaveHullVertices.get(secondBridgeIndex);
+
+      // The polygon is convex at this vertex => no pocket => no bridge
+      if (GeometryTools.isPointOnLeftSideOfLine(concaveVertex, firstBridgeVertex, secondBridgeVertex))
+         return null;
+
+      int startIndexCandidate = firstBridgeIndex;
+      int endIndexCandidate = secondBridgeIndex;
+
+      // Doing a loop with the start and end indices going opposite ways at the same time.
+      while (true)
+      {
+         startIndexCandidate = decrement(startIndexCandidate, concaveHullVertices);
+         // Check if all the vertices have been explored
+         if (startIndexCandidate == endIndexCandidate)
+            break;
+
+         endIndexCandidate = increment(endIndexCandidate, concaveHullVertices);
+         // Check if all the vertices have been explored
+         if (startIndexCandidate == endIndexCandidate)
+            break;
+
+         Point2d startCandidate = concaveHullVertices.get(startIndexCandidate);
+         Point2d endCandidate = concaveHullVertices.get(endIndexCandidate);
+
+         if (GeometryTools.isPointOnLeftSideOfLine(startCandidate, firstBridgeVertex, secondBridgeVertex))
+         { // startIndexCandidate is the new firstBridgeIndex.
+            firstBridgeIndex = startIndexCandidate;
+            firstBridgeVertex = startCandidate;
+            // Reset the other index to rescan the vertices
+            endIndexCandidate = secondBridgeIndex;
+         }
+         else if (GeometryTools.isPointOnLeftSideOfLine(endCandidate, firstBridgeVertex, secondBridgeVertex))
+         { // endIndexCandidate is the new secondBridgeIndex.
+            secondBridgeIndex = endIndexCandidate;
+            secondBridgeVertex = endCandidate;
+            // Reset the other index to rescan the vertices
+            startIndexCandidate = firstBridgeIndex;
+         }
+      }
+
+      return new int[] {firstBridgeIndex, secondBridgeIndex};
+   }
+
+   public static int increment(int index, List<Point2d> concaveHullVertices)
+   {
+      return (index + 1) % concaveHullVertices.size();
+   }
+
+   public static int decrement(int index, List<Point2d> concaveHullVertices)
+   {
+      return (index - 1 + concaveHullVertices.size()) % concaveHullVertices.size();
+   }
 }

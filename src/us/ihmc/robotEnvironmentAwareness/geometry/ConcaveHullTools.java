@@ -242,6 +242,35 @@ public class ConcaveHullTools
       return pocketToModify.getDeepestVertexIndex() >= 0;
    }
 
+   public static boolean isConvexAtVertex(int vertexIndex, List<Point2d> concaveHullVertices)
+   {
+      Point2d vertex = concaveHullVertices.get(vertexIndex);
+      Point2d previousVertex = concaveHullVertices.get(decrement(vertexIndex, concaveHullVertices));
+      Point2d nextVertex = concaveHullVertices.get(increment(vertexIndex, concaveHullVertices));
+
+      return GeometryTools.isPointOnLeftSideOfLine(vertex, previousVertex, nextVertex);
+   }
+
+   public static boolean isAlmostConvexAtVertex(int vertexIndex, double angleTolerance, List<Point2d> concaveHullVertices)
+   {
+      Point2d vertex = concaveHullVertices.get(vertexIndex);
+      Point2d previousVertex = concaveHullVertices.get(decrement(vertexIndex, concaveHullVertices));
+      Point2d nextVertex = concaveHullVertices.get(increment(vertexIndex, concaveHullVertices));
+
+      return getAngleABC(nextVertex, previousVertex, vertex) > -angleTolerance;
+   }
+
+   public static double getAngleABC(Point2d a, Point2d b, Point2d c)
+   {
+      double bax = b.getX() - a.getX();
+      double bay = b.getY() - a.getY();
+
+      double bcx = b.getX() - c.getX();
+      double bcy = b.getY() - c.getY();
+
+      return GeometryTools.getAngleFromFirstToSecondVector(bax, bay, bcx, bcy);
+   }
+
    public static int increment(int index, List<Point2d> concaveHullVertices)
    {
       return (index + 1) % concaveHullVertices.size();

@@ -247,6 +247,54 @@ public class ConcaveHullPruningFilteringTools
       return numberOfVerticesRemoved;
    }
 
+   public static int flattenShallowPockets(double depthThreshold, List<Point2d> concaveHullVerticesToFilter)
+   {
+      int numberOfVerticesRemoved = 0;
+      ConcaveHullPocket pocket = new ConcaveHullPocket();
+
+      Vector2d shift = new Vector2d();
+
+      for (int currentIndex = 0; currentIndex < concaveHullVerticesToFilter.size(); currentIndex++)
+      {
+         if (isConvexAtVertex(currentIndex, concaveHullVerticesToFilter))
+            continue;
+
+         boolean success = computeConcaveHullPocket(currentIndex, pocket, concaveHullVerticesToFilter);
+         if (!success)
+            continue;
+
+         double maxDepth = pocket.getMaxDepth();
+         if (maxDepth > depthThreshold)
+            continue;
+
+
+         Point2d startBridgeVertex = pocket.getStartBridgeVertex();
+         Point2d endBridgeVertex = pocket.getEndBridgeVertex();
+         shift.sub(endBridgeVertex, startBridgeVertex);
+         shift.normalize();
+         // Rotate to the right
+         shift.set(shift.getY(), -shift.getX());
+         shift.scale(maxDepth);
+
+         System.out.println("start bridge: " + pocket.getStartBridgeIndex() + " " + pocket.getStartBridgeVertex() + ", end bridge: " + pocket.getEndBridgeIndex() + " " + pocket.getEndBridgeVertex() + ", shift: " + shift + ", size: " + concaveHullVerticesToFilter.size());
+         startBridgeVertex.add(shift);
+         endBridgeVertex.add(shift);
+
+         int startBridgeVertexIndex = pocket.getStartBridgeIndex();
+         int endBridgeVertexIndex = pocket.getEndBridgeIndex();
+         int firstRemovableVertexIndex = increment(startBridgeVertexIndex, concaveHullVerticesToFilter);
+
+         for (int index = decrement(endBridgeVertexIndex, concaveHullVerticesToFilter); index != startBridgeVertexIndex;)
+         {
+            index = decrement(index, concaveHullVerticesToFilter);
+            concaveHullVerticesToFilter.remove(firstRemovableVertexIndex);
+            numberOfVerticesRemoved++;
+         }
+      }
+
+      return numberOfVerticesRemoved;
+   }
+
    /**
     * Removes vertices to filter short edges. Only convex vertices are removed, meaning the polygon area can only decrease when calling this method.
     * @param concaveAngleLimit threshold to define a concavity. 0 rad being flat, negative convex, positive concave.

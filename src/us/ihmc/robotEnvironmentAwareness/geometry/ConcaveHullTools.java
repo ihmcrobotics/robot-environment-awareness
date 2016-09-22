@@ -19,21 +19,21 @@ public class ConcaveHullTools
     */
    public static boolean isVertexPreventingKink(int vertexIndex, List<Point2d> concaveHullVertices)
    {
-      int vertexPreviousIndex = (vertexIndex - 1 + concaveHullVertices.size()) % concaveHullVertices.size();
+      int vertexPreviousIndex = decrement(vertexIndex, concaveHullVertices);
       vertexIndex %= concaveHullVertices.size();
-      int vertexNextIndex = (vertexIndex + 1) % concaveHullVertices.size();
+      int vertexNextIndex = increment(vertexIndex, concaveHullVertices);
    
       Point2d a = concaveHullVertices.get(vertexPreviousIndex);
       Point2d b = concaveHullVertices.get(vertexIndex);
       Point2d c = concaveHullVertices.get(vertexNextIndex);
    
-      int currentIndex = (vertexNextIndex + 1) % concaveHullVertices.size();
+      int currentIndex = increment(vertexNextIndex, concaveHullVertices);
    
       while (currentIndex != vertexPreviousIndex)
       {
          if (isPointInsideTriangleABC(concaveHullVertices.get(currentIndex), a, b, c))
             return true;
-         currentIndex = (currentIndex +1) % concaveHullVertices.size();
+         currentIndex = increment(currentIndex, concaveHullVertices);
       }
    
       return false;
@@ -67,8 +67,8 @@ public class ConcaveHullTools
 
       for (int vertexIndex = 0; vertexIndex < concaveHullVertices.size(); vertexIndex++)
       {
-         int previousVertexIndex = (vertexIndex - 1 + concaveHullVertices.size()) % concaveHullVertices.size();
-         int nextVertexIndex = (vertexIndex + 1) % concaveHullVertices.size();
+         int previousVertexIndex = decrement(vertexIndex, concaveHullVertices);
+         int nextVertexIndex = increment(vertexIndex, concaveHullVertices);
 
          Point2d previousVertex = concaveHullVertices.get(previousVertexIndex);
          Point2d vertex = concaveHullVertices.get(vertexIndex);
@@ -89,7 +89,7 @@ public class ConcaveHullTools
       for (int i = 0; i < concaveHullVertices.size(); i++)
       {
          Point2d vertex = concaveHullVertices.get(i);
-         Point2d nextVertex = concaveHullVertices.get((i + 1) % concaveHullVertices.size());
+         Point2d nextVertex = concaveHullVertices.get(increment(i, concaveHullVertices));
          perimeter += vertex.distance(nextVertex);
       }
       return perimeter;
@@ -101,7 +101,7 @@ public class ConcaveHullTools
 
       for (int index = 0; index < concaveHullVertices.size();)
       {
-         int nextIndex = (index + 1) % concaveHullVertices.size();
+         int nextIndex = increment(index, concaveHullVertices);
          if (concaveHullVertices.get(index).equals(concaveHullVertices.get(nextIndex)))
          {
             concaveHullVertices.remove(nextIndex);
@@ -126,8 +126,8 @@ public class ConcaveHullTools
       concaveVertexIndex %= concaveHullVertices.size();
       Point2d concaveVertex = concaveHullVertices.get(concaveVertexIndex);
 
-      int firstBridgeIndex = (concaveVertexIndex - 1 + concaveHullVertices.size()) % concaveHullVertices.size();
-      int secondBridgeIndex = (concaveVertexIndex + 1) % concaveHullVertices.size();
+      int firstBridgeIndex = decrement(concaveVertexIndex, concaveHullVertices);
+      int secondBridgeIndex = increment(concaveVertexIndex, concaveHullVertices);
 
       Point2d firstBridgeVertex = concaveHullVertices.get(firstBridgeIndex);
       Point2d secondBridgeVertex = concaveHullVertices.get(secondBridgeIndex);

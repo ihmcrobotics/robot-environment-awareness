@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -73,32 +72,36 @@ public class ConcaveHullVisualizer extends Application
       concaveHullVertices.addAll(getGeometryVertices(concaveHullGeometry));
       originalConcaveHullVertices.addAll(getGeometryVertices(concaveHullGeometry));
 
-      ensureClockwiseOrdering();
+      ConcaveHullTools.ensureClockwiseOrdering(concaveHullVertices);
 
       System.out.println("Size before filtering: " + concaveHullVertices.size());
+
+      int numberOfDuplicateRemoved = ConcaveHullTools.removeSuccessiveDuplicateVertices(concaveHullVertices);
+      System.out.println("Removed : " + numberOfDuplicateRemoved + " duplicate vertices");
 
       long endTime = System.nanoTime();
       System.out.println("ConcaveHull Took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
 
-      System.out.println("Perimeter: " + computeTotalLength());
+      System.out.println("Perimeter: " + ConcaveHullTools.computePerimeter(concaveHullVertices));
       double sd = computeMaxStandardDeviation();
       System.out.println("Standard dev: " + sd);
 
-      double concaveAngleLimit = Math.toRadians(10.0);
       double shallowAngleThreshold = Math.toRadians(1.0);
-      double peakAngleThreshold = Math.toRadians(120.0);
-      double lengthThreshold = sd / 10.0;
+      double peakAngleThreshold = Math.toRadians(150.0);
+      double lengthThreshold = 0.10; //sd / 10.0;
       double areaThreshold = 0.001;
+      double percentageThreshold = 0.995;
 
       int nVerticesRemoved = 0;
 
       startTime = System.nanoTime();
       for (int i = 0; i < 10; i++)
       {
-         //         filter2(sd / 5.0);
-//         nVerticesRemoved += filterOutPeaksAndShallowAngles(concaveAngleLimit, shallowAngleThreshold, peakAngleThreshold, concaveHullVertices);
-//         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutShortEdges(concaveAngleLimit, lengthThreshold, concaveHullVertices);
-         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutSmallTriangles(concaveAngleLimit, areaThreshold, concaveHullVertices);
+         //                  filter2(sd / 5.0);
+         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutGroupsOfShallowVertices(percentageThreshold, concaveHullVertices);
+         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, concaveHullVertices);
+         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, concaveHullVertices);
+         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutSmallTriangles(areaThreshold, concaveHullVertices);
 //         filterOutShortEdges(lengthThreshold);
 //         filterOutSmallTriangles();
       }
@@ -335,53 +338,6 @@ public class ConcaveHullVisualizer extends Application
       if (index == -1)
          return list.get(list.size() - 1);
       return list.get(index % list.size());
-   }
-
-   private void ensureClockwiseOrdering()
-   {
-      Point2d average = new Point2d();
-      double sumOfCrosses = 0.0;
-
-      for (Point2d vertex : concaveHullVertices)
-      {
-         average.add(vertex);
-      }
-      average.scale(1.0 / concaveHullVertices.size());
-
-      Vector2d v0 = new Vector2d();
-      Vector2d v1 = new Vector2d();
-
-      for (int i = 0; i < concaveHullVertices.size(); i++)
-      {
-         Point2d vertex = concaveHullVertices.get(i);
-         int nextIndex = (i + 1) % concaveHullVertices.size();
-         Point2d nextVertex = concaveHullVertices.get(nextIndex);
-         if (vertex.equals(nextVertex))
-         {
-            concaveHullVertices.remove(nextIndex);
-            continue;
-         }
-         v0.sub(vertex, average);
-         v1.sub(nextVertex, average);
-         sumOfCrosses += cross(v0, v1);
-      }
-
-      if (sumOfCrosses > 0.0)
-      {
-         Collections.reverse(concaveHullVertices);
-      }
-   }
-
-   private double computeTotalLength()
-   {
-      double totalLength = 0.0;
-      for (int i = 0; i < concaveHullVertices.size(); i++)
-      {
-         Point2d vertex = concaveHullVertices.get(i);
-         Point2d nextVertex = concaveHullVertices.get((i + 1) % concaveHullVertices.size());
-         totalLength += vertex.distance(nextVertex);
-      }
-      return totalLength;
    }
 
    private double computeMaxStandardDeviation()

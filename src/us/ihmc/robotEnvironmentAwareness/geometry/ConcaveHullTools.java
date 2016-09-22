@@ -203,6 +203,7 @@ public class ConcaveHullTools
       }
 
       pocketToPack.setBridgeIndices(firstBridgeIndex, secondBridgeIndex);
+      pocketToPack.setBridgeVertices(firstBridgeVertex, secondBridgeVertex);
 
       return true;
    }

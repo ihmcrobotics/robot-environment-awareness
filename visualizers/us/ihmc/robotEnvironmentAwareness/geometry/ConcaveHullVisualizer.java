@@ -51,6 +51,58 @@ public class ConcaveHullVisualizer extends Application
 
    public ConcaveHullVisualizer() throws IOException
    {
+      createConcaveHullFromRegion();
+//      loadConcaveHullFromFile();
+
+      ConcaveHullTools.ensureClockwiseOrdering(concaveHullVertices);
+
+      System.out.println("Size before filtering: " + concaveHullVertices.size());
+
+      int numberOfDuplicateRemoved = ConcaveHullTools.removeSuccessiveDuplicateVertices(concaveHullVertices);
+      System.out.println("Removed : " + numberOfDuplicateRemoved + " duplicate vertices");
+
+
+      System.out.println("Perimeter: " + ConcaveHullTools.computePerimeter(concaveHullVertices));
+      double sd = computeMaxStandardDeviation();
+      System.out.println("Standard dev: " + sd);
+
+      double shallowAngleThreshold = Math.toRadians(1.0);
+      double peakAngleThreshold = Math.toRadians(120.0);
+      double lengthThreshold = 0.10; //sd / 10.0;
+      double areaThreshold = 0.001;
+      double percentageThreshold = 0.995;
+      double depthThreshold = 0.1;
+
+      int nVerticesRemoved = 0;
+
+      long startTime = System.nanoTime();
+      for (int i = 0; i < 10; i++)
+      {
+         //                  filter2(sd / 5.0);
+//         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutGroupsOfShallowVertices(percentageThreshold, concaveHullVertices);
+         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, concaveHullVertices);
+         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, concaveHullVertices);
+//         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutSmallTriangles(areaThreshold, concaveHullVertices);
+//         nVerticesRemoved += ConcaveHullPruningFilteringTools.flattenShallowPockets(depthThreshold, concaveHullVertices);
+         
+//         filterOutShortEdges(lengthThreshold);
+//         filterOutSmallTriangles();
+      }
+      long endTime = System.nanoTime();
+      System.out.println("filtering Took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime) + ", number of vertices removed: " + nVerticesRemoved);
+
+      convexPolygon2d = new ConvexPolygon2d(concaveHullVertices);
+
+      startTime = System.nanoTime();
+      ConcaveHullDecomposition.decomposeRecursively(concaveHullVertices, depthThreshold, 0, decomposedPolygons);
+      endTime = System.nanoTime();
+      System.out.println("decomposition Took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime) + ", number of polygons: " + decomposedPolygons.size());
+
+      System.out.println("Size after filtering: " + concaveHullVertices.size());
+   }
+
+   public void createConcaveHullFromRegion() throws IOException
+   {
       InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream("regionPoints"));
       BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 
@@ -70,56 +122,29 @@ public class ConcaveHullVisualizer extends Application
       ConcaveHull concaveHull = new ConcaveHull(convertPoint2dToMultipoint(pointCloud), 0.05);
       Geometry concaveHullGeometry = concaveHull.getConcaveHull();
 
-      concaveHullVertices.addAll(getGeometryVertices(concaveHullGeometry));
-      originalConcaveHullVertices.addAll(getGeometryVertices(concaveHullGeometry));
-
-      ConcaveHullTools.ensureClockwiseOrdering(concaveHullVertices);
-
-      System.out.println("Size before filtering: " + concaveHullVertices.size());
-
-      int numberOfDuplicateRemoved = ConcaveHullTools.removeSuccessiveDuplicateVertices(concaveHullVertices);
-      System.out.println("Removed : " + numberOfDuplicateRemoved + " duplicate vertices");
-
       long endTime = System.nanoTime();
       System.out.println("ConcaveHull Took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
 
-      System.out.println("Perimeter: " + ConcaveHullTools.computePerimeter(concaveHullVertices));
-      double sd = computeMaxStandardDeviation();
-      System.out.println("Standard dev: " + sd);
+      concaveHullVertices.addAll(getGeometryVertices(concaveHullGeometry));
+      originalConcaveHullVertices.addAll(getGeometryVertices(concaveHullGeometry));
+   }
 
-      double shallowAngleThreshold = Math.toRadians(1.0);
-      double peakAngleThreshold = Math.toRadians(120.0);
-      double lengthThreshold = 0.10; //sd / 10.0;
-      double areaThreshold = 0.001;
-      double percentageThreshold = 0.995;
-      double depthThreshold = 0.1;
+   public void loadConcaveHullFromFile() throws IOException
+   {
+      InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream("troublesomeCase1"));
+      BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 
-      int nVerticesRemoved = 0;
+      String line = "";
+      String cvsSplitBy = ",";
 
-      startTime = System.nanoTime();
-      for (int i = 0; i < 10; i++)
+      while ((line = bufferedReader.readLine()) != null)
       {
-         //                  filter2(sd / 5.0);
-//         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutGroupsOfShallowVertices(percentageThreshold, concaveHullVertices);
-         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, concaveHullVertices);
-         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, concaveHullVertices);
-//         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutSmallTriangles(areaThreshold, concaveHullVertices);
-//         nVerticesRemoved += ConcaveHullPruningFilteringTools.flattenShallowPockets(depthThreshold, concaveHullVertices);
-         
-//         filterOutShortEdges(lengthThreshold);
-//         filterOutSmallTriangles();
+         String[] coordsAsString = line.split(cvsSplitBy);
+         double x = Double.parseDouble(coordsAsString[0]);
+         double y = Double.parseDouble(coordsAsString[1]);
+         concaveHullVertices.add(new Point2d(x, y));
+         originalConcaveHullVertices.add(new Point2d(x, y));
       }
-      endTime = System.nanoTime();
-      System.out.println("filtering Took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime) + ", number of vertices removed: " + nVerticesRemoved);
-
-      convexPolygon2d = new ConvexPolygon2d(concaveHullVertices);
-
-      startTime = System.nanoTime();
-      ConcaveHullDecomposition.decomposeRecursively(concaveHullVertices, depthThreshold, 0, decomposedPolygons);
-      endTime = System.nanoTime();
-      System.out.println("decomposition Took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime) + ", number of polygons: " + decomposedPolygons.size());
-
-      System.out.println("Size after filtering: " + concaveHullVertices.size());
    }
 
    private final List<ConvexPolygon2d> decomposedPolygons = new ArrayList<>();

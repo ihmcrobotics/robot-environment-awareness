@@ -1,6 +1,8 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
 import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools.*;
+import static us.ihmc.robotEnvironmentAwareness.geometry.ListTools.increment;
+import static us.ihmc.robotEnvironmentAwareness.geometry.ListTools.removeAllExclusive;
 import static us.ihmc.robotics.geometry.GeometryTools.computeTriangleArea;
 import static us.ihmc.robotics.geometry.GeometryTools.isPointOnLeftSideOfLine;
 
@@ -262,7 +264,7 @@ public class ConcaveHullPruningFilteringTools
 
          int startBridgeVertexIndex = pocket.getStartBridgeIndex();
          int endBridgeVertexIndex = pocket.getEndBridgeIndex();
-         numberOfVerticesRemoved += ConcaveHullTools.removeAllBetween(startBridgeVertexIndex, endBridgeVertexIndex, concaveHullVerticesToFilter);
+         numberOfVerticesRemoved += removeAllExclusive(startBridgeVertexIndex, endBridgeVertexIndex, concaveHullVerticesToFilter);
       }
 
       return numberOfVerticesRemoved;

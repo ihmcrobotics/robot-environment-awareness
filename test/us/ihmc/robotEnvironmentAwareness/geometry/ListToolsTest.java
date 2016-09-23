@@ -12,30 +12,30 @@ import org.junit.Test;
 
 import us.ihmc.robotics.random.RandomTools;
 
-public class ConcaveHullToolsTest
+public class ListToolsTest
 {
    @Test
-   public void testRemoveAllBetween()
+   public void testRemoveAllExclusive()
    {
       Random random = new Random(453L);
       List<Point2d> list = createRandomList(9, random);
       int from = 8;
       int to = 1;
-      int n = ConcaveHullTools.removeAllBetween(from, to, list);
+      int n = ListTools.removeAllExclusive(from, to, list);
       assertEquals(1, n); 
       assertEquals(8, list.size());
 
       list = createRandomList(12, random);
       from = 11;
       to = 3;
-      n = ConcaveHullTools.removeAllBetween(from, to, list);
+      n = ListTools.removeAllExclusive(from, to, list);
       assertEquals(3, n);
       assertEquals(9, list.size());
 
       list = createRandomList(20, random);
       from = 11;
       to = 18;
-      n = ConcaveHullTools.removeAllBetween(from, to, list);
+      n = ListTools.removeAllExclusive(from, to, list);
       assertEquals(6, n);
       assertEquals(14, list.size());
    }

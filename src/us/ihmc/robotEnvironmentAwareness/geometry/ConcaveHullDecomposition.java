@@ -1,6 +1,8 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools.*;
+import static us.ihmc.robotEnvironmentAwareness.geometry.ListTools.increment;
+import static us.ihmc.robotEnvironmentAwareness.geometry.ListTools.removeAllExclusive;
+import static us.ihmc.robotEnvironmentAwareness.geometry.ListTools.subListInclusive;
 
 import java.util.List;
 
@@ -18,7 +20,10 @@ public class ConcaveHullDecomposition
          List<ConvexPolygon2d> convexPolygons)
    {
       if (concaveHullVertices.isEmpty())
-         throw new RuntimeException("The concave hull is empty");
+      {
+         System.err.println("The concave hull is empty");
+         return;
+      }
 
       // The concave hull is actually convex, end of recursion
       if (ConcaveHullTools.isHullConvex(concaveHullVertices))
@@ -27,26 +32,13 @@ public class ConcaveHullDecomposition
          return;
       }
 
-      ConcaveHullPocket pocket = null;
-      if (concaveHullVertices.size() == 45)
-         System.out.println();
-      // Find the first pocket
-      for (int i = 0; i < concaveHullVertices.size() && pocket == null; i++)
-      {
-         if (!isConvexAtVertex(i, concaveHullVertices))
-            pocket = ConcaveHullTools.computeConcaveHullPocket(i, concaveHullVertices);
-      }
-      ConcaveHullPocket pocket2 = ConcaveHullTools.findFirstConcaveHullPocket(concaveHullVertices);
-
-      if (pocket2.getStartBridgeIndex() != pocket.getStartBridgeIndex())
-         System.out.println();
-      if (pocket2.getEndBridgeIndex() != pocket.getEndBridgeIndex())
-         System.out.println();
-
-//      pocket = pocket2;
+      ConcaveHullPocket pocket = ConcaveHullTools.findFirstConcaveHullPocket(concaveHullVertices);
 
       if (pocket == null)
-         throw new RuntimeException("Did not find any pocket.");
+      {
+         System.err.println("Did not find any pocket.");
+         return;
+      }
 
       int startBridgeIndex = pocket.getStartBridgeIndex();
       int endBridgeIndex = pocket.getEndBridgeIndex();
@@ -54,7 +46,7 @@ public class ConcaveHullDecomposition
       // The pocket is negligible, remove the vertices.
       if (pocket.getMaxDepth() < depthThreshold)
       {
-         ConcaveHullTools.removeAllBetween(startBridgeIndex, endBridgeIndex, concaveHullVertices);
+         removeAllExclusive(startBridgeIndex, endBridgeIndex, concaveHullVertices);
          // Restart the search for pockets
          decomposeRecursively(concaveHullVertices, depthThreshold, decompositionDepth, convexPolygons);
          return;
@@ -68,7 +60,6 @@ public class ConcaveHullDecomposition
       Point2d endBridgeVertex = pocket.getEndBridgeVertex();
       Point2d startBridgeVertex = pocket.getStartBridgeVertex();
       cutDirection.sub(endBridgeVertex, startBridgeVertex);
-//      cutDirection.sub(concaveHullVertices.get(increment(deepestVertexIndex, concaveHullVertices)), concaveHullVertices.get(decrement(deepestVertexIndex, concaveHullVertices)));
       cutDirection.normalize();
       cutDirection.set(cutDirection.y, -cutDirection.x); // Rotate 90 degrees to the right (inside polygon)
 
@@ -105,16 +96,22 @@ public class ConcaveHullDecomposition
 
       if (Double.isNaN(otherVertexForCutting.getX()))
       {
-         System.err.println("Something went wrong finding the other vertex for cutting. Pocket vertex: " + deepestVertex + ", bridge: start: " + startBridgeVertex + ", end: " + endBridgeVertex);
+         System.err.println("Something went wrong finding the other vertex for cutting. Pocket vertex: " + deepestVertex + ", bridge: start: "
+               + startBridgeVertex + ", end: " + endBridgeVertex);
          return;
       }
 
-      if (alpha < 1.0e-3)
+      // Check if we can use an existing vertex to cut
+      if (alpha < 0.1)
       {
          otherVertexIndexForCutting = (otherVertexIndexForCutting - 1) % concaveHullVertices.size();
       }
-      else if (alpha < 1.0 - 1.0e-3)
+      else if (alpha > 1.0 - 0.1)
       {
+         // otherVertexIndexForCutting is good
+      }
+      else
+      { // Add a new vertex
          concaveHullVertices.add(otherVertexIndexForCutting, otherVertexForCutting);
          if (otherVertexIndexForCutting < deepestVertexIndex)
             deepestVertexIndex++;
@@ -122,29 +119,13 @@ public class ConcaveHullDecomposition
 
       // decompose the two new polygons.
       int p1StartIndex = deepestVertexIndex;
-      int p1EndIndex = (otherVertexIndexForCutting + 1) % (concaveHullVertices.size() + 1);
+      int p1EndIndex = otherVertexIndexForCutting;
       int p2StartIndex = otherVertexIndexForCutting;
-      int p2EndIndex = (deepestVertexIndex + 1) % (concaveHullVertices.size() + 1);
+      int p2EndIndex = deepestVertexIndex;
 
-      int p1Size;
-      if (p1StartIndex > p1EndIndex)
-         p1Size = p1EndIndex + concaveHullVertices.size() - p1StartIndex;
-      else
-         p1Size = p1EndIndex - p1StartIndex;
-      int p2Size;
-      if (p2StartIndex > p2EndIndex)
-         p2Size = p2EndIndex + concaveHullVertices.size() - p2StartIndex;
-      else
-         p2Size = p2EndIndex - p2StartIndex;
+      List<Point2d> p1 = subListInclusive(p1StartIndex, p1EndIndex, concaveHullVertices);
+      List<Point2d> p2 = subListInclusive(p2StartIndex, p2EndIndex, concaveHullVertices);
 
-      if (p1Size == concaveHullVertices.size() || p2Size == concaveHullVertices.size())
-         throw new RuntimeException("Something went wrong.");
-
-      
-      List<Point2d> p1 = subList(concaveHullVertices, p1StartIndex, p1EndIndex);
-      List<Point2d> p2 = subList(concaveHullVertices, p2StartIndex, p2EndIndex);
-      if (p1.isEmpty() || p2.isEmpty())
-         System.out.println();
       decomposeRecursively(p1, depthThreshold, decompositionDepth + 1, convexPolygons);
       decomposeRecursively(p2, depthThreshold, decompositionDepth + 1, convexPolygons);
    }

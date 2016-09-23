@@ -52,9 +52,6 @@ public class ConcaveHullDecomposition
          return;
       }
 
-      if (startBridgeIndex == 36 && endBridgeIndex == 16)
-         System.out.println();
-
       int deepestVertexIndex = pocket.getDeepestVertexIndex();
       Vector2d cutDirection = new Vector2d();
       Point2d endBridgeVertex = pocket.getEndBridgeVertex();
@@ -129,5 +126,4 @@ public class ConcaveHullDecomposition
       decomposeRecursively(p1, depthThreshold, decompositionDepth + 1, convexPolygons);
       decomposeRecursively(p2, depthThreshold, decompositionDepth + 1, convexPolygons);
    }
-
 }

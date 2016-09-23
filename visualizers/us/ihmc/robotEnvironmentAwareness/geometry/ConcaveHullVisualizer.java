@@ -94,7 +94,7 @@ public class ConcaveHullVisualizer extends Application
       convexPolygon2d = new ConvexPolygon2d(concaveHullVertices);
 
       startTime = System.nanoTime();
-      ConcaveHullDecomposition.decomposeRecursively(concaveHullVertices, depthThreshold, 0, decomposedPolygons);
+      ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHullVertices, depthThreshold, decomposedPolygons);
       endTime = System.nanoTime();
       System.out.println("decomposition Took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime) + ", number of polygons: " + decomposedPolygons.size());
 

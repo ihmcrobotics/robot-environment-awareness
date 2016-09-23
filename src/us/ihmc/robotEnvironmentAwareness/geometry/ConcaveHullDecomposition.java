@@ -15,9 +15,17 @@ import us.ihmc.robotics.geometry.LineSegment2d;
 
 public class ConcaveHullDecomposition
 {
-
-   public static void decomposeRecursively(List<Point2d> concaveHullVertices, double depthThreshold, int decompositionDepth,
-         List<ConvexPolygon2d> convexPolygons)
+   /**
+    * Inspired from the SL-decomposition in the paper 
+    * <a href="https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=0ahUKEwjZlOab96XPAhXBQD4KHcXeB4MQFggsMAE&url=https%3A%2F%2Fparasol.tamu.edu%2Fpublications%2Fdownload.php%3Ffile_id%3D390&usg=AFQjCNF3wXvuCxXNREhu4CW-oNyd1caa0A&sig2=X-zxaHykED7EuqkYhkfUgg">
+    *  Approximate Convex Decomposition of Polygons</a>.
+    *  @param concaveHullVertices [input] the concave hull to be decomposed into convex polygons.
+    *  @param depthThreshold [input] the algorithm determines whether the polygon is to split or not by looking at the maximum depth of concave pockets in the concave hull.
+    *  When a pocket is deeper than {@code depthThreshold} the concave hull will be split in two.
+    *  Otherwise, the pocket vertices will be removed.
+    *  @param convexPolygonsToPack [output] the convex polygons approximating the concave hull.
+    */
+   public static void recursiveApproximateDecomposition(List<Point2d> concaveHullVertices, double depthThreshold, List<ConvexPolygon2d> convexPolygonsToPack)
    {
       if (concaveHullVertices.isEmpty())
       {
@@ -28,7 +36,7 @@ public class ConcaveHullDecomposition
       // The concave hull is actually convex, end of recursion
       if (ConcaveHullTools.isHullConvex(concaveHullVertices))
       {
-         convexPolygons.add(new ConvexPolygon2d(concaveHullVertices));
+         convexPolygonsToPack.add(new ConvexPolygon2d(concaveHullVertices));
          return;
       }
 
@@ -48,7 +56,7 @@ public class ConcaveHullDecomposition
       {
          removeAllExclusive(startBridgeIndex, endBridgeIndex, concaveHullVertices);
          // Restart the search for pockets
-         decomposeRecursively(concaveHullVertices, depthThreshold, decompositionDepth, convexPolygons);
+         recursiveApproximateDecomposition(concaveHullVertices, depthThreshold, convexPolygonsToPack);
          return;
       }
 
@@ -78,6 +86,7 @@ public class ConcaveHullDecomposition
 
          edge.set(current, next);
          Point2d intersection = edge.intersectionWith(cuttingLine);
+
          if (intersection != null)
          {
             double distanceSquared = intersection.distanceSquared(deepestVertex);
@@ -123,7 +132,7 @@ public class ConcaveHullDecomposition
       List<Point2d> p1 = subListInclusive(p1StartIndex, p1EndIndex, concaveHullVertices);
       List<Point2d> p2 = subListInclusive(p2StartIndex, p2EndIndex, concaveHullVertices);
 
-      decomposeRecursively(p1, depthThreshold, decompositionDepth + 1, convexPolygons);
-      decomposeRecursively(p2, depthThreshold, decompositionDepth + 1, convexPolygons);
+      recursiveApproximateDecomposition(p1, depthThreshold, convexPolygonsToPack);
+      recursiveApproximateDecomposition(p2, depthThreshold, convexPolygonsToPack);
    }
 }

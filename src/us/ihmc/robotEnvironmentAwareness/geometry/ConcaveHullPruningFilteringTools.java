@@ -33,49 +33,29 @@ public class ConcaveHullPruningFilteringTools
    public static int filterOutPeaksAndShallowAngles(double shallowAngleThreshold, double peakAngleThreshold, List<Point2d> concaveHullVerticesToFilter)
    {
       int numberOfVerticesRemoved = 0;
-      double cosPeakAngle = Math.cos(peakAngleThreshold);
-      double cosShallowAngle = Math.cos(shallowAngleThreshold);
-
-      // abc represent a triangle formed by three successive vertices.
-      // At each step of the iteration, b is tested to see if it can be removed.
-      Point2d a = concaveHullVerticesToFilter.get(0);
-      Point2d b = concaveHullVerticesToFilter.get(1);
-      Point2d c = concaveHullVerticesToFilter.get(2);
-
-      Vector2d ab = new Vector2d();
-      Vector2d bc = new Vector2d();
-      ab.sub(b, a);
-      bc.sub(c, b);
-      ab.normalize();
-      bc.normalize();
+      shallowAngleThreshold = - Math.abs(shallowAngleThreshold);
+      peakAngleThreshold = - Math.abs(peakAngleThreshold);
 
       for (int currentIndex = 0; currentIndex < concaveHullVerticesToFilter.size();)
       {
-         // If convex at b, then b should be on the outside of ac => on the left of the vector ac.
-         boolean isConvex = isPointOnLeftSideOfLine(b, a, c);
-         // The dot product is used to evaluate the angle at b. If it is too small or too large b may be removed
-         double dot = ab.dot(bc);
-
-         int nextIndex = increment(currentIndex, concaveHullVerticesToFilter);
-         if (isConvex && (dot < cosPeakAngle || dot > cosShallowAngle) && !isVertexPreventingKink(nextIndex, concaveHullVerticesToFilter))
+         if (!ConcaveHullTools.isConvexAtVertex(currentIndex, concaveHullVerticesToFilter))
          {
-            concaveHullVerticesToFilter.remove(nextIndex);
-            b = c;
-            ab.sub(b, a);
-            ab.normalize();
+            currentIndex++;
+            continue;
+         }
+
+         double angle = ConcaveHullTools.getAngleFromPreviousEdgeToNextEdge(currentIndex, concaveHullVerticesToFilter);
+         boolean isAngleWithinThresholds = angle < peakAngleThreshold || angle > shallowAngleThreshold;
+
+         if (isAngleWithinThresholds && !isVertexPreventingKink(currentIndex, concaveHullVerticesToFilter))
+         {
+            concaveHullVerticesToFilter.remove(currentIndex);
             numberOfVerticesRemoved++;
          }
          else
          {
-            a = b;
-            b = c;
-            ab.set(bc);
             currentIndex++;
          }
-
-         c = concaveHullVerticesToFilter.get(increment(nextIndex, concaveHullVerticesToFilter));
-         bc.sub(c, b);
-         bc.normalize();
       }
       return numberOfVerticesRemoved;
    }
@@ -282,14 +262,7 @@ public class ConcaveHullPruningFilteringTools
 
          int startBridgeVertexIndex = pocket.getStartBridgeIndex();
          int endBridgeVertexIndex = pocket.getEndBridgeIndex();
-         int firstRemovableVertexIndex = increment(startBridgeVertexIndex, concaveHullVerticesToFilter);
-
-         for (int index = decrement(endBridgeVertexIndex, concaveHullVerticesToFilter); index != startBridgeVertexIndex;)
-         {
-            index = decrement(index, concaveHullVerticesToFilter);
-            concaveHullVerticesToFilter.remove(firstRemovableVertexIndex);
-            numberOfVerticesRemoved++;
-         }
+         numberOfVerticesRemoved += ConcaveHullTools.removeAllBetween(startBridgeVertexIndex, endBridgeVertexIndex, concaveHullVerticesToFilter);
       }
 
       return numberOfVerticesRemoved;

@@ -28,7 +28,6 @@ import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
-import javafx.scene.shape.Cylinder;
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.Sphere;
 import javafx.stage.Stage;
@@ -36,8 +35,6 @@ import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
-import us.ihmc.robotics.geometry.Line2d;
-import us.ihmc.robotics.geometry.LineSegment2d;
 import us.ihmc.robotics.linearAlgebra.PrincipalComponentAnalysis3D;
 import us.ihmc.robotics.time.TimeTools;
 
@@ -52,7 +49,7 @@ public class ConcaveHullVisualizer extends Application
    public ConcaveHullVisualizer() throws IOException
    {
       createConcaveHullFromRegion();
-//      loadConcaveHullFromFile();
+//      loadConcaveHullFromFile("troublesomeCase3");
 
       ConcaveHullTools.ensureClockwiseOrdering(concaveHullVertices);
 
@@ -70,8 +67,10 @@ public class ConcaveHullVisualizer extends Application
       double peakAngleThreshold = Math.toRadians(120.0);
       double lengthThreshold = 0.10; //sd / 10.0;
       double areaThreshold = 0.001;
-      double percentageThreshold = 0.995;
+      double percentageThreshold = 0.992;
       double depthThreshold = 0.1;
+      double alpha = 0.1;
+      int deadIndexRegion = 10;
 
       int nVerticesRemoved = 0;
 
@@ -79,15 +78,17 @@ public class ConcaveHullVisualizer extends Application
       for (int i = 0; i < 10; i++)
       {
          //                  filter2(sd / 5.0);
-//         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutGroupsOfShallowVertices(percentageThreshold, concaveHullVertices);
+//         nVerticesRemoved += ConcaveHullPruningFilteringTools.innerAlphaShapeFiltering(alpha, deadIndexRegion, concaveHullVertices);
+         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutGroupsOfShallowVertices(percentageThreshold, concaveHullVertices);
          nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, concaveHullVertices);
          nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, concaveHullVertices);
+         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterByRay(0.15, concaveHullVertices);
 //         nVerticesRemoved += ConcaveHullPruningFilteringTools.filterOutSmallTriangles(areaThreshold, concaveHullVertices);
-//         nVerticesRemoved += ConcaveHullPruningFilteringTools.flattenShallowPockets(depthThreshold, concaveHullVertices);
+      }
+         nVerticesRemoved += ConcaveHullPruningFilteringTools.flattenShallowPockets(depthThreshold, concaveHullVertices);
          
 //         filterOutShortEdges(lengthThreshold);
 //         filterOutSmallTriangles();
-      }
       long endTime = System.nanoTime();
       System.out.println("filtering Took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime) + ", number of vertices removed: " + nVerticesRemoved);
 
@@ -129,9 +130,9 @@ public class ConcaveHullVisualizer extends Application
       originalConcaveHullVertices.addAll(getGeometryVertices(concaveHullGeometry));
    }
 
-   public void loadConcaveHullFromFile() throws IOException
+   public void loadConcaveHullFromFile(String fileName) throws IOException
    {
-      InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream("troublesomeCase1"));
+      InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream(fileName));
       BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 
       String line = "";

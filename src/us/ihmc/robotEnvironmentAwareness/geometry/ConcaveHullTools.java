@@ -1,10 +1,11 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
 import static us.ihmc.robotEnvironmentAwareness.geometry.ListTools.*;
-import static us.ihmc.robotics.geometry.GeometryTools.distanceFromPointToLine;
-import static us.ihmc.robotics.geometry.GeometryTools.isPointInsideTriangleABC;
-import static us.ihmc.robotics.geometry.GeometryTools.isPointOnLeftSideOfLine;
+import static us.ihmc.robotics.geometry.GeometryTools.*;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -13,6 +14,7 @@ import javax.vecmath.Vector2d;
 
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
 import us.ihmc.robotics.geometry.GeometryTools;
+import us.ihmc.robotics.geometry.Line2d;
 import us.ihmc.robotics.geometry.LineSegment2d;
 
 public class ConcaveHullTools
@@ -425,5 +427,136 @@ public class ConcaveHullTools
       }
 
       return true;
+   }
+
+   /**
+    * Find the closest edge to a vertex that is visible from the inside of the polygon.
+    * In other words, the line that goes from the given vertex to the computed closestPoint is entirely inside the polygon.
+    * @param vertexIndex the close edge to this vertex.
+    * @param deadIndexRegion the search algorithm starts at {@code vertexIndex + deadIndexRegion + 1} and ends at {@code vertexIndex - deadIndexRegion - 1}
+    * @param concaveHullVertices the vertices of the concave hull on which the search is to be performed.
+    * @param closestPointToPack coordinates of the closest point found.
+    * @return the index of the closest edge first vertex.
+    */
+   public static int findInnerClosestEdgeToVertex(int vertexIndex, int deadIndexRegion, List<Point2d> concaveHullVertices, Point2d closestPointToPack)
+   {
+      int startSearchIndex = increment(vertexIndex, concaveHullVertices);
+      int endSearchIndex = decrement(vertexIndex, concaveHullVertices);
+      return findInnerClosestEdgeToVertex(vertexIndex, startSearchIndex, endSearchIndex, concaveHullVertices, closestPointToPack);
+   }
+
+   public static int findInnerClosestEdgeToVertex(int vertexIndex, int startSearchIndex, int endSearchIndex, List<Point2d> concaveHullVertices, Point2d closestPointToPack)
+   {
+      int closestEdgeFirstIndex = -1;
+      double distanceSquaredToClosestEdge = Double.POSITIVE_INFINITY;
+
+      vertexIndex %= concaveHullVertices.size();
+      Point2d vertex = concaveHullVertices.get(vertexIndex);
+
+      LineSegment2d edge = new LineSegment2d();
+      Point2d candidateClosestPoint = new Point2d();
+
+      // The loop skips the edges to which the given vertex belongs.
+      for (int candidateIndex = startSearchIndex; candidateIndex != endSearchIndex; candidateIndex = increment(candidateIndex, concaveHullVertices))
+      {
+         Point2d edgeFirstVertex = concaveHullVertices.get(candidateIndex);
+         Point2d edgeSecondVertex = getNextWrap(candidateIndex, concaveHullVertices);
+
+         edge.set(edgeFirstVertex, edgeSecondVertex);
+         edge.getClosestPointOnLineSegment(candidateClosestPoint, vertex);
+
+         double distanceSquared = candidateClosestPoint.distanceSquared(vertex);
+
+         // We have a new point that is closer than the previous.
+         if (distanceSquared < distanceSquaredToClosestEdge)
+         {
+            // Before considering it as the new closest point, we need to check that the line goes from the given vertex to the new candidate is fully inside of the polygon.
+            boolean isLineInsidePolygon = true;
+
+            int startCheckIndex = increment(startSearchIndex, concaveHullVertices);
+            int endCheckIndex = increment(candidateIndex, concaveHullVertices);
+
+            // The line is inside the polygon if all the vertices in ]vertexIndex; candidateIndex[ are on the left side of the line (vertex, candidateClosestPoint)
+            for (int index = startCheckIndex; index != endCheckIndex && isLineInsidePolygon; index = increment(index, concaveHullVertices))
+               isLineInsidePolygon = isPointOnLeftSideOfLine(concaveHullVertices.get(index), vertex, candidateClosestPoint);
+
+            if (isLineInsidePolygon)
+            { // The line is inside, the candidate is the new closest point.
+               distanceSquaredToClosestEdge = distanceSquared;
+               closestEdgeFirstIndex = candidateIndex;
+               closestPointToPack.set(candidateClosestPoint);
+            }
+         }
+      }
+
+      return closestEdgeFirstIndex;
+   }
+
+   public static int findClosestIntersectionWithRay(Point2d rayOrigin, Vector2d rayDirection, int startSearchIndex, int endSearchIndex, List<Point2d> concaveHullVertices, Point2d intersectionToPack)
+   {
+      double minDistanceSquared = Double.POSITIVE_INFINITY;
+      int closestEdgeFirstVertexIndex = -1;
+      intersectionToPack.set(Double.NaN, Double.NaN);
+
+      Vector2d rayOriginToCandidate = new Vector2d();
+      Line2d rayLine = new Line2d(rayOrigin, rayDirection);
+      LineSegment2d edge = new LineSegment2d();
+
+      for (int currentIndex = startSearchIndex; currentIndex != endSearchIndex; currentIndex = increment(currentIndex, concaveHullVertices))
+      {
+         int nextIndex = increment(currentIndex, concaveHullVertices);
+
+         Point2d current = concaveHullVertices.get(currentIndex);
+         Point2d next = concaveHullVertices.get(nextIndex);
+
+         edge.set(current, next);
+         Point2d intersection = edge.intersectionWith(rayLine);
+
+         if (intersection != null)
+         {
+            rayOriginToCandidate.sub(intersection, rayOrigin);
+            if (rayOriginToCandidate.dot(rayDirection) < 0.0)
+               continue;
+            
+            double distanceSquared = intersection.distanceSquared(rayOrigin);
+            if (distanceSquared < minDistanceSquared)
+            {
+               minDistanceSquared = distanceSquared;
+               intersectionToPack.set(intersection);
+               closestEdgeFirstVertexIndex = currentIndex;
+            }
+         }
+      }
+      return closestEdgeFirstVertexIndex;
+   }
+
+   public static String vertexListToString(List<Point2d> vertexList)
+   {
+      String ret = "";
+      for (int i = 0; i < vertexList.size(); i++)
+      {
+         Point2d vertex = vertexList.get(i);
+         ret += vertex.getX() + ", " + vertex.getY();
+         if (i < vertexList.size() - 1)
+            ret += "\n";
+      }
+      return ret;
+   }
+
+   public static void exportVertexListToFile(List<Point2d> vertexList, String fileName)
+   {
+      try
+      {
+         File file = new File(fileName);
+         if(!file.exists())
+            file.createNewFile();
+         FileWriter fileWriter = new FileWriter(file);
+         fileWriter.write(vertexListToString(vertexList));
+         fileWriter.close();
+      }
+      catch (IOException e)
+      {
+         e.printStackTrace();
+      }
    }
 }

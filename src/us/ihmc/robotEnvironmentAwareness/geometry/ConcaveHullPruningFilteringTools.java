@@ -1,15 +1,13 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
 import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools.*;
-import static us.ihmc.robotics.geometry.GeometryTools.computeTriangleArea;
-import static us.ihmc.robotics.geometry.GeometryTools.isPointOnLeftSideOfLine;
+import static us.ihmc.robotEnvironmentAwareness.geometry.ListTools.*;
+import static us.ihmc.robotics.geometry.GeometryTools.*;
 
 import java.util.List;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
-
-import us.ihmc.robotics.geometry.GeometryTools;
 
 /**
  * This class gathers different filters on a concave hull.
@@ -33,49 +31,29 @@ public class ConcaveHullPruningFilteringTools
    public static int filterOutPeaksAndShallowAngles(double shallowAngleThreshold, double peakAngleThreshold, List<Point2d> concaveHullVerticesToFilter)
    {
       int numberOfVerticesRemoved = 0;
-      double cosPeakAngle = Math.cos(peakAngleThreshold);
-      double cosShallowAngle = Math.cos(shallowAngleThreshold);
-
-      // abc represent a triangle formed by three successive vertices.
-      // At each step of the iteration, b is tested to see if it can be removed.
-      Point2d a = concaveHullVerticesToFilter.get(0);
-      Point2d b = concaveHullVerticesToFilter.get(1);
-      Point2d c = concaveHullVerticesToFilter.get(2);
-
-      Vector2d ab = new Vector2d();
-      Vector2d bc = new Vector2d();
-      ab.sub(b, a);
-      bc.sub(c, b);
-      ab.normalize();
-      bc.normalize();
+      shallowAngleThreshold = - Math.abs(shallowAngleThreshold);
+      peakAngleThreshold = - Math.abs(peakAngleThreshold);
 
       for (int currentIndex = 0; currentIndex < concaveHullVerticesToFilter.size();)
       {
-         // If convex at b, then b should be on the outside of ac => on the left of the vector ac.
-         boolean isConvex = isPointOnLeftSideOfLine(b, a, c);
-         // The dot product is used to evaluate the angle at b. If it is too small or too large b may be removed
-         double dot = ab.dot(bc);
-
-         int nextIndex = increment(currentIndex, concaveHullVerticesToFilter);
-         if (isConvex && (dot < cosPeakAngle || dot > cosShallowAngle) && !isVertexPreventingKink(nextIndex, concaveHullVerticesToFilter))
+         if (!ConcaveHullTools.isConvexAtVertex(currentIndex, concaveHullVerticesToFilter))
          {
-            concaveHullVerticesToFilter.remove(nextIndex);
-            b = c;
-            ab.sub(b, a);
-            ab.normalize();
+            currentIndex++;
+            continue;
+         }
+
+         double angle = ConcaveHullTools.getAngleFromPreviousEdgeToNextEdge(currentIndex, concaveHullVerticesToFilter);
+         boolean isAngleWithinThresholds = angle < peakAngleThreshold || angle > shallowAngleThreshold;
+
+         if (isAngleWithinThresholds && !isVertexPreventingKink(currentIndex, concaveHullVerticesToFilter))
+         {
+            concaveHullVerticesToFilter.remove(currentIndex);
             numberOfVerticesRemoved++;
          }
          else
          {
-            a = b;
-            b = c;
-            ab.set(bc);
             currentIndex++;
          }
-
-         c = concaveHullVerticesToFilter.get(increment(nextIndex, concaveHullVerticesToFilter));
-         bc.sub(c, b);
-         bc.normalize();
       }
       return numberOfVerticesRemoved;
    }
@@ -109,7 +87,7 @@ public class ConcaveHullPruningFilteringTools
             currentIndex++;
          }
 
-         c = concaveHullVerticesToFilter.get(increment(nextIndex, concaveHullVerticesToFilter));
+         c = getNextWrap(nextIndex, concaveHullVerticesToFilter);
       }
 
       return numberOfVerticesRemoved;
@@ -170,7 +148,7 @@ public class ConcaveHullPruningFilteringTools
          {
             Point2d vertexToCheck = concaveHullVerticesToFilter.get(checkIndex);
 
-            if (!GeometryTools.isPointOnLeftSideOfLine(vertexToCheck, firstVertex, lastVertex))
+            if (!isPointOnLeftSideOfLine(vertexToCheck, firstVertex, lastVertex))
             {
                // Reducing the cutting line
                endCutIndex = checkIndex;
@@ -195,12 +173,7 @@ public class ConcaveHullPruningFilteringTools
          }
 
          // Removing the vertices.
-         for (int index = firstRemovableVertexIndex; index != endCutIndex;)
-         {
-            index = increment(index, concaveHullVerticesToFilter);
-            concaveHullVerticesToFilter.remove(firstRemovableVertexIndex);
-            numberOfVerticesRemoved++;
-         }
+         numberOfVerticesRemoved += removeAllExclusive(startCutIndex, endCutIndex, concaveHullVerticesToFilter);
       }
 
       return numberOfVerticesRemoved;
@@ -276,20 +249,12 @@ public class ConcaveHullPruningFilteringTools
          shift.set(shift.getY(), -shift.getX());
          shift.scale(maxDepth);
 
-         System.out.println("start bridge: " + pocket.getStartBridgeIndex() + " " + pocket.getStartBridgeVertex() + ", end bridge: " + pocket.getEndBridgeIndex() + " " + pocket.getEndBridgeVertex() + ", shift: " + shift + ", size: " + concaveHullVerticesToFilter.size());
          startBridgeVertex.add(shift);
          endBridgeVertex.add(shift);
 
          int startBridgeVertexIndex = pocket.getStartBridgeIndex();
          int endBridgeVertexIndex = pocket.getEndBridgeIndex();
-         int firstRemovableVertexIndex = increment(startBridgeVertexIndex, concaveHullVerticesToFilter);
-
-         for (int index = decrement(endBridgeVertexIndex, concaveHullVerticesToFilter); index != startBridgeVertexIndex;)
-         {
-            index = decrement(index, concaveHullVerticesToFilter);
-            concaveHullVerticesToFilter.remove(firstRemovableVertexIndex);
-            numberOfVerticesRemoved++;
-         }
+         numberOfVerticesRemoved += removeAllExclusive(startBridgeVertexIndex, endBridgeVertexIndex, concaveHullVerticesToFilter);
       }
 
       return numberOfVerticesRemoved;
@@ -429,6 +394,82 @@ public class ConcaveHullPruningFilteringTools
             }
          }
       }
+      return numberOfVerticesRemoved;
+   }
+
+   public static int filterByRay(double threshold, List<Point2d> concaveHullVerticesToFilter)
+   {
+      int numberOfVerticesRemoved = 0;
+      Vector2d rayDirection = new Vector2d();
+      Point2d intersection = new Point2d();
+      double thresholdSquared = threshold * threshold;
+
+      for (int currentIndex = 0; currentIndex < concaveHullVerticesToFilter.size(); currentIndex++)
+      {
+         Point2d rayOrigin = concaveHullVerticesToFilter.get(currentIndex);
+         rayDirection.sub(getNextWrap(currentIndex, concaveHullVerticesToFilter), getPreviousWrap(currentIndex, concaveHullVerticesToFilter));
+         rayDirection.set(rayDirection.getY(), -rayDirection.getX());
+
+         int startSearchIndex = increment(currentIndex, concaveHullVerticesToFilter);
+         int endSearchIndex = decrement(currentIndex, concaveHullVerticesToFilter);
+         int edgeFirstVertexIndex = findClosestIntersectionWithRay(rayOrigin, rayDirection, startSearchIndex, endSearchIndex, concaveHullVerticesToFilter, intersection);
+
+         if (rayOrigin.distanceSquared(intersection) < thresholdSquared)
+         {
+            int edgeSecondVertexIndex = increment(edgeFirstVertexIndex, concaveHullVerticesToFilter);
+            int firstSubLength = subLengthInclusive(currentIndex, edgeFirstVertexIndex, concaveHullVerticesToFilter);
+            int secondSubLength = subLengthInclusive(edgeSecondVertexIndex, currentIndex, concaveHullVerticesToFilter);
+
+            if (firstSubLength < secondSubLength)
+            {
+               concaveHullVerticesToFilter.get(edgeFirstVertexIndex).set(intersection);
+               numberOfVerticesRemoved += removeAllExclusive(currentIndex, edgeFirstVertexIndex, concaveHullVerticesToFilter);
+            }
+            else
+            {
+               concaveHullVerticesToFilter.get(edgeSecondVertexIndex).set(intersection);
+               numberOfVerticesRemoved += removeAllExclusive(edgeSecondVertexIndex, currentIndex, concaveHullVerticesToFilter);
+            }
+         }
+      }
+      return numberOfVerticesRemoved;
+   }
+
+   public static int innerAlphaShapeFiltering(double alpha, int deadIndexRegion, List<Point2d> concaveHullVerticesToFilter)
+   {
+      int numberOfVerticesRemoved = 0;
+      Point2d closestPoint = new Point2d();
+      double alphaSquared = alpha * alpha;
+
+      for (int currentIndex = 0; currentIndex < concaveHullVerticesToFilter.size(); currentIndex++)
+      {
+         Point2d currentVertex = concaveHullVerticesToFilter.get(currentIndex);
+         int closestEdgeFirstVertexIndex = findInnerClosestEdgeToVertex(currentIndex, deadIndexRegion, concaveHullVerticesToFilter, closestPoint);
+
+         if (closestPoint.distanceSquared(currentVertex) < alphaSquared)
+         {
+            int closestEdgeSecondVertexIndex = increment(closestEdgeFirstVertexIndex, concaveHullVerticesToFilter);
+            int firstSubLength = subLengthInclusive(currentIndex, closestEdgeFirstVertexIndex, concaveHullVerticesToFilter);
+            int secondSubLength = subLengthInclusive(closestEdgeSecondVertexIndex, currentIndex, concaveHullVerticesToFilter);
+
+            if (firstSubLength <= 1 || secondSubLength <= 1)
+            {
+               continue;
+            }
+
+            if (firstSubLength <= secondSubLength)
+            {
+               concaveHullVerticesToFilter.get(closestEdgeFirstVertexIndex).set(closestPoint);
+               numberOfVerticesRemoved += removeAllExclusive(currentIndex, closestEdgeFirstVertexIndex, concaveHullVerticesToFilter);
+            }
+            else
+            {
+               concaveHullVerticesToFilter.get(closestEdgeSecondVertexIndex).set(closestPoint);
+               numberOfVerticesRemoved += removeAllExclusive(closestEdgeSecondVertexIndex, currentIndex, concaveHullVerticesToFilter);
+            }
+         }
+      }
+
       return numberOfVerticesRemoved;
    }
 }

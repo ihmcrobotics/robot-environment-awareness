@@ -51,6 +51,8 @@ public class FootstepPlannerUIInteractionPane extends GridPane
          ToggleButton showFreeSpaceButton = ocTreeUIControlFactory.showFreeSpaceButton();
          ComboBox<ColoringType> coloringTypeButton = ocTreeUIControlFactory.normalBasedColoringButton();
          ToggleButton showEstimatedSurfacesButton = ocTreeUIControlFactory.showEstimatedSurfacesButton();
+         ToggleButton showPlanarRegionsButton = ocTreeUIControlFactory.showPlanarRegionsButton();
+         ToggleButton hidePlanarRegionNodesButton = ocTreeUIControlFactory.hidePlanarRegionNodesButton();
          ToggleButton advancedStageButton = ocTreeUIControlFactory.showAdvanceStageButton();
          Slider resolutionSlider = ocTreeUIControlFactory.resolutionSlider();
          Label resolutionLabel = new Label("OcTree Resolution: ");
@@ -65,6 +67,8 @@ public class FootstepPlannerUIInteractionPane extends GridPane
          add(advancedStageButton, 0, row);
          add(coloringTypeButton, 1, row);
          add(showEstimatedSurfacesButton, 2, row);
+         add(showPlanarRegionsButton, 3, row);
+         add(hidePlanarRegionNodesButton, 4, row);
          row++;
          add(ocTreeUIControlFactory.createBoundingBoxPane(), 1, row);
          row++;

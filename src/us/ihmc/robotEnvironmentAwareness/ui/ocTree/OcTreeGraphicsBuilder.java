@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.ui.ocTree;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -18,6 +19,7 @@ import javafx.util.Pair;
 import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
+import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxInterface;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.octoMap.iterators.LeafBoundingBoxIterable;
@@ -25,6 +27,7 @@ import us.ihmc.octoMap.iterators.LeafIterable;
 import us.ihmc.octoMap.iterators.OcTreeSuperNode;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
+import us.ihmc.octoMap.planarRegions.PlanarRegion;
 import us.ihmc.octoMap.tools.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
@@ -41,17 +44,20 @@ public class OcTreeGraphicsBuilder
    private final AtomicBoolean clear = new AtomicBoolean(false);
    private final AtomicInteger treeDepthForDisplay;
 
-   public enum ColoringType {DEFAULT, NORMAL, HAS_CENTER, REGION};
+   public enum ColoringType {HIDE_NODES, DEFAULT, NORMAL, HAS_CENTER, REGION};
 
    private final AtomicReference<ColoringType> coloringType = new AtomicReference<>(ColoringType.REGION);
 
    private final AtomicBoolean showFreeSpace = new AtomicBoolean(false);
    private final AtomicBoolean showEstimatedSurfaces = new AtomicBoolean(true);
+   private final AtomicBoolean hidePlanarRegionNodes = new AtomicBoolean(false);
+   private final AtomicBoolean showPlanarRegions = new AtomicBoolean(false);
 
    private final AtomicBoolean processPropertyChange = new AtomicBoolean(false);
 
    private final MultiColorMeshBuilder occupiedMeshBuilder;
    private final MeshBuilder freeMeshBuilder = new MeshBuilder();
+   private final MultiColorMeshBuilder polygonsMeshBuilder;
 
    private final Vector3d ocTreeBoundingBoxSize = new Vector3d();
    private final Point3d ocTreeBoundingBoxCenter = new Point3d();
@@ -62,6 +68,7 @@ public class OcTreeGraphicsBuilder
 
    private final AtomicReference<Pair<Mesh, Material>> newOccupiedMeshToRender = new AtomicReference<>(null);
    private final AtomicReference<Pair<Mesh, Material>> newFreeMeshToRender = new AtomicReference<>(null);
+   private final AtomicReference<Pair<Mesh, Material>> newPlanarRegionPolygonMeshToRender = new AtomicReference<>(null);
    private final Material defaultOccupiedMaterial = new PhongMaterial(DEFAULT_COLOR);
    private final Material defaultFreeMaterial = new PhongMaterial(FREE_COLOR);
 
@@ -77,6 +84,8 @@ public class OcTreeGraphicsBuilder
    private final LeafIterable<NormalOcTreeNode> leafIterable;
    private final LeafBoundingBoxIterable<NormalOcTreeNode> leafBoundingBoxIterable;
 
+   private final PlanarRegionPolygonizer planarRegionPolygonizer = new PlanarRegionPolygonizer();
+
    public OcTreeGraphicsBuilder(NormalOcTree octree, boolean enableInitialValue)
    {
       this.octree = octree;
@@ -86,6 +95,9 @@ public class OcTreeGraphicsBuilder
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);
       occupiedMeshBuilder = new MultiColorMeshBuilder(normalBasedColorPalette1D);
+      TextureColorPalette2D regionColorPalette1D = new TextureColorPalette2D();
+      regionColorPalette1D.setHueBrightnessBased(0.9);
+      polygonsMeshBuilder = new MultiColorMeshBuilder(regionColorPalette1D);
 
       leafIterable = new LeafIterable<>(octree, true);
       leafBoundingBoxIterable = new LeafBoundingBoxIterable<>(octree, true);
@@ -112,27 +124,65 @@ public class OcTreeGraphicsBuilder
 
       processPropertyChange.set(false);
 
-      int currentDepth = treeDepthForDisplay.get();
       occupiedMeshBuilder.clear();
       freeMeshBuilder.clear();
+      polygonsMeshBuilder.clear();
+
+      addCellsToMeshBuilders(occupiedMeshBuilder, freeMeshBuilder);
+      addPolygonsToMeshBuilders(polygonsMeshBuilder);
+
+      if (Thread.interrupted())
+         return;
+
+      Material occupiedLeafMaterial = getOccupiedMeshMaterial();
+      Pair<Mesh, Material> meshAndMaterial = new Pair<Mesh, Material>(occupiedMeshBuilder.generateMesh(), occupiedLeafMaterial);
+      newOccupiedMeshToRender.set(meshAndMaterial);
+
+      Mesh freeLeafMesh = showFreeSpace.get() ? freeMeshBuilder.generateMesh() : null;
+      newFreeMeshToRender.set(new Pair<Mesh, Material>(freeLeafMesh, defaultFreeMaterial));
+
+      Mesh planarRegionPolygonMesh = showPlanarRegions.get() ? polygonsMeshBuilder.generateMesh() : null;
+      newPlanarRegionPolygonMeshToRender.set(new Pair<>(planarRegionPolygonMesh, polygonsMeshBuilder.generateMaterial()));
+
+      handleOcTreeBoundingBox();
+   }
+
+   private void addPolygonsToMeshBuilders(MultiColorMeshBuilder polygonsMeshBuilder)
+   {
+      if (!showPlanarRegions.get())
+         return;
+
+      for (int i = 0; i < octree.getNumberOfPlanarRegions(); i++)
+      {
+         PlanarRegion planarRegion = octree.getPlanarRegion(i);
+         planarRegionPolygonizer.compute(planarRegion);
+         List<Point3d> regionConacveHullVertices = planarRegionPolygonizer.getConcaveHullVertices();
+         if (regionConacveHullVertices.size() < 10)
+            continue;
+
+         double lineWidth = 0.01;
+         int regionId = planarRegion.getId();
+         Color regionColor = getRegionColor(regionId);
+         polygonsMeshBuilder.addMultiLineMesh(regionConacveHullVertices, lineWidth, regionColor, true);
+
+         for (int j = 0; j < planarRegionPolygonizer.getNumberOfConvexPolygons(); j++)
+         {
+            List<Point3d> convexPolygonVertices = planarRegionPolygonizer.getConvexPolygonVertices(j);
+            regionColor = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) j / (double) planarRegionPolygonizer.getNumberOfConvexPolygons()));
+            polygonsMeshBuilder.addPolyon(convexPolygonVertices, regionColor);
+         }
+      }
+   }
+
+   private void addCellsToMeshBuilders(MultiColorMeshBuilder occupiedMeshBuilder, MeshBuilder freeMeshBuilder)
+   {
+      if (coloringType.get() == ColoringType.HIDE_NODES)
+         return;
+
+      int currentDepth = treeDepthForDisplay.get();
       boolean showSurfaces = showEstimatedSurfaces.get();
 
-      Iterable<OcTreeSuperNode<NormalOcTreeNode>> iterable;
-
-      if (!useBoundingBox.get())
-      {
-         leafIterable.setMaxDepth(currentDepth);
-         iterable = leafIterable;
-      }
-      else
-      {
-         updateBoundingBox();
-         leafBoundingBoxIterable.setMaxDepth(currentDepth);
-         OcTreeBoundingBoxInterface boundingBox = atomicBoundingBox.getAndSet(null);
-         if (boundingBox != null)
-            leafBoundingBoxIterable.setBoundingBox(boundingBox);
-         iterable = leafBoundingBoxIterable;
-      }
+      Iterable<OcTreeSuperNode<NormalOcTreeNode>> iterable = updateAndGetIterable(currentDepth);
 
       Vector3d planeNormal = new Vector3d();
       Point3d pointOnPlane = new Point3d();
@@ -140,6 +190,10 @@ public class OcTreeGraphicsBuilder
       for (OcTreeSuperNode<NormalOcTreeNode> superNode : iterable)
       {
          NormalOcTreeNode node = superNode.getNode();
+
+         if (hidePlanarRegionNodes.get() && node.isPartOfRegion())
+            continue;
+
          if (octree.isNodeOccupied(node))
          {
             double size = superNode.getSize();
@@ -167,18 +221,27 @@ public class OcTreeGraphicsBuilder
             freeMeshBuilder.addCubeMesh(size, position);
          }
       }
+   }
 
-      if (Thread.interrupted())
-         return;
+   private Iterable<OcTreeSuperNode<NormalOcTreeNode>> updateAndGetIterable(int currentDepth)
+   {
+      Iterable<OcTreeSuperNode<NormalOcTreeNode>> iterable;
 
-      Material occupiedLeafMaterial = getOccupiedMeshMaterial();
-      Pair<Mesh, Material> meshAndMaterial = new Pair<Mesh, Material>(occupiedMeshBuilder.generateMesh(), occupiedLeafMaterial);
-      newOccupiedMeshToRender.set(meshAndMaterial);
-
-      Mesh freeLeafMesh = showFreeSpace.get() ? freeMeshBuilder.generateMesh() : null;
-      newFreeMeshToRender.set(new Pair<Mesh, Material>(freeLeafMesh, defaultFreeMaterial));
-
-      handleOcTreeBoundingBox();
+      if (!useBoundingBox.get())
+      {
+         leafIterable.setMaxDepth(currentDepth);
+         iterable = leafIterable;
+      }
+      else
+      {
+         updateBoundingBox();
+         leafBoundingBoxIterable.setMaxDepth(currentDepth);
+         OcTreeBoundingBoxInterface boundingBox = atomicBoundingBox.getAndSet(null);
+         if (boundingBox != null)
+            leafBoundingBoxIterable.setBoundingBox(boundingBox);
+         iterable = leafBoundingBoxIterable;
+      }
+      return iterable;
    }
 
    private void handleOcTreeBoundingBox()
@@ -194,7 +257,6 @@ public class OcTreeGraphicsBuilder
       boundingBox.getCenterCoordinate(ocTreeBoundingBoxCenter);
 
       double yaw = boundingBox.getYaw();
-      System.out.println("BBX yaw: " + yaw);
 
       Box ocTreeBoundingBoxGraphics = new Box();
       ocTreeBoundingBoxGraphics.setWidth(ocTreeBoundingBoxSize.getX());
@@ -248,6 +310,11 @@ public class OcTreeGraphicsBuilder
       return newOcTreeBoudingBoxToRender.get() != null;
    }
 
+   public boolean hasNewPlanarRegionPolygonMeshToRender()
+   {
+      return newPlanarRegionPolygonMeshToRender.get() != null;
+   }
+
    public Pair<Mesh, Material> pollOccupiedMesh()
    {
       return newOccupiedMeshToRender.getAndSet(null);
@@ -261,6 +328,11 @@ public class OcTreeGraphicsBuilder
    public Box pollOcTreeBoundingBoxGraphics()
    {
       return newOcTreeBoudingBoxToRender.get();
+   }
+
+   public Pair<Mesh, Material> pollPlanarRegionPolygonMesh()
+   {
+      return newPlanarRegionPolygonMeshToRender.getAndSet(null);
    }
 
    public void setTreeDepthForDisplay(int newDepth)
@@ -319,6 +391,34 @@ public class OcTreeGraphicsBuilder
       return showEstimatedSurfaces.get();
    }
 
+   public void showPlanarRegions(boolean show)
+   {
+      if (show != showPlanarRegions.get())
+      {
+         processPropertyChange.set(true);
+         showPlanarRegions.set(show);
+      }
+   }
+
+   public boolean isShowingPlanarRegions()
+   {
+      return showPlanarRegions.get();
+   }
+
+   public void hidePlanarRegionNodes(boolean show)
+   {
+      if (show != hidePlanarRegionNodes.get())
+      {
+         processPropertyChange.set(true);
+         hidePlanarRegionNodes.set(show);
+      }
+   }
+
+   public boolean isHidingPlanarRegionNodes()
+   {
+      return hidePlanarRegionNodes.get();
+   }
+
    public void showOcTreeBoundingBox(boolean show)
    {
       if (show != showOcTreeBoundingBox.get())
@@ -342,8 +442,8 @@ public class OcTreeGraphicsBuilder
       case REGION:
          if (node.isPartOfRegion())
          {
-            java.awt.Color awtColor = new java.awt.Color(node.getRegionId());
-            return Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
+            int regionId = node.getRegionId();
+            return getRegionColor(regionId);
          }
          return DEFAULT_COLOR;
       case HAS_CENTER:
@@ -361,11 +461,18 @@ public class OcTreeGraphicsBuilder
          }
          else
             return DEFAULT_COLOR;
-
+      case HIDE_NODES:
+         return null;
       case DEFAULT:
       default:
          return DEFAULT_COLOR;
       }
+   }
+
+   public Color getRegionColor(int regionId)
+   {
+      java.awt.Color awtColor = new java.awt.Color(regionId);
+      return Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
    }
 
    private Material getOccupiedMeshMaterial()

@@ -183,6 +183,26 @@ public class OcTreeUIController
       return graphicsBuilder.isShowingEstimatedSurfaces();
    }
 
+   public void showPlanarRegions(boolean show)
+   {
+      graphicsBuilder.showPlanarRegions(show);
+   }
+
+   public boolean isShowingPlanarRegions()
+   {
+      return graphicsBuilder.isShowingPlanarRegions();
+   }
+
+   public void hidePlanarRegionNodes(boolean show)
+   {
+      graphicsBuilder.hidePlanarRegionNodes(show);
+   }
+
+   public boolean isHidingPlanarRegionNodes()
+   {
+      return graphicsBuilder.isHidingPlanarRegionNodes();
+   }
+
    public boolean hasNewOccupiedMeshToRender()
    {
       return graphicsBuilder.hasNewOccupiedMeshToRender();
@@ -193,6 +213,11 @@ public class OcTreeUIController
       return graphicsBuilder.hasNewFreeMeshToRender();
    }
 
+   public boolean hasNewPlanarRegionPolygonMeshToRender()
+   {
+      return graphicsBuilder.hasNewPlanarRegionPolygonMeshToRender();
+   }
+
    public Pair<Mesh, Material> pollOccupiedMesh()
    {
       return graphicsBuilder.pollOccupiedMesh();
@@ -201,6 +226,11 @@ public class OcTreeUIController
    public Pair<Mesh, Material> pollFreeMesh()
    {
       return graphicsBuilder.pollFreeMesh();
+   }
+
+   public Pair<Mesh, Material> pollPlanarRegionPolygonMesh()
+   {
+      return graphicsBuilder.pollPlanarRegionPolygonMesh();
    }
 
    public void showOcTreeBoundingBox(boolean show)

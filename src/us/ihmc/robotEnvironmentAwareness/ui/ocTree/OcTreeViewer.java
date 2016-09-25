@@ -30,6 +30,7 @@ public class OcTreeViewer extends Group
 
    private final MeshView occupiedLeafsMeshView = new MeshView();
    private final MeshView freeLeafsMeshView = new MeshView();
+   private final MeshView planarRegionMeshView = new MeshView();
    private Box ocTreeBoundingBoxGraphics = null;
 
    private final OcTreeUIController controller;
@@ -39,7 +40,7 @@ public class OcTreeViewer extends Group
    {
       this.controller = controller;
       enable = new AtomicBoolean(enableInitialValue);
-      getChildren().addAll(occupiedLeafsMeshView, freeLeafsMeshView);
+      getChildren().addAll(occupiedLeafsMeshView, freeLeafsMeshView, planarRegionMeshView);
       setMouseTransparent(true);
 
       renderMeshAnimation = new AnimationTimer()
@@ -54,6 +55,7 @@ public class OcTreeViewer extends Group
             {
                occupiedLeafsMeshView.setMesh(null);
                freeLeafsMeshView.setMesh(null);
+               planarRegionMeshView.setMesh(null);
                return;
             }
 
@@ -68,6 +70,11 @@ public class OcTreeViewer extends Group
             if (controller.hasNewFreeMeshToRender())
             {
                updateMeshView(freeLeafsMeshView, controller.pollFreeMesh());
+            }
+
+            if (controller.hasNewPlanarRegionPolygonMeshToRender())
+            {
+               updateMeshView(planarRegionMeshView, controller.pollPlanarRegionPolygonMesh());
             }
 
             if (ocTreeBoundingBoxGraphics != null)
@@ -220,6 +227,42 @@ public class OcTreeViewer extends Group
          };
       }
       return showEstimatedSurfacesProperty;
+   }
+
+   private BooleanProperty showPlanarRegionsProperty;
+
+   public BooleanProperty showPlanarRegionsProperty()
+   {
+      if (showPlanarRegionsProperty == null)
+      {
+         showPlanarRegionsProperty = new SimpleBooleanProperty(this, "showPlanarRegions", controller.isShowingPlanarRegions())
+         {
+            @Override
+            protected void invalidated()
+            {
+               controller.showPlanarRegions(get());
+            }
+         };
+      }
+      return showPlanarRegionsProperty;
+   }
+
+   private BooleanProperty hidePlanarRegionNodesProperty;
+
+   public BooleanProperty hidePlanarRegionNodesProperty()
+   {
+      if (hidePlanarRegionNodesProperty == null)
+      {
+         hidePlanarRegionNodesProperty = new SimpleBooleanProperty(this, "hidePlanarRegionNodes", controller.isHidingPlanarRegionNodes())
+         {
+            @Override
+            protected void invalidated()
+            {
+               controller.hidePlanarRegionNodes(get());
+            }
+         };
+      }
+      return hidePlanarRegionNodesProperty;
    }
 
    private DoubleProperty occupancyThresholdProperty;

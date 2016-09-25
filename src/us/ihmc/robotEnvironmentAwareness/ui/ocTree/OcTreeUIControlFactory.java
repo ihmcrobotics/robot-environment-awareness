@@ -134,6 +134,26 @@ public class OcTreeUIControlFactory
       return showEstimatedSurfacesButton;
    }
 
+   public ToggleButton showPlanarRegionsButton()
+   {
+      final BooleanProperty showPlanarRegionsProperty = ocTreeViewer.showPlanarRegionsProperty();
+      final ToggleButton showPlanarRegionsButton = new ToggleButton("Show planar regions");
+      showPlanarRegionsButton.setSelected(showPlanarRegionsProperty.get());
+      showPlanarRegionsButton.selectedProperty().bindBidirectional(showPlanarRegionsProperty);
+      
+      return showPlanarRegionsButton;
+   }
+
+   public ToggleButton hidePlanarRegionNodesButton()
+   {
+      final BooleanProperty hidePlanarRegionNodesProperty = ocTreeViewer.hidePlanarRegionNodesProperty();
+      final ToggleButton hidePlanarRegionNodesButton = new ToggleButton("Hide planar region nodes");
+      hidePlanarRegionNodesButton.setSelected(hidePlanarRegionNodesProperty.get());
+      hidePlanarRegionNodesButton.selectedProperty().bindBidirectional(hidePlanarRegionNodesProperty);
+      
+      return hidePlanarRegionNodesButton;
+   }
+
    private static final double SLIDER_MIN_PROBABILITY = 0.01;
    private static final double SLIDER_MAX_PROBABILITY = 0.99;
 

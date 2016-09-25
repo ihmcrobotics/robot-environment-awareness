@@ -59,7 +59,17 @@ public class PlanarRegionPolygonizer
       GeometryFactory geometryFactory = new GeometryFactory();
       MultiPoint multiPoint = geometryFactory.createMultiPoint(coordinates);
 
-      Geometry concaveHullGeometry = new ConcaveHull(multiPoint, concaveHullThreshold).getConcaveHull();
+      Geometry concaveHullGeometry = null;
+
+      try
+      {
+         concaveHullGeometry = new ConcaveHull(multiPoint, 0.2).getConcaveHull();
+      }
+      catch (IndexOutOfBoundsException e)
+      {
+         System.err.println("Could not compute the concave hull.");
+         return;
+      }
 
       for (Coordinate vertex : concaveHullGeometry.getCoordinates())
       {
@@ -68,16 +78,17 @@ public class PlanarRegionPolygonizer
       }
 
       ConcaveHullTools.ensureClockwiseOrdering(concaveHullVerticesInPlane);
+      ConcaveHullTools.removeSuccessiveDuplicateVertices(concaveHullVerticesInPlane);
 
       double shallowAngleThreshold = Math.toRadians(1.0);
       double peakAngleThreshold = Math.toRadians(120.0);
-      double percentageThreshold = 0.995;
+//      double percentageThreshold = 0.99999;
       double depthThreshold = 0.10;
-      double lengthThreshold = 0.01; //sd / 10.0;
+      double lengthThreshold = 0.05; //sd / 10.0;
 
       for (int i = 0; i < 5; i++)
       {
-         ConcaveHullPruningFilteringTools.filterOutGroupsOfShallowVertices(percentageThreshold, concaveHullVerticesInPlane);
+//         ConcaveHullPruningFilteringTools.filterOutGroupsOfShallowVertices(percentageThreshold, concaveHullVerticesInPlane);
          ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, concaveHullVerticesInPlane);
          ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, concaveHullVerticesInPlane);
       }

@@ -7,7 +7,6 @@ import java.util.List;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
-import javax.vecmath.Vector3d;
 
 import org.opensphere.geometry.algorithm.ConcaveHull;
 
@@ -22,13 +21,9 @@ import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullPruningFilteringToo
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
 import us.ihmc.robotics.geometry.GeometryTools;
-import us.ihmc.robotics.geometry.RotationTools;
-import us.ihmc.robotics.linearAlgebra.PrincipalComponentAnalysis3D;
 
 public class PlanarRegionPolygonizer
 {
-   private static final Vector3d Z_WORLD = new Vector3d(0.0, 0.0, 1.0);
-
    private double concaveHullThreshold = 0.05;
    private List<Point2d> concaveHullVerticesInPlane = new ArrayList<>();
    private List<Point3d> concaveHullVerticesInWorld = new ArrayList<>();

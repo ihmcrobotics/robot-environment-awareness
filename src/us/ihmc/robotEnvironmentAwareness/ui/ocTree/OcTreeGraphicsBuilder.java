@@ -32,6 +32,7 @@ import us.ihmc.octoMap.tools.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
+import us.ihmc.robotics.time.TimeTools;
 
 public class OcTreeGraphicsBuilder
 {
@@ -154,9 +155,25 @@ public class OcTreeGraphicsBuilder
       if (!showPlanarRegions.get())
          return;
 
+      long startTime = System.nanoTime();
+
+      intersectionCalculator.compute(octree.getPlanarRegions());
+
+      for (int i = 0; i < intersectionCalculator.getNumberOfIntersections(); i++)
+      {
+         LineSegment3d intersection = intersectionCalculator.getIntersection(i);
+         Point3d start = intersection.getPointA();
+         Point3d end = intersection.getPointB();
+         double lineWidth = 0.025;
+         Color color = Color.BLACK;
+         polygonsMeshBuilder.addLineMesh(start, end, lineWidth, color);
+      }
+
       for (int i = 0; i < octree.getNumberOfPlanarRegions(); i++)
       {
          PlanarRegion planarRegion = octree.getPlanarRegion(i);
+         if (planarRegion.getNumberOfNodes() < 10)
+            continue;
          planarRegionPolygonizer.compute(planarRegion);
          List<Point3d> regionConacveHullVertices = planarRegionPolygonizer.getConcaveHullVertices();
          if (regionConacveHullVertices.size() < 10)
@@ -175,17 +192,8 @@ public class OcTreeGraphicsBuilder
          }
       }
 
-      intersectionCalculator.compute(octree.getPlanarRegions());
-
-      for (int i = 0; i < intersectionCalculator.getNumberOfIntersections(); i++)
-      {
-         LineSegment3d intersection = intersectionCalculator.getIntersection(i);
-         Point3d start = intersection.getPointA();
-         Point3d end = intersection.getPointB();
-         double lineWidth = 0.025;
-         Color color = Color.BLACK;
-         polygonsMeshBuilder.addLineMesh(start, end, lineWidth, color);
-      }
+      long endTime = System.nanoTime();
+      System.out.println("Processing concave hulls took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
    }
 
    private void addCellsToMeshBuilders(MultiColorMeshBuilder occupiedMeshBuilder, MeshBuilder freeMeshBuilder)

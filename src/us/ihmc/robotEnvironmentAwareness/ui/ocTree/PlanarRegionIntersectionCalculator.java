@@ -41,7 +41,28 @@ public class PlanarRegionIntersectionCalculator
 
             LineSegment3d intersection = findIntersectionEndPoints(currentRegion, currentNeighbor, neighborMaxDistance, intersectionPoint, intersectionDirection);
             if (intersection != null)
+            {
+               Vector3d intersectionLength = new Vector3d();
+               intersectionLength.sub(intersection.getPointB(), intersection.getPointA());
+               double length = intersectionLength.length();
+               
+               if (length < 0.06)
+                  continue;
+
                intersections.add(intersection);
+
+               double delta = 0.04;
+               int numberOfPointsToAdd = (int) (length / delta);
+               numberOfPointsToAdd = Math.min(10, numberOfPointsToAdd);
+               for (int k = 0; k < numberOfPointsToAdd; k++)
+               {
+                  Point3d newPoint = new Point3d();
+                  double alpha = k / (double) numberOfPointsToAdd;
+                  newPoint.scaleAdd(alpha, intersectionLength, intersection.getPointA());
+                  currentRegion.addPoint(new Point3d(newPoint));
+                  currentNeighbor.addPoint(new Point3d(newPoint));
+               }
+            }
          }
       }
       System.out.println("Number of intersections: " + intersections.size());

@@ -29,6 +29,7 @@ import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.planarRegions.PlanarRegion;
 import us.ihmc.octoMap.tools.IntersectionPlaneBoxCalculator;
+import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
 
@@ -84,6 +85,7 @@ public class OcTreeGraphicsBuilder
    private final LeafIterable<NormalOcTreeNode> leafIterable;
    private final LeafBoundingBoxIterable<NormalOcTreeNode> leafBoundingBoxIterable;
 
+   private final PlanarRegionIntersectionCalculator intersectionCalculator = new PlanarRegionIntersectionCalculator();
    private final PlanarRegionPolygonizer planarRegionPolygonizer = new PlanarRegionPolygonizer();
 
    public OcTreeGraphicsBuilder(NormalOcTree octree, boolean enableInitialValue)
@@ -171,6 +173,18 @@ public class OcTreeGraphicsBuilder
             regionColor = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) j / (double) planarRegionPolygonizer.getNumberOfConvexPolygons()));
             polygonsMeshBuilder.addPolyon(convexPolygonVertices, regionColor);
          }
+      }
+
+      intersectionCalculator.compute(octree.getPlanarRegions());
+
+      for (int i = 0; i < intersectionCalculator.getNumberOfIntersections(); i++)
+      {
+         LineSegment3d intersection = intersectionCalculator.getIntersection(i);
+         Point3d start = intersection.getPointA();
+         Point3d end = intersection.getPointB();
+         double lineWidth = 0.025;
+         Color color = Color.BLACK;
+         polygonsMeshBuilder.addLineMesh(start, end, lineWidth, color);
       }
    }
 
@@ -486,6 +500,8 @@ public class OcTreeGraphicsBuilder
       case HAS_CENTER:
          occupiedMeshBuilder.changeColorPalette(normalBasedColorPalette1D);
          return occupiedMeshBuilder.generateMaterial();
+      case HIDE_NODES:
+         return null;
       default:
          throw new RuntimeException("Unhandled ColoringType value: " + coloringType.get());
       }

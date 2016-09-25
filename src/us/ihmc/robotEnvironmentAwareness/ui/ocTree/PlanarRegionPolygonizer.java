@@ -71,7 +71,7 @@ public class PlanarRegionPolygonizer
 
       double shallowAngleThreshold = Math.toRadians(1.0);
       double peakAngleThreshold = Math.toRadians(120.0);
-      double percentageThreshold = 0.992;
+      double percentageThreshold = 0.995;
       double depthThreshold = 0.10;
       double lengthThreshold = 0.01; //sd / 10.0;
 

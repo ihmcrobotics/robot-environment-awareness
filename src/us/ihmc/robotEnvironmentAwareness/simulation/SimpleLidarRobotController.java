@@ -96,7 +96,7 @@ public class SimpleLidarRobotController implements RobotController
    {
       if (spinLidar.getBooleanValue())
       {
-         lidarJoint.getQ().add(desiredLidarVelocity.getDoubleValue() * dt);
+         lidarJoint.getQYoVariable().add(desiredLidarVelocity.getDoubleValue() * dt);
       }
 
       RigidBodyTransform transform = new RigidBodyTransform();
@@ -141,7 +141,7 @@ public class SimpleLidarRobotController implements RobotController
       lidarJoint.getTransformToWorld(transform);
       transform.get(orientation, position);
       LidarPosePacket lidarPosePacket = new LidarPosePacket(position, orientation);
-      lidarPosePacket.setLidarAngleJoint((float) lidarJoint.getQ().getDoubleValue());
+      lidarPosePacket.setLidarAngleJoint((float) lidarJoint.getQ());
       return lidarPosePacket;
    }
 

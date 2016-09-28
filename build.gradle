@@ -41,6 +41,7 @@ dependencies {
     compile "org.ros.rosjava_messages:std_msgs:0.5.9"
     compile "org.ros.rosjava_messages:geometry_msgs:1.11.7"
 
+    compile ihmc.getProjectDependency(":DarpaRoboticsChallenge")
     compile ihmc.getProjectDependency(":Graphics3DAdapter")
     compile ihmc.getProjectDependency(":SimulationConstructionSet")
     compile ihmc.getProjectDependency(":Plotting")

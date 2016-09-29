@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.ui.ocTree;
+package us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,14 +19,15 @@ import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.ocTree.implementations.PlanarRegionSegmentationParameters;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
 import us.ihmc.octoMap.tools.OctoMapTools;
-import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
+import us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree.OcTreeGraphicsBuilder.ColoringType;
 import us.ihmc.tools.io.printing.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;
 
 public class OcTreeUIController
 {
-   private static final int THREAD_PERIOD_MILLISECONDS = 1000;
-   private static final double GRAPHICS_REFRESH_PERIOD = 0.5; // in seconds
+   private static final boolean REPORT_TIME = false;
+   private static final int THREAD_PERIOD_MILLISECONDS = 500;
+   private static final double GRAPHICS_REFRESH_PERIOD = 0.25; // in seconds
    private static final double OCTREE_RESOLUTION = 0.02;
    protected static final boolean DEBUG = true;
 
@@ -272,8 +273,18 @@ public class OcTreeUIController
 
             try
             {
-               updateOcTreeSettings();
-               updater.update();
+               if (REPORT_TIME)
+               {
+                  updateOcTreeSettings();
+                  long startTime = System.nanoTime();
+                  updater.update();
+                  long endTime = System.nanoTime();
+                  System.out.println("OcTree update took: " + OctoMapTools.nanoSecondsToSeconds(endTime - startTime));
+               }
+               else
+               {
+                  updater.update();
+               }
 
                if (Thread.interrupted())
                   return;
@@ -283,7 +294,17 @@ public class OcTreeUIController
                if (Double.isNaN(lastGraphicsUpdate.get()) || currentTime - lastGraphicsUpdate.get() >= GRAPHICS_REFRESH_PERIOD)
                {
                   lastGraphicsUpdate.set(currentTime);
-                  graphicsBuilder.update();
+                  if (REPORT_TIME)
+                  {
+                     long startTime = System.nanoTime();
+                     graphicsBuilder.update();
+                     long endTime = System.nanoTime();
+                     System.out.println("OcTreeGraphics update took: " + OctoMapTools.nanoSecondsToSeconds(endTime - startTime));
+                  }
+                  else
+                  {
+                     graphicsBuilder.update();
+                  }
                }
             }
             catch (Exception e)

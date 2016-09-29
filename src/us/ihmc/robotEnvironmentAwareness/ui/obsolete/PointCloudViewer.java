@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.ui;
+package us.ihmc.robotEnvironmentAwareness.ui.obsolete;
 
 import java.util.ArrayList;
 import java.util.List;

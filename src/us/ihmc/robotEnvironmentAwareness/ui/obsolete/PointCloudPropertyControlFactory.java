@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.ui;
+package us.ihmc.robotEnvironmentAwareness.ui.obsolete;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;

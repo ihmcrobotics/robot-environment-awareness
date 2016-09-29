@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.ui.ocTree;
+package us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -174,6 +174,7 @@ public class OcTreeGraphicsBuilder
          PlanarRegion planarRegion = octree.getPlanarRegion(i);
          if (planarRegion.getNumberOfNodes() < 10)
             continue;
+//         planarRegion.printPointsToFile();
          planarRegionPolygonizer.compute(planarRegion);
          List<Point3d> regionConacveHullVertices = planarRegionPolygonizer.getConcaveHullVertices();
          if (regionConacveHullVertices.size() < 10)

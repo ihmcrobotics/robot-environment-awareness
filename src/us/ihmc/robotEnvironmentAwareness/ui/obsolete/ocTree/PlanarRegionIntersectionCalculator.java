@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.ui.ocTree;
+package us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree;
 
 import java.util.ArrayList;
 import java.util.List;

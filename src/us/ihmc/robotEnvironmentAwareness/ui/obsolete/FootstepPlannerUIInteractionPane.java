@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.ui;
+package us.ihmc.robotEnvironmentAwareness.ui.obsolete;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -6,8 +6,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.GridPane;
-import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
-import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeUIControlFactory;
+import us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree.OcTreeUIControlFactory;
+import us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree.OcTreeGraphicsBuilder.ColoringType;
 
 public class FootstepPlannerUIInteractionPane extends GridPane
 {

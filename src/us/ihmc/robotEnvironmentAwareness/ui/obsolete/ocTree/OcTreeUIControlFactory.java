@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.ui.ocTree;
+package us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -36,7 +36,7 @@ import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.octoMap.ocTree.implementations.NormalEstimationParameters;
 import us.ihmc.octoMap.ocTree.implementations.PlanarRegionSegmentationParameters;
 import us.ihmc.octoMap.occupancy.OccupancyParameters;
-import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeGraphicsBuilder.ColoringType;
+import us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree.OcTreeGraphicsBuilder.ColoringType;
 import us.ihmc.robotics.geometry.Direction;
 
 public class OcTreeUIControlFactory

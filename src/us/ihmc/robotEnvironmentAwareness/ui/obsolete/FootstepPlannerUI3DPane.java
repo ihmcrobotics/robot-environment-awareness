@@ -1,10 +1,11 @@
-package us.ihmc.robotEnvironmentAwareness.ui;
+package us.ihmc.robotEnvironmentAwareness.ui.obsolete;
 
 import javax.vecmath.Vector3d;
 
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.SubScene;
@@ -17,9 +18,9 @@ import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPac
 import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
-import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeUIControlFactory;
-import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeUIController;
-import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeViewer;
+import us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree.OcTreeUIControlFactory;
+import us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree.OcTreeUIController;
+import us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree.OcTreeViewer;
 
 public class FootstepPlannerUI3DPane extends Pane
 {
@@ -113,6 +114,11 @@ public class FootstepPlannerUI3DPane extends Pane
       this.getChildren().add(subScene3D);
       subScene3D.heightProperty().bind(this.heightProperty());
       subScene3D.widthProperty().bind(this.widthProperty());
+   }
+
+   public void attachChild(Node nodeToAttach)
+   {
+      rootNode.getChildren().add(nodeToAttach);
    }
 
    public void stop()

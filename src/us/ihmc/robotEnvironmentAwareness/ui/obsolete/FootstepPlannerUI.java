@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.ui;
+package us.ihmc.robotEnvironmentAwareness.ui.obsolete;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -12,7 +12,7 @@ import javafx.stage.WindowEvent;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarSimulationNetClassList;
-import us.ihmc.robotEnvironmentAwareness.ui.ocTree.OcTreeUIControlFactory;
+import us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree.OcTreeUIControlFactory;
 
 public class FootstepPlannerUI extends Application
 {

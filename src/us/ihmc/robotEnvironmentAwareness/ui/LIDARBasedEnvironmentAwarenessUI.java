@@ -1,5 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.ui;
 
+import java.io.IOException;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -18,12 +20,13 @@ import us.ihmc.robotEnvironmentAwareness.ui.controller.NormalEstimationAnchorPan
 import us.ihmc.robotEnvironmentAwareness.ui.controller.OcTreeBasicsAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.PointCloudAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.RegionSegmentationAnchorPaneController;
-import us.ihmc.robotEnvironmentAwareness.ui.obsolete.FootstepPlannerUI3DPane;
+import us.ihmc.robotEnvironmentAwareness.ui.scene3D.RobotEnvironmentAwareness3DScene;
 
 public class LIDARBasedEnvironmentAwarenessUI extends Application
 {
    private final PacketCommunicator packetCommunicator;
-   private FootstepPlannerUI3DPane ui3dpane;
+   private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
+   private final SplitPane mainPane;
 
    @FXML
    private PointCloudAnchorPaneController pointCloudAnchorPaneController;
@@ -36,29 +39,27 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
    @FXML
    private RegionSegmentationAnchorPaneController regionSegmentationAnchorPaneController;
 
-   public LIDARBasedEnvironmentAwarenessUI()
+   public LIDARBasedEnvironmentAwarenessUI() throws IOException
    {
-      packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient("localhost", NetworkPorts.BEHAVIOUR_MODULE_PORT,
-            new LidarSimulationNetClassList());
+      LidarSimulationNetClassList netClassList = new LidarSimulationNetClassList();
+      packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient("localhost", NetworkPorts.BEHAVIOUR_MODULE_PORT, netClassList);
+      packetCommunicator.connect();
+
+      FXMLLoader loader = new FXMLLoader();
+      loader.setController(this);
+      loader.setLocation(getClass().getResource(getClass().getSimpleName() + ".fxml"));
+      mainPane = loader.load();
    }
 
    @Override
    public void start(Stage primaryStage) throws Exception
    {
-      FXMLLoader loader = new FXMLLoader();
-      loader.setController(this);
-      loader.setLocation(getClass().getResource(getClass().getSimpleName() + ".fxml"));
-      SplitPane mainPane = loader.load();
-
-      packetCommunicator.connect();
-      ui3dpane = new FootstepPlannerUI3DPane(-1, -1, packetCommunicator);
-      mainPane.getItems().set(0, ui3dpane);
+      mainPane.getItems().set(0, scene3D);
 
       pointCloudAnchorPaneController.start();
-      ui3dpane.attachChild(pointCloudAnchorPaneController.getRoot());
+      scene3D.attachChild(pointCloudAnchorPaneController.getRoot());
       packetCommunicator.attachListener(PointCloudWorldPacket.class, pointCloudAnchorPaneController.getPointCloudWorldPacketConsumer());
       pointCloudAnchorPaneController.bindControls();
-
 
       primaryStage.setTitle(getClass().getSimpleName());
       primaryStage.setMaximized(true);
@@ -66,7 +67,9 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
       primaryStage.setScene(mainScene);
       primaryStage.show();
       // Get the divider to move back we want it to be... Kinda lame.
-      Platform.runLater(() -> {mainPane.setDividerPositions(0.7);});
+      Platform.runLater(() -> {
+         mainPane.setDividerPositions(0.7);
+      });
 
       primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>()
       {
@@ -76,7 +79,7 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
             stop();
          }
       });
-      
+
    }
 
    @Override
@@ -86,8 +89,8 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
       {
          packetCommunicator.closeConnection();
          packetCommunicator.close();
-         if (ui3dpane != null)
-            ui3dpane.stop();
+         if (scene3D != null)
+            scene3D.stop();
          if (pointCloudAnchorPaneController != null)
             pointCloudAnchorPaneController.stop();
          Platform.exit();

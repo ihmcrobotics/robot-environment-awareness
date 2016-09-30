@@ -41,7 +41,7 @@ public class MultisensePointCloudReceiver extends RosPointCloudSubscriber
       PointCloudWorldPacket pointCloudPacket = new PointCloudWorldPacket();
       pointCloudPacket.setDecayingWorldScan(points);
       packetCommunicator.send(pointCloudPacket);
-      LidarPosePacket lidarPosePacket = new LidarPosePacket(new Point3d(), new Quat4d());
+      LidarPosePacket lidarPosePacket = new LidarPosePacket(new Point3d(), new Quat4d(0.0, 0.0, 0.0, 1.0));
       packetCommunicator.send(lidarPosePacket);
    }
 

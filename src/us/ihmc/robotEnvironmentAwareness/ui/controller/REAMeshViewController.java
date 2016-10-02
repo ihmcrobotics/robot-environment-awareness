@@ -64,7 +64,7 @@ public class REAMeshViewController
 
             if (boundingBoxMeshToRender.get() != null)
             {
-               ocTreeBoundingBoxGraphics = boundingBoxMeshToRender.getAndSet(null);
+               ocTreeBoundingBoxGraphics = boundingBoxMeshToRender.get();
                root.getChildren().add(ocTreeBoundingBoxGraphics);
             }
          }

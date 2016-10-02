@@ -1,7 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.ui.controller;
 
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,11 +10,10 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAOcTreeGraphicsBuilder.ColoringType;
 
-public class OcTreeBasicsAnchorPaneController
+public class OcTreeBasicsAnchorPaneController extends REABasicUIController
 {
    @FXML
    private ToggleButton enableButton;
@@ -30,16 +28,10 @@ public class OcTreeBasicsAnchorPaneController
    @FXML
    private ComboBox<ColoringType> coloringTypeComboBox;
 
-   private REAMessager outputMessager;
    private final IntegerProperty depthIntegerProperty = new SimpleIntegerProperty(this, "depthInteger");
 
    public OcTreeBasicsAnchorPaneController()
    {
-   }
-
-   public void attachOutputMessager(REAMessager outputMessager)
-   {
-      this.outputMessager = outputMessager;
    }
 
    public void setupControls()
@@ -50,14 +42,15 @@ public class OcTreeBasicsAnchorPaneController
       depthIntegerProperty.bind(depthSlider.valueProperty());
    }
 
+   @Override
    public void bindControls()
    {
       setupControls();
 
-      sendMessageOnPropertyChange(enableButton.selectedProperty(), REAModuleAPI.OcTreeEnable);
+      sendMessageOnPropertyChange(enableButton, REAModuleAPI.OcTreeEnable);
       sendMessageOnPropertyChange(depthIntegerProperty, REAModuleAPI.OcTreeGraphicsDepth);
-      sendMessageOnPropertyChange(showOcTreeNodesButton.selectedProperty(), REAModuleAPI.OcTreeGraphicsShowOcTreeNodes);
-      sendMessageOnPropertyChange(showEstimatedSurfacesButton.selectedProperty(), REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces);
+      sendMessageOnPropertyChange(showOcTreeNodesButton, REAModuleAPI.OcTreeGraphicsShowOcTreeNodes);
+      sendMessageOnPropertyChange(showEstimatedSurfacesButton, REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces);
       sendMessageOnPropertyChange(coloringTypeComboBox.valueProperty(), REAModuleAPI.OcTreeGraphicsColoringMode);
    }
 
@@ -65,15 +58,5 @@ public class OcTreeBasicsAnchorPaneController
    public void clear()
    {
       send(new REAMessage(REAModuleAPI.OcTreeClear, true));
-   }
-
-   private <T> void sendMessageOnPropertyChange(Property<T> property, String messageName)
-   {
-      ListenerTools.sendMessageOnPropertyChange(property, outputMessager, messageName);
-   }
-
-   private void send(REAMessage message)
-   {
-      outputMessager.submitMessage(message);
    }
 }

@@ -72,8 +72,8 @@ public class REAOcTreeGraphicsBuilder
    private final TextureColorPalette1D normalBasedColorPalette1D = new TextureColorPalette1D();
    private final TextureColorPalette1D normalVariationBasedColorPalette1D = new TextureColorPalette1D();
 
-   private final AtomicReference<OcTreeBoundingBoxWithCenterAndYaw> atomicBoundingBox;
    private final AtomicReference<Boolean> showOcTreeBoundingBox;
+   private final AtomicReference<Boolean> useOcTreeBoundingBox;
 
    private final LeafBoundingBoxIterable<NormalOcTreeNode> leafBoundingBoxIterable;
 
@@ -95,8 +95,8 @@ public class REAOcTreeGraphicsBuilder
       showEstimatedSurfaces = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, Boolean.class);
       hidePlanarRegionNodes = inputManager.createInput(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, Boolean.class);
       showPlanarRegions = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowPlanarRegions, Boolean.class);
-      atomicBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters, OcTreeBoundingBoxWithCenterAndYaw.class);
       showOcTreeBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, Boolean.class);
+      useOcTreeBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxEnable, Boolean.class);
 
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);
@@ -240,11 +240,16 @@ public class REAOcTreeGraphicsBuilder
    {
       Iterable<OcTreeSuperNode<NormalOcTreeNode>> iterable;
 
-      updateBoundingBox();
       leafBoundingBoxIterable.setMaxDepth(currentDepth);
-      OcTreeBoundingBoxInterface boundingBox = atomicBoundingBox.getAndSet(null);
-      if (boundingBox != null)
+      if (useOcTreeBoundingBox())
+      {
+         OcTreeBoundingBoxInterface boundingBox = octree.getBoundingBox();
          leafBoundingBoxIterable.setBoundingBox(boundingBox);
+      }
+      else
+      {
+         leafBoundingBoxIterable.setBoundingBox(null);
+      }
       iterable = leafBoundingBoxIterable;
       return iterable;
    }
@@ -275,14 +280,6 @@ public class REAOcTreeGraphicsBuilder
 
       ocTreeBoundingBoxGraphics.setMaterial(ocTreeBoundingBoxMaterial);
       outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, ocTreeBoundingBoxGraphics));
-   }
-
-   private void updateBoundingBox()
-   {
-      if (atomicBoundingBox.get() == null)
-         return;
-      OcTreeBoundingBoxWithCenterAndYaw newBoundingBox = atomicBoundingBox.get();
-      newBoundingBox.update(octree.getResolution(), octree.getTreeDepth());
    }
 
    private Color getNodeColor(OcTreeSuperNode<NormalOcTreeNode> superNode)
@@ -384,6 +381,11 @@ public class REAOcTreeGraphicsBuilder
       boolean ret = showOcTreeBoundingBox.get() == null ? false : showOcTreeBoundingBox.get();
       ret &= octree.getBoundingBox() != null;
       return ret;
+   }
+
+   private boolean useOcTreeBoundingBox()
+   {
+      return useOcTreeBoundingBox.get() == null ? false : useOcTreeBoundingBox.get();
    }
 
    private ColoringType getCurrentColoringType()

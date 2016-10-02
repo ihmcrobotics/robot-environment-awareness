@@ -16,6 +16,7 @@ public class REAModuleAPI
    public static final String OcTreeBoundingBoxEnable = Input + OcTree + BoundingBox + "Enable";
    public static final String OcTreeBoundingBoxParameters = Input + OcTree + BoundingBox + "Parameters";
 
+   public static final String OcTreeGraphicsBoundingBoxEnable = Input + OcTree + Graphics + BoundingBox + "Enable";
    public static final String OcTreeGraphicsDepth = Input + OcTree + Graphics + "Depth";
    public static final String OcTreeGraphicsColoringMode = Input + OcTree + Graphics + "ColoringMode";
    public static final String OcTreeGraphicsShowOcTreeNodes = Input + OcTree + Graphics + "ShowOcTreeNodes";

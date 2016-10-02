@@ -71,8 +71,12 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
 
       packetCommunicator.attachListener(PointCloudWorldPacket.class, pointCloudAnchorPaneController.getPointCloudWorldPacketConsumer());
       pointCloudAnchorPaneController.bindControls();
+
       ocTreeBasicsAnchorPaneController.attachOutputMessager(uiOutputManager);
       ocTreeBasicsAnchorPaneController.bindControls();
+      lidarFilterAnchorPaneController.attachOutputMessager(uiOutputManager);
+      lidarFilterAnchorPaneController.bindControls();
+
       reaMeshViewController.start();
 
       primaryStage.setTitle(getClass().getSimpleName());

@@ -8,23 +8,23 @@
 
 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="192.0" prefWidth="569.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="us.ihmc.robotEnvironmentAwareness.ui.controller.LIDARFilterAnchorPaneController">
    <children>
-      <ToggleButton layoutX="14.0" layoutY="14.0" mnemonicParsing="false" text="Enable Bounding Box" />
-      <ToggleButton layoutX="14.0" layoutY="49.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="129.0" text="Show Bounding Box" />
+      <ToggleButton fx:id="enableBoundingBoxButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" text="Enable Bounding Box" />
+      <ToggleButton fx:id="showBoundingBoxButton" layoutX="14.0" layoutY="49.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="129.0" text="Show Bounding Box" />
       <Spinner fx:id="boundingBoxMinXSpinner" editable="true" layoutX="191.0" layoutY="13.0" prefHeight="25.0" prefWidth="95.0" />
       <Label layoutX="157.0" layoutY="17.0" text="minX:" />
-      <Spinner editable="true" layoutX="191.0" layoutY="48.0" prefHeight="25.0" prefWidth="95.0" />
+      <Spinner fx:id="boundingBoxMaxXSpinner" editable="true" layoutX="191.0" layoutY="48.0" prefHeight="25.0" prefWidth="95.0" />
       <Label layoutX="157.0" layoutY="52.0" text="maxX:" />
-      <Spinner editable="true" layoutX="468.0" layoutY="14.0" prefHeight="25.0" prefWidth="95.0" />
+      <Spinner fx:id="boundingBoxMinZSpinner" editable="true" layoutX="468.0" layoutY="14.0" prefHeight="25.0" prefWidth="95.0" />
       <Label layoutX="434.0" layoutY="18.0" text="minz:" />
-      <Spinner editable="true" layoutX="468.0" layoutY="49.0" prefHeight="25.0" prefWidth="95.0" />
+      <Spinner fx:id="boundingBoxMaxZSpinner" editable="true" layoutX="468.0" layoutY="49.0" prefHeight="25.0" prefWidth="95.0" />
       <Label layoutX="434.0" layoutY="53.0" text="maxZ:" />
-      <Spinner editable="true" layoutX="328.0" layoutY="14.0" prefHeight="25.0" prefWidth="95.0" />
+      <Spinner fx:id="boundingBoxMinYSpinner" editable="true" layoutX="328.0" layoutY="14.0" prefHeight="25.0" prefWidth="95.0" />
       <Label layoutX="294.0" layoutY="18.0" text="minY:" />
-      <Spinner editable="true" layoutX="328.0" layoutY="49.0" prefHeight="25.0" prefWidth="95.0" />
+      <Spinner fx:id="boundingBoxMaxYSpinner" editable="true" layoutX="328.0" layoutY="49.0" prefHeight="25.0" prefWidth="95.0" />
       <Label layoutX="294.0" layoutY="53.0" text="maxY:" />
       <Label layoutX="142.0" layoutY="96.0" text="LIDAR min range:" />
-      <Slider blockIncrement="0.05" layoutX="253.0" layoutY="98.0" majorTickUnit="0.2" max="1.0" minorTickCount="5" prefHeight="38.0" prefWidth="224.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.2" />
+      <Slider fx:id="lidarMinRange" blockIncrement="0.05" layoutX="253.0" layoutY="98.0" majorTickUnit="0.2" max="1.0" minorTickCount="5" prefHeight="38.0" prefWidth="224.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.2" />
       <Label layoutX="144.0" layoutY="136.0" text="LIDAR max range:" />
-      <Slider blockIncrement="0.5" layoutX="255.0" layoutY="138.0" majorTickUnit="0.5" max="15.0" min="1.0" minorTickCount="1" prefHeight="38.0" prefWidth="224.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="3.0" />
+      <Slider fx:id="lidarMaxRange" blockIncrement="0.5" layoutX="255.0" layoutY="138.0" majorTickUnit="0.5" max="15.0" min="1.0" minorTickCount="1" prefHeight="38.0" prefWidth="224.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="3.0" />
    </children>
 </AnchorPane>

@@ -6,6 +6,7 @@ import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
+import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.pointCloud.SweepCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
@@ -27,7 +28,7 @@ public class REAOcTreeUpdater
    private final AtomicReference<Double> maxRange;
 
    private final AtomicReference<Boolean> useBoundingBox;
-   private final AtomicReference<OcTreeBoundingBoxWithCenterAndYaw> atomicBoundingBox;
+   private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
    private final REAMessager outputManager;
 
    public REAOcTreeUpdater(NormalOcTree octree, REAMessageManager inputManager, REAMessager outputMessager)
@@ -40,7 +41,7 @@ public class REAOcTreeUpdater
       minRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMinRange, Double.class);
       maxRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMaxRange, Double.class);
       useBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable, Boolean.class);
-      atomicBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters, OcTreeBoundingBoxWithCenterAndYaw.class);
+      atomicBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters, OcTreeSimpleBoundingBox.class);
    }
 
    public void update()
@@ -95,13 +96,13 @@ public class REAOcTreeUpdater
 
    private void handleBoundingBox()
    {
-      if (isUsingBoundingBox())
+      if (isUsingBoundingBox() && atomicBoundingBox.get() != null)
       {
-         OcTreeBoundingBoxWithCenterAndYaw newBoundingBox = atomicBoundingBox.get();
+         OcTreeBoundingBoxWithCenterAndYaw newBoundingBox = new OcTreeBoundingBoxWithCenterAndYaw(octree.getResolution(), octree.getTreeDepth());
+         newBoundingBox.setLocalBoundingBox(atomicBoundingBox.get());
          LidarPosePacket lidarPosePacket = latestLidarPoseReference.get();
          newBoundingBox.setOffsetCoordinate(lidarPosePacket.getPosition());
          newBoundingBox.setYawFromQuaternion(lidarPosePacket.getOrientation());
-         newBoundingBox.update(octree.getResolution(), octree.getTreeDepth());
          octree.setBoundingBox(newBoundingBox);
       }
       else

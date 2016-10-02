@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.ui;
 
+import java.io.File;
 import java.io.IOException;
 
 import javafx.application.Application;
@@ -7,7 +8,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.SplitPane;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
@@ -25,9 +26,11 @@ import us.ihmc.robotEnvironmentAwareness.updaters.REAMessageManager;
 
 public class LIDARBasedEnvironmentAwarenessUI extends Application
 {
+   private static final String CONFIGURATION_FILE_NAME = "./Configurations/defaultREAConfiguration.txt";
+
    private final PacketCommunicator packetCommunicator;
    private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
-   private final SplitPane mainPane;
+   private final BorderPane mainPane;
 
    private final REAMessageManager uiInputManager = new REAMessageManager();
    private final REAMessageManager uiOutputManager = new REAMessageManager();
@@ -63,7 +66,7 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
    @Override
    public void start(Stage primaryStage) throws Exception
    {
-      mainPane.getItems().set(0, scene3D);
+      mainPane.setCenter(scene3D);
 
       pointCloudAnchorPaneController.start();
       scene3D.attachChild(pointCloudAnchorPaneController.getRoot());
@@ -72,6 +75,8 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
       packetCommunicator.attachListener(PointCloudWorldPacket.class, pointCloudAnchorPaneController.getPointCloudWorldPacketConsumer());
       pointCloudAnchorPaneController.bindControls();
 
+      File configurationFile = new File(CONFIGURATION_FILE_NAME);
+      ocTreeBasicsAnchorPaneController.setConfigurationFile(configurationFile);
       ocTreeBasicsAnchorPaneController.attachOutputMessager(uiOutputManager);
       ocTreeBasicsAnchorPaneController.bindControls();
       lidarFilterAnchorPaneController.attachOutputMessager(uiOutputManager);
@@ -84,11 +89,6 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
       Scene mainScene = new Scene(mainPane, 600, 400);
       primaryStage.setScene(mainScene);
       primaryStage.show();
-      // Get the divider to move back we want it to be... Kinda lame.
-      Platform.runLater(() -> {
-         mainPane.setDividerPositions(0.7);
-      });
-
       primaryStage.setOnCloseRequest(event -> stop());
 
    }

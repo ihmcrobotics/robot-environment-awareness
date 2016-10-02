@@ -1,0 +1,7 @@
+#
+#Sun Oct 02 15:12:07 CDT 2016
+Input/OcTree/Graphics/ColoringMode=REGION
+Input/OcTree/Graphics/ShowEstimatedSurfaces=true
+Input/OcTree/Enable=true
+Input/OcTree/Graphics/ShowOcTreeNodes=true
+Input/OcTree/Graphics/Depth=16

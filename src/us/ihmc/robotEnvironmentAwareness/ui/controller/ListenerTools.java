@@ -8,15 +8,17 @@ import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
 
 public class ListenerTools
 {
-   public static <T> void sendMessageOnPropertyChange(Property<T> property, REAMessager messager, String messageName)
+   public static <T> InvalidationListener sendMessageOnPropertyChange(Property<T> property, REAMessager messager, String messageName)
    {
-      property.addListener(new InvalidationListener()
+      InvalidationListener listener = new InvalidationListener()
       {
          @Override
          public void invalidated(Observable observable)
          {
             messager.submitMessage(new REAMessage(messageName, property.getValue()));
          }
-      });
+      };
+      property.addListener(listener);
+      return listener;
    }
 }

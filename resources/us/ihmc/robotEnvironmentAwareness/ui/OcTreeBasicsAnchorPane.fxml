@@ -11,11 +11,11 @@
    <children>
       <ToggleButton fx:id="enableButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" selected="true" text="Enable" />
       <Button fx:id="clearButton" layoutX="14.0" layoutY="49.0" mnemonicParsing="false" onAction="#clear" prefHeight="25.0" prefWidth="52.0" text="Clear" />
-      <Slider blockIncrement="1.0" layoutX="184.0" layoutY="8.0" majorTickUnit="1.0" max="16.0" min="10.0" minorTickCount="1" prefHeight="38.0" prefWidth="146.0" showTickLabels="true" showTickMarks="true" value="16.0" />
+      <Slider fx:id="depthSlider" blockIncrement="1.0" layoutX="184.0" layoutY="8.0" majorTickUnit="1.0" max="16.0" min="10.0" minorTickCount="0" prefHeight="38.0" prefWidth="146.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="16.0" />
       <Label layoutX="84.0" layoutY="18.0" text="Current Depth:" />
-      <ComboBox layoutX="14.0" layoutY="113.0" prefWidth="150.0" />
+      <ComboBox fx:id="coloringTypeComboBox" layoutX="14.0" layoutY="113.0" prefWidth="150.0" />
       <Label layoutX="14.0" layoutY="84.0" text="Node Coloring Type:" />
-      <ToggleButton layoutX="184.0" layoutY="49.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="148.0" text="Show Free Space" />
-      <ToggleButton layoutX="184.0" layoutY="80.0" mnemonicParsing="false" text="Show Estimated Surfaces" />
+      <ToggleButton fx:id="showOcTreeNodesButton" layoutX="184.0" layoutY="49.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="148.0" text="Show OcTree Nodes" />
+      <ToggleButton fx:id="showEstimatedSurfacesButton" layoutX="184.0" layoutY="80.0" mnemonicParsing="false" text="Show Estimated Surfaces" />
    </children>
 </AnchorPane>

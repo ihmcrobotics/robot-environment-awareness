@@ -47,11 +47,12 @@ public class REAOcTreeGraphicsBuilder
 
    public enum ColoringType
    {
-      HIDE_NODES, DEFAULT, NORMAL, HAS_CENTER, REGION
+      DEFAULT, NORMAL, HAS_CENTER, REGION
    };
 
    private final AtomicReference<ColoringType> coloringType;
 
+   private final AtomicReference<Boolean> showOcTreeNodes;
    private final AtomicReference<Boolean> showEstimatedSurfaces;
    private final AtomicReference<Boolean> hidePlanarRegionNodes;
    private final AtomicReference<Boolean> showPlanarRegions;
@@ -90,6 +91,7 @@ public class REAOcTreeGraphicsBuilder
       treeDepthForDisplay = inputManager.createInput(REAModuleAPI.OcTreeGraphicsDepth, Integer.class);
       coloringType = inputManager.createInput(REAModuleAPI.OcTreeGraphicsColoringMode, ColoringType.class);
 
+      showOcTreeNodes = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, Boolean.class);
       showEstimatedSurfaces = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, Boolean.class);
       hidePlanarRegionNodes = inputManager.createInput(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, Boolean.class);
       showPlanarRegions = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowPlanarRegions, Boolean.class);
@@ -191,14 +193,9 @@ public class REAOcTreeGraphicsBuilder
       System.out.println("Processing concave hulls took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
    }
 
-   private boolean isShowingPlanarRegions()
-   {
-      return showPlanarRegions.get() == null ? false : showPlanarRegions.get();
-   }
-
    private void addCellsToMeshBuilders(MultiColorMeshBuilder occupiedMeshBuilder)
    {
-      if (getCurrentColoringType() == ColoringType.HIDE_NODES)
+      if (!isShowingOcTreeNodes())
          return;
 
       int currentDepth = getCurrentTreeDepthForDisplay();
@@ -316,8 +313,6 @@ public class REAOcTreeGraphicsBuilder
          }
          else
             return DEFAULT_COLOR;
-      case HIDE_NODES:
-         return null;
       case DEFAULT:
       default:
          return DEFAULT_COLOR;
@@ -332,6 +327,9 @@ public class REAOcTreeGraphicsBuilder
 
    private Material getOccupiedMeshMaterial()
    {
+      if (!isShowingOcTreeNodes())
+         return null;
+
       switch (getCurrentColoringType())
       {
       case DEFAULT:
@@ -341,8 +339,6 @@ public class REAOcTreeGraphicsBuilder
       case HAS_CENTER:
          occupiedMeshBuilder.changeColorPalette(normalBasedColorPalette1D);
          return occupiedMeshBuilder.generateMaterial();
-      case HIDE_NODES:
-         return null;
       default:
          throw new RuntimeException("Unhandled ColoringType value: " + getCurrentColoringType());
       }
@@ -358,6 +354,11 @@ public class REAOcTreeGraphicsBuilder
       return clear.get() == null ? false : clear.getAndSet(null);
    }
 
+   private boolean isShowingOcTreeNodes()
+   {
+      return showOcTreeNodes.get() == null ? false : showOcTreeNodes.get();
+   }
+
    private boolean isHidingPlanarRegionNodes()
    {
       return hidePlanarRegionNodes.get() == null ? false : hidePlanarRegionNodes.get();
@@ -366,6 +367,11 @@ public class REAOcTreeGraphicsBuilder
    private boolean isShowingEstimatedSurfaces()
    {
       return showEstimatedSurfaces.get() == null ? false : showEstimatedSurfaces.get();
+   }
+
+   private boolean isShowingPlanarRegions()
+   {
+      return showPlanarRegions.get() == null ? false : showPlanarRegions.get();
    }
 
    private int getCurrentTreeDepthForDisplay()

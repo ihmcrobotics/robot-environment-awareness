@@ -18,6 +18,7 @@ public class REAModuleAPI
 
    public static final String OcTreeGraphicsDepth = Input + OcTree + Graphics + "Depth";
    public static final String OcTreeGraphicsColoringMode = Input + OcTree + Graphics + "ColoringMode";
+   public static final String OcTreeGraphicsShowOcTreeNodes = Input + OcTree + Graphics + "ShowOcTreeNodes";
    public static final String OcTreeGraphicsShowEstimatedSurfaces = Input + OcTree + Graphics + "ShowEstimatedSurfaces";
    public static final String OcTreeGraphicsHidePlanarRegionNodes = Input + OcTree + Graphics + "HidePlanarRegionNodes";
    public static final String OcTreeGraphicsShowPlanarRegions = Input + OcTree + Graphics + "ShowPlanarRegions";

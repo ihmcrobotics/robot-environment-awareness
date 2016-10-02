@@ -64,6 +64,39 @@ public class LIDARFilterAnchorPaneController extends REABasicUIController
       boundingBoxMaxYSpinner.valueProperty().addListener(sendBoundingBoxListener);
       boundingBoxMinZSpinner.valueProperty().addListener(sendBoundingBoxListener);
       boundingBoxMaxZSpinner.valueProperty().addListener(sendBoundingBoxListener);
+      registerListener(sendBoundingBoxListener);
+      fireAllListeners();
+
+      load();
+   }
+
+   @FXML
+   public void save()
+   {
+      saveProperty(REAModuleAPI.OcTreeBoundingBoxEnable, enableBoundingBoxButton.isSelected());
+      saveProperty(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, showBoundingBoxButton.isSelected());
+      saveProperty(REAModuleAPI.OcTreeLIDARMinRange, lidarMinRange.getValue());
+      saveProperty(REAModuleAPI.OcTreeLIDARMaxRange, lidarMaxRange.getValue());
+      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters + "/minX", boundingBoxMinXSpinner.getValue());
+      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters + "/maxX", boundingBoxMaxXSpinner.getValue());
+      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters + "/minY", boundingBoxMinYSpinner.getValue());
+      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters + "/maxY", boundingBoxMaxYSpinner.getValue());
+      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters + "/minZ", boundingBoxMinZSpinner.getValue());
+      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters + "/maxZ", boundingBoxMaxZSpinner.getValue());
+   }
+
+   public void load()
+   {
+      loadPropertyAndUpdateUIControl(enableBoundingBoxButton, REAModuleAPI.OcTreeBoundingBoxEnable);
+      loadPropertyAndUpdateUIControl(showBoundingBoxButton, REAModuleAPI.OcTreeGraphicsBoundingBoxShow);
+      loadPropertyAndUpdateUIControl(lidarMinRange, REAModuleAPI.OcTreeLIDARMinRange);
+      loadPropertyAndUpdateUIControl(lidarMaxRange, REAModuleAPI.OcTreeLIDARMaxRange);
+      loadPropertyAndUpdateUIControl(boundingBoxMinXSpinner, REAModuleAPI.OcTreeBoundingBoxParameters + "/minX");
+      loadPropertyAndUpdateUIControl(boundingBoxMaxXSpinner, REAModuleAPI.OcTreeBoundingBoxParameters + "/maxX");
+      loadPropertyAndUpdateUIControl(boundingBoxMinYSpinner, REAModuleAPI.OcTreeBoundingBoxParameters + "/minY");
+      loadPropertyAndUpdateUIControl(boundingBoxMaxYSpinner, REAModuleAPI.OcTreeBoundingBoxParameters + "/maxY");
+      loadPropertyAndUpdateUIControl(boundingBoxMinZSpinner, REAModuleAPI.OcTreeBoundingBoxParameters + "/minZ");
+      loadPropertyAndUpdateUIControl(boundingBoxMaxZSpinner, REAModuleAPI.OcTreeBoundingBoxParameters + "/maxZ");
    }
 
    private OcTreeSimpleBoundingBox createBoundingBox()

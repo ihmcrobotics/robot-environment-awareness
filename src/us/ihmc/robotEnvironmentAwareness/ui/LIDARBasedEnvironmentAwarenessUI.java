@@ -79,6 +79,7 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
       ocTreeBasicsAnchorPaneController.setConfigurationFile(configurationFile);
       ocTreeBasicsAnchorPaneController.attachOutputMessager(uiOutputManager);
       ocTreeBasicsAnchorPaneController.bindControls();
+      lidarFilterAnchorPaneController.setConfigurationFile(configurationFile);
       lidarFilterAnchorPaneController.attachOutputMessager(uiOutputManager);
       lidarFilterAnchorPaneController.bindControls();
 

@@ -10,7 +10,6 @@ import com.google.common.util.concurrent.AtomicDouble;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.tools.OctoMapTools;
-import us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree.OcTreeUIController;
 import us.ihmc.tools.io.printing.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;
 
@@ -96,7 +95,7 @@ public class LIDARBasedREAModule
                }
                else
                {
-                  PrintTools.error(OcTreeUIController.class, e.getClass().getSimpleName());
+                  PrintTools.error(LIDARBasedREAModule.class, e.getClass().getSimpleName());
                }
             }
          }

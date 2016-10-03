@@ -1,17 +1,12 @@
 #
-#Sun Oct 02 16:25:13 CDT 2016
+#Sun Oct 02 18:51:47 CDT 2016
 Input/OcTree/Enable=true
 Input/OcTree/Graphics/ShowEstimatedSurfaces=true
 Input/OcTree/LIDAR/MaxRange=3.0
 Input/OcTree/Graphics/BoundingBox/Show=false
 Input/OcTree/Graphics/Depth=16
 Input/OcTree/LIDAR/MinRange=0.2
-Input/OcTree/BoundingBox/Parameters/maxZ=1.0
-Input/OcTree/BoundingBox/Parameters/maxY=2.0
 Input/OcTree/Graphics/ColoringMode=REGION
-Input/OcTree/BoundingBox/Parameters/maxX=5.0
 Input/OcTree/Graphics/ShowOcTreeNodes=true
-Input/OcTree/BoundingBox/Parameters/minZ=-1.1
-Input/OcTree/BoundingBox/Parameters/minY=-2.0
 Input/OcTree/BoundingBox/Enable=true
-Input/OcTree/BoundingBox/Parameters/minX=0.0
+Input/OcTree/BoundingBox/Parameters=min\: (0.0, -2.0, -1.0), max\: (5.0, 2.0, 1.0)

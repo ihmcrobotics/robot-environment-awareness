@@ -7,6 +7,7 @@ import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
+import us.ihmc.octoMap.ocTree.implementations.NormalEstimationParameters;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.pointCloud.SweepCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
@@ -27,6 +28,8 @@ public class REAOcTreeUpdater
    private final AtomicReference<Double> minRange;
    private final AtomicReference<Double> maxRange;
 
+   private final AtomicReference<NormalEstimationParameters> normalEstimationParameters;
+
    private final AtomicReference<Boolean> useBoundingBox;
    private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
    private final REAMessager outputManager;
@@ -42,6 +45,7 @@ public class REAOcTreeUpdater
       maxRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMaxRange, Double.class);
       useBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable, Boolean.class);
       atomicBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters, OcTreeSimpleBoundingBox.class);
+      normalEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters, NormalEstimationParameters.class);
    }
 
    public void update()
@@ -66,6 +70,10 @@ public class REAOcTreeUpdater
 
       if (minRange.get() != null && maxRange.get() != null)
          octree.setBoundsInsertRange(minRange.get(), maxRange.get());
+
+      if (normalEstimationParameters.get() != null)
+         octree.setNormalEstimationParameters(normalEstimationParameters.getAndSet(null));
+
       octree.update(newScan);
 
       if (Thread.interrupted())

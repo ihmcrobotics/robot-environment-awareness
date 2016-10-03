@@ -77,12 +77,7 @@ public class LIDARFilterAnchorPaneController extends REABasicUIController
       saveProperty(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, showBoundingBoxButton.isSelected());
       saveProperty(REAModuleAPI.OcTreeLIDARMinRange, lidarMinRange.getValue());
       saveProperty(REAModuleAPI.OcTreeLIDARMaxRange, lidarMaxRange.getValue());
-      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters + "/minX", boundingBoxMinXSpinner.getValue());
-      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters + "/maxX", boundingBoxMaxXSpinner.getValue());
-      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters + "/minY", boundingBoxMinYSpinner.getValue());
-      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters + "/maxY", boundingBoxMaxYSpinner.getValue());
-      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters + "/minZ", boundingBoxMinZSpinner.getValue());
-      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters + "/maxZ", boundingBoxMaxZSpinner.getValue());
+      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters, createBoundingBox().toString());
    }
 
    public void load()
@@ -91,12 +86,17 @@ public class LIDARFilterAnchorPaneController extends REABasicUIController
       loadPropertyAndUpdateUIControl(showBoundingBoxButton, REAModuleAPI.OcTreeGraphicsBoundingBoxShow);
       loadPropertyAndUpdateUIControl(lidarMinRange, REAModuleAPI.OcTreeLIDARMinRange);
       loadPropertyAndUpdateUIControl(lidarMaxRange, REAModuleAPI.OcTreeLIDARMaxRange);
-      loadPropertyAndUpdateUIControl(boundingBoxMinXSpinner, REAModuleAPI.OcTreeBoundingBoxParameters + "/minX");
-      loadPropertyAndUpdateUIControl(boundingBoxMaxXSpinner, REAModuleAPI.OcTreeBoundingBoxParameters + "/maxX");
-      loadPropertyAndUpdateUIControl(boundingBoxMinYSpinner, REAModuleAPI.OcTreeBoundingBoxParameters + "/minY");
-      loadPropertyAndUpdateUIControl(boundingBoxMaxYSpinner, REAModuleAPI.OcTreeBoundingBoxParameters + "/maxY");
-      loadPropertyAndUpdateUIControl(boundingBoxMinZSpinner, REAModuleAPI.OcTreeBoundingBoxParameters + "/minZ");
-      loadPropertyAndUpdateUIControl(boundingBoxMaxZSpinner, REAModuleAPI.OcTreeBoundingBoxParameters + "/maxZ");
+      String boundingBoxAsString = loadProperty(REAModuleAPI.OcTreeBoundingBoxParameters);
+      if (boundingBoxAsString != null)
+      {
+         OcTreeSimpleBoundingBox boundingBox = OcTreeSimpleBoundingBox.parseOcTreeSimpleBoundingBox(boundingBoxAsString);
+         boundingBoxMinXSpinner.getValueFactory().setValue(boundingBox.getMinX());
+         boundingBoxMinYSpinner.getValueFactory().setValue(boundingBox.getMinY());
+         boundingBoxMinZSpinner.getValueFactory().setValue(boundingBox.getMinZ());
+         boundingBoxMaxXSpinner.getValueFactory().setValue(boundingBox.getMaxX());
+         boundingBoxMaxYSpinner.getValueFactory().setValue(boundingBox.getMaxY());
+         boundingBoxMaxZSpinner.getValueFactory().setValue(boundingBox.getMaxZ());
+      }
    }
 
    private OcTreeSimpleBoundingBox createBoundingBox()

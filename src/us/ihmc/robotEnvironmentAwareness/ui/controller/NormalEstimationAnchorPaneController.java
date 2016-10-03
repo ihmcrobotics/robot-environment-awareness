@@ -40,7 +40,7 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
       String parameters = loadProperty(REAModuleAPI.OcTreeNormalEstimationParameters);
       if (parameters != null)
       {
-         NormalEstimationParameters normalEstimationParameters = NormalEstimationParameters.parseNormalEstimationParameters(parameters);
+         NormalEstimationParameters normalEstimationParameters = NormalEstimationParameters.parse(parameters);
          searchRadiusSlider.setValue(normalEstimationParameters.getSearchRadius());
          maxDistanceFromPlaneSlider.setValue(normalEstimationParameters.getMaxDistanceFromPlane());
       }

@@ -89,7 +89,7 @@ public class LIDARFilterAnchorPaneController extends REABasicUIController
       String boundingBoxAsString = loadProperty(REAModuleAPI.OcTreeBoundingBoxParameters);
       if (boundingBoxAsString != null)
       {
-         OcTreeSimpleBoundingBox boundingBox = OcTreeSimpleBoundingBox.parseOcTreeSimpleBoundingBox(boundingBoxAsString);
+         OcTreeSimpleBoundingBox boundingBox = OcTreeSimpleBoundingBox.parse(boundingBoxAsString);
          boundingBoxMinXSpinner.getValueFactory().setValue(boundingBox.getMinX());
          boundingBoxMinYSpinner.getValueFactory().setValue(boundingBox.getMinY());
          boundingBoxMinZSpinner.getValueFactory().setValue(boundingBox.getMinZ());

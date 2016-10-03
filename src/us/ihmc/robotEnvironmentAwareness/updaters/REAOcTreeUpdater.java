@@ -9,6 +9,7 @@ import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.octoMap.ocTree.implementations.NormalEstimationParameters;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
+import us.ihmc.octoMap.ocTree.implementations.PlanarRegionSegmentationParameters;
 import us.ihmc.octoMap.pointCloud.SweepCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
@@ -29,6 +30,7 @@ public class REAOcTreeUpdater
    private final AtomicReference<Double> maxRange;
 
    private final AtomicReference<NormalEstimationParameters> normalEstimationParameters;
+   private final AtomicReference<PlanarRegionSegmentationParameters> planarRegionSegmentationParameters;
 
    private final AtomicReference<Boolean> useBoundingBox;
    private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
@@ -46,6 +48,7 @@ public class REAOcTreeUpdater
       useBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable, Boolean.class);
       atomicBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters, OcTreeSimpleBoundingBox.class);
       normalEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters, NormalEstimationParameters.class);
+      planarRegionSegmentationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, PlanarRegionSegmentationParameters.class);
    }
 
    public void update()
@@ -73,6 +76,8 @@ public class REAOcTreeUpdater
 
       if (normalEstimationParameters.get() != null)
          octree.setNormalEstimationParameters(normalEstimationParameters.getAndSet(null));
+      if (planarRegionSegmentationParameters.get() != null)
+         octree.setPlanarRegionSegmentationParameters(planarRegionSegmentationParameters.getAndSet(null));
 
       octree.update(newScan);
 

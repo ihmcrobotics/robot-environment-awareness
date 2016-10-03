@@ -37,14 +37,14 @@ public class REAOcTreeUpdater
    {
       this.octree = octree;
 
-      enable = inputManager.createInput(REAModuleAPI.OcTreeEnable, Boolean.class);
-      clear = inputManager.createInput(REAModuleAPI.OcTreeClear, Boolean.class);
-      minRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMinRange, Double.class);
-      maxRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMaxRange, Double.class);
-      useBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable, Boolean.class);
-      atomicBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters, OcTreeSimpleBoundingBox.class);
-      normalEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters, NormalEstimationParameters.class);
-      planarRegionSegmentationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, PlanarRegionSegmentationParameters.class);
+      enable = inputManager.createInput(REAModuleAPI.OcTreeEnable);
+      clear = inputManager.createInput(REAModuleAPI.OcTreeClear);
+      minRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMinRange);
+      maxRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMaxRange);
+      useBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable);
+      atomicBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters);
+      normalEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters);
+      planarRegionSegmentationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationParameters);
    }
 
    public void update()

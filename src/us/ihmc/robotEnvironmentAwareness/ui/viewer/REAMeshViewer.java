@@ -27,13 +27,11 @@ public class REAMeshViewer
 
    private final AnimationTimer renderMeshAnimation;
 
-   @SuppressWarnings("unchecked")
    public REAMeshViewer(REAMessageManager inputManager)
    {
-      Pair<Mesh, Material> pair = new Pair<Mesh, Material>(null, null);
-      occupiedMeshToRender = (AtomicReference<Pair<Mesh, Material>>) inputManager.createInput(REAModuleAPI.OcTreeGraphicsOccupiedMesh, pair.getClass());
-      planarRegionPolygonMeshToRender = (AtomicReference<Pair<Mesh, Material>>) inputManager.createInput(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh, pair.getClass());
-      boundingBoxMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, Box.class);
+      occupiedMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsOccupiedMesh);
+      planarRegionPolygonMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh);
+      boundingBoxMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh);
 
       root.getChildren().addAll(occupiedLeafsMeshView, planarRegionMeshView);
       root.setMouseTransparent(true);

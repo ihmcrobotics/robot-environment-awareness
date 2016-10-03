@@ -80,17 +80,17 @@ public class REAOcTreeGraphicsBuilder
       this.octree = octree;
       this.regionFeaturesProvider = regionFeaturesProvider;
       this.outputMessager = outputMessager;
-      enable = inputManager.createInput(REAModuleAPI.OcTreeEnable, Boolean.class);
-      clear = inputManager.createInput(REAModuleAPI.OcTreeClear, Boolean.class);
+      enable = inputManager.createInput(REAModuleAPI.OcTreeEnable);
+      clear = inputManager.createInput(REAModuleAPI.OcTreeClear);
 
-      treeDepthForDisplay = inputManager.createInput(REAModuleAPI.OcTreeGraphicsDepth, Integer.class);
-      coloringType = inputManager.createInput(REAModuleAPI.OcTreeGraphicsColoringMode, ColoringType.class);
+      treeDepthForDisplay = inputManager.createInput(REAModuleAPI.OcTreeGraphicsDepth);
+      coloringType = inputManager.createInput(REAModuleAPI.OcTreeGraphicsColoringMode);
 
-      showOcTreeNodes = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, Boolean.class);
-      showEstimatedSurfaces = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, Boolean.class);
-      hidePlanarRegionNodes = inputManager.createInput(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, Boolean.class);
-      showOcTreeBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, Boolean.class);
-      useOcTreeBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxEnable, Boolean.class);
+      showOcTreeNodes = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes);
+      showEstimatedSurfaces = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces);
+      hidePlanarRegionNodes = inputManager.createInput(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes);
+      showOcTreeBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxShow);
+      useOcTreeBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxEnable);
 
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);

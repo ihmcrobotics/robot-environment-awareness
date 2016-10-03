@@ -27,13 +27,13 @@ public class REAMessageManager implements REAMessager
       }
    }
 
-   public <T extends Object> AtomicReference<T> createInput(String messageName, Class<T> messageClass)
+   public <T extends Object> AtomicReference<T> createInput(String messageName)
    {
-      return createInput(messageName, messageClass, null);
+      return createInput(messageName, null);
    }
 
    @SuppressWarnings("unchecked")
-   public <T extends Object> AtomicReference<T> createInput(String messageName, Class<T> messageClass, T defaultValue)
+   public <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue)
    {
       AtomicReference<T> boundVariable = new AtomicReference<T>(defaultValue);
 

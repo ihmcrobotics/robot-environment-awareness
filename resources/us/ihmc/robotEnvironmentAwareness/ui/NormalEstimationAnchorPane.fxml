@@ -27,8 +27,8 @@
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
          </rowConstraints>
          <children>
-            <Label text="Search radius: " />
-            <Label text="Max distance from Plane: " GridPane.rowIndex="1" />
+            <Label text="Search radius (cm): " />
+            <Label text="Max distance from Plane (cm): " GridPane.rowIndex="1" />
             <Slider fx:id="searchRadiusSlider" blockIncrement="0.01" majorTickUnit="0.02" max="0.15" min="0.01" prefHeight="38.0" prefWidth="194.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.08" GridPane.columnIndex="1" />
             <Slider fx:id="maxDistanceFromPlaneSlider" blockIncrement="0.01" majorTickUnit="0.02" max="0.15" min="0.01" prefHeight="38.0" prefWidth="194.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.03" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          </children>

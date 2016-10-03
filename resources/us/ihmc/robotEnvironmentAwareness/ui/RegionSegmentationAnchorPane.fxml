@@ -28,8 +28,8 @@
             <Label text="Min normal quality (0 better): " GridPane.columnIndex="2" GridPane.rowIndex="1" />
             <Slider fx:id="searchRadiusSlider" blockIncrement="0.01" majorTickUnit="0.05" max="0.2" prefHeight="38.0" prefWidth="209.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.05" GridPane.columnIndex="1" />
             <Slider fx:id="maxDistanceFromPlaneSlider" blockIncrement="0.01" majorTickUnit="0.05" max="0.2" prefHeight="38.0" prefWidth="209.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.05" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <Slider fx:id="maxAngleFromPlaneSlider" blockIncrement="1.0" majorTickUnit="5.0" max="30.0" minorTickCount="4" prefHeight="38.0" prefWidth="209.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="10.0" GridPane.columnIndex="3" />
-            <Slider fx:id="minNormalQualitySlider" blockIncrement="1.0" majorTickUnit="2.5" max="15.0" minorTickCount="4" prefHeight="38.0" prefWidth="209.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="1.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+            <Slider fx:id="maxAngleFromPlaneSlider" blockIncrement="0.01" majorTickUnit="0.0872665" max="0.5236" minorTickCount="4" prefHeight="38.0" prefWidth="209.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.174533" GridPane.columnIndex="3" />
+            <Slider fx:id="minNormalQualitySlider" blockIncrement="0.01" majorTickUnit="0.02" max="0.1" prefHeight="38.0" prefWidth="209.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.01" GridPane.columnIndex="3" GridPane.rowIndex="1" />
          </children>
       </GridPane>
       <Button layoutX="14.0" layoutY="105.0" mnemonicParsing="false" onAction="#save" prefHeight="25.0" prefWidth="87.0" text="Save" />

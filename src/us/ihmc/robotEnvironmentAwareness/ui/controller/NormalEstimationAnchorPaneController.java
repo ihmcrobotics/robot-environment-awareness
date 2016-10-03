@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Slider;
 import us.ihmc.octoMap.ocTree.implementations.NormalEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
+import us.ihmc.robotEnvironmentAwareness.ui.tools.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 
 public class NormalEstimationAnchorPaneController extends REABasicUIController
@@ -18,9 +19,17 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
    {
    }
 
+   private void setupControls()
+   {
+      searchRadiusSlider.setLabelFormatter(StringConverterTools.metersToRoundedCentimeters());
+      maxDistanceFromPlaneSlider.setLabelFormatter(StringConverterTools.metersToRoundedCentimeters());
+   }
+
    @Override
    public void bindControls()
    {
+      setupControls();
+
       InvalidationListener sendParametersListener = observable -> send(new REAMessage(REAModuleAPI.OcTreeNormalEstimationParameters, createNormalEstimationParameters()));
       searchRadiusSlider.valueProperty().addListener(sendParametersListener);
       maxDistanceFromPlaneSlider.valueProperty().addListener(sendParametersListener);

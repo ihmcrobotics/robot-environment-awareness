@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Slider;
 import us.ihmc.octoMap.ocTree.implementations.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
+import us.ihmc.robotEnvironmentAwareness.ui.tools.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 
 public class RegionSegmentationAnchorPaneController extends REABasicUIController
@@ -22,9 +23,19 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
    {
    }
 
+   private void setupControls()
+   {
+      searchRadiusSlider.setLabelFormatter(StringConverterTools.metersToRoundedCentimeters());
+      maxDistanceFromPlaneSlider.setLabelFormatter(StringConverterTools.metersToRoundedCentimeters());
+      maxAngleFromPlaneSlider.setLabelFormatter(StringConverterTools.radiansToRoundedDegrees());
+      minNormalQualitySlider.setLabelFormatter(StringConverterTools.metersToRoundedCentimeters());
+   }
+
    @Override
    public void bindControls()
    {
+      setupControls();
+
       InvalidationListener sendParametersListener = observer -> send(new REAMessage(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, createParameters()));
       searchRadiusSlider.valueProperty().addListener(sendParametersListener);
       maxDistanceFromPlaneSlider.valueProperty().addListener(sendParametersListener);

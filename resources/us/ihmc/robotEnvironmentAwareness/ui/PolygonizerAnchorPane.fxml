@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="221.0" prefWidth="541.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="us.ihmc.robotEnvironmentAwareness.ui.controller.PolygonizerAnchorPaneController">
+   <children>
+      <ToggleButton fx:id="enableButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="114.0" text="Enable" />
+      <ToggleButton fx:id="hideRegionNodes" layoutX="14.0" layoutY="50.0" mnemonicParsing="false" text="Hide region nodes" />
+      <Button layoutX="14.0" layoutY="86.0" mnemonicParsing="false" onAction="#save" prefHeight="25.0" prefWidth="114.0" text="Save" />
+   </children>
+</AnchorPane>

@@ -18,6 +18,7 @@ import us.ihmc.robotEnvironmentAwareness.ui.controller.LIDARFilterAnchorPaneCont
 import us.ihmc.robotEnvironmentAwareness.ui.controller.NormalEstimationAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.OcTreeBasicsAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.PointCloudAnchorPaneController;
+import us.ihmc.robotEnvironmentAwareness.ui.controller.PolygonizerAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.REAMeshViewController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.RegionSegmentationAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.scene3D.RobotEnvironmentAwareness3DScene;
@@ -47,6 +48,8 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
    private NormalEstimationAnchorPaneController normalEstimationAnchorPaneController;
    @FXML
    private RegionSegmentationAnchorPaneController regionSegmentationAnchorPaneController;
+   @FXML
+   private PolygonizerAnchorPaneController polygonizerAnchorPaneController;
 
    public LIDARBasedEnvironmentAwarenessUI() throws IOException
    {
@@ -88,6 +91,9 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
       regionSegmentationAnchorPaneController.setConfigurationFile(configurationFile);
       regionSegmentationAnchorPaneController.attachOutputMessager(uiOutputManager);
       regionSegmentationAnchorPaneController.bindControls();
+      polygonizerAnchorPaneController.setConfigurationFile(configurationFile);
+      polygonizerAnchorPaneController.attachOutputMessager(uiOutputManager);
+      polygonizerAnchorPaneController.bindControls();
 
       reaMeshViewController.start();
 

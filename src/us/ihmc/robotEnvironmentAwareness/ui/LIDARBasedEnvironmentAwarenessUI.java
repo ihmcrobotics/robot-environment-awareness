@@ -82,6 +82,9 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
       lidarFilterAnchorPaneController.setConfigurationFile(configurationFile);
       lidarFilterAnchorPaneController.attachOutputMessager(uiOutputManager);
       lidarFilterAnchorPaneController.bindControls();
+      normalEstimationAnchorPaneController.setConfigurationFile(configurationFile);
+      normalEstimationAnchorPaneController.attachOutputMessager(uiOutputManager);
+      normalEstimationAnchorPaneController.bindControls();
 
       reaMeshViewController.start();
 

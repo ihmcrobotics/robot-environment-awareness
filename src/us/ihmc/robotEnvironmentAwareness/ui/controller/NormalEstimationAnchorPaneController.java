@@ -26,6 +26,7 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
       maxDistanceFromPlaneSlider.valueProperty().addListener(sendParametersListener);
       registerListener(sendParametersListener);
       fireAllListeners();
+      load();
    }
 
    @FXML
@@ -36,7 +37,13 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
 
    public void load()
    {
-      
+      String parameters = loadProperty(REAModuleAPI.OcTreeNormalEstimationParameters);
+      if (parameters != null)
+      {
+         NormalEstimationParameters normalEstimationParameters = NormalEstimationParameters.parseNormalEstimationParameters(parameters);
+         searchRadiusSlider.setValue(normalEstimationParameters.getSearchRadius());
+         maxDistanceFromPlaneSlider.setValue(normalEstimationParameters.getMaxDistanceFromPlane());
+      }
    }
 
    private NormalEstimationParameters createNormalEstimationParameters()

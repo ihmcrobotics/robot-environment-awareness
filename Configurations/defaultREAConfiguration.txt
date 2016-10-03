@@ -1,5 +1,5 @@
 #
-#Sun Oct 02 18:51:47 CDT 2016
+#Sun Oct 02 21:12:04 CDT 2016
 Input/OcTree/Enable=true
 Input/OcTree/Graphics/ShowEstimatedSurfaces=true
 Input/OcTree/LIDAR/MaxRange=3.0
@@ -8,5 +8,6 @@ Input/OcTree/Graphics/Depth=16
 Input/OcTree/LIDAR/MinRange=0.2
 Input/OcTree/Graphics/ColoringMode=REGION
 Input/OcTree/Graphics/ShowOcTreeNodes=true
+Input/OcTree/NormalEstimation/Parameters=search radius\: 0.08, max distance from plane\: 0.03
 Input/OcTree/BoundingBox/Enable=true
 Input/OcTree/BoundingBox/Parameters=min\: (0.0, -2.0, -1.0), max\: (5.0, 2.0, 1.0)

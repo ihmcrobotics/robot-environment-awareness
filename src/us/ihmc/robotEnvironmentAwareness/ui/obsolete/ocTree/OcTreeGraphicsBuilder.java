@@ -29,6 +29,8 @@ import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.planarRegions.PlanarRegion;
 import us.ihmc.octoMap.tools.IntersectionPlaneBoxCalculator;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionIntersectionCalculator;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionPolygonizer;
 import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;

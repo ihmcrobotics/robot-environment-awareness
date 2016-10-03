@@ -2,7 +2,6 @@ package us.ihmc.robotEnvironmentAwareness.updaters;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
@@ -12,7 +11,6 @@ import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.ocTree.implementations.PlanarRegionSegmentationParameters;
 import us.ihmc.octoMap.pointCloud.SweepCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 
 public class REAOcTreeUpdater
 {
@@ -34,12 +32,10 @@ public class REAOcTreeUpdater
 
    private final AtomicReference<Boolean> useBoundingBox;
    private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
-   private final REAMessager outputManager;
 
    public REAOcTreeUpdater(NormalOcTree octree, REAMessageManager inputManager, REAMessager outputMessager)
    {
       this.octree = octree;
-      this.outputManager = outputMessager;
 
       enable = inputManager.createInput(REAModuleAPI.OcTreeEnable, Boolean.class);
       clear = inputManager.createInput(REAModuleAPI.OcTreeClear, Boolean.class);
@@ -91,20 +87,9 @@ public class REAOcTreeUpdater
       }
    }
 
-   private boolean isEnabled()
-   {
-      return enable.get() == null ? false : enable.get();
-   }
-
-   private boolean shouldClear()
-   {
-      return clear.get() == null ? false : clear.getAndSet(null);
-   }
-
    private void clear()
    {
       octree.clear();
-      outputManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeHasCleared, true));
    }
 
    private void handleBoundingBox()
@@ -122,16 +107,11 @@ public class REAOcTreeUpdater
          octree.disableBoundingBox();
    }
 
-   private boolean isUsingBoundingBox()
-   {
-      return useBoundingBox.get() == null ? false : useBoundingBox.get();
-   }
-
    private void updateSweep()
    {
       LidarPosePacket lidarPosePacket = latestLidarPoseReference.get();
       PointCloudWorldPacket pointCloudPacket = latestPointCloudWorldPacket.getAndSet(null);
-      
+
       if (!isEnabled() || lidarPosePacket == null || pointCloudPacket == null)
          return;
 
@@ -143,37 +123,34 @@ public class REAOcTreeUpdater
 
    public void attachListeners(PacketCommunicator packetCommunicator)
    {
-      packetCommunicator.attachListener(LidarPosePacket.class, getLidarPosePacketConsumer());
-      packetCommunicator.attachListener(PointCloudWorldPacket.class, getPointCloudWorldPacketConsumer());
+      packetCommunicator.attachListener(LidarPosePacket.class, this::handlePacket);
+      packetCommunicator.attachListener(PointCloudWorldPacket.class, this::handlePacket);
    }
 
-   private PacketConsumer<LidarPosePacket> getLidarPosePacketConsumer()
+   private void handlePacket(LidarPosePacket packet)
    {
-      PacketConsumer<LidarPosePacket> packetConsumer = new PacketConsumer<LidarPosePacket>()
-      {
-         @Override
-         public void receivedPacket(LidarPosePacket packet)
-         {
-            if (packet == null)
-               return;
-
-            latestLidarPoseReference.set(new LidarPosePacket(packet));
-         }
-      };
-      return packetConsumer;
+      if (packet != null)
+         latestLidarPoseReference.set(new LidarPosePacket(packet));
    }
 
-   private PacketConsumer<PointCloudWorldPacket> getPointCloudWorldPacketConsumer()
+   private void handlePacket(PointCloudWorldPacket packet)
    {
-      PacketConsumer<PointCloudWorldPacket> packetConsumer = new PacketConsumer<PointCloudWorldPacket>()
-      {
-         @Override
-         public void receivedPacket(PointCloudWorldPacket packet)
-         {
-            if (packet != null)
-               latestPointCloudWorldPacket.set(packet);
-         }
-      };
-      return packetConsumer;
+      if (packet != null)
+         latestPointCloudWorldPacket.set(packet);
+   }
+
+   private boolean isEnabled()
+   {
+      return enable.get() == null ? false : enable.get();
+   }
+
+   private boolean shouldClear()
+   {
+      return clear.get() == null ? false : clear.getAndSet(null);
+   }
+
+   private boolean isUsingBoundingBox()
+   {
+      return useBoundingBox.get() == null ? false : useBoundingBox.get();
    }
 }

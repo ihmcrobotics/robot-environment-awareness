@@ -3,9 +3,9 @@ package us.ihmc.robotEnvironmentAwareness.ui.controller;
 import javafx.beans.InvalidationListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Slider;
+import us.ihmc.javaFXToolkit.StringConverterTools;
 import us.ihmc.octoMap.ocTree.implementations.NormalEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
-import us.ihmc.robotEnvironmentAwareness.ui.tools.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 
 public class NormalEstimationAnchorPaneController extends REABasicUIController

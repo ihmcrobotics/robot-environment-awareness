@@ -59,20 +59,16 @@ public class LidarFrameViewer
 
    public PacketConsumer<LidarPosePacket> createLidarPosePacketConsumer()
    {
-      PacketConsumer<LidarPosePacket> packetConsumer = new PacketConsumer<LidarPosePacket>()
-      {
-         @Override
-         public void receivedPacket(LidarPosePacket packet)
-         {
-            if (packet == null)
-               return;
+      return this::handlePacket;
+   }
 
-            Quat4d orientation = packet.getOrientation();
-            Point3d position = packet.getPosition();
-            lastAffine.set(JavaFXTools.createAffineFromQuaternionAndTuple(orientation, position));
-         }
-      };
-      return packetConsumer;
+   private void handlePacket(LidarPosePacket packet)
+   {
+      if (packet == null)
+         return;
+      Quat4d orientation = packet.getOrientation();
+      Point3d position = packet.getPosition();
+      lastAffine.set(JavaFXTools.createAffineFromQuaternionAndTuple(orientation, position));
    }
 
    public Node getRoot()

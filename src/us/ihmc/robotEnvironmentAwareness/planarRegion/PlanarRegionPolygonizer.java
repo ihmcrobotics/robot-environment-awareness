@@ -24,7 +24,6 @@ import us.ihmc.robotics.geometry.GeometryTools;
 
 public class PlanarRegionPolygonizer
 {
-   private double concaveHullThreshold = 0.05;
    private List<Point2d> concaveHullVerticesInPlane = new ArrayList<>();
    private List<Point3d> concaveHullVerticesInWorld = new ArrayList<>();
    private List<List<Point3d>> convexPolygonsVerticesInWorld = new ArrayList<>();
@@ -33,7 +32,7 @@ public class PlanarRegionPolygonizer
    private final Point3d origin = new Point3d();
    private final List<Point2d> pointsInPlane = new ArrayList<>();
 
-   private int minNumberOfNodes = 10;
+   private final PolygonizerParameters parameters = new PolygonizerParameters();
 
    public PlanarRegionPolygonizer()
    {
@@ -45,7 +44,7 @@ public class PlanarRegionPolygonizer
       concaveHullVerticesInWorld.clear();
       convexPolygonsVerticesInWorld.clear();
 
-      if (planarRegion.getNumberOfNodes() < minNumberOfNodes)
+      if (planarRegion.getNumberOfNodes() < parameters.getMinNumberOfNodes())
          return;
 
       updateRegionProperties(planarRegion);
@@ -63,7 +62,7 @@ public class PlanarRegionPolygonizer
 
       try
       {
-         concaveHullGeometry = new ConcaveHull(multiPoint, 0.2).getConcaveHull();
+         concaveHullGeometry = new ConcaveHull(multiPoint, parameters.getConcaveHullThreshold()).getConcaveHull();
       }
       catch (IndexOutOfBoundsException e)
       {
@@ -80,15 +79,11 @@ public class PlanarRegionPolygonizer
       ConcaveHullTools.ensureClockwiseOrdering(concaveHullVerticesInPlane);
       ConcaveHullTools.removeSuccessiveDuplicateVertices(concaveHullVerticesInPlane);
 
-      double shallowAngleThreshold = Math.toRadians(1.0);
-      double peakAngleThreshold = Math.toRadians(120.0);
-//      double percentageThreshold = 0.99999;
-      double depthThreshold = 0.10;
-      double lengthThreshold = 0.05; //sd / 10.0;
-
       for (int i = 0; i < 5; i++)
       {
-//         ConcaveHullPruningFilteringTools.filterOutGroupsOfShallowVertices(percentageThreshold, concaveHullVerticesInPlane);
+         double shallowAngleThreshold = parameters.getShallowAngleThreshold();
+         double peakAngleThreshold = parameters.getPeakAngleThreshold();
+         double lengthThreshold = parameters.getLengthThreshold();
          ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, concaveHullVerticesInPlane);
          ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, concaveHullVerticesInPlane);
       }
@@ -100,6 +95,7 @@ public class PlanarRegionPolygonizer
       }
 
       List<ConvexPolygon2d> decomposedPolygons = new ArrayList<>();
+      double depthThreshold = parameters.getDepthThreshold();
       ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHullVerticesInPlane, depthThreshold, decomposedPolygons);
 
       for (int pIndex = 0; pIndex < decomposedPolygons.size(); pIndex++)
@@ -114,6 +110,11 @@ public class PlanarRegionPolygonizer
          Collections.reverse(convexPolygonVerticesInWorld);
          convexPolygonsVerticesInWorld.add(convexPolygonVerticesInWorld);
       }
+   }
+
+   public void setParameters(PolygonizerParameters parameters)
+   {
+      this.parameters.set(parameters);
    }
 
    public List<Point3d> getConcaveHullVertices()

@@ -24,6 +24,7 @@ public class LIDARBasedREAModule
    private final NormalOcTree octree = new NormalOcTree(OCTREE_RESOLUTION);
 
    private final REAOcTreeUpdater updater;
+   private final REAPlanarRegionFeatureUpdater planarRegionFeatureUpdater;
    private final REAOcTreeGraphicsBuilder graphicsBuilder;
 
    private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
@@ -32,7 +33,8 @@ public class LIDARBasedREAModule
    public LIDARBasedREAModule(REAMessageManager uiOutputManager, REAMessager uiInputMessager)
    {
       updater = new REAOcTreeUpdater(octree, uiOutputManager, uiInputMessager);
-      graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, uiOutputManager, uiInputMessager);
+      planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(octree, uiOutputManager, uiInputMessager);
+      graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, planarRegionFeatureUpdater, uiOutputManager, uiInputMessager);
    }
 
    public void attachListeners(PacketCommunicator packetCommunicator)
@@ -68,6 +70,8 @@ public class LIDARBasedREAModule
 
                if (Thread.interrupted())
                   return;
+
+               planarRegionFeatureUpdater.update();
 
                double currentTime = OctoMapTools.nanoSecondsToSeconds(System.nanoTime());
 

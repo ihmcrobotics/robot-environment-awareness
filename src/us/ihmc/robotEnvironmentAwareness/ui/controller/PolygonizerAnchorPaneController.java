@@ -7,7 +7,10 @@ import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 public class PolygonizerAnchorPaneController extends REABasicUIController
 {
    @FXML
-   private ToggleButton enableButton;
+   private ToggleButton enablePolygonizerButton;
+   
+   @FXML
+   private ToggleButton enableIntersectionCalculatorButton;
 
    @FXML
    private ToggleButton hideRegionNodes;
@@ -19,7 +22,8 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
    @Override
    public void bindControls()
    {
-      sendMessageOnPropertyChange(enableButton, REAModuleAPI.OcTreeGraphicsShowPlanarRegions);
+      sendMessageOnPropertyChange(enablePolygonizerButton, REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
+      sendMessageOnPropertyChange(enableIntersectionCalculatorButton, REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
       sendMessageOnPropertyChange(hideRegionNodes, REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes);
       fireAllListeners();
 
@@ -29,13 +33,15 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
    @FXML
    public void save()
    {
-      saveProperty(REAModuleAPI.OcTreeGraphicsShowPlanarRegions, enableButton.isSelected());
+      saveProperty(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable, enablePolygonizerButton.isSelected());
+      saveProperty(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable, enableIntersectionCalculatorButton.isSelected());
       saveProperty(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, hideRegionNodes.isSelected());
    }
 
    private void load()
    {
-      loadPropertyAndUpdateUIControl(enableButton, REAModuleAPI.OcTreeGraphicsShowPlanarRegions);
+      loadPropertyAndUpdateUIControl(enablePolygonizerButton, REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
+      loadPropertyAndUpdateUIControl(enableIntersectionCalculatorButton, REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
       loadPropertyAndUpdateUIControl(hideRegionNodes, REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes);
    }
 }

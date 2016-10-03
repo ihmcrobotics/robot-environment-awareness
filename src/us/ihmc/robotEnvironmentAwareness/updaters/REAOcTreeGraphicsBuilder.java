@@ -24,15 +24,11 @@ import us.ihmc.octoMap.iterators.LeafBoundingBoxIterable;
 import us.ihmc.octoMap.iterators.OcTreeSuperNode;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
-import us.ihmc.octoMap.planarRegions.PlanarRegion;
 import us.ihmc.octoMap.tools.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionIntersectionCalculator;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionPolygonizer;
 import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
-import us.ihmc.robotics.time.TimeTools;
 
 public class REAOcTreeGraphicsBuilder
 {
@@ -40,6 +36,7 @@ public class REAOcTreeGraphicsBuilder
    private static final Color OCTREE_BBX_COLOR = new Color(Color.DARKGREY.getRed(), Color.DARKGREY.getGreen(), Color.DARKGREY.getBlue(), 0.0);
 
    private final NormalOcTree octree;
+   private final RegionFeaturesProvider regionFeaturesProvider;
 
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> clear;
@@ -55,7 +52,6 @@ public class REAOcTreeGraphicsBuilder
    private final AtomicReference<Boolean> showOcTreeNodes;
    private final AtomicReference<Boolean> showEstimatedSurfaces;
    private final AtomicReference<Boolean> hidePlanarRegionNodes;
-   private final AtomicReference<Boolean> showPlanarRegions;
 
    private final AtomicBoolean processPropertyChange = new AtomicBoolean(false);
 
@@ -77,13 +73,12 @@ public class REAOcTreeGraphicsBuilder
 
    private final LeafBoundingBoxIterable<NormalOcTreeNode> leafBoundingBoxIterable;
 
-   private final PlanarRegionIntersectionCalculator intersectionCalculator = new PlanarRegionIntersectionCalculator();
-   private final PlanarRegionPolygonizer planarRegionPolygonizer = new PlanarRegionPolygonizer();
    private final REAMessager outputMessager;
 
-   public REAOcTreeGraphicsBuilder(NormalOcTree octree, REAMessageManager inputManager, REAMessager outputMessager)
+   public REAOcTreeGraphicsBuilder(NormalOcTree octree, RegionFeaturesProvider regionFeaturesProvider, REAMessageManager inputManager, REAMessager outputMessager)
    {
       this.octree = octree;
+      this.regionFeaturesProvider = regionFeaturesProvider;
       this.outputMessager = outputMessager;
       enable = inputManager.createInput(REAModuleAPI.OcTreeEnable, Boolean.class);
       clear = inputManager.createInput(REAModuleAPI.OcTreeClear, Boolean.class);
@@ -94,7 +89,6 @@ public class REAOcTreeGraphicsBuilder
       showOcTreeNodes = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, Boolean.class);
       showEstimatedSurfaces = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, Boolean.class);
       hidePlanarRegionNodes = inputManager.createInput(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, Boolean.class);
-      showPlanarRegions = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowPlanarRegions, Boolean.class);
       showOcTreeBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, Boolean.class);
       useOcTreeBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxEnable, Boolean.class);
 
@@ -137,8 +131,7 @@ public class REAOcTreeGraphicsBuilder
       Material occupiedLeafMaterial = getOccupiedMeshMaterial();
       Pair<Mesh, Material> occupiedMeshAndMaterial = new Pair<Mesh, Material>(occupiedMeshBuilder.generateMesh(), occupiedLeafMaterial);
 
-      Mesh planarRegionPolygonMesh = isShowingPlanarRegions() ? polygonsMeshBuilder.generateMesh() : null;
-      Pair<Mesh, Material> planarRegionPolygonsMesh = new Pair<>(planarRegionPolygonMesh, polygonsMeshBuilder.generateMaterial());
+      Pair<Mesh, Material> planarRegionPolygonsMesh = new Pair<>(polygonsMeshBuilder.generateMesh(), polygonsMeshBuilder.generateMaterial());
 
       outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsOccupiedMesh, occupiedMeshAndMaterial));
       outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh, planarRegionPolygonsMesh));
@@ -148,16 +141,9 @@ public class REAOcTreeGraphicsBuilder
 
    private void addPolygonsToMeshBuilders(MultiColorMeshBuilder polygonsMeshBuilder)
    {
-      if (!isShowingPlanarRegions())
-         return;
-
-      long startTime = System.nanoTime();
-
-      intersectionCalculator.compute(octree.getPlanarRegions());
-
-      for (int i = 0; i < intersectionCalculator.getNumberOfIntersections(); i++)
+      for (int i = 0; i < regionFeaturesProvider.getNumberOfPlaneIntersections(); i++)
       {
-         LineSegment3d intersection = intersectionCalculator.getIntersection(i);
+         LineSegment3d intersection = regionFeaturesProvider.getIntersection(i);
          Point3d start = intersection.getPointA();
          Point3d end = intersection.getPointB();
          double lineWidth = 0.025;
@@ -165,32 +151,21 @@ public class REAOcTreeGraphicsBuilder
          polygonsMeshBuilder.addLineMesh(start, end, lineWidth, color);
       }
 
-      for (int i = 0; i < octree.getNumberOfPlanarRegions(); i++)
+      for (int i = 0; i < regionFeaturesProvider.getNumberOfConcaveHulls(); i++)
       {
-         PlanarRegion planarRegion = octree.getPlanarRegion(i);
-         if (planarRegion.getNumberOfNodes() < 10)
-            continue;
-         //         planarRegion.printPointsToFile();
-         planarRegionPolygonizer.compute(planarRegion);
-         List<Point3d> regionConacveHullVertices = planarRegionPolygonizer.getConcaveHullVertices();
-         if (regionConacveHullVertices.size() < 10)
-            continue;
-
          double lineWidth = 0.01;
-         int regionId = planarRegion.getId();
+         int regionId = regionFeaturesProvider.getRegionId(i);
          Color regionColor = getRegionColor(regionId);
-         polygonsMeshBuilder.addMultiLineMesh(regionConacveHullVertices, lineWidth, regionColor, true);
+         polygonsMeshBuilder.addMultiLineMesh(regionFeaturesProvider.getConcaveHull(i), lineWidth, regionColor, true);
 
-         for (int j = 0; j < planarRegionPolygonizer.getNumberOfConvexPolygons(); j++)
+         int numberOfConvexHulls = regionFeaturesProvider.getNumberOfConvexHulls(i);
+         for (int j = 0; j < numberOfConvexHulls; j++)
          {
-            List<Point3d> convexPolygonVertices = planarRegionPolygonizer.getConvexPolygonVertices(j);
-            regionColor = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) j / (double) planarRegionPolygonizer.getNumberOfConvexPolygons()));
+            List<Point3d> convexPolygonVertices = regionFeaturesProvider.getConvexHull(i, j);
+            regionColor = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) j / (double) numberOfConvexHulls));
             polygonsMeshBuilder.addPolyon(convexPolygonVertices, regionColor);
          }
       }
-
-      long endTime = System.nanoTime();
-      System.out.println("Processing concave hulls took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
    }
 
    private void addCellsToMeshBuilders(MultiColorMeshBuilder occupiedMeshBuilder)
@@ -364,11 +339,6 @@ public class REAOcTreeGraphicsBuilder
    private boolean isShowingEstimatedSurfaces()
    {
       return showEstimatedSurfaces.get() == null ? false : showEstimatedSurfaces.get();
-   }
-
-   private boolean isShowingPlanarRegions()
-   {
-      return showPlanarRegions.get() == null ? false : showPlanarRegions.get();
    }
 
    private int getCurrentTreeDepthForDisplay()

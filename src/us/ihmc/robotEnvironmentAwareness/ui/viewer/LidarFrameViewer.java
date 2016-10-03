@@ -1,68 +1,82 @@
-package us.ihmc.robotEnvironmentAwareness.ui.obsolete;
+package us.ihmc.robotEnvironmentAwareness.ui.viewer;
 
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
 
 import javafx.animation.AnimationTimer;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.transform.Affine;
 import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
-import us.ihmc.robotics.geometry.RigidBodyTransform;
 
-public class LidarFrameViewer extends Group
+public class LidarFrameViewer
 {
    private final JavaFXCoordinateSystem lidarCoordinateSystem;
    private final Affine lidarPose = new Affine();
 
-   private final ConcurrentLinkedDeque<Affine> queue = new ConcurrentLinkedDeque<>();
+   private final AtomicReference<Affine> lastAffine = new AtomicReference<>();
+   private final AnimationTimer lidarUpdater;
+
+   private final Group root = new Group();
 
    public LidarFrameViewer()
    {
       lidarCoordinateSystem = new JavaFXCoordinateSystem(0.1);
       lidarCoordinateSystem.getTransforms().add(lidarPose);
-      getChildren().add(lidarCoordinateSystem);
+      root.getChildren().add(lidarCoordinateSystem);
 
-      new AnimationTimer()
+      lidarUpdater = new AnimationTimer()
       {
          @Override
          public void handle(long now)
          {
-            if (!queue.isEmpty())
-            {
-               Affine newAffine = queue.pollLast();
-               
-               if (newAffine != null)
-                  lidarPose.setToTransform(newAffine);
-            }
+            updateLidarPose();
          }
-      }.start();
+      };
+   }
+
+   public void start()
+   {
+      lidarUpdater.start();
+   }
+
+   public void stop()
+   {
+      lidarUpdater.stop();
+   }
+
+   private void updateLidarPose()
+   {
+      Affine affine = lastAffine.getAndSet(null);
+      if (affine != null)
+         lidarPose.setToTransform(affine);
    }
 
    public PacketConsumer<LidarPosePacket> createLidarPosePacketConsumer()
    {
       PacketConsumer<LidarPosePacket> packetConsumer = new PacketConsumer<LidarPosePacket>()
       {
-         private final RigidBodyTransform localTransform = new RigidBodyTransform();
-
          @Override
          public void receivedPacket(LidarPosePacket packet)
          {
-            if (packet == null || queue.size() > 5)
+            if (packet == null)
                return;
 
             Quat4d orientation = packet.getOrientation();
             Point3d position = packet.getPosition();
-
-            localTransform.setRotation(orientation);
-            localTransform.setTranslation(position.getX(), position.getY(), position.getZ());
-            queue.addLast(JavaFXTools.convertRigidBodyTransformToAffine(localTransform));
+            lastAffine.set(JavaFXTools.createAffineFromQuaternionAndTuple(orientation, position));
          }
       };
       return packetConsumer;
+   }
+
+   public Node getRoot()
+   {
+      return root;
    }
 }

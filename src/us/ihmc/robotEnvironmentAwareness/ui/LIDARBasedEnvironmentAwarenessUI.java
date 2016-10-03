@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
+import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarSimulationNetClassList;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.LIDARFilterAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.NormalEstimationAnchorPaneController;
@@ -22,6 +23,7 @@ import us.ihmc.robotEnvironmentAwareness.ui.controller.PolygonizerAnchorPaneCont
 import us.ihmc.robotEnvironmentAwareness.ui.controller.REAMeshViewController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.RegionSegmentationAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.scene3D.RobotEnvironmentAwareness3DScene;
+import us.ihmc.robotEnvironmentAwareness.ui.viewer.LidarFrameViewer;
 import us.ihmc.robotEnvironmentAwareness.updaters.LIDARBasedREAModule;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAMessageManager;
 
@@ -37,6 +39,7 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
    private final REAMessageManager uiOutputManager = new REAMessageManager();
    private final LIDARBasedREAModule lidarBasedREAModule = new LIDARBasedREAModule(uiOutputManager, uiInputManager);
    private final REAMeshViewController reaMeshViewController = new REAMeshViewController(uiInputManager);
+   private final LidarFrameViewer lidarFrameViewer = new LidarFrameViewer();
 
    @FXML
    private PointCloudAnchorPaneController pointCloudAnchorPaneController;
@@ -64,6 +67,9 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
 
       lidarBasedREAModule.attachListeners(packetCommunicator);
       lidarBasedREAModule.start();
+      
+      packetCommunicator.attachListener(LidarPosePacket.class, lidarFrameViewer.createLidarPosePacketConsumer());
+      lidarFrameViewer.start();
    }
 
    @Override
@@ -74,6 +80,7 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
       pointCloudAnchorPaneController.start();
       scene3D.attachChild(pointCloudAnchorPaneController.getRoot());
       scene3D.attachChild(reaMeshViewController.getRoot());
+      scene3D.attachChild(lidarFrameViewer.getRoot());
 
       packetCommunicator.attachListener(PointCloudWorldPacket.class, pointCloudAnchorPaneController.getPointCloudWorldPacketConsumer());
       pointCloudAnchorPaneController.bindControls();
@@ -119,6 +126,7 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
             pointCloudAnchorPaneController.stop();
          lidarBasedREAModule.stop();
          reaMeshViewController.stop();
+         lidarFrameViewer.stop();
          Platform.exit();
       }
       catch (Exception e)

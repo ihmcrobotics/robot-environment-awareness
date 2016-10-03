@@ -21,6 +21,7 @@ import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
 import us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree.OcTreeUIControlFactory;
 import us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree.OcTreeUIController;
 import us.ihmc.robotEnvironmentAwareness.ui.obsolete.ocTree.OcTreeViewer;
+import us.ihmc.robotEnvironmentAwareness.ui.viewer.LidarFrameViewer;
 
 public class FootstepPlannerUI3DPane extends Pane
 {
@@ -84,7 +85,8 @@ public class FootstepPlannerUI3DPane extends Pane
       if (FootstepPlannerUI.CREATE_LIDAR_VIEWER)
       {
          lidarFrameViewer = new LidarFrameViewer();
-         rootNode.getChildren().add(lidarFrameViewer);
+         lidarFrameViewer.start();
+         rootNode.getChildren().add(lidarFrameViewer.getRoot());
          packetCommunicator.attachListener(LidarPosePacket.class, lidarFrameViewer.createLidarPosePacketConsumer());
       }
       else

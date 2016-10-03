@@ -1,11 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.ui.controller;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
 
 import javafx.beans.InvalidationListener;
@@ -20,7 +16,7 @@ import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
 public abstract class REABasicUIController
 {
    private REAMessager outputMessager;
-   private File configurationFile;
+   private FilePropertyHelper filePropertyHelper;
    private final Set<InvalidationListener> invalidationListeners = new HashSet<>();
 
    public abstract void bindControls();
@@ -31,88 +27,48 @@ public abstract class REABasicUIController
 
    public void setConfigurationFile(File configurationFile)
    {
-      this.configurationFile = configurationFile;
+      filePropertyHelper = new FilePropertyHelper(configurationFile);
    }
 
    protected void saveProperty(String propertyName, double propertyValue)
    {
-      saveProperty(propertyName, Double.toString(propertyValue));
+      filePropertyHelper.saveProperty(propertyName, propertyValue);
    }
 
    protected void saveProperty(String propertyName, int propertyValue)
    {
-      saveProperty(propertyName, Integer.toString(propertyValue));
+      filePropertyHelper.saveProperty(propertyName, propertyValue);
    }
 
    protected void saveProperty(String propertyName, boolean propertyValue)
    {
-      saveProperty(propertyName, Boolean.toString(propertyValue));
+      filePropertyHelper.saveProperty(propertyName, propertyValue);
    }
 
    protected void saveProperty(String propertyName, String propertyValue)
    {
-      FileOutputStream fileOut = null;
-      FileInputStream fileIn = null;
-
-      try
-      {
-         Properties properties = new Properties();
-
-         if (configurationFile.exists() && configurationFile.isFile())
-         {
-            fileIn = new FileInputStream(configurationFile);
-            properties.load(fileIn);
-         }
-
-         properties.setProperty(propertyName, propertyValue);
-         fileOut = new FileOutputStream(configurationFile);
-         properties.store(fileOut, "");
-         fileOut.close();
-      }
-      catch (Exception ex)
-      {
-         throw new RuntimeException("Problem when saving property.");
-      }
-      finally
-      {
-         try
-         {
-            if (fileIn != null)
-               fileIn.close();
-         }
-         catch (Exception e)
-         {
-         }
-
-         try
-         {
-            fileOut.close();
-         }
-         catch (IOException e)
-         {
-         }
-      }
+      filePropertyHelper.saveProperty(propertyName, propertyValue);
    }
 
    protected void loadPropertyAndUpdateUIControl(ToggleButton toggleButton, String propertyName)
    {
-      String loadedProperty = loadProperty(propertyName);
+      Boolean loadedProperty = filePropertyHelper.loadBooleanProperty(propertyName);
       if (loadedProperty != null)
-         toggleButton.setSelected(Boolean.parseBoolean(loadedProperty));
+         toggleButton.setSelected(loadedProperty);
    }
 
    protected void loadPropertyAndUpdateUIControl(Slider slider, String propertyName)
    {
-      String loadedProperty = loadProperty(propertyName);
+      Double loadedProperty = filePropertyHelper.loadDoubleProperty(propertyName);
       if (loadedProperty != null)
-         slider.setValue(Double.parseDouble(loadedProperty));
+         slider.setValue(loadedProperty);
    }
 
    protected void loadPropertyAndUpdateUIControl(Spinner<Double> spinner, String propertyName)
    {
-      String loadedProperty = loadProperty(propertyName);
+      Double loadedProperty = filePropertyHelper.loadDoubleProperty(propertyName);
       if (loadedProperty != null)
-         spinner.getValueFactory().setValue(Double.parseDouble(loadedProperty));
+         spinner.getValueFactory().setValue(loadedProperty);
    }
 
    @SuppressWarnings("unchecked")
@@ -128,37 +84,7 @@ public abstract class REABasicUIController
 
    protected String loadProperty(String propertyName)
    {
-      FileInputStream fileIn = null;
-      String propertyValue = null;
-
-      if (!configurationFile.exists() || !configurationFile.isFile())
-         return null;
-
-      try
-      {
-         Properties properties = new Properties();
-
-         fileIn = new FileInputStream(configurationFile);
-         properties.load(fileIn);
-         propertyValue = properties.getProperty(propertyName);
-      }
-      catch (Exception ex)
-      {
-         throw new RuntimeException("Problem when loading property.");
-      }
-      finally
-      {
-         try
-         {
-            fileIn.close();
-         }
-         catch (IOException e)
-         {
-            e.printStackTrace();
-         }
-      }
-
-      return propertyValue;
+      return filePropertyHelper.loadProperty(propertyName);
    }
 
    public void attachOutputMessager(REAMessager outputMessager)

@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.ui.controller;
+package us.ihmc.robotEnvironmentAwareness.ui.viewer;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -13,7 +13,7 @@ import javafx.util.Pair;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAMessageManager;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 
-public class REAMeshViewController
+public class REAMeshViewer
 {
    private final Group root = new Group();
 
@@ -28,7 +28,7 @@ public class REAMeshViewController
    private final AnimationTimer renderMeshAnimation;
 
    @SuppressWarnings("unchecked")
-   public REAMeshViewController(REAMessageManager inputManager)
+   public REAMeshViewer(REAMessageManager inputManager)
    {
       Pair<Mesh, Material> pair = new Pair<Mesh, Material>(null, null);
       occupiedMeshToRender = (AtomicReference<Pair<Mesh, Material>>) inputManager.createInput(REAModuleAPI.OcTreeGraphicsOccupiedMesh, pair.getClass());

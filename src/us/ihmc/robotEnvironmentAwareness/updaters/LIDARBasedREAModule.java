@@ -51,7 +51,7 @@ public class LIDARBasedREAModule
          @Override
          public void run()
          {
-            if (Thread.interrupted())
+            if (isThreadInterrupted())
                return;
 
             try
@@ -68,10 +68,13 @@ public class LIDARBasedREAModule
                   updater.update();
                }
 
-               if (Thread.interrupted())
+               if (isThreadInterrupted())
                   return;
 
                planarRegionFeatureUpdater.update();
+
+               if (isThreadInterrupted())
+                  return;
 
                double currentTime = OctoMapTools.nanoSecondsToSeconds(System.nanoTime());
 
@@ -102,6 +105,11 @@ public class LIDARBasedREAModule
                   PrintTools.error(LIDARBasedREAModule.class, e.getClass().getSimpleName());
                }
             }
+         }
+
+         private boolean isThreadInterrupted()
+         {
+            return Thread.interrupted() || scheduled == null || scheduled.isCancelled();
          }
       };
       return runnable;

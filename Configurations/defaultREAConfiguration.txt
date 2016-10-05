@@ -1,5 +1,5 @@
 #
-#Mon Oct 03 12:31:58 CDT 2016
+#Tue Oct 04 08:56:40 CDT 2016
 Input/OcTree/Enable=true
 Input/OcTree/Graphics/ShowEstimatedSurfaces=true
 Input/OcTree/LIDAR/MaxRange=3.0
@@ -9,7 +9,11 @@ Input/OcTree/Graphics/Depth=16
 Input/OcTree/LIDAR/MinRange=0.2
 Input/OcTree/Graphics/ColoringMode=REGION
 Input/OcTree/Graphics/ShowOcTreeNodes=true
-Input/OcTree/Graphics/HidePlanarRegionNodes=false
+Input/OcTree/PlanarRegionFeatures/Polygonizer/Enable=true
+Input/OcTree/PlanarRegionFeatures/Intersection/Parameters=maxDistanceToRegion\: 0.05, minRegionSize\: 50, minIntersectionLength\: 0.06, minRegionAngleDifference\: 0.08726646259971647, addIntersectionsToRegions\: true
+Input/OcTree/PlanarRegionFeatures/Intersection/Enable=true
+Input/OcTree/PlanarRegionFeatures/Polygonizer/Parameters=concaveHullThreshold\: 0.2, minNumberOfNodes\: 50, shallowAngleThreshold\: 0.17453292519943295, peakAngleThreshold\: 2.792526803190927, lengthThreshold\: 0.05, depthThreshold\: 0.1
 Input/OcTree/NormalEstimation/Parameters=search radius\: 0.08, max distance from plane\: 0.03
+Input/OcTree/Graphics/HidePlanarRegionNodes=false
 Input/OcTree/BoundingBox/Enable=true
 Input/OcTree/BoundingBox/Parameters=min\: (0.0, -2.0, -1.2), max\: (5.0, 2.0, 1.0)

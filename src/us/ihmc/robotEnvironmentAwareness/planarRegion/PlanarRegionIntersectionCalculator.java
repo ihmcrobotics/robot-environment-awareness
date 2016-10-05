@@ -2,12 +2,14 @@ package us.ihmc.robotEnvironmentAwareness.planarRegion;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.PriorityQueue;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import us.ihmc.octoMap.planarRegions.PlanarRegion;
 import us.ihmc.robotics.MathTools;
+import us.ihmc.robotics.geometry.LineSegment1d;
 import us.ihmc.robotics.geometry.LineSegment3d;
 
 public class PlanarRegionIntersectionCalculator
@@ -39,31 +41,33 @@ public class PlanarRegionIntersectionCalculator
             if (!success)
                continue;
 
-            LineSegment3d intersection = findIntersectionEndPoints(currentRegion, currentNeighbor, parameters.getMaxDistanceToRegion(), intersectionPoint,
-                  intersectionDirection);
-            if (intersection != null)
+            double maxDistanceToRegion = parameters.getMaxDistanceToRegion();
+            double minIntersectionLength = parameters.getMinIntersectionLength();
+
+            List<LineSegment3d> intersectionList = findIntersectionEndPoints2(currentRegion, currentNeighbor, maxDistanceToRegion, minIntersectionLength, intersectionPoint, intersectionDirection);
+
+            if (intersectionList != null)
             {
                Vector3d intersectionLength = new Vector3d();
-               intersectionLength.sub(intersection.getPointB(), intersection.getPointA());
-               double length = intersectionLength.length();
 
-               if (length < parameters.getMinIntersectionLength())
-                  continue;
-
-               intersections.add(intersection);
+               intersections.addAll(intersectionList);
 
                if (parameters.isAddIntersectionsToRegions())
                {
-                  double delta = 0.04;
-                  int numberOfPointsToAdd = (int) (length / delta);
-                  numberOfPointsToAdd = Math.min(10, numberOfPointsToAdd);
-                  for (int k = 0; k < numberOfPointsToAdd; k++)
+                  for (LineSegment3d intersection : intersectionList)
                   {
-                     Point3d newPoint = new Point3d();
-                     double alpha = k / (double) numberOfPointsToAdd;
-                     newPoint.scaleAdd(alpha, intersectionLength, intersection.getPointA());
-                     currentRegion.addPoint(new Point3d(newPoint));
-                     currentNeighbor.addPoint(new Point3d(newPoint));
+                     intersectionLength.sub(intersection.getPointB(), intersection.getPointA());
+                     double length = intersectionLength.length();
+                     double delta = 0.01;
+                     int numberOfPointsToAdd = (int) (length / delta);
+                     for (int k = 0; k < numberOfPointsToAdd; k++)
+                     {
+                        Point3d newPoint = new Point3d();
+                        double alpha = k / (double) numberOfPointsToAdd;
+                        newPoint.scaleAdd(alpha, intersectionLength, intersection.getPointA());
+                        currentRegion.addPoint(new Point3d(newPoint));
+                        currentNeighbor.addPoint(new Point3d(newPoint));
+                     }
                   }
                }
             }
@@ -114,94 +118,51 @@ public class PlanarRegionIntersectionCalculator
       return true;
    }
 
-   private LineSegment3d findIntersectionEndPoints(PlanarRegion region1, PlanarRegion region2, double maxDistance, Point3d intersectionPoint,
+   private List<LineSegment3d> findIntersectionEndPoints2(PlanarRegion region1, PlanarRegion region2, double maxDistance, double minIntersectionLength, Point3d intersectionPoint,
          Vector3d intersectionDirection)
    {
-      LineSegment3d intersection1 = findIntersectionEndPoints(region1, maxDistance, intersectionPoint, intersectionDirection);
-      if (intersection1 == null)
+
+      List<LineSegment1d> intersectionsFromRegion1 = findIntersectionLineSegments(region1, maxDistance, minIntersectionLength, intersectionPoint, intersectionDirection);
+      if (intersectionsFromRegion1 == null || intersectionsFromRegion1.isEmpty())
          return null;
-      LineSegment3d intersection2 = findIntersectionEndPoints(region2, maxDistance, intersectionPoint, intersectionDirection);
-      if (intersection2 == null)
+      List<LineSegment1d> intersectionsFromRegion2 = findIntersectionLineSegments(region2, maxDistance, minIntersectionLength, intersectionPoint, intersectionDirection);
+      if (intersectionsFromRegion2 == null || intersectionsFromRegion2.isEmpty())
          return null;
 
-      LineSegment3d intersection = new LineSegment3d();
+      List<LineSegment3d> intersections = new ArrayList<>();
 
-      Vector3d direction = new Vector3d();
-
-      Point3d pointA1 = intersection1.getPointA();
-      Point3d pointB1 = intersection1.getPointB();
-      Point3d pointA2 = intersection2.getPointA();
-      Point3d pointB2 = intersection2.getPointB();
-
-      // First verify that the two segments overlap
-      direction.sub(pointA2, pointA1);
-      double distanceA1ToA2 = direction.dot(intersectionDirection);
-      direction.sub(pointB2, pointA1);
-      double distanceA1ToB2 = direction.dot(intersectionDirection);
-      direction.sub(pointA2, pointB1);
-      double distanceB1ToA2 = direction.dot(intersectionDirection);
-      direction.sub(pointB2, pointB1);
-      double distanceB1ToB2 = direction.dot(intersectionDirection);
-
-      boolean isA1BetweenA2AndB2 = distanceA1ToA2 * distanceA1ToB2 < 0.0;
-      boolean isB1BetweenA2AndB2 = distanceB1ToA2 * distanceB1ToB2 < 0.0;
-
-      boolean isA2BetweenA1AndB1 = distanceA1ToA2 * distanceB1ToA2 < 0.0;
-      boolean isB2BetweenA1AndB1 = distanceA1ToB2 * distanceB1ToB2 < 0.0;
-
-      if (!isA1BetweenA2AndB2 && !isB1BetweenA2AndB2 && !isA2BetweenA1AndB1 && !isB2BetweenA1AndB1)
-         return null; // They do not overlap
-
-      direction.sub(pointB1, pointA1);
-      double distanceA1ToB1 = direction.dot(intersectionDirection);
-
-      direction.sub(pointB2, pointA2);
-      double distanceA2ToB2 = direction.dot(intersectionDirection);
-
-      if (distanceA1ToB1 * distanceA2ToB2 > 0.0)
-      { // The two segments point to the same direction
-         if (isA1BetweenA2AndB2)
-            intersection.setPointA(pointA1);
-         else
-            intersection.setPointA(pointA2);
-
-         if (isB1BetweenA2AndB2)
-            intersection.setPointB(pointB1);
-         else
-            intersection.setPointB(pointB2);
-      }
-      else
-      { // The two segments point to opposite directions
-         if (isA1BetweenA2AndB2)
-            intersection.setPointA(pointA1);
-         else
-            intersection.setPointA(pointB2);
-
-         if (isB1BetweenA2AndB2)
-            intersection.setPointB(pointB1);
-         else
-            intersection.setPointB(pointA2);
+      for (LineSegment1d intersectionFromRegion1 : intersectionsFromRegion1)
+      {
+         for (LineSegment1d intersectionFromRegion2 : intersectionsFromRegion2)
+         {
+            LineSegment1d overlap = intersectionFromRegion1.computeOverlap(intersectionFromRegion2);
+            if (overlap != null && overlap.length() > minIntersectionLength)
+               intersections.add(overlap.toLineSegment3d(intersectionPoint, intersectionDirection));
+         }
       }
 
-      return intersection;
+      return intersections.isEmpty() ? null : intersections;
    }
 
-   private LineSegment3d findIntersectionEndPoints(PlanarRegion region, double maxDistance, Point3d intersectionPoint, Vector3d intersectionDirection)
+   /**
+    * 
+    * @param region
+    * @param maxDistance
+    * @param intersectionPoint
+    * @param intersectionDirection
+    * @return
+    */
+   private List<LineSegment1d> findIntersectionLineSegments(PlanarRegion region, double maxDistance, double minIntersectionLength, Point3d intersectionPoint, Vector3d intersectionDirection)
    {
-
-      Vector3d directionA = new Vector3d(intersectionDirection);
-      directionA.normalize();
-      Vector3d directionB = new Vector3d();
-      directionB.negate(directionA);
-
-      double distanceToA = Double.NEGATIVE_INFINITY;
-      double distanceToB = Double.NEGATIVE_INFINITY;
-
       Vector3d perpendicularToDirection = new Vector3d();
-      perpendicularToDirection.cross(region.getNormal(), directionA);
+      perpendicularToDirection.cross(region.getNormal(), intersectionDirection);
       perpendicularToDirection.normalize();
 
       Vector3d distance = new Vector3d();
+
+      // 1-D Coorsdinates along the intersection direction of all the region points that are close enough to the intersection.
+      // By using a PriorityQueue the coordinates are sorted.
+      PriorityQueue<Double> points1D = new PriorityQueue<>();
 
       for (int i = 0; i < region.getNumberOfNodes(); i++)
       {
@@ -209,70 +170,48 @@ public class PlanarRegionIntersectionCalculator
 
          distance.sub(regionPoint, intersectionPoint);
 
-         if (Math.abs(distance.dot(perpendicularToDirection)) > maxDistance)
-            continue;
-
-         if (distance.dot(directionA) > distanceToA)
-            distanceToA = distance.dot(directionA);
-         else if (distance.dot(directionB) > distanceToB)
-            distanceToB = distance.dot(directionB);
+         double orthogonalDistanceFromLine = Math.abs(distance.dot(perpendicularToDirection));
+         if (orthogonalDistanceFromLine <= maxDistance)
+            points1D.add(distance.dot(intersectionDirection));
       }
 
-      if (Double.isInfinite(distanceToA) || Double.isInfinite(distanceToB))
+      if (points1D.size() < 2)
          return null;
 
-      Point3d pointA = new Point3d();
-      Point3d pointB = new Point3d();
-      pointA.scaleAdd(distanceToA, directionA, intersectionPoint);
-      pointB.scaleAdd(distanceToB, directionB, intersectionPoint);
+      List<LineSegment1d> intersectionSegments = new ArrayList<>();
 
-      return new LineSegment3d(pointA, pointB);
-   }
+      double firstEndpoint = points1D.poll();
+      double secondEndpoint = Double.NaN;
+      
+      double lastPoint1D = firstEndpoint;
 
-   private double findMinDistanceToPoint(PlanarRegion planarRegion, Point3d point)
-   {
-      if (planarRegion.getNumberOfNodes() == 0)
-         return Double.POSITIVE_INFINITY;
-
-      double minDistanceSquared = Double.POSITIVE_INFINITY;
-
-      for (int i = 0; i < planarRegion.getNumberOfNodes(); i++)
+      while (!points1D.isEmpty())
       {
-         Point3d candidate = planarRegion.getPoint(i);
+         double currentPoint1D = points1D.poll();
 
-         double distance = candidate.distanceSquared(point);
-         if (distance < minDistanceSquared)
-            minDistanceSquared = distance;
-      }
-
-      return minDistanceSquared;
-   }
-
-   private Point3d findFarthestPointInDirection(PlanarRegion planarRegion, Vector3d direction)
-   {
-      if (planarRegion.getNumberOfNodes() == 0)
-         return null;
-
-      Point3d result = new Point3d();
-
-      double maxDistance = Double.NEGATIVE_INFINITY;
-      direction.normalize();
-      Vector3d translation = new Vector3d();
-      Point3d origin = planarRegion.getOrigin();
-
-      for (int i = 0; i < planarRegion.getNumberOfNodes(); i++)
-      {
-         Point3d candidate = planarRegion.getPoint(i);
-         translation.sub(candidate, origin);
-         double distance = translation.dot(direction);
-         if (distance > maxDistance)
-         {
-            maxDistance = distance;
-            result.set(candidate);
+         if (Math.abs(currentPoint1D - lastPoint1D) < maxDistance)
+         { // The current point is close enough to the previous, we extend the current segment
+            secondEndpoint = currentPoint1D;
+            if (points1D.isEmpty() && Math.abs(secondEndpoint - firstEndpoint) >= minIntersectionLength)
+               intersectionSegments.add(new LineSegment1d(firstEndpoint, secondEndpoint));
          }
+         else
+         { // The current point is too far from the previous, end of the current segment
+            // If there is not secondEndpoint, that means the firstEndpoint is isolated => not an intersection.
+            if (!Double.isNaN(secondEndpoint) || Math.abs(secondEndpoint - firstEndpoint) >= minIntersectionLength)
+               intersectionSegments.add(new LineSegment1d(firstEndpoint, secondEndpoint));
+
+            if (points1D.size() < 2)
+               break;
+
+            // Beginning of a new segment
+            firstEndpoint = currentPoint1D;
+            secondEndpoint = Double.NaN; // Serve to detect isolated point.
+         }
+         lastPoint1D = currentPoint1D;
       }
 
-      return result;
+      return intersectionSegments.isEmpty() ? null : intersectionSegments;
    }
 
    public void setParameters(IntersectionEstimationParameters parameters)

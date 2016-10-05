@@ -30,6 +30,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private final List<List<ConvexHullVertices>> convexHullsVertices = new ArrayList<>();
 
    private final AtomicReference<Boolean> enablePolygonizer;
+   private final AtomicReference<Boolean> isOcTreeEnabled;
    private final AtomicReference<Boolean> enableIntersectionCalulator;
    private final AtomicReference<IntersectionEstimationParameters> intersectionEstimationParameters;
    private final AtomicReference<PolygonizerParameters> polygonizerParameters;
@@ -39,6 +40,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       this.octree = octree;
 
       enablePolygonizer = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
+      isOcTreeEnabled = inputManager.createInput(REAModuleAPI.OcTreeEnable);
       enableIntersectionCalulator = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
       intersectionEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters);
       polygonizerParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters);
@@ -150,12 +152,23 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
    private boolean isPolygonizerEnabled()
    {
-      return enablePolygonizer.get() == null ? false : enablePolygonizer.get();
+      if (!isOcTreeEnabled())
+         return false;
+      else
+         return enablePolygonizer.get() == null ? false : enablePolygonizer.get();
    }
 
    private boolean isIntersectionCalulatorEnabled()
    {
-      return enableIntersectionCalulator.get() == null ? false : enableIntersectionCalulator.get();
+      if (!isOcTreeEnabled())
+         return false;
+      else
+         return enableIntersectionCalulator.get() == null ? false : enableIntersectionCalulator.get();
+   }
+
+   public boolean isOcTreeEnabled()
+   {
+      return isOcTreeEnabled.get() == null ? false : isOcTreeEnabled.get();
    }
    
    /** Just for clarity. */

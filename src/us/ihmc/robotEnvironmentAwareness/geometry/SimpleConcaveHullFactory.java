@@ -8,6 +8,8 @@ import java.util.Set;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
+import org.apache.commons.lang3.time.StopWatch;
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -21,6 +23,8 @@ import com.vividsolutions.jts.triangulate.quadedge.QuadEdge;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeSubdivision;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeTriangle;
 import com.vividsolutions.jts.triangulate.quadedge.Vertex;
+
+import us.ihmc.robotics.time.TimeTools;
 
 /**
  * Computes the concave hull of a 2D point cloud based on the paper
@@ -40,6 +44,8 @@ import com.vividsolutions.jts.triangulate.quadedge.Vertex;
 public class SimpleConcaveHullFactory
 {
    private static final boolean VERBOSE = false;
+   private static final boolean REPORT_TIME = false;
+   private final StopWatch stopWatch = REPORT_TIME ? new StopWatch() : null;
 
    private final GeometryFactory geometryFactory = new GeometryFactory();
 
@@ -131,9 +137,26 @@ public class SimpleConcaveHullFactory
 
    private void computeBorderTriangles()
    {
+      if (REPORT_TIME)
+      {
+         stopWatch.reset();
+         stopWatch.start();
+      }
+
       ConformingDelaunayTriangulationBuilder conformingDelaunayTriangulationBuilder = new ConformingDelaunayTriangulationBuilder();
       conformingDelaunayTriangulationBuilder.setSites(multiPoint);
       QuadEdgeSubdivision subdivision = conformingDelaunayTriangulationBuilder.getSubdivision();
+
+      if (REPORT_TIME)
+      {
+         System.out.println("Triangulation took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()) + " sec.");
+      }
+
+      if (REPORT_TIME)
+      {
+         stopWatch.reset();
+         stopWatch.start();
+      }
 
       // All the triangles resulting from the triangulation.
       @SuppressWarnings("unchecked")
@@ -235,6 +258,12 @@ public class SimpleConcaveHullFactory
                System.out.println("Reached max number of iterations");
             break;
          }
+      }
+
+      if (REPORT_TIME)
+      {
+         stopWatch.stop();
+         System.out.println("Concave hull computation took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()) + " sec.");
       }
    }
 

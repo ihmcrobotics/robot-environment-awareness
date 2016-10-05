@@ -278,20 +278,25 @@ public class SimpleConcaveHullFactory
       }
    }
 
-   private int numberOfBorderEdges(QuadEdgeTriangle triangle, Set<QuadEdge> borderEdges)
+   private static int numberOfBorderEdges(QuadEdgeTriangle triangle, Set<QuadEdge> borderEdges)
    {
       int numberOfBorderEdges = 0;
       for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
       {
          QuadEdge edge = triangle.getEdge(edgeIndex);
          // Need to check the dual of the edge too (edge != edge.sym())
-         if (borderEdges.contains(edge) || borderEdges.contains(edge.sym()))
+         if (isBorderEdge(edge, borderEdges))
             numberOfBorderEdges++;
       }
       return numberOfBorderEdges;
    }
 
-   private int indexOfVertexOppositeToEdge(int edgeIndex)
+   private static boolean isBorderEdge(QuadEdge edge, Set<QuadEdge> borderEdges)
+   {
+      return borderEdges.contains(edge) || borderEdges.contains(edge.sym());
+   }
+
+   private static int indexOfVertexOppositeToEdge(int edgeIndex)
    {
       if (edgeIndex < 0 || edgeIndex > 2)
          throw new RuntimeException("Bad edge index: " + edgeIndex);

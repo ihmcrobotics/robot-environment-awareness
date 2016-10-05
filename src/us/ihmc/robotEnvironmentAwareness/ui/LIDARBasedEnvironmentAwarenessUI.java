@@ -86,18 +86,23 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
       pointCloudAnchorPaneController.bindControls();
 
       File configurationFile = new File(CONFIGURATION_FILE_NAME);
+
       ocTreeBasicsAnchorPaneController.setConfigurationFile(configurationFile);
       ocTreeBasicsAnchorPaneController.attachOutputMessager(uiOutputManager);
       ocTreeBasicsAnchorPaneController.bindControls();
+
       lidarFilterAnchorPaneController.setConfigurationFile(configurationFile);
       lidarFilterAnchorPaneController.attachOutputMessager(uiOutputManager);
       lidarFilterAnchorPaneController.bindControls();
+      
       normalEstimationAnchorPaneController.setConfigurationFile(configurationFile);
       normalEstimationAnchorPaneController.attachOutputMessager(uiOutputManager);
       normalEstimationAnchorPaneController.bindControls();
+      
       regionSegmentationAnchorPaneController.setConfigurationFile(configurationFile);
       regionSegmentationAnchorPaneController.attachOutputMessager(uiOutputManager);
       regionSegmentationAnchorPaneController.bindControls();
+      
       polygonizerAnchorPaneController.setConfigurationFile(configurationFile);
       polygonizerAnchorPaneController.attachOutputMessager(uiOutputManager);
       polygonizerAnchorPaneController.bindControls();

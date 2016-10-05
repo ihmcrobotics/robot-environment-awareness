@@ -108,7 +108,7 @@
                   <Tooltip prefWidth="200.0" text="Minimum size required for the 2 intersecting regions to compute the intersection." wrapText="true" />
                </tooltip>
             </Label>
-            <Label text="Min intersection length" GridPane.rowIndex="2" />
+            <Label text="Min intersection length (cm)" GridPane.rowIndex="2" />
             <ToggleButton fx:id="addIntersectionsToRegionsButton" mnemonicParsing="false" text="Add intersections to regions" GridPane.columnIndex="2" GridPane.rowIndex="1" />
          </children>
       </GridPane>

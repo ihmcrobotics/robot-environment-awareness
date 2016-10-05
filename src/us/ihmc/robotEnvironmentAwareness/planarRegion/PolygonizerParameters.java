@@ -3,12 +3,12 @@ package us.ihmc.robotEnvironmentAwareness.planarRegion;
 import java.util.Scanner;
 
 import us.ihmc.octoMap.planarRegions.PlanarRegion;
-import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHull;
+import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory;
 
 public class PolygonizerParameters
 {
    /**
-    * Threshold used when creating a new {@link ConcaveHull}.
+    * Threshold used when creating a new concave hull with {@link SimpleConcaveHullFactory}.
     * <p>
     * Uses the Duckham and al. (2008) algorithm defined in the paper
     * untitled "Efficient generation of simple polygons for characterizing

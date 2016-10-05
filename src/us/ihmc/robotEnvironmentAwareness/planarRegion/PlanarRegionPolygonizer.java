@@ -8,15 +8,9 @@ import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
 
-import org.opensphere.geometry.algorithm.ConcaveHull;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPoint;
-
 import us.ihmc.octoMap.planarRegions.PlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullDecomposition;
+import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullPruningFilteringTools;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
@@ -31,6 +25,7 @@ public class PlanarRegionPolygonizer
    private final Quat4d orientation = new Quat4d();
    private final Point3d origin = new Point3d();
    private final List<Point2d> pointsInPlane = new ArrayList<>();
+   private final SimpleConcaveHullFactory concaveHullFactory = new SimpleConcaveHullFactory();
 
    private final PolygonizerParameters parameters = new PolygonizerParameters();
 
@@ -49,33 +44,11 @@ public class PlanarRegionPolygonizer
 
       updateRegionProperties(planarRegion);
 
-      Coordinate[] coordinates = new Coordinate[planarRegion.getNumberOfNodes()];
-      for (int i = 0; i < planarRegion.getNumberOfNodes(); i++)
-      {
-         Point2d pointInPlane = pointsInPlane.get(i);
-         coordinates[i] = new Coordinate(pointInPlane.getX(), pointInPlane.getY());
-      }
-      GeometryFactory geometryFactory = new GeometryFactory();
-      MultiPoint multiPoint = geometryFactory.createMultiPoint(coordinates);
-
-      Geometry concaveHullGeometry = null;
-
-      try
-      {
-         concaveHullGeometry = new ConcaveHull(multiPoint, parameters.getConcaveHullThreshold()).getConcaveHull();
-      }
-      catch (IndexOutOfBoundsException e)
-      {
-         System.err.println("Could not compute the concave hull.");
-         return;
-      }
-
-      for (Coordinate vertex : concaveHullGeometry.getCoordinates())
-      {
-         Point2d vertexInPlane = new Point2d(vertex.x, vertex.y);
-         concaveHullVerticesInPlane.add(vertexInPlane);
-      }
-
+      concaveHullFactory.setEdgeLengthThreshold(parameters.getConcaveHullThreshold());
+      concaveHullFactory.setPointCloud(pointsInPlane);
+      concaveHullFactory.computeConcaveHull();
+      concaveHullFactory.concaveHullAsPoint2dList(concaveHullVerticesInPlane);
+      
       ConcaveHullTools.ensureClockwiseOrdering(concaveHullVerticesInPlane);
       ConcaveHullTools.removeSuccessiveDuplicateVertices(concaveHullVerticesInPlane);
 

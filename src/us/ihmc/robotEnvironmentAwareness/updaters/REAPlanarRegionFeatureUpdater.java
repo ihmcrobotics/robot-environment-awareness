@@ -6,6 +6,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.vecmath.Point3d;
 
+import org.apache.commons.lang3.time.StopWatch;
+
 import gnu.trove.list.array.TIntArrayList;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.planarRegions.PlanarRegion;
@@ -18,6 +20,9 @@ import us.ihmc.robotics.time.TimeTools;
 
 public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 {
+   private static final boolean REPORT_TIME = true;
+   private final StopWatch stopWatch = REPORT_TIME ? new StopWatch() : null;
+
    private final NormalOcTree octree;
 
    private final PlanarRegionIntersectionCalculator intersectionCalculator = new PlanarRegionIntersectionCalculator();
@@ -56,13 +61,8 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       if (!isPolygonizerEnabled() && !isIntersectionCalulatorEnabled())
          return;
 
-      long startTime = System.nanoTime();
-
       updateIntersections();
       updatePolygons();
-
-      long endTime = System.nanoTime();
-      System.out.println("Processing concave hulls took: " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
    }
 
    private void updateIntersections()
@@ -70,9 +70,21 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       if (!isIntersectionCalulatorEnabled())
          return;
 
+      if (REPORT_TIME)
+      {
+         stopWatch.reset();
+         stopWatch.start();
+      }
+
       if (intersectionEstimationParameters.get() != null)
          intersectionCalculator.setParameters(intersectionEstimationParameters.getAndSet(null));
       intersectionCalculator.compute(octree.getPlanarRegions());
+
+      if (REPORT_TIME)
+      {
+         stopWatch.stop();
+         System.out.println("Processing intersections took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()));
+      }
    }
 
    private void updatePolygons()
@@ -83,6 +95,12 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       if (polygonizerParameters.get() != null)
          planarRegionPolygonizer.setParameters(polygonizerParameters.getAndSet(null));
 
+      if (REPORT_TIME)
+      {
+         stopWatch.reset();
+         stopWatch.start();
+      }
+
       for (int i = 0; i < octree.getNumberOfPlanarRegions(); i++)
       {
          PlanarRegion planarRegion = octree.getPlanarRegion(i);
@@ -92,6 +110,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
          regionIds.add(planarRegion.getId());
          planarRegionPolygonizer.compute(planarRegion);
+         
          ConcaveHullVertices concaveHullVertices = new ConcaveHullVertices();
          concaveHullVertices.addAll(planarRegionPolygonizer.getConcaveHullVertices());
          concaveHullsVertices.add(concaveHullVertices);
@@ -105,6 +124,12 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
             convexHullVertices.addAll(planarRegionPolygonizer.getConvexPolygonVertices(j));
             regionConvexHullsVertices.add(convexHullVertices);
          }
+      }
+
+      if (REPORT_TIME)
+      {
+         stopWatch.stop();
+         System.out.println("Processing polygons took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()));
       }
    }
 

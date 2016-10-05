@@ -1,14 +1,19 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -143,6 +148,7 @@ public class SimpleConcaveHullFactory
          stopWatch.start();
       }
 
+      // NOTE: The DelaunayTriangulatorBuilder is 30% to 40% faster than the ConformingDelaunayTriangulationBuilder.
       ConformingDelaunayTriangulationBuilder conformingDelaunayTriangulationBuilder = new ConformingDelaunayTriangulationBuilder();
       conformingDelaunayTriangulationBuilder.setSites(multiPoint);
       QuadEdgeSubdivision subdivision = conformingDelaunayTriangulationBuilder.getSubdivision();
@@ -163,6 +169,9 @@ public class SimpleConcaveHullFactory
       List<QuadEdgeTriangle> allTriangles = QuadEdgeTriangle.createOn(subdivision);
       // Former border triangles. Used to figure out border edges as triangles are being filtered out.
       Set<QuadEdgeTriangle> outerTriangles = new HashSet<>();
+      //
+      QuadEdgeComparator quadEdgeComparator = new QuadEdgeComparator();
+      PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> sortedByLengthMap = new PriorityQueue<>(quadEdgeComparator);
 
       // Initialize the border triangles, edges, and vertices. The triangulation provides that information.
       for (QuadEdgeTriangle triangle : allTriangles)
@@ -180,6 +189,7 @@ public class SimpleConcaveHullFactory
                   borderEdges.add(borderEdge);
                   borderVertices.add(borderEdge.orig());
                   borderVertices.add(borderEdge.dest());
+                  sortedByLengthMap.add(new ImmutablePair<>(borderEdge, triangle));
                }
             }
          }
@@ -191,53 +201,54 @@ public class SimpleConcaveHullFactory
 
          // Find the regular triangle with the longest border edge
          // Regular means that the triangle can be removed without generating a vertex with more than 2 connected border edges.
-         double longestEdgeLength = 0.0;
          int longestEdgeIndex = -1;
          QuadEdgeTriangle borderTriangleWithLongestEdge = null;
 
-         for (QuadEdgeTriangle triangle : borderTriangles)
+         while (longestEdgeIndex == -1 && !sortedByLengthMap.isEmpty())
          {
-            for (int borderEdgeIndex = 0; borderEdgeIndex < 3; borderEdgeIndex++)
+            ImmutablePair<QuadEdge, QuadEdgeTriangle> entry = sortedByLengthMap.poll();
+            QuadEdge edge = entry.getKey();
+            QuadEdgeTriangle triangle = entry.getValue();
+            int edgeIndex = triangle.getEdgeIndex(edge);
+            double currentEdgeLength = quadEdgeComparator.getEdgeLength(edge);
+
+            if (currentEdgeLength < edgeLengthThreshold)
+               break;
+
+            // The triangle is a candidate
+            if (numberOfBorderEdges(triangle, borderEdges) < 2)
             {
-               if (isBorderEdge(triangle, borderEdgeIndex, outerTriangles))
+               if (!borderVertices.contains(triangle.getVertex(indexOfVertexOppositeToEdge(edgeIndex))))
                {
-                  QuadEdge borderEdge = triangle.getEdge(borderEdgeIndex);
-                  double currentEdgeLength = borderEdge.getLength();
-
-                  // The triangle is a candidate
-                  if (currentEdgeLength > longestEdgeLength)
-                  {
-                     Vertex oppositeVertex = triangle.getVertex(indexOfVertexOppositeToEdge(borderEdgeIndex));
-
-                     // Early prune if:
-                     //  1- The triangle has 2 border edges
-                     //  2- The vertex opposite to the edge is already a border vertex (connected to 2 border edges).
-                     if (numberOfBorderEdges(triangle, borderEdges) < 2 && !borderVertices.contains(oppositeVertex))
-                     {
-                        longestEdgeLength = currentEdgeLength;
-                        longestEdgeIndex = borderEdgeIndex;
-                        borderTriangleWithLongestEdge = triangle;
-                     }
-                  }
+                  longestEdgeIndex = edgeIndex;
+                  borderTriangleWithLongestEdge = triangle;
                }
             }
          }
 
-         if (longestEdgeLength > edgeLengthThreshold)
+         if (longestEdgeIndex >= 0)
          {
             int afterEdgeIndex = QuadEdgeTriangle.nextIndex(longestEdgeIndex);
             int beforeEdgeIndex = QuadEdgeTriangle.nextIndex(afterEdgeIndex);
 
-            // Remove the triangle and add the two inner adjacent triangle
+            // Remove the triangle and its edge
             borderTriangles.remove(borderTriangleWithLongestEdge);
-            borderTriangles.add(borderTriangleWithLongestEdge.getAdjacentTriangleAcrossEdge(afterEdgeIndex));
-            borderTriangles.add(borderTriangleWithLongestEdge.getAdjacentTriangleAcrossEdge(beforeEdgeIndex));
-
-            // Remove the longest edge and the two others.
             borderEdges.remove(borderTriangleWithLongestEdge.getEdge(longestEdgeIndex));
             borderEdges.remove(borderTriangleWithLongestEdge.getEdge(longestEdgeIndex).sym());
-            borderEdges.add(borderTriangleWithLongestEdge.getEdge(afterEdgeIndex));
-            borderEdges.add(borderTriangleWithLongestEdge.getEdge(beforeEdgeIndex));
+
+            // Get and add the two adjacent triangles
+            QuadEdge afterEdge = borderTriangleWithLongestEdge.getEdge(afterEdgeIndex).sym();
+            QuadEdgeTriangle afterTriangle = (QuadEdgeTriangle) afterEdge.getData();
+            QuadEdge beforeEdge = borderTriangleWithLongestEdge.getEdge(beforeEdgeIndex).sym();
+            QuadEdgeTriangle beforeTriangle = (QuadEdgeTriangle) beforeEdge.getData();
+
+            borderTriangles.add(afterTriangle);
+            borderEdges.add(afterEdge);
+            sortedByLengthMap.add(new ImmutablePair<>(afterEdge, afterTriangle));
+
+            borderTriangles.add(beforeTriangle);
+            borderEdges.add(beforeEdge);
+            sortedByLengthMap.add(new ImmutablePair<>(beforeEdge, beforeTriangle));
 
             // Add the vertex opposite of the removed edge. Its index is the same as beforeEdgeIndex
             borderVertices.add(borderTriangleWithLongestEdge.getVertex(beforeEdgeIndex));
@@ -280,23 +291,10 @@ public class SimpleConcaveHullFactory
       return numberOfBorderEdges;
    }
 
-   /**
-    * Is either a border edge because:
-    * <li> there is no adjacent triangle across this edge,
-    * <li> the adjacent triangle across this edge has already been removed and thus considered to outside the hull.
-    * 
-    * @param triangle the triangle to get the edge from
-    * @param candidateEdgeIndex the edge on which the check is performed
-    * @param outerTriangles {@link Set} of the former border triangles.
-    * @return true is {@code triangle.getEdge(candiateEdgeIndex)} is a border edge.
-    */
-   private static boolean isBorderEdge(QuadEdgeTriangle triangle, int candidateEdgeIndex, Set<QuadEdgeTriangle> outerTriangles)
-   {
-      return triangle.isBorder(candidateEdgeIndex) || outerTriangles.contains(triangle.getAdjacentTriangleAcrossEdge(candidateEdgeIndex));
-   }
-
    private int indexOfVertexOppositeToEdge(int edgeIndex)
    {
+      if (edgeIndex < 0 || edgeIndex > 2)
+         throw new RuntimeException("Bad edge index: " + edgeIndex);
       return QuadEdgeTriangle.nextIndex(QuadEdgeTriangle.nextIndex(edgeIndex));
    }
 
@@ -325,5 +323,35 @@ public class SimpleConcaveHullFactory
       for (Coordinate vertex : concaveHullGeometry.getCoordinates())
          vertices.add(new Point3d(vertex.x, vertex.y, z));
       return vertices;
+   }
+
+   private static class QuadEdgeComparator implements Comparator<ImmutablePair<QuadEdge, QuadEdgeTriangle>>
+   {
+      private final Map<QuadEdge, Double> map = new HashMap<>();
+
+      @Override
+      public int compare(ImmutablePair<QuadEdge, QuadEdgeTriangle> pair1, ImmutablePair<QuadEdge, QuadEdgeTriangle> pair2)
+      {
+         double length1 = getEdgeLength(pair1.getKey());
+         double length2 = getEdgeLength(pair2.getKey());
+         if (length1 < length2)
+            return 1;
+         else if (length1 == length2)
+            return 0;
+         else
+            return -1;
+      }
+
+      private double getEdgeLength(QuadEdge edge)
+      {
+         Double length = map.get(edge);
+         if (length == null)
+         {
+            length = edge.getLength();
+            map.put(edge, length);
+            map.put(edge.sym(), length);
+         }
+         return length;
+      }
    }
 }

@@ -165,8 +165,8 @@ public class NormalOcTreeVisualizer extends Application
             if (isNormalSet)
             {
                Point3d pointOnPlane = new Point3d();
-               if (node.isCenterSet())
-                  node.getCenter(pointOnPlane);
+               if (node.isHitLocationSet())
+                  node.getHitLocation(pointOnPlane);
                else
                   pointOnPlane.set(nodeCenter);
                intersectionPlaneBoxCalculator.setCube(boxSize, nodeCenter);

@@ -168,9 +168,9 @@ public class PlanarRegionSegmentationVisualizer extends Application
             if (node.isNormalSet())
             {
                node.getNormal(nodeNormal);
-               if (node.isCenterSet())
+               if (node.isHitLocationSet())
                {
-                  node.getCenter(pointOnPlane);
+                  node.getHitLocation(pointOnPlane);
 //                  occupiedMeshBuilder.addCubeMesh(0.005, pointOnPlane, normalBasedColor);
                }
                else
@@ -183,9 +183,9 @@ public class PlanarRegionSegmentationVisualizer extends Application
             else
             {
 
-               if (node.isCenterSet())
+               if (node.isHitLocationSet())
                {
-                  node.getCenter(pointOnPlane);
+                  node.getHitLocation(pointOnPlane);
                   occupiedMeshBuilder.addCubeMesh(0.005, pointOnPlane, normalBasedColor);
                }
                else

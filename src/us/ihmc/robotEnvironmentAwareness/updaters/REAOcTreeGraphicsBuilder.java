@@ -196,8 +196,8 @@ public class REAOcTreeGraphicsBuilder
             if (node.isNormalSet() && showSurfaces)
             {
                node.getNormal(planeNormal);
-               if (node.isCenterSet())
-                  node.getCenter(pointOnPlane);
+               if (node.isHitLocationSet())
+                  node.getHitLocation(pointOnPlane);
                else
                   pointOnPlane.set(nodeCenter);
                intersectionPlaneBoxCalculator.setCube(size, nodeCenter);
@@ -271,7 +271,7 @@ public class REAOcTreeGraphicsBuilder
          }
          return DEFAULT_COLOR;
       case HAS_CENTER:
-         return node.isCenterSet() ? Color.DARKGREEN : Color.RED;
+         return node.isHitLocationSet() ? Color.DARKGREEN : Color.RED;
       case NORMAL:
          if (node.isNormalSet())
          {

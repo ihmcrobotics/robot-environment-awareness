@@ -47,7 +47,7 @@ public class REAOcTreeUpdater
       planarRegionSegmentationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationParameters);
    }
 
-   public void update()
+   public void update(boolean performCompleteUpdate)
    {
       if (shouldClear())
       {
@@ -75,7 +75,7 @@ public class REAOcTreeUpdater
       if (planarRegionSegmentationParameters.get() != null)
          octree.setPlanarRegionSegmentationParameters(planarRegionSegmentationParameters.getAndSet(null));
 
-      octree.update(newScan);
+      octree.update(newScan, performCompleteUpdate, performCompleteUpdate);
 
       if (Thread.interrupted())
          return;

@@ -5,6 +5,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.time.StopWatch;
+
 import com.google.common.util.concurrent.AtomicDouble;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
@@ -16,11 +18,13 @@ import us.ihmc.tools.thread.ThreadTools;
 public class LIDARBasedREAModule
 {
    private static final boolean REPORT_TIME = false;
-   private static final int THREAD_PERIOD_MILLISECONDS = 500;
-   private static final double GRAPHICS_REFRESH_PERIOD = 0.25; // in seconds
+   private static final int THREAD_PERIOD_MILLISECONDS = 100;
+   private static final double OCTREE_COMPLETE_UPDATE_PERIOD = 0.5; // in seconds
+   private static final double GRAPHICS_REFRESH_PERIOD = 0.5; // in seconds
    private static final double OCTREE_RESOLUTION = 0.02;
    protected static final boolean DEBUG = true;
 
+   private final StopWatch stopWatch = REPORT_TIME ? new StopWatch() : null;
    private final NormalOcTree octree = new NormalOcTree(OCTREE_RESOLUTION);
 
    private final REAOcTreeUpdater updater;
@@ -46,6 +50,7 @@ public class LIDARBasedREAModule
    {
       Runnable runnable = new Runnable()
       {
+         private final AtomicDouble lastCompleteUpdate = new AtomicDouble(Double.NaN);
          private final AtomicDouble lastGraphicsUpdate = new AtomicDouble(Double.NaN);
 
          @Override
@@ -56,42 +61,31 @@ public class LIDARBasedREAModule
 
             try
             {
-               if (REPORT_TIME)
-               {
-                  long startTime = System.nanoTime();
-                  updater.update();
-                  long endTime = System.nanoTime();
-                  System.out.println("OcTree update took: " + OctoMapTools.nanoSecondsToSeconds(endTime - startTime));
-               }
-               else
-               {
-                  updater.update();
-               }
-
-               if (isThreadInterrupted())
-                  return;
-
-               planarRegionFeatureUpdater.update();
-
-               if (isThreadInterrupted())
-                  return;
-
+               boolean performCompleteUpdate = false;
                double currentTime = OctoMapTools.nanoSecondsToSeconds(System.nanoTime());
+
+               if (Double.isNaN(lastCompleteUpdate.get()) || currentTime - lastCompleteUpdate.get() >= OCTREE_COMPLETE_UPDATE_PERIOD)
+               {
+                  lastCompleteUpdate.set(currentTime);
+                  performCompleteUpdate = true;
+               }
+
+               callOcTreeUpdater(performCompleteUpdate);
+
+               if (performCompleteUpdate)
+               {
+                  if (isThreadInterrupted())
+                     return;
+                  planarRegionFeatureUpdater.update();
+               }
+
+               if (isThreadInterrupted())
+                  return;
 
                if (Double.isNaN(lastGraphicsUpdate.get()) || currentTime - lastGraphicsUpdate.get() >= GRAPHICS_REFRESH_PERIOD)
                {
                   lastGraphicsUpdate.set(currentTime);
-                  if (REPORT_TIME)
-                  {
-                     long startTime = System.nanoTime();
-                     graphicsBuilder.update();
-                     long endTime = System.nanoTime();
-                     System.out.println("OcTreeGraphics update took: " + OctoMapTools.nanoSecondsToSeconds(endTime - startTime));
-                  }
-                  else
-                  {
-                     graphicsBuilder.update();
-                  }
+                  callGraphicsBuilder();
                }
             }
             catch (Exception e)
@@ -104,6 +98,38 @@ public class LIDARBasedREAModule
                {
                   PrintTools.error(LIDARBasedREAModule.class, e.getClass().getSimpleName());
                }
+            }
+         }
+
+         private void callOcTreeUpdater(boolean performCompleteUpdate)
+         {
+            if (REPORT_TIME)
+            {
+               stopWatch.reset();
+               stopWatch.start();
+            }
+
+            updater.update(performCompleteUpdate);
+
+            if (REPORT_TIME)
+            {
+               System.out.println("OcTree update took: " + OctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
+            }
+         }
+
+         private void callGraphicsBuilder()
+         {
+            if (REPORT_TIME)
+            {
+               stopWatch.reset();
+               stopWatch.start();
+            }
+
+            graphicsBuilder.update();
+
+            if (REPORT_TIME)
+            {
+               System.out.println("OcTreeGraphics update took: " + OctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
             }
          }
 

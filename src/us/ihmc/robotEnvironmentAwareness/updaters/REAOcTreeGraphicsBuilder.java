@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -176,42 +177,39 @@ public class REAOcTreeGraphicsBuilder
       int currentDepth = getCurrentTreeDepthForDisplay();
       boolean showSurfaces = isShowingEstimatedSurfaces();
 
-      Iterable<OcTreeSuperNode<NormalOcTreeNode>> iterable = updateAndGetIterable(currentDepth);
+      List<NormalOcTreeNode> nodes = getNodes(currentDepth);
 
       Vector3d planeNormal = new Vector3d();
       Point3d pointOnPlane = new Point3d();
 
-      for (OcTreeSuperNode<NormalOcTreeNode> superNode : iterable)
+      for (NormalOcTreeNode node : nodes)
       {
-         NormalOcTreeNode node = superNode.getNode();
-
          if (isHidingPlanarRegionNodes() && node.isPartOfRegion())
             continue;
 
          if (octree.isNodeOccupied(node))
          {
-            double size = superNode.getSize();
-            Point3d nodeCenter = superNode.getCoordinate();
-            Color color = getNodeColor(superNode);
+            double size = node.getSize();
+            Color color = getNodeColor(node);
             if (node.isNormalSet() && showSurfaces)
             {
                node.getNormal(planeNormal);
                if (node.isHitLocationSet())
                   node.getHitLocation(pointOnPlane);
                else
-                  pointOnPlane.set(nodeCenter);
-               intersectionPlaneBoxCalculator.setCube(size, nodeCenter);
+                  node.getCoordinate(pointOnPlane);
+               intersectionPlaneBoxCalculator.setCube(size, node.getX(), node.getY(), node.getZ());
                intersectionPlaneBoxCalculator.setPlane(pointOnPlane, planeNormal);
                intersectionPlaneBoxCalculator.computeIntersections(plane);
                occupiedMeshBuilder.addPolyon(plane, color);
             }
             else
-               occupiedMeshBuilder.addCubeMesh(size, nodeCenter, color);
+               occupiedMeshBuilder.addCubeMesh(size, node.getX(), node.getY(), node.getZ(), color);
          }
       }
    }
 
-   private Iterable<OcTreeSuperNode<NormalOcTreeNode>> updateAndGetIterable(int currentDepth)
+   private List<NormalOcTreeNode> getNodes(int currentDepth)
    {
       Iterable<OcTreeSuperNode<NormalOcTreeNode>> iterable;
 
@@ -226,7 +224,12 @@ public class REAOcTreeGraphicsBuilder
          leafBoundingBoxIterable.setBoundingBox(null);
       }
       iterable = leafBoundingBoxIterable;
-      return iterable;
+
+      List<NormalOcTreeNode> nodes = new ArrayList<>();
+
+      for (OcTreeSuperNode<NormalOcTreeNode> superNode : iterable)
+         nodes.add(superNode.getNode());
+      return nodes;
    }
 
    private void handleOcTreeBoundingBox()
@@ -257,10 +260,8 @@ public class REAOcTreeGraphicsBuilder
       outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, ocTreeBoundingBoxGraphics));
    }
 
-   private Color getNodeColor(OcTreeSuperNode<NormalOcTreeNode> superNode)
+   private Color getNodeColor(NormalOcTreeNode node)
    {
-      NormalOcTreeNode node = superNode.getNode();
-
       switch (getCurrentColoringType())
       {
       case REGION:

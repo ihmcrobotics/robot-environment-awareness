@@ -116,10 +116,12 @@ public class PlanarRegionPolygonizer
    {
       pointsInPlane.clear();
 
+      Point3d point3d = new Point3d();
+
       for (int i = 0; i < planarRegion.getNumberOfNodes(); i++)
       {
-         Point3d point = planarRegion.getPoint(i);
-         Point2d pointInPlane = getPointInPlane(point);
+         planarRegion.getPoint(i, point3d);
+         Point2d pointInPlane = getPointInPlane(point3d);
          pointsInPlane.add(pointInPlane);
       }
    }

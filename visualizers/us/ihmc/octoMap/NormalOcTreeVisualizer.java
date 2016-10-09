@@ -20,9 +20,8 @@ import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
-import us.ihmc.octoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.octoMap.iterators.OcTreeIterable;
-import us.ihmc.octoMap.iterators.OcTreeSuperNode;
+import us.ihmc.octoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.pointCloud.PointCloud;
@@ -151,12 +150,12 @@ public class NormalOcTreeVisualizer extends Application
       MeshBuilder freeMeshBuilder = new MeshBuilder();
 
       OcTreeIterable<NormalOcTreeNode> leafIterable = OcTreeIteratorFactory.createLeafIteratable(ocTree.getRoot(), 14);
-      for (OcTreeSuperNode<NormalOcTreeNode> superNode : leafIterable)
+      for (NormalOcTreeNode node : leafIterable)
       {
-         double boxSize = superNode.getSize();
-         Point3d nodeCenter = superNode.getCoordinate();
+         double boxSize = node.getSize();
+         Point3d nodeCenter = new Point3d();
+         node.getCoordinate(nodeCenter);
 
-         NormalOcTreeNode node = superNode.getNode();
          if (ocTree.isNodeOccupied(node))
          {
             Vector3d planeNormal = new Vector3d();

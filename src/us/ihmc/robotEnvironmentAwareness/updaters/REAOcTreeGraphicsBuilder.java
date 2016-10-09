@@ -22,7 +22,6 @@ import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.octoMap.iterators.OcTreeIterable;
 import us.ihmc.octoMap.iterators.OcTreeIteratorFactory;
-import us.ihmc.octoMap.iterators.OcTreeSuperNode;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
@@ -212,9 +211,7 @@ public class REAOcTreeGraphicsBuilder
          iterable.setRule(OcTreeIteratorFactory.leavesInsideBoundingBoxOnly(octree.getBoundingBox()));
 
       List<NormalOcTreeNode> nodes = new ArrayList<>();
-
-      for (OcTreeSuperNode<NormalOcTreeNode> superNode : iterable)
-         nodes.add(superNode.getNode());
+      iterable.forEach(nodes::add);
       return nodes;
    }
 

@@ -21,7 +21,6 @@ import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 import us.ihmc.octoMap.iterators.OcTreeIterable;
 import us.ihmc.octoMap.iterators.OcTreeIteratorFactory;
-import us.ihmc.octoMap.iterators.OcTreeSuperNode;
 import us.ihmc.octoMap.node.OccupancyOcTreeNode;
 import us.ihmc.octoMap.ocTree.implementations.OcTree;
 import us.ihmc.octoMap.pointCloud.PointCloud;
@@ -83,13 +82,13 @@ public class OcTreeVisualizer extends Application
       int iteratorLeafCount = 0;
       
       OcTreeIterable<OccupancyOcTreeNode> treeIterable = OcTreeIteratorFactory.createIteratable(ocTree.getRoot());
-      for (OcTreeSuperNode<OccupancyOcTreeNode> node : treeIterable)
+      for (OccupancyOcTreeNode node : treeIterable)
       {
          iteratorNodeCount++;
          if (foundNodes.contains(node))
             iteratorDuplicatedFounds++;
-         foundNodes.add(node.getNode());
-         if (node.isLeaf())
+         foundNodes.add(node);
+         if (!node.hasAtLeastOneChild())
             iteratorLeafCount++;
       }
       
@@ -213,12 +212,13 @@ public class OcTreeVisualizer extends Application
       primaryStage.setScene(scene);
       primaryStage.show();
 
-      for (OcTreeSuperNode<OccupancyOcTreeNode> node : ocTree)
+      for (OccupancyOcTreeNode node : ocTree)
       {
          double boxSize = node.getSize();
-         Point3d boxCenter = node.getCoordinate();
+         Point3d boxCenter = new Point3d();
+         node.getCoordinate(boxCenter);
 
-         if (ocTree.isNodeOccupied(node.getNode()))
+         if (ocTree.isNodeOccupied(node))
          {
             addOccupiedBox(boxSize, boxCenter, rootNode);
          }

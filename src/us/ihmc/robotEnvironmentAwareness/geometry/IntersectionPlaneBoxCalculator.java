@@ -55,10 +55,20 @@ public class IntersectionPlaneBoxCalculator
       setBox(size, size, size, center);
    }
 
+   public void setCube(double size, double centerX, double centerY, double centerZ)
+   {
+      setBox(size, size, size, centerX, centerY, centerZ);
+   }
+
    public void setBox(double lx, double ly, double lz, Point3d center)
    {
+      setBox(lx, ly, lz, center.getX(), center.getY(), center.getZ());
+   }
+
+   public void setBox(double lx, double ly, double lz, double centerX, double centerY, double centerZ)
+   {
       boxSize.set(lx, ly, lz);
-      boxCenter.set(center);
+      boxCenter.set(centerX, centerY, centerZ);
    }
 
    public void setPlane(Point3d pointOnPlane, Vector3d planeNormal)

@@ -18,7 +18,7 @@ import us.ihmc.tools.thread.ThreadTools;
 public class LIDARBasedREAModule
 {
    private static final boolean REPORT_TIME = false;
-   private static final int THREAD_PERIOD_MILLISECONDS = 100;
+   private static final int THREAD_PERIOD_MILLISECONDS = 50;
    private static final double OCTREE_COMPLETE_UPDATE_PERIOD = 0.5; // in seconds
    private static final double GRAPHICS_REFRESH_PERIOD = 0.5; // in seconds
    private static final double OCTREE_RESOLUTION = 0.02;
@@ -59,34 +59,29 @@ public class LIDARBasedREAModule
             if (isThreadInterrupted())
                return;
 
+
+            double currentTime = OctoMapTools.nanoSecondsToSeconds(System.nanoTime());
+            
+            boolean performCompleteOcTreeUpdate = (Double.isNaN(lastCompleteUpdate.get()) || currentTime - lastCompleteUpdate.get() >= OCTREE_COMPLETE_UPDATE_PERIOD);
+            boolean performGraphicsUpdate = (Double.isNaN(lastGraphicsUpdate.get()) || currentTime - lastGraphicsUpdate.get() >= GRAPHICS_REFRESH_PERIOD);
+
             try
             {
-               boolean performCompleteUpdate = false;
-               double currentTime = OctoMapTools.nanoSecondsToSeconds(System.nanoTime());
-
-               if (Double.isNaN(lastCompleteUpdate.get()) || currentTime - lastCompleteUpdate.get() >= OCTREE_COMPLETE_UPDATE_PERIOD)
-               {
-                  lastCompleteUpdate.set(currentTime);
-                  performCompleteUpdate = true;
-               }
-
-               callOcTreeUpdater(performCompleteUpdate);
-
-               if (performCompleteUpdate)
-               {
-                  if (isThreadInterrupted())
-                     return;
-                  planarRegionFeatureUpdater.update();
-               }
+               callOcTreeUpdater(performCompleteOcTreeUpdate);
 
                if (isThreadInterrupted())
                   return;
 
-               if (Double.isNaN(lastGraphicsUpdate.get()) || currentTime - lastGraphicsUpdate.get() >= GRAPHICS_REFRESH_PERIOD)
-               {
-                  lastGraphicsUpdate.set(currentTime);
+               if (performCompleteOcTreeUpdate)
+                  planarRegionFeatureUpdater.update();
+
+               if (isThreadInterrupted())
+                  return;
+
+
+               if (performGraphicsUpdate)
                   callGraphicsBuilder();
-               }
+
             }
             catch (Exception e)
             {
@@ -99,6 +94,12 @@ public class LIDARBasedREAModule
                   PrintTools.error(LIDARBasedREAModule.class, e.getClass().getSimpleName());
                }
             }
+
+            currentTime = OctoMapTools.nanoSecondsToSeconds(System.nanoTime());
+            if (performCompleteOcTreeUpdate)
+               lastCompleteUpdate.set(currentTime);
+            if (performGraphicsUpdate)
+               lastGraphicsUpdate.set(currentTime);
          }
 
          private void callOcTreeUpdater(boolean performCompleteUpdate)

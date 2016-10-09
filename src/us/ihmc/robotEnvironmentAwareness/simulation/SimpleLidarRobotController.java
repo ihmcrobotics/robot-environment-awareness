@@ -1,16 +1,20 @@
 package us.ihmc.robotEnvironmentAwareness.simulation;
 
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
 
+import gnu.trove.list.array.TFloatArrayList;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.graphics3DAdapter.GPULidar;
 import us.ihmc.graphics3DAdapter.GPULidarScanBuffer;
 import us.ihmc.graphics3DAdapter.Graphics3DAdapter;
-import us.ihmc.ihmcPerception.depthData.DepthDataFilter;
-import us.ihmc.ihmcPerception.depthData.PointCloudWorldPacketGenerator;
+import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
 import us.ihmc.robotics.dataStructures.listener.VariableChangedListener;
 import us.ihmc.robotics.dataStructures.registry.YoVariableRegistry;
@@ -28,15 +32,18 @@ import us.ihmc.simulationconstructionset.PinJoint;
 import us.ihmc.simulationconstructionset.robotController.RobotController;
 import us.ihmc.simulationconstructionset.yoUtilities.graphics.BagOfBalls;
 import us.ihmc.simulationconstructionset.yoUtilities.graphics.YoGraphicsListRegistry;
+import us.ihmc.tools.thread.ThreadTools;
 
 public class SimpleLidarRobotController implements RobotController
 {
-   private static final double DEFAULT_SPIN_VELOCITY = 0.3;
-
    private final YoVariableRegistry registry = new YoVariableRegistry(getClass().getSimpleName());
+
+   private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(ThreadTools.getNamedThreadFactory("PointCloudWorldPacketGenerator"));
 
    private final BooleanYoVariable spinLidar = new BooleanYoVariable("spinLidar", registry);
    private final DoubleYoVariable desiredLidarVelocity = new DoubleYoVariable("desiredLidarVelocity", registry);
+   private final DoubleYoVariable lidarRange = new DoubleYoVariable("lidarRange", registry);
+
    private final PinJoint lidarJoint;
    private final double dt;
    private final FloatingJoint rootJoint;
@@ -46,10 +53,6 @@ public class SimpleLidarRobotController implements RobotController
    private final GPULidarScanBuffer gpuLidarScanBuffer;
    private final int vizualizeEveryNPoints = 5;
    private final BagOfBalls sweepViz;
-
-   private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-   private final DepthDataFilter depthDataFilter = new DepthDataFilter();
-   private final PointCloudWorldPacketGenerator pointCloudWorldPacketGenerator;
 
    private final PacketCommunicator packetCommunicator;
 
@@ -61,8 +64,9 @@ public class SimpleLidarRobotController implements RobotController
       lidarJoint = lidarRobot.getLidarJoint();
       rootJoint = lidarRobot.getRootJoint();
 
-      desiredLidarVelocity.set(DEFAULT_SPIN_VELOCITY);
+      desiredLidarVelocity.set(FootstepPlanningFastSimulation.DEFAULT_SPIN_VELOCITY);
       spinLidar.set(true);
+      lidarRange.set(7.0);
 
       final YoFrameOrientation lidarYawPitchRoll = new YoFrameOrientation("lidar", null, registry);
       lidarYawPitchRoll.attachVariableChangedListener(new VariableChangedListener()
@@ -82,8 +86,7 @@ public class SimpleLidarRobotController implements RobotController
       gpuLidar = graphics3dAdapter.createGPULidar(gpuLidarScanBuffer, lidarScanParameters);
       sweepViz = BagOfBalls.createRainbowBag(lidarScanParameters.getPointsPerSweep() / vizualizeEveryNPoints, 0.005, "SweepViz", registry, yoGraphicsListRegistry);
 
-      pointCloudWorldPacketGenerator = new PointCloudWorldPacketGenerator(packetCommunicator, readWriteLock.readLock(), depthDataFilter);
-      pointCloudWorldPacketGenerator.start();
+      executorService.scheduleAtFixedRate(this::sendPackets, 0, FootstepPlanningFastSimulation.POINT_CLOUD_PUBLISHING_PERIOD_MILLSECONDS, TimeUnit.MILLISECONDS);
    }
 
    @Override
@@ -114,23 +117,23 @@ public class SimpleLidarRobotController implements RobotController
             sweepViz.setBallLoop(new FramePoint(ReferenceFrame.getWorldFrame(), scan.getPoint(i)));
          }
 
-         readWriteLock.writeLock().lock();
-         try
+         TFloatArrayList newScan = new TFloatArrayList();
+         for (int i = 0; i < scan.size(); i++)
          {
-            for (int i = 0; i < scan.size(); i++)
+            Point3d sensorOrigin = new Point3d();
+            transform.getTranslation(sensorOrigin);
+            Point3d scanPoint = scan.getPoint(i);
+            if (sensorOrigin.distance(scanPoint) < lidarRange.getDoubleValue())
             {
-               Point3d sensorOrigin = new Point3d();
-               transform.getTranslation(sensorOrigin);
-               depthDataFilter.addPoint(scan.getPoint(i), sensorOrigin);
+               newScan.add((float) scanPoint.getX());
+               newScan.add((float) scanPoint.getY());
+               newScan.add((float) scanPoint.getZ());
             }
          }
-         finally
-         {
-            readWriteLock.writeLock().unlock();
-         }
+         scansToSend.add(newScan.toArray());
       }
 
-      packetCommunicator.send(generateLidarPosePacket());
+      lidarPosePacketToSend.set(generateLidarPosePacket());
    }
 
    private LidarPosePacket generateLidarPosePacket()
@@ -143,6 +146,27 @@ public class SimpleLidarRobotController implements RobotController
       LidarPosePacket lidarPosePacket = new LidarPosePacket(position, orientation);
       lidarPosePacket.setLidarAngleJoint((float) lidarJoint.getQ());
       return lidarPosePacket;
+   }
+
+   private final AtomicReference<LidarPosePacket> lidarPosePacketToSend = new AtomicReference<LidarPosePacket>(null);
+   private final ConcurrentLinkedDeque<float[]> scansToSend = new ConcurrentLinkedDeque<>();
+
+   private void sendPackets()
+   {
+      LidarPosePacket lidarPosePacket = lidarPosePacketToSend.getAndSet(null);
+      if (lidarPosePacket != null)
+         packetCommunicator.send(lidarPosePacket);
+
+      if (!scansToSend.isEmpty())
+      {
+         TFloatArrayList entireScan = new TFloatArrayList();
+
+         while (!scansToSend.isEmpty())
+            entireScan.addAll(scansToSend.poll());
+         PointCloudWorldPacket pointCloudWorldPacket = new PointCloudWorldPacket();
+         pointCloudWorldPacket.decayingWorldScan = entireScan.toArray();
+         packetCommunicator.send(pointCloudWorldPacket);
+      }
    }
 
    @Override

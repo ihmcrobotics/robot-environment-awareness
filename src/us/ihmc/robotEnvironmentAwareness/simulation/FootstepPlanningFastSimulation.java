@@ -23,23 +23,27 @@ public class FootstepPlanningFastSimulation
    private enum GroundType
    {
       OBSTACLE_COURSE, FLAT
-   };
+   }
+
+   public static final int POINT_CLOUD_PUBLISHING_PERIOD_MILLSECONDS = 100;
+   public static final double DEFAULT_SPIN_VELOCITY = 0.3;
 
    public FootstepPlanningFastSimulation() throws IOException
    {
       SimpleLidarRobot robot = new SimpleLidarRobot();
       SimulationConstructionSetParameters parameters = new SimulationConstructionSetParameters(true, RealtimeTools.nextPowerOfTwo(200000));
       SimulationConstructionSet scs = new SimulationConstructionSet(robot, parameters);
-      scs.setDT(0.0001, 10);
+      double simDT = 0.0001;
+      double controlDT = 0.01;
+      scs.setDT(simDT, 10);
 
-      double dt = scs.getDT();
       Graphics3DAdapter graphics3dAdapter = scs.getGraphics3dAdapter();
       YoGraphicsListRegistry yoGraphicsListRegistry = new YoGraphicsListRegistry();
       PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.BEHAVIOUR_MODULE_PORT, new LidarSimulationNetClassList());
       packetCommunicator.connect();
 
-      SimpleLidarRobotController controller = new SimpleLidarRobotController(robot, dt, packetCommunicator, graphics3dAdapter, yoGraphicsListRegistry);
-      robot.setController(controller);
+      SimpleLidarRobotController controller = new SimpleLidarRobotController(robot, controlDT, packetCommunicator, graphics3dAdapter, yoGraphicsListRegistry);
+      robot.setController(controller, (int) (controlDT / simDT));
 //      scs.addYoGraphicsListRegistry(yoGraphicsListRegistry);
 
       createGroundTypeListener(scs);

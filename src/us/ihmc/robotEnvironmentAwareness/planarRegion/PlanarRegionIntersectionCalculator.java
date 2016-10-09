@@ -65,8 +65,9 @@ public class PlanarRegionIntersectionCalculator
                         Point3d newPoint = new Point3d();
                         double alpha = k / (double) numberOfPointsToAdd;
                         newPoint.scaleAdd(alpha, intersectionLength, intersection.getPointA());
-                        currentRegion.addPoint(new Point3d(newPoint));
-                        currentNeighbor.addPoint(new Point3d(newPoint));
+                        // FIXME Figure out something less hackish
+//                        currentRegion.addPoint(new Point3d(newPoint));
+//                        currentNeighbor.addPoint(new Point3d(newPoint));
                      }
                   }
                }
@@ -159,6 +160,7 @@ public class PlanarRegionIntersectionCalculator
       perpendicularToDirection.normalize();
 
       Vector3d distance = new Vector3d();
+      Point3d regionPoint = new Point3d();
 
       // 1-D Coorsdinates along the intersection direction of all the region points that are close enough to the intersection.
       // By using a PriorityQueue the coordinates are sorted.
@@ -166,8 +168,7 @@ public class PlanarRegionIntersectionCalculator
 
       for (int i = 0; i < region.getNumberOfNodes(); i++)
       {
-         Point3d regionPoint = region.getPoint(i);
-
+         region.getPoint(i, regionPoint);
          distance.sub(regionPoint, intersectionPoint);
 
          double orthogonalDistanceFromLine = Math.abs(distance.dot(perpendicularToDirection));

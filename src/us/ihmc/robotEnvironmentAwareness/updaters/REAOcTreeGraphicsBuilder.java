@@ -19,10 +19,9 @@ import javafx.util.Pair;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
-import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxInterface;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
-import us.ihmc.octoMap.iterators.LeafBoundingBoxIterable;
-import us.ihmc.octoMap.iterators.OcTreeSuperNode;
+import us.ihmc.octoMap.iterators.OcTreeIterable;
+import us.ihmc.octoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
@@ -72,8 +71,6 @@ public class REAOcTreeGraphicsBuilder
    private final AtomicReference<Boolean> showOcTreeBoundingBox;
    private final AtomicReference<Boolean> useOcTreeBoundingBox;
 
-   private final LeafBoundingBoxIterable<NormalOcTreeNode> leafBoundingBoxIterable;
-
    private final REAMessager outputMessager;
 
    public REAOcTreeGraphicsBuilder(NormalOcTree octree, RegionFeaturesProvider regionFeaturesProvider, REAMessageManager inputManager, REAMessager outputMessager)
@@ -99,8 +96,6 @@ public class REAOcTreeGraphicsBuilder
       TextureColorPalette2D regionColorPalette1D = new TextureColorPalette2D();
       regionColorPalette1D.setHueBrightnessBased(0.9);
       polygonsMeshBuilder = new MultiColorMeshBuilder(regionColorPalette1D);
-
-      leafBoundingBoxIterable = new LeafBoundingBoxIterable<>(octree, true);
    }
 
    private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
@@ -211,24 +206,12 @@ public class REAOcTreeGraphicsBuilder
 
    private List<NormalOcTreeNode> getNodes(int currentDepth)
    {
-      Iterable<OcTreeSuperNode<NormalOcTreeNode>> iterable;
-
-      leafBoundingBoxIterable.setMaxDepth(currentDepth);
+      OcTreeIterable<NormalOcTreeNode> iterable = OcTreeIteratorFactory.createLeafIteratable(octree.getRoot(), currentDepth);
       if (useOcTreeBoundingBox())
-      {
-         OcTreeBoundingBoxInterface boundingBox = octree.getBoundingBox();
-         leafBoundingBoxIterable.setBoundingBox(boundingBox);
-      }
-      else
-      {
-         leafBoundingBoxIterable.setBoundingBox(null);
-      }
-      iterable = leafBoundingBoxIterable;
+         iterable.setRule(OcTreeIteratorFactory.leavesInsideBoundingBoxOnly(octree.getBoundingBox()));
 
       List<NormalOcTreeNode> nodes = new ArrayList<>();
-
-      for (OcTreeSuperNode<NormalOcTreeNode> superNode : iterable)
-         nodes.add(superNode.getNode());
+      iterable.forEach(nodes::add);
       return nodes;
    }
 

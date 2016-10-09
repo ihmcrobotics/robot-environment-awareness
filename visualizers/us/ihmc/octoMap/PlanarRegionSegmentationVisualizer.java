@@ -18,8 +18,8 @@ import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
-import us.ihmc.octoMap.iterators.LeafIterable;
-import us.ihmc.octoMap.iterators.OcTreeSuperNode;
+import us.ihmc.octoMap.iterators.OcTreeIterable;
+import us.ihmc.octoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.planarRegions.PlanarRegion;
@@ -154,13 +154,13 @@ public class PlanarRegionSegmentationVisualizer extends Application
       Vector3d nodeNormal = new Vector3d();
       Point3d pointOnPlane = new Point3d();
 
-      LeafIterable<NormalOcTreeNode> leafIterable = new LeafIterable<>(ocTree, 16);
-      for (OcTreeSuperNode<NormalOcTreeNode> superNode : leafIterable)
+      OcTreeIterable<NormalOcTreeNode> leafIterable = OcTreeIteratorFactory.createLeafIteratable(ocTree.getRoot(), 16);
+      for (NormalOcTreeNode node : leafIterable)
       {
-         double boxSize = superNode.getSize();
-         Point3d boxCenter = superNode.getCoordinate();
+         double boxSize = node.getSize();
+         Point3d boxCenter = new Point3d();
+         node.getCoordinate(boxCenter);
 
-         NormalOcTreeNode node = superNode.getNode();
          if (ocTree.isNodeOccupied(node))
          {
             int regionId = node.getRegionId();

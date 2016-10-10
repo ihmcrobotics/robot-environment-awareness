@@ -11,6 +11,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.vecmath.Vector3d;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxInterface;
@@ -36,6 +38,7 @@ public class PlanarRegionCalculator
       planarRegions.stream().forEach(region -> removeBadNodesFromRegion(boundingBox, parameters, region));
       planarRegions.stream().forEach(region -> region.nodeStream().forEach(allRegionNodes::add));
       planarRegions.stream().forEach(region -> growPlanarRegion(root, region, boundingBox, parameters));
+      planarRegions.parallelStream().forEach(PlanarRegionCalculator::flipNormalOfOutliers);
       
       Set<NormalOcTreeNode> nodeSet = new HashSet<>();
       nodeSet.clear();
@@ -58,6 +61,25 @@ public class PlanarRegionCalculator
    {
       IteratorSelectionRule<NormalOcTreeNode> isNormalSetRule = (node, maxDepth) -> node.isNormalSet();
       return OcTreeIteratorFactory.multipleRule(OcTreeIteratorFactory.leavesInsideBoundingBoxOnly(boundingBox), isNormalSetRule);
+   }
+
+   public static void flipNormalOfOutliers(PlanarRegion planarRegion)
+   {
+      Vector3d regionNormal = planarRegion.getNormal();
+      int numberOfNormalsFlipped = (int) planarRegion.nodeParallelStream().filter(node -> isNodeNormalFlipped(node, regionNormal)).count();
+      int numberOfNormalsNotFlipped = planarRegion.getNumberOfNodes() - numberOfNormalsFlipped;
+
+      // The majority of the nodes are flipped => flip the region normal
+      if (numberOfNormalsFlipped > numberOfNormalsNotFlipped)
+         regionNormal.negate();
+
+      // Flip the nodes that upside down
+      planarRegion.nodeParallelStream().filter(node -> isNodeNormalFlipped(node, regionNormal)).forEach(NormalOcTreeNode::negateNormal);
+   }
+
+   private static boolean isNodeNormalFlipped(NormalOcTreeNode node, Vector3d referenceNormal)
+   {
+      return node.getNormalX() * referenceNormal.getX() + node.getNormalY() * referenceNormal.getY() + node.getNormalZ() * referenceNormal.getZ() < 0.0;
    }
 
    public static List<PlanarRegion> mergePlanarRegionsIfPossible(NormalOcTreeNode root, List<PlanarRegion> inputRegions, PlanarRegionSegmentationParameters parameters)

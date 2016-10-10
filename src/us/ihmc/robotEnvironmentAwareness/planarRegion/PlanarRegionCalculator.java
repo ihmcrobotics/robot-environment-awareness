@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxInterface;
-import us.ihmc.octoMap.exceptions.PlanarRegionSegmentationException;
 import us.ihmc.octoMap.iterators.OcTreeIterable;
 import us.ihmc.octoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
@@ -22,6 +21,7 @@ import us.ihmc.octoMap.ocTree.implementations.PlanarRegionSegmentationParameters
 import us.ihmc.octoMap.rules.interfaces.IteratorSelectionRule;
 import us.ihmc.octoMap.tools.OcTreeNearestNeighborTools;
 import us.ihmc.octoMap.tools.OcTreeNearestNeighborTools.NeighborActionRule;
+import us.ihmc.robotEnvironmentAwareness.exception.PlanarRegionSegmentationException;
 
 public class PlanarRegionCalculator
 {

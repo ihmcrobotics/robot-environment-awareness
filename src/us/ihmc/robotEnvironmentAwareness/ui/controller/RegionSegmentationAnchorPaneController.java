@@ -54,11 +54,14 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
    @FXML
    public void save()
    {
+      saveProperty(REAModuleAPI.OcTreePlanarRegionSegmentationEnable, enableSegmentationButton.isSelected());
       saveProperty(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, createParameters().toString());
    }
 
    public void load()
    {
+      loadPropertyAndUpdateUIControl(enableSegmentationButton, REAModuleAPI.OcTreePlanarRegionSegmentationEnable);
+
       String parametersAsString = loadProperty(REAModuleAPI.OcTreePlanarRegionSegmentationParameters);
       if (parametersAsString != null)
       {

@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.planarRegion;
+package us.ihmc.robotEnvironmentAwareness.geometry;
 
 import javax.vecmath.Point3d;
 

@@ -14,6 +14,8 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import us.ihmc.octoMap.node.NormalOcTreeNode;
+import us.ihmc.robotEnvironmentAwareness.geometry.PointMean;
+import us.ihmc.robotEnvironmentAwareness.geometry.VectorMean;
 
 public class PlanarRegion implements Iterable<NormalOcTreeNode>
 {

@@ -20,6 +20,7 @@ public class REAModuleAPI
    public static final String OcTreeLIDARMaxRange = Input + OcTree + LIDAR + "MaxRange";
    public static final String OcTreeBoundingBoxEnable = Input + OcTree + BoundingBox + "Enable";
    public static final String OcTreeBoundingBoxParameters = Input + OcTree + BoundingBox + "Parameters";
+   public static final String OcTreeNormalEstimationEnable = Input + OcTree + NormaleEstimation + "Enable";
    public static final String OcTreeNormalEstimationParameters = Input + OcTree + NormaleEstimation + "Parameters";
 
    public static final String OcTreeGraphicsBoundingBoxEnable = Input + OcTree + Graphics + BoundingBox + "Enable";

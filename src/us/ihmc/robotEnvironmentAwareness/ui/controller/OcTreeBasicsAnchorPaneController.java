@@ -18,6 +18,8 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    @FXML
    private ToggleButton enableButton;
    @FXML
+   private ToggleButton enableNormalEstimationButton;
+   @FXML
    private Button clearButton;
    @FXML
    private Slider depthSlider;
@@ -48,6 +50,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       setupControls();
 
       sendMessageOnPropertyChange(enableButton, REAModuleAPI.OcTreeEnable);
+      sendMessageOnPropertyChange(enableNormalEstimationButton, REAModuleAPI.OcTreeNormalEstimationEnable);
       sendMessageOnPropertyChange(depthIntegerProperty, REAModuleAPI.OcTreeGraphicsDepth);
       sendMessageOnPropertyChange(showOcTreeNodesButton, REAModuleAPI.OcTreeGraphicsShowOcTreeNodes);
       sendMessageOnPropertyChange(showEstimatedSurfacesButton, REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces);
@@ -66,6 +69,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    public void load()
    {
       loadPropertyAndUpdateUIControl(enableButton, REAModuleAPI.OcTreeEnable);
+      loadPropertyAndUpdateUIControl(enableNormalEstimationButton, REAModuleAPI.OcTreeNormalEstimationEnable);
       loadPropertyAndUpdateUIControl(depthSlider, REAModuleAPI.OcTreeGraphicsDepth);
       loadPropertyAndUpdateUIControl(showOcTreeNodesButton, REAModuleAPI.OcTreeGraphicsShowOcTreeNodes);
       loadPropertyAndUpdateUIControl(showEstimatedSurfacesButton, REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces);
@@ -76,6 +80,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    public void save()
    {
       saveProperty(REAModuleAPI.OcTreeEnable, enableButton.isSelected());
+      saveProperty(REAModuleAPI.OcTreeNormalEstimationEnable, enableNormalEstimationButton.isSelected());
       saveProperty(REAModuleAPI.OcTreeGraphicsDepth, depthIntegerProperty.intValue());
       saveProperty(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, showOcTreeNodesButton.isSelected());
       saveProperty(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, showEstimatedSurfacesButton.isSelected());

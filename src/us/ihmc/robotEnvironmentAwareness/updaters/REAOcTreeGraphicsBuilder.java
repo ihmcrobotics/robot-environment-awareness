@@ -1,7 +1,8 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -171,7 +172,7 @@ public class REAOcTreeGraphicsBuilder
          return;
 
       int currentDepth = getCurrentTreeDepthForDisplay();
-      List<NormalOcTreeNode> nodes = getNodes(currentDepth);
+      Set<NormalOcTreeNode> nodes = getNodes(currentDepth);
 
       for (PlanarRegion planarRegion : regionFeaturesProvider.getPlanarRegions())
       {
@@ -220,13 +221,13 @@ public class REAOcTreeGraphicsBuilder
       }
    }
 
-   private List<NormalOcTreeNode> getNodes(int currentDepth)
+   private Set<NormalOcTreeNode> getNodes(int currentDepth)
    {
       OcTreeIterable<NormalOcTreeNode> iterable = OcTreeIteratorFactory.createLeafIteratable(octree.getRoot(), currentDepth);
       if (useOcTreeBoundingBox())
          iterable.setRule(OcTreeIteratorFactory.leavesInsideBoundingBoxOnly(octree.getBoundingBox()));
 
-      List<NormalOcTreeNode> nodes = new ArrayList<>();
+      Set<NormalOcTreeNode> nodes = new HashSet<>();
       iterable.forEach(nodes::add);
       return nodes;
    }

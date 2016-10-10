@@ -19,8 +19,8 @@ import javafx.stage.Stage;
 import javafx.util.Pair;
 import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
-import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
-import us.ihmc.octoMap.pointCloud.SweepCollection;
+import us.ihmc.octoMap.ocTree.NormalOcTree;
+import us.ihmc.octoMap.pointCloud.ScanCollection;
 import us.ihmc.octoMap.tools.OctoMapRandomTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAMessageManager;
@@ -49,11 +49,11 @@ public class MergingPlanarRegionsVisualizer extends Application
 
       Point3d center1 = new Point3d(-5.0, 0.0, 0.0);
       Vector3d normal1 = new Vector3d(0.0, 0.0, 1.0);
-      SweepCollection sweep1 = OctoMapRandomTools.createSingleSweepInPlane(random, 1.0, center1, normal1, 2.0, 2.0, 100000);
+      ScanCollection sweep1 = OctoMapRandomTools.createSingleSweepInPlane(random, 1.0, center1, normal1, 2.0, 2.0, 100000);
       ocTree.update(sweep1);
       Point3d center2 = new Point3d(5.0, 0.0, 0.0);
       Vector3d normal2 = new Vector3d(0.0, 0.0, 1.0);
-      SweepCollection sweep2 = OctoMapRandomTools.createSingleSweepInPlane(random, 1.0, center2, normal2, 2.0, 2.0, 100000);
+      ScanCollection sweep2 = OctoMapRandomTools.createSingleSweepInPlane(random, 1.0, center2, normal2, 2.0, 2.0, 100000);
       ocTree.update(sweep2);
 
       inputManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeEnable, true));

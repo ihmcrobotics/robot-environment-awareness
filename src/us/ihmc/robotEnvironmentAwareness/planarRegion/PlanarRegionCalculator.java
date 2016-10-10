@@ -217,30 +217,8 @@ public class PlanarRegionCalculator
    private static void removeBadNodesFromRegion(OcTreeBoundingBoxInterface boundingBox, PlanarRegionSegmentationParameters parameters,
          PlanarRegion planarRegion)
    {
-      double dotThreshold = Math.cos(parameters.getMaxAngleFromPlane());
-      double maxDistanceFromPlane = parameters.getMaxDistanceFromPlane();
-
-      boolean hasRemovedNodes = false;
-      for (int i = planarRegion.getNumberOfNodes() - 1; i >= 0; i--)
-      {
-         NormalOcTreeNode node = planarRegion.getNode(i);
-         if (!node.isNormalSet())
-         {
-            hasRemovedNodes = true;
-            planarRegion.removeNode(i);
-         }
-      }
-      if (hasRemovedNodes)
-         planarRegion.recomputeNormalAndOrigin();
-
       List<NormalOcTreeNode> nodesToRemove = planarRegion.nodeStream()
-            // Deleted nodes have their normal reset.
-            .filter(node -> node.isNormalSet())
-            // Let's not update nodes that are outside the bounding box as the OcTree should be frozen there.
-            .filter(node -> isNodeInBoundingBox(node, boundingBox))
-            // Group nodes by whether they are part of the region or not.
-            .collect(Collectors.groupingBy(node -> !isNodePartOfRegion(node, planarRegion, maxDistanceFromPlane, dotThreshold)))
-            // Keep only the nodes that should be removed.
+            .collect(Collectors.groupingBy(node -> isBadNode(node, planarRegion, boundingBox, parameters)))
             .getOrDefault(true, Collections.emptyList());
 
       planarRegion.removeNodesAndUpdate(nodesToRemove);
@@ -249,6 +227,16 @@ public class PlanarRegionCalculator
    private static boolean isNodeInBoundingBox(NormalOcTreeNode node, OcTreeBoundingBoxInterface boundingBox)
    {
       return boundingBox == null || boundingBox.isInBoundingBox(node.getX(), node.getY(), node.getZ());
+   }
+
+   private static boolean isBadNode(NormalOcTreeNode node, PlanarRegion planarRegion, OcTreeBoundingBoxInterface boundingBox, PlanarRegionSegmentationParameters parameters)
+   {
+      if (!node.isNormalSet())
+         return true;
+
+      double maxDistanceFromPlane = parameters.getMaxDistanceFromPlane();
+      double dotThreshold = Math.cos(parameters.getMaxAngleFromPlane());
+      return isNodeInBoundingBox(node, boundingBox) && !isNodePartOfRegion(node, planarRegion, maxDistanceFromPlane, dotThreshold);
    }
 
    public static boolean isNodePartOfRegion(NormalOcTreeNode node, PlanarRegion planarRegion, double maxDistanceFromPlane, double dotThreshold)

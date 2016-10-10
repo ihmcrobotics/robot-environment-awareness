@@ -4,10 +4,12 @@ import java.util.List;
 
 import javax.vecmath.Point3d;
 
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegion;
 import us.ihmc.robotics.geometry.LineSegment3d;
 
 public interface RegionFeaturesProvider
 {
+   List<PlanarRegion> getPlanarRegions();
 
    int getNumberOfConcaveHulls();
 

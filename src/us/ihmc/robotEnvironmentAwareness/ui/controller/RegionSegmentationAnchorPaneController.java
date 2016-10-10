@@ -3,6 +3,7 @@ package us.ihmc.robotEnvironmentAwareness.ui.controller;
 import javafx.beans.InvalidationListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Slider;
+import javafx.scene.control.ToggleButton;
 import us.ihmc.javaFXToolkit.StringConverterTools;
 import us.ihmc.octoMap.ocTree.implementations.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
@@ -10,6 +11,8 @@ import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 
 public class RegionSegmentationAnchorPaneController extends REABasicUIController
 {
+   @FXML
+   private ToggleButton enableSegmentationButton;
    @FXML
    private Slider searchRadiusSlider;
    @FXML
@@ -36,6 +39,7 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
    {
       setupControls();
 
+      sendMessageOnPropertyChange(enableSegmentationButton, REAModuleAPI.OcTreePlanarRegionSegmentationEnable);
       InvalidationListener sendParametersListener = observer -> send(new REAMessage(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, createParameters()));
       searchRadiusSlider.valueProperty().addListener(sendParametersListener);
       maxDistanceFromPlaneSlider.valueProperty().addListener(sendParametersListener);

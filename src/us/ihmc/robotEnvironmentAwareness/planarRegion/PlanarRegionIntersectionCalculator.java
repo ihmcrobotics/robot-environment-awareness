@@ -7,7 +7,6 @@ import java.util.PriorityQueue;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
-import us.ihmc.octoMap.planarRegions.PlanarRegion;
 import us.ihmc.robotics.MathTools;
 import us.ihmc.robotics.geometry.LineSegment1d;
 import us.ihmc.robotics.geometry.LineSegment3d;

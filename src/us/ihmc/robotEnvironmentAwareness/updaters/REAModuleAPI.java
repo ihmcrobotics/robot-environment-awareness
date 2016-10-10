@@ -21,7 +21,6 @@ public class REAModuleAPI
    public static final String OcTreeBoundingBoxEnable = Input + OcTree + BoundingBox + "Enable";
    public static final String OcTreeBoundingBoxParameters = Input + OcTree + BoundingBox + "Parameters";
    public static final String OcTreeNormalEstimationParameters = Input + OcTree + NormaleEstimation + "Parameters";
-   public static final String OcTreePlanarRegionSegmentationParameters = Input + OcTree + PlanarRegionSegmentation + "Parameters";
 
    public static final String OcTreeGraphicsBoundingBoxEnable = Input + OcTree + Graphics + BoundingBox + "Enable";
    public static final String OcTreeGraphicsDepth = Input + OcTree + Graphics + "Depth";
@@ -31,6 +30,9 @@ public class REAModuleAPI
    public static final String OcTreeGraphicsHidePlanarRegionNodes = Input + OcTree + Graphics + "HidePlanarRegionNodes";
    public static final String OcTreeGraphicsBoundingBoxShow = Input + OcTree + Graphics + BoundingBox + "Show";
 
+   // TODO Review the names
+   public static final String OcTreePlanarRegionSegmentationEnable = Input + OcTree + PlanarRegionSegmentation + "Enable";
+   public static final String OcTreePlanarRegionSegmentationParameters = Input + OcTree + PlanarRegionSegmentation + "Parameters";
    public static final String OcTreePlanarRegionFeaturesPolygonizerEnable = Input + OcTree + PlanarRegionFeatures + Polygonizer + "Enable";
    public static final String OcTreePlanarRegionFeaturesIntersectionEnable = Input + OcTree + PlanarRegionFeatures + Intersection + "Enable";
    public static final String OcTreePlanarRegionFeaturesIntersectionParameters = Input + OcTree + PlanarRegionFeatures + Intersection + "Parameters";

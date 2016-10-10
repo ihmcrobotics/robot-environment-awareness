@@ -8,7 +8,6 @@ import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
 
-import us.ihmc.octoMap.planarRegions.PlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullDecomposition;
 import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullPruningFilteringTools;

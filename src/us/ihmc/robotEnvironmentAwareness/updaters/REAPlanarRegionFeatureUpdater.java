@@ -9,9 +9,13 @@ import javax.vecmath.Point3d;
 import org.apache.commons.lang3.time.StopWatch;
 
 import gnu.trove.list.array.TIntArrayList;
+import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxInterface;
+import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
-import us.ihmc.octoMap.planarRegions.PlanarRegion;
+import us.ihmc.octoMap.ocTree.implementations.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegion;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionIntersectionCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionPolygonizer;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
@@ -25,6 +29,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
    private final NormalOcTree octree;
 
+   private final PlanarRegionCalculator planarRegionCalculator = new PlanarRegionCalculator();
    private final PlanarRegionIntersectionCalculator intersectionCalculator = new PlanarRegionIntersectionCalculator();
    private final PlanarRegionPolygonizer planarRegionPolygonizer = new PlanarRegionPolygonizer();
    
@@ -34,9 +39,11 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private final List<ConcaveHullVertices> concaveHullsVertices = new ArrayList<>();
    private final List<List<ConvexHullVertices>> convexHullsVertices = new ArrayList<>();
 
-   private final AtomicReference<Boolean> enablePolygonizer;
    private final AtomicReference<Boolean> isOcTreeEnabled;
+   private final AtomicReference<Boolean> enableSegmentation;
+   private final AtomicReference<Boolean> enablePolygonizer;
    private final AtomicReference<Boolean> enableIntersectionCalulator;
+   private final AtomicReference<PlanarRegionSegmentationParameters> planarRegionSegmentationParameters;
    private final AtomicReference<IntersectionEstimationParameters> intersectionEstimationParameters;
    private final AtomicReference<PolygonizerParameters> polygonizerParameters;
 
@@ -44,9 +51,11 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    {
       this.octree = octree;
 
-      enablePolygonizer = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
       isOcTreeEnabled = inputManager.createInput(REAModuleAPI.OcTreeEnable);
+      enableSegmentation = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationEnable);
+      enablePolygonizer = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
       enableIntersectionCalulator = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
+      planarRegionSegmentationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, new PlanarRegionSegmentationParameters());
       intersectionEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters);
       polygonizerParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters);
    }
@@ -58,11 +67,32 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       convexHullsVertices.clear();
       intersectionCalculator.clear();
 
-      if (!isPolygonizerEnabled() && !isIntersectionCalulatorEnabled())
+      if (!isSegmentationEnabled())
          return;
 
-      updateIntersections();
+      updateSegmentation();
       updatePolygons();
+      updateIntersections();
+   }
+
+   private void updateSegmentation()
+   {
+      if (REPORT_TIME)
+      {
+         stopWatch.reset();
+         stopWatch.start();
+      }
+
+      NormalOcTreeNode root = octree.getRoot();
+      OcTreeBoundingBoxInterface boundingBox = octree.getBoundingBox();
+      PlanarRegionSegmentationParameters parameters = planarRegionSegmentationParameters.get();
+      planarRegionCalculator.compute(root, boundingBox, parameters);
+
+      if (REPORT_TIME)
+      {
+         stopWatch.stop();
+         System.out.println("Segmentation took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()));
+      }
    }
 
    private void updateIntersections()
@@ -78,7 +108,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
       if (intersectionEstimationParameters.get() != null)
          intersectionCalculator.setParameters(intersectionEstimationParameters.getAndSet(null));
-      intersectionCalculator.compute(octree.getPlanarRegions());
+      intersectionCalculator.compute(planarRegionCalculator.getPlanarRegions());
 
       if (REPORT_TIME)
       {
@@ -101,10 +131,8 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
          stopWatch.start();
       }
 
-      for (int i = 0; i < octree.getNumberOfPlanarRegions(); i++)
+      for (PlanarRegion planarRegion : planarRegionCalculator.getPlanarRegions())
       {
-         PlanarRegion planarRegion = octree.getPlanarRegion(i);
-
          if (planarRegion.getNumberOfNodes() < minPlanarRegionSize)
             continue;
 
@@ -131,6 +159,12 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
          stopWatch.stop();
          System.out.println("Processing polygons took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()));
       }
+   }
+
+   @Override
+   public List<PlanarRegion> getPlanarRegions()
+   {
+      return planarRegionCalculator.getPlanarRegions();
    }
 
    @Override
@@ -173,6 +207,14 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    public LineSegment3d getIntersection(int intersectionIndex)
    {
       return intersectionCalculator.getIntersection(intersectionIndex);
+   }
+
+   private boolean isSegmentationEnabled()
+   {
+      if (!isOcTreeEnabled())
+         return false;
+      else
+         return enableSegmentation.get() == null ? false : enableSegmentation.get();
    }
 
    private boolean isPolygonizerEnabled()

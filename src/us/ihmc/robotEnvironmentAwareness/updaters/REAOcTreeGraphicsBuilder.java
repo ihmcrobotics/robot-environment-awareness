@@ -26,6 +26,7 @@ import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegion;
 import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
@@ -170,37 +171,52 @@ public class REAOcTreeGraphicsBuilder
          return;
 
       int currentDepth = getCurrentTreeDepthForDisplay();
-      boolean showSurfaces = isShowingEstimatedSurfaces();
-
       List<NormalOcTreeNode> nodes = getNodes(currentDepth);
 
-      Vector3d planeNormal = new Vector3d();
-      Point3d pointOnPlane = new Point3d();
+      for (PlanarRegion planarRegion : regionFeaturesProvider.getPlanarRegions())
+      {
+         for (NormalOcTreeNode node : planarRegion)
+         {
+            nodes.remove(node);
+
+            if (isHidingPlanarRegionNodes())
+               continue;
+
+            Color color = getNodeColor(node, planarRegion.getId());
+            addNodeToMeshBuilder(node, color, occupiedMeshBuilder);
+         }
+      }
 
       for (NormalOcTreeNode node : nodes)
       {
-         if (isHidingPlanarRegionNodes() && node.isPartOfRegion())
-            continue;
+         Color color = getNodeColor(node);
+         addNodeToMeshBuilder(node, color, occupiedMeshBuilder);
+      }
+   }
 
-         if (octree.isNodeOccupied(node))
-         {
-            double size = node.getSize();
-            Color color = getNodeColor(node);
-            if (node.isNormalSet() && showSurfaces)
-            {
-               node.getNormal(planeNormal);
-               if (node.isHitLocationSet())
-                  node.getHitLocation(pointOnPlane);
-               else
-                  node.getCoordinate(pointOnPlane);
-               intersectionPlaneBoxCalculator.setCube(size, node.getX(), node.getY(), node.getZ());
-               intersectionPlaneBoxCalculator.setPlane(pointOnPlane, planeNormal);
-               intersectionPlaneBoxCalculator.computeIntersections(plane);
-               occupiedMeshBuilder.addPolyon(plane, color);
-            }
-            else
-               occupiedMeshBuilder.addCubeMesh(size, node.getX(), node.getY(), node.getZ(), color);
-         }
+   private void addNodeToMeshBuilder(NormalOcTreeNode node, Color color, MultiColorMeshBuilder meshBuilder)
+   {
+      Vector3d planeNormal = new Vector3d();
+      Point3d pointOnPlane = new Point3d();
+      double size = node.getSize();
+
+      if (node.isNormalSet() && isShowingEstimatedSurfaces())
+      {
+         node.getNormal(planeNormal);
+
+         if (node.isHitLocationSet())
+            node.getHitLocation(pointOnPlane);
+         else
+            node.getCoordinate(pointOnPlane);
+
+         intersectionPlaneBoxCalculator.setCube(size, node.getX(), node.getY(), node.getZ());
+         intersectionPlaneBoxCalculator.setPlane(pointOnPlane, planeNormal);
+         intersectionPlaneBoxCalculator.computeIntersections(plane);
+         meshBuilder.addPolyon(plane, color);
+      }
+      else
+      {
+         meshBuilder.addCubeMesh(size, node.getX(), node.getY(), node.getZ(), color);
       }
    }
 
@@ -245,15 +261,18 @@ public class REAOcTreeGraphicsBuilder
 
    private Color getNodeColor(NormalOcTreeNode node)
    {
+      return getNodeColor(node, PlanarRegion.NO_REGION_ID);
+   }
+
+   private Color getNodeColor(NormalOcTreeNode node, int regionId)
+   {
       switch (getCurrentColoringType())
       {
       case REGION:
-         if (node.isPartOfRegion())
-         {
-            int regionId = node.getRegionId();
+         if (regionId != PlanarRegion.NO_REGION_ID)
             return getRegionColor(regionId);
-         }
-         return DEFAULT_COLOR;
+         else
+            return DEFAULT_COLOR;
       case HAS_CENTER:
          return node.isHitLocationSet() ? Color.DARKGREEN : Color.RED;
       case NORMAL:

@@ -10,7 +10,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import com.google.common.util.concurrent.AtomicDouble;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
+import us.ihmc.octoMap.ocTree.NormalOcTree;
 import us.ihmc.octoMap.tools.OctoMapTools;
 import us.ihmc.tools.io.printing.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;

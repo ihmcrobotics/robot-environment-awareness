@@ -22,7 +22,7 @@ import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 import us.ihmc.octoMap.iterators.OcTreeIterable;
 import us.ihmc.octoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.octoMap.node.OccupancyOcTreeNode;
-import us.ihmc.octoMap.ocTree.implementations.OcTree;
+import us.ihmc.octoMap.ocTree.OcTree;
 import us.ihmc.octoMap.pointCloud.PointCloud;
 import us.ihmc.robotics.geometry.RotationTools;
 

@@ -19,7 +19,7 @@ import javafx.stage.Stage;
 import javafx.util.Pair;
 import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
-import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
+import us.ihmc.octoMap.ocTree.NormalOcTree;
 import us.ihmc.octoMap.pointCloud.SweepCollection;
 import us.ihmc.octoMap.tools.OctoMapRandomTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;

@@ -11,7 +11,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import gnu.trove.list.array.TIntArrayList;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxInterface;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
-import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
+import us.ihmc.octoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionCalculator;

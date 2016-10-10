@@ -8,7 +8,7 @@ import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.octoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.octoMap.ocTree.NormalOcTree;
-import us.ihmc.octoMap.pointCloud.SweepCollection;
+import us.ihmc.octoMap.pointCloud.ScanCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
 
 public class REAOcTreeUpdater
@@ -18,7 +18,7 @@ public class REAOcTreeUpdater
 
    private final AtomicReference<LidarPosePacket> latestLidarPoseReference = new AtomicReference<>(null);
    private final AtomicReference<PointCloudWorldPacket> latestPointCloudWorldPacket = new AtomicReference<>(null);
-   private final AtomicReference<SweepCollection> newFullScanReference = new AtomicReference<>(null);
+   private final AtomicReference<ScanCollection> newFullScanReference = new AtomicReference<>(null);
 
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> clear;
@@ -55,14 +55,14 @@ public class REAOcTreeUpdater
       if (!isEnabled() || Thread.interrupted())
          return;
 
-      updateSweep();
+      updateScanCollection();
 
-      SweepCollection newScan = newFullScanReference.getAndSet(null);
+      ScanCollection newScan = newFullScanReference.getAndSet(null);
 
       if (newScan == null)
       {
          if (performCompleteUpdate)
-            newScan = new SweepCollection();
+            newScan = new ScanCollection();
          else
             return;
       }
@@ -107,7 +107,7 @@ public class REAOcTreeUpdater
          octree.disableBoundingBox();
    }
 
-   private void updateSweep()
+   private void updateScanCollection()
    {
       LidarPosePacket lidarPosePacket = latestLidarPoseReference.get();
       PointCloudWorldPacket pointCloudPacket = latestPointCloudWorldPacket.getAndSet(null);
@@ -115,10 +115,10 @@ public class REAOcTreeUpdater
       if (!isEnabled() || lidarPosePacket == null || pointCloudPacket == null)
          return;
 
-      SweepCollection sweepCollection = new SweepCollection();
-      newFullScanReference.set(sweepCollection);
-      sweepCollection.setSubSampleSize(NUMBER_OF_SAMPLES);
-      sweepCollection.addSweep(pointCloudPacket.decayingWorldScan, lidarPosePacket.position);
+      ScanCollection scanCollection = new ScanCollection();
+      newFullScanReference.set(scanCollection);
+      scanCollection.setSubSampleSize(NUMBER_OF_SAMPLES);
+      scanCollection.addScan(pointCloudPacket.decayingWorldScan, lidarPosePacket.position);
    }
 
    public void attachListeners(PacketCommunicator packetCommunicator)

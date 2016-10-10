@@ -25,7 +25,7 @@ import us.ihmc.octoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.NormalOcTree;
 import us.ihmc.octoMap.pointCloud.PointCloud;
-import us.ihmc.octoMap.pointCloud.SweepCollection;
+import us.ihmc.octoMap.pointCloud.ScanCollection;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotics.geometry.RotationTools;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
@@ -52,12 +52,12 @@ public class NormalOcTreeVisualizer extends Application
       System.out.println("Initialized octree");
       System.out.println("Computing normals");
       long startTime = System.nanoTime();
-      ocTree.update(new SweepCollection(pointcloud, lidarPosition));
-      ocTree.update(new SweepCollection(pointcloud, lidarPosition));
-      ocTree.update(new SweepCollection(pointcloud, lidarPosition));
-      ocTree.update(new SweepCollection(pointcloud, lidarPosition));
-      ocTree.update(new SweepCollection(pointcloud, lidarPosition));
-      ocTree.update(new SweepCollection(pointcloud, lidarPosition));
+      ocTree.update(new ScanCollection(pointcloud, lidarPosition));
+      ocTree.update(new ScanCollection(pointcloud, lidarPosition));
+      ocTree.update(new ScanCollection(pointcloud, lidarPosition));
+      ocTree.update(new ScanCollection(pointcloud, lidarPosition));
+      ocTree.update(new ScanCollection(pointcloud, lidarPosition));
+      ocTree.update(new ScanCollection(pointcloud, lidarPosition));
       long endTime = System.nanoTime();
       System.out.println("Done computing normals: time it took = " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
    }
@@ -81,7 +81,7 @@ public class NormalOcTreeVisualizer extends Application
          }
       }
 
-      ocTree.update(new SweepCollection(pointcloud, origin));
+      ocTree.update(new ScanCollection(pointcloud, origin));
    }
 
    public void createPlane(Point3d lidarPosition, double pitch, double roll, double z)
@@ -103,7 +103,7 @@ public class NormalOcTreeVisualizer extends Application
             pointcloud.add(point);
          }
       }
-      ocTree.update(new SweepCollection(pointcloud, lidarPosition));
+      ocTree.update(new ScanCollection(pointcloud, lidarPosition));
    }
 
    public void createBowl(double radius, Point3d center)
@@ -122,7 +122,7 @@ public class NormalOcTreeVisualizer extends Application
          }
       }
 
-      ocTree.update(new SweepCollection(pointcloud, origin));
+      ocTree.update(new ScanCollection(pointcloud, origin));
    }
 
    private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
@@ -233,7 +233,7 @@ public class NormalOcTreeVisualizer extends Application
 
       if (SHOW_POINT_CLOUD)
       {
-         for (int i = 0; i < pointcloud.size(); i++)
+         for (int i = 0; i < pointcloud.getNumberOfPoints(); i++)
          {
             Sphere sphere = new Sphere(0.0025);
             sphere.setTranslateX(pointcloud.getPoint(i).getX());

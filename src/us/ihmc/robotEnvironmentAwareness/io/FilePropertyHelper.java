@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Properties;
+import java.util.TreeSet;
 
 public final class FilePropertyHelper
 {
@@ -37,7 +40,17 @@ public final class FilePropertyHelper
 
       try
       {
-         Properties properties = new Properties();
+         Properties properties = new Properties()
+         {
+            private static final long serialVersionUID = -8814683165980261816L;
+
+            @Override
+            public synchronized Enumeration<Object> keys()
+            {
+               return Collections.enumeration(new TreeSet<Object>(super.keySet()));
+            }
+         };
+
 
          if (configurationFile.exists() && configurationFile.isFile())
          {

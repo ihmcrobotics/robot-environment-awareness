@@ -4,7 +4,7 @@ import javafx.beans.InvalidationListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Slider;
 import us.ihmc.javaFXToolkit.StringConverterTools;
-import us.ihmc.octoMap.ocTree.implementations.NormalEstimationParameters;
+import us.ihmc.octoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 

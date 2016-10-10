@@ -6,7 +6,7 @@ import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
-import us.ihmc.octoMap.ocTree.implementations.NormalEstimationParameters;
+import us.ihmc.octoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.octoMap.ocTree.implementations.NormalOcTree;
 import us.ihmc.octoMap.pointCloud.SweepCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;

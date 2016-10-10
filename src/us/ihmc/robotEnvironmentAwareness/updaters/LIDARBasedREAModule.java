@@ -67,7 +67,7 @@ public class LIDARBasedREAModule
 
             try
             {
-               callOcTreeUpdater(performCompleteOcTreeUpdate);
+               performCompleteOcTreeUpdate &= callOcTreeUpdater(performCompleteOcTreeUpdate);
 
                if (isThreadInterrupted())
                   return;
@@ -102,7 +102,7 @@ public class LIDARBasedREAModule
                lastGraphicsUpdate.set(currentTime);
          }
 
-         private void callOcTreeUpdater(boolean performCompleteUpdate)
+         private boolean callOcTreeUpdater(boolean performCompleteUpdate)
          {
             if (REPORT_TIME)
             {
@@ -110,12 +110,14 @@ public class LIDARBasedREAModule
                stopWatch.start();
             }
 
-            updater.update(performCompleteUpdate);
+            boolean updatedProperly = updater.update(performCompleteUpdate);
 
             if (REPORT_TIME)
             {
                System.out.println("OcTree update took: " + OctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
             }
+
+            return updatedProperly;
          }
 
          private void callGraphicsBuilder()

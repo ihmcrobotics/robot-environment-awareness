@@ -44,28 +44,23 @@ public class REAOcTreeUpdater
       normalEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters);
    }
 
-   public void update(boolean performCompleteUpdate)
+   public boolean update(boolean performCompleteUpdate)
    {
       if (shouldClear())
       {
          clear();
-         return;
+         return false;
       }
 
-      if (!isEnabled() || Thread.interrupted())
-         return;
+      if (!isEnabled())
+         return false;
 
       updateScanCollection();
 
       ScanCollection newScan = newFullScanReference.getAndSet(null);
 
       if (newScan == null)
-      {
-         if (performCompleteUpdate)
-            newScan = new ScanCollection();
-         else
-            return;
-      }
+         return false;
 
       handleBoundingBox();
 
@@ -77,14 +72,7 @@ public class REAOcTreeUpdater
 
       octree.update(newScan, performCompleteUpdate);
 
-      if (Thread.interrupted())
-         return;
-
-      if (shouldClear())
-      {
-         clear();
-         return;
-      }
+      return true;
    }
 
    private void clear()

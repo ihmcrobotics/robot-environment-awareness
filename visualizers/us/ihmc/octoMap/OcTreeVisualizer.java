@@ -104,10 +104,6 @@ public class OcTreeVisualizer extends Application
 //      {
          Point3d end = new Point3d(5.0, 3.0, 1.0);
          ocTree.castRay(new Point3d(0.0, 0.0, 2.0), new Vector3d(0.0, 0.0, -1.0), end, true);
-         List<Vector3d> normals = new ArrayList<>();
-         ocTree.getNormals(end, normals);
-//      }
-      System.out.println(normals);
 //      long endTime = System.nanoTime();
 //      System.out.println(TimeTools.nanoSecondstoSeconds(endTime - startTime));
    }

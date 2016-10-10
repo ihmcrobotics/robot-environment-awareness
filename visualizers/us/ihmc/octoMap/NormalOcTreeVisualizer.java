@@ -48,7 +48,7 @@ public class NormalOcTreeVisualizer extends Application
       //      callInsertPointCloud();
       createPlane(lidarPosition, 12.0, 0.0, -0.05);
 //      createBowl(0.5, new Point3d());
-      System.out.println("Number of leafs: " + ocTree.getNumLeafNodes());
+      System.out.println("Number of leafs: " + ocTree.getNumberOfLeafNodes());
       System.out.println("Initialized octree");
       System.out.println("Computing normals");
       long startTime = System.nanoTime();

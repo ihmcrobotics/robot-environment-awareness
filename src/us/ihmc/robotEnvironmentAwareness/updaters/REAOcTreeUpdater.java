@@ -94,7 +94,7 @@ public class REAOcTreeUpdater
 
    private void handleBoundingBox()
    {
-      if (isUsingBoundingBox() && atomicBoundingBox.get() != null)
+      if (isUsingBoundingBox() && atomicBoundingBox.get() != null && latestLidarPoseReference.get() != null)
       {
          OcTreeBoundingBoxWithCenterAndYaw newBoundingBox = new OcTreeBoundingBoxWithCenterAndYaw(octree.getResolution(), octree.getTreeDepth());
          newBoundingBox.setLocalBoundingBox(atomicBoundingBox.get());

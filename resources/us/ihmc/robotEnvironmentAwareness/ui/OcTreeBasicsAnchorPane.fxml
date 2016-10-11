@@ -16,7 +16,6 @@
       <VBox layoutX="14.0" layoutY="14.0" spacing="5.0">
          <children>
             <ToggleButton fx:id="enableButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="153.0" text="Enable OcTree" />
-            <ToggleButton fx:id="enableNormalEstimationButton" mnemonicParsing="false" text="Enable Normal Estimation" />
             <Button fx:id="clearButton" mnemonicParsing="false" onAction="#clear" prefHeight="25.0" prefWidth="153.0" text="Clear" />
             <Button fx:id="saveButton" mnemonicParsing="false" onAction="#save" prefHeight="25.0" prefWidth="153.0" text="Save" />
          </children>

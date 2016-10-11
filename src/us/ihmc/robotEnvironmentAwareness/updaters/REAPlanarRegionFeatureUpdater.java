@@ -1,10 +1,8 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-
-import javax.vecmath.Point3d;
 
 import org.apache.commons.lang3.time.StopWatch;
 
@@ -15,6 +13,8 @@ import us.ihmc.octoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionCalculator;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionIntersectionCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionPolygonizer;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
@@ -31,13 +31,10 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
    private final PlanarRegionCalculator planarRegionCalculator = new PlanarRegionCalculator();
    private final PlanarRegionIntersectionCalculator intersectionCalculator = new PlanarRegionIntersectionCalculator();
-   private final PlanarRegionPolygonizer planarRegionPolygonizer = new PlanarRegionPolygonizer();
    
-   private int minPlanarRegionSize = 10;
-
    private final TIntArrayList regionIds = new TIntArrayList();
-   private final List<ConcaveHullVertices> concaveHullsVertices = new ArrayList<>();
-   private final List<List<ConvexHullVertices>> convexHullsVertices = new ArrayList<>();
+   private Map<PlanarRegion, PlanarRegionConcaveHull> concaveHulls = null;
+   private Map<PlanarRegion, PlanarRegionConvexPolygons> convexPolygons = null;
 
    private final AtomicReference<Boolean> isOcTreeEnabled;
    private final AtomicReference<Boolean> enableSegmentation;
@@ -59,14 +56,12 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       enableIntersectionCalulator = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
       planarRegionSegmentationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, new PlanarRegionSegmentationParameters());
       intersectionEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters);
-      polygonizerParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters);
+      polygonizerParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, new PolygonizerParameters());
    }
 
    public void update()
    {
       regionIds.reset();
-      concaveHullsVertices.clear();
-      convexHullsVertices.clear();
       intersectionCalculator.clear();
 
       if (shouldClearSegmentation())
@@ -133,37 +128,17 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       if (!isPolygonizerEnabled())
          return;
 
-      if (polygonizerParameters.get() != null)
-         planarRegionPolygonizer.setParameters(polygonizerParameters.getAndSet(null));
-
       if (REPORT_TIME)
       {
          stopWatch.reset();
          stopWatch.start();
       }
 
-      for (PlanarRegion planarRegion : planarRegionCalculator.getPlanarRegions())
-      {
-         if (planarRegion.getNumberOfNodes() < minPlanarRegionSize)
-            continue;
+      PolygonizerParameters parameters = polygonizerParameters.get();
+      List<PlanarRegion> planarRegions = planarRegionCalculator.getPlanarRegions();
 
-         regionIds.add(planarRegion.getId());
-         planarRegionPolygonizer.compute(planarRegion);
-         
-         ConcaveHullVertices concaveHullVertices = new ConcaveHullVertices();
-         concaveHullVertices.addAll(planarRegionPolygonizer.getConcaveHullVertices());
-         concaveHullsVertices.add(concaveHullVertices);
-
-         ArrayList<ConvexHullVertices> regionConvexHullsVertices = new ArrayList<>();
-         convexHullsVertices.add(regionConvexHullsVertices);
-
-         for (int j = 0; j < planarRegionPolygonizer.getNumberOfConvexPolygons(); j++)
-         {
-            ConvexHullVertices convexHullVertices = new ConvexHullVertices();
-            convexHullVertices.addAll(planarRegionPolygonizer.getConvexPolygonVertices(j));
-            regionConvexHullsVertices.add(convexHullVertices);
-         }
-      }
+      concaveHulls = PlanarRegionPolygonizer.computeConcaveHulls(planarRegions, parameters);
+      convexPolygons = PlanarRegionPolygonizer.computeConvexDecomposition(concaveHulls, parameters);
 
       if (REPORT_TIME)
       {
@@ -179,33 +154,21 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    }
 
    @Override
-   public int getNumberOfConcaveHulls()
+   public boolean hasPolygonizedPlanarRegions()
    {
-      return concaveHullsVertices.size();
+      return concaveHulls != null;
    }
 
    @Override
-   public int getRegionId(int concaveHullIndex)
+   public PlanarRegionConcaveHull getPlanarRegionConcaveHull(PlanarRegion planarRegion)
    {
-      return regionIds.get(concaveHullIndex);
+      return concaveHulls == null ? null : concaveHulls.get(planarRegion);
    }
 
    @Override
-   public List<Point3d> getConcaveHull(int concaveHullIndex)
+   public PlanarRegionConvexPolygons getPlanarRegionConvexPolygons(PlanarRegion planarRegion)
    {
-      return concaveHullsVertices.get(concaveHullIndex);
-   }
-   
-   @Override
-   public int getNumberOfConvexHulls(int concaveHullIndex)
-   {
-      return convexHullsVertices.get(concaveHullIndex).size();
-   }
-
-   @Override
-   public List<Point3d> getConvexHull(int concaveHullIndex, int convexHullIndex)
-   {
-      return convexHullsVertices.get(concaveHullIndex).get(convexHullIndex);
+      return convexPolygons == null ? null : convexPolygons.get(planarRegion);
    }
 
    @Override
@@ -215,9 +178,9 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    }
 
    @Override
-   public LineSegment3d getIntersection(int intersectionIndex)
+   public LineSegment3d getIntersection(int index)
    {
-      return intersectionCalculator.getIntersection(intersectionIndex);
+      return intersectionCalculator.getIntersection(index);
    }
 
    private boolean isSegmentationEnabled()
@@ -252,17 +215,5 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    public boolean shouldClearSegmentation()
    {
       return clearSegmentation.get() == null ? false : clearSegmentation.getAndSet(null);
-   }
-   
-   /** Just for clarity. */
-   private static class ConcaveHullVertices extends ArrayList<Point3d>
-   {
-      private static final long serialVersionUID = -4203566841508179115L;
-   }
-
-   /** Just for clarity. */
-   private static class ConvexHullVertices extends ArrayList<Point3d>
-   {
-      private static final long serialVersionUID = -4203566841508179115L;
    }
 }

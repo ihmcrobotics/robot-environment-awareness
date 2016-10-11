@@ -28,6 +28,8 @@ import us.ihmc.octoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegion;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
 import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
@@ -149,18 +151,28 @@ public class REAOcTreeGraphicsBuilder
          polygonsMeshBuilder.addLineMesh(start, end, lineWidth, color);
       }
 
-      for (int i = 0; i < regionFeaturesProvider.getNumberOfConcaveHulls(); i++)
+      for (PlanarRegion planarRegion : regionFeaturesProvider.getPlanarRegions())
       {
-         double lineWidth = 0.01;
-         int regionId = regionFeaturesProvider.getRegionId(i);
-         Color regionColor = getRegionColor(regionId);
-         polygonsMeshBuilder.addMultiLineMesh(regionFeaturesProvider.getConcaveHull(i), lineWidth, regionColor, true);
+         PlanarRegionConcaveHull planarRegionConcaveHull = regionFeaturesProvider.getPlanarRegionConcaveHull(planarRegion);
+         if (planarRegionConcaveHull == null)
+            continue;
 
-         int numberOfConvexHulls = regionFeaturesProvider.getNumberOfConvexHulls(i);
-         for (int j = 0; j < numberOfConvexHulls; j++)
+         double lineWidth = 0.01;
+         int regionId = planarRegion.getId();
+         Color regionColor = getRegionColor(regionId);
+         List<Point3d> concaveHullVerticesInWorld = planarRegionConcaveHull.getConcaveHullVerticesInWorld();
+         polygonsMeshBuilder.addMultiLineMesh(concaveHullVerticesInWorld, lineWidth, regionColor, true);
+
+         PlanarRegionConvexPolygons planarRegionConvexPolygons = regionFeaturesProvider.getPlanarRegionConvexPolygons(planarRegion);
+         if (planarRegionConvexPolygons == null)
+            continue;
+
+         List<List<Point3d>> convexPolygonsVertices = planarRegionConvexPolygons.getConvexPolygonsVerticesInWorld();
+         int numberOfConvexPolygons = convexPolygonsVertices.size();
+         for (int j = 0; j < numberOfConvexPolygons; j++)
          {
-            List<Point3d> convexPolygonVertices = regionFeaturesProvider.getConvexHull(i, j);
-            regionColor = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) j / (double) numberOfConvexHulls));
+            List<Point3d> convexPolygonVertices = convexPolygonsVertices.get(j);
+            regionColor = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) j / (double) numberOfConvexPolygons));
             polygonsMeshBuilder.addPolyon(convexPolygonVertices, regionColor);
          }
       }

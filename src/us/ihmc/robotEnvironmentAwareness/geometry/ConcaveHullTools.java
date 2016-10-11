@@ -89,6 +89,31 @@ public class ConcaveHullTools
          Collections.reverse(concaveHullVertices);
    }
 
+   public static void ensureCounterClockwiseOrdering(List<Point2d> concaveHullVertices)
+   {
+      double sumOfAngles = 0.0;
+
+      Vector2d previousEdge = new Vector2d();
+      Vector2d nextEdge = new Vector2d();
+
+      for (int vertexIndex = 0; vertexIndex < concaveHullVertices.size(); vertexIndex++)
+      {
+         int previousVertexIndex = decrement(vertexIndex, concaveHullVertices);
+         int nextVertexIndex = increment(vertexIndex, concaveHullVertices);
+
+         Point2d previousVertex = concaveHullVertices.get(previousVertexIndex);
+         Point2d vertex = concaveHullVertices.get(vertexIndex);
+         Point2d nextVertex = concaveHullVertices.get(nextVertexIndex);
+
+         previousEdge.sub(vertex, previousVertex);
+         nextEdge.sub(nextVertex, vertex);
+         sumOfAngles += GeometryTools.getAngleFromFirstToSecondVector(previousEdge, nextEdge);
+      }
+
+      if (sumOfAngles < 0.0)
+         Collections.reverse(concaveHullVertices);
+   }
+
    public static double computePerimeter(List<Point2d> concaveHullVertices)
    {
       double perimeter = 0.0;

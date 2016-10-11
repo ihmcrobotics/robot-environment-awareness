@@ -3,6 +3,8 @@ package us.ihmc.robotEnvironmentAwareness.planarRegion;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
@@ -31,19 +33,52 @@ public class PlanarRegionPolygonizer
    {
    }
 
-   public void compute(List<PlanarRegion> planarRegions, PolygonizerParameters parameters)
+   public static Map<PlanarRegion, PlanarRegionConcaveHull> computeConcaveHulls(List<PlanarRegion> planarRegions, PolygonizerParameters parameters)
    {
-      for (PlanarRegion planarRegion : planarRegions)
+      return planarRegions.parallelStream()
+                          .filter(region -> region.getNumberOfNodes() >= parameters.getMinNumberOfNodes())
+                          .map(region -> createConcaveHull(region, parameters))
+                          .collect(Collectors.toConcurrentMap(PlanarRegionConcaveHull::getPlanarRegion, concaveHull -> concaveHull));
+
+   }
+
+   public static Map<PlanarRegion, PlanarRegionConvexPolygons> computeConvexDecomposition(Map<PlanarRegion, PlanarRegionConcaveHull> concaveHulls, PolygonizerParameters parameters)
+   {
+      return concaveHulls.values().parallelStream()
+                  .map(concaveHull -> createConvexPolygons(concaveHull, parameters))
+                  .collect(Collectors.toConcurrentMap(PlanarRegionConvexPolygons::getPlanarRegion, polygons -> polygons));
+   }
+
+   private static PlanarRegionConcaveHull createConcaveHull(PlanarRegion planarRegion, PolygonizerParameters parameters)
+   {
+      double concaveHullThreshold = parameters.getConcaveHullThreshold();
+      double shallowAngleThreshold = parameters.getShallowAngleThreshold();
+      double peakAngleThreshold = parameters.getPeakAngleThreshold();
+      double lengthThreshold = parameters.getLengthThreshold();
+
+      List<Point2d> pointsInPlane = PolygonizerTools.extractPointsInPlane(planarRegion);
+      List<Point2d> concaveHullVerticesInPlane = SimpleConcaveHullFactory.createConcaveHullAsPoint2dList(pointsInPlane, concaveHullThreshold);
+
+      ConcaveHullTools.ensureClockwiseOrdering(concaveHullVerticesInPlane);
+      ConcaveHullTools.removeSuccessiveDuplicateVertices(concaveHullVerticesInPlane);
+
+      for (int i = 0; i < 5; i++)
       {
-         if (planarRegion.getNumberOfNodes() < parameters.getMinNumberOfNodes())
-            continue;
-         
-         Point3d origin = planarRegion.getOrigin();
-         Quat4d orientation = new Quat4d();
-         orientation.set(GeometryTools.getRotationBasedOnNormal(planarRegion.getNormal()));
-         
-         
+         ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, concaveHullVerticesInPlane);
+         ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, concaveHullVerticesInPlane);
       }
+
+      return new PlanarRegionConcaveHull(planarRegion, concaveHullVerticesInPlane);
+   }
+
+   private static PlanarRegionConvexPolygons createConvexPolygons(PlanarRegionConcaveHull concaveHull, PolygonizerParameters parameters)
+   {
+      List<ConvexPolygon2d> decomposedPolygons = new ArrayList<>();
+      double depthThreshold = parameters.getDepthThreshold();
+      ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHull.getConcaveHullVerticesInPlane(), depthThreshold, decomposedPolygons);
+
+      PlanarRegion planarRegion = concaveHull.getPlanarRegion();
+      return new PlanarRegionConvexPolygons(planarRegion, decomposedPolygons);
    }
 
    public void compute(PlanarRegion planarRegion)
@@ -138,84 +173,11 @@ public class PlanarRegionPolygonizer
 
    private Point2d getPointInPlane(Point3d point)
    {
-      return toPointInPlane(point, origin, orientation);
-   }
-
-   private static List<Point2d> toPointsInPlane(List<Point3d> pointsToTransform, Point3d planeOrigin, Quat4d planeOrientation)
-   {
-      List<Point2d> pointsInPlane = new ArrayList<>();
-      pointsToTransform.parallelStream().map(point -> toPointInPlane(point, planeOrigin, planeOrientation)).forEach(pointsInPlane::add);
-      return pointsInPlane;
-   }
-
-   private static Point2d toPointInPlane(Point3d pointToTransform, Point3d planeOrigin, Quat4d planeOrientation)
-   {
-      Point2d pointInPlane = new Point2d();
-
-      double qx = -planeOrientation.getX();
-      double qy = -planeOrientation.getY();
-      double qz = -planeOrientation.getZ();
-      double qs = planeOrientation.getW();
-
-      // t = 2.0 * cross(q.xyz, v);
-      // v' = v + q.s * t + cross(q.xyz, t);
-      double x = pointToTransform.getX() - planeOrigin.getX();
-      double y = pointToTransform.getY() - planeOrigin.getY();
-      double z = pointToTransform.getZ() - planeOrigin.getZ();
-
-      double crossX = 2.0 * (qy * z - qz * y);
-      double crossY = 2.0 * (qz * x - qx * z);
-      double crossZ = 2.0 * (qx * y - qy * x);
-
-      double crossCrossX = qy * crossZ - qz * crossY;
-      double crossCrossY = qz * crossX - qx * crossZ;
-
-      pointInPlane.setX(x + qs * crossX + crossCrossX);
-      pointInPlane.setY(y + qs * crossY + crossCrossY);
-
-      return pointInPlane;
+      return PolygonizerTools.toPointInPlane(point, origin, orientation);
    }
 
    private Point3d getPointInWorld(Point2d point)
    {
-      return toPointInWorld(point, origin, orientation);
-   }
-
-   private static List<Point3d> toPointsInWorld(List<Point2d> pointsInPlane, Point3d planeOrigin, Quat4d planeOrientation)
-   {
-      List<Point3d> pointsInWorld = new ArrayList<>();
-      pointsInPlane.parallelStream().map(point -> toPointInWorld(point, planeOrigin, planeOrientation)).forEach(pointsInWorld::add);
-      return pointsInWorld;
-   }
-
-   private static Point3d toPointInWorld(Point2d pointInPlane, Point3d planeOrigin, Quat4d planeOrientation)
-   {
-      Point3d pointInWorld = new Point3d();
-
-      double qx = planeOrientation.getX();
-      double qy = planeOrientation.getY();
-      double qz = planeOrientation.getZ();
-      double qs = planeOrientation.getW();
-
-      // t = 2.0 * cross(q.xyz, v);
-      // v' = v + q.s * t + cross(q.xyz, t);
-      double x = pointInPlane.getX();
-      double y = pointInPlane.getY();
-      double z = 0.0;
-
-      double crossX = 2.0 * (qy * z - qz * y);
-      double crossY = 2.0 * (qz * x - qx * z);
-      double crossZ = 2.0 * (qx * y - qy * x);
-
-      double crossCrossX = qy * crossZ - qz * crossY;
-      double crossCrossY = qz * crossX - qx * crossZ;
-      double crossCrossZ = qx * crossY - qy * crossX;
-
-      pointInWorld.setX(x + qs * crossX + crossCrossX);
-      pointInWorld.setY(y + qs * crossY + crossCrossY);
-      pointInWorld.setZ(z + qs * crossZ + crossCrossZ);
-      pointInWorld.add(planeOrigin);
-
-      return pointInWorld;
+      return PolygonizerTools.toPointInWorld(point, origin, orientation);
    }
 }

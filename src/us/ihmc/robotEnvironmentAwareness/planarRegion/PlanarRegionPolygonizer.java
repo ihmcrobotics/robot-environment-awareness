@@ -127,18 +127,23 @@ public class PlanarRegionPolygonizer
 
    private Point2d getPointInPlane(Point3d point)
    {
+      return toPointInPlane(point, origin, orientation);
+   }
+
+   private static Point2d toPointInPlane(Point3d pointToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   {
       Point2d pointInPlane = new Point2d();
 
-      double qx = -orientation.getX();
-      double qy = -orientation.getY();
-      double qz = -orientation.getZ();
-      double qs = orientation.getW();
+      double qx = -planeOrientation.getX();
+      double qy = -planeOrientation.getY();
+      double qz = -planeOrientation.getZ();
+      double qs = planeOrientation.getW();
 
       // t = 2.0 * cross(q.xyz, v);
       // v' = v + q.s * t + cross(q.xyz, t);
-      double x = point.getX() - origin.getX();
-      double y = point.getY() - origin.getY();
-      double z = point.getZ() - origin.getZ();
+      double x = pointToTransform.getX() - planeOrigin.getX();
+      double y = pointToTransform.getY() - planeOrigin.getY();
+      double z = pointToTransform.getZ() - planeOrigin.getZ();
 
       double crossX = 2.0 * (qy * z - qz * y);
       double crossY = 2.0 * (qz * x - qx * z);
@@ -155,17 +160,22 @@ public class PlanarRegionPolygonizer
 
    private Point3d getPointInWorld(Point2d point)
    {
+      return toPointInWorld(point, origin, orientation);
+   }
+
+   private static Point3d toPointInWorld(Point2d pointInPlane, Point3d planeOrigin, Quat4d planeOrientation)
+   {
       Point3d pointInWorld = new Point3d();
 
-      double qx = orientation.getX();
-      double qy = orientation.getY();
-      double qz = orientation.getZ();
-      double qs = orientation.getW();
+      double qx = planeOrientation.getX();
+      double qy = planeOrientation.getY();
+      double qz = planeOrientation.getZ();
+      double qs = planeOrientation.getW();
 
       // t = 2.0 * cross(q.xyz, v);
       // v' = v + q.s * t + cross(q.xyz, t);
-      double x = point.getX();
-      double y = point.getY();
+      double x = pointInPlane.getX();
+      double y = pointInPlane.getY();
       double z = 0.0;
 
       double crossX = 2.0 * (qy * z - qz * y);
@@ -179,7 +189,7 @@ public class PlanarRegionPolygonizer
       pointInWorld.setX(x + qs * crossX + crossCrossX);
       pointInWorld.setY(y + qs * crossY + crossCrossY);
       pointInWorld.setZ(z + qs * crossZ + crossCrossZ);
-      pointInWorld.add(origin);
+      pointInWorld.add(planeOrigin);
 
       return pointInWorld;
    }

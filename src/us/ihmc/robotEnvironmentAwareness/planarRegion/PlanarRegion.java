@@ -185,11 +185,6 @@ public class PlanarRegion implements Iterable<NormalOcTreeNode>
       normal.clear();
    }
 
-   public boolean containsNode(NormalOcTreeNode node)
-   {
-      return nodeSet.contains(node);
-   }
-
    public void removeNode(int index)
    {
       NormalOcTreeNode removedNode = nodes.remove(index);
@@ -208,6 +203,11 @@ public class PlanarRegion implements Iterable<NormalOcTreeNode>
          nodes.removeAll(nodesToRemove);
          recomputeNormalAndOrigin();
       }
+   }
+
+   public boolean isEmpty()
+   {
+      return nodes.isEmpty();
    }
 
    public int getNumberOfNodes()

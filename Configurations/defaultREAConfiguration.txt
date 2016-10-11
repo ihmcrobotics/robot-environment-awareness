@@ -19,4 +19,4 @@ Input/OcTree/PlanarRegionFeatures/Intersection/Parameters=maxDistanceToRegion\: 
 Input/OcTree/PlanarRegionFeatures/Polygonizer/Enable=false
 Input/OcTree/PlanarRegionFeatures/Polygonizer/Parameters=concaveHullThreshold\: 0.15, minNumberOfNodes\: 100, shallowAngleThreshold\: 0.02617993877991494, peakAngleThreshold\: 2.96705972839036, lengthThreshold\: 0.035, depthThreshold\: 0.1
 Input/OcTree/PlanarRegionSegmentation/Enable=true
-Input/OcTree/PlanarRegionSegmentation/Parameters=search radius\: 0.05, max distance from plane\: 0.05, maxAngleFromPlane\: 0.174533, minNormalQuality\: 0.01
+Input/OcTree/PlanarRegionSegmentation/Parameters=search radius\: 0.05, max distance from plane\: 0.05, maxAngleFromPlane\: 0.174533, minNormalQuality\: 0.005, minRegionSize\: 50

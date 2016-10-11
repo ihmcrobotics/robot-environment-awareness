@@ -21,6 +21,8 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
    private Slider maxAngleFromPlaneSlider;
    @FXML
    private Slider minNormalQualitySlider;
+   @FXML
+   private Slider minRegionSizeSlider;
 
    public RegionSegmentationAnchorPaneController()
    {
@@ -45,6 +47,7 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
       maxDistanceFromPlaneSlider.valueProperty().addListener(sendParametersListener);
       maxAngleFromPlaneSlider.valueProperty().addListener(sendParametersListener);
       minNormalQualitySlider.valueProperty().addListener(sendParametersListener);
+      minRegionSizeSlider.valueProperty().addListener(sendParametersListener);
       registerListener(sendParametersListener);
       fireAllListeners();
 
@@ -70,6 +73,7 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
          maxDistanceFromPlaneSlider.setValue(parameters.getMaxDistanceFromPlane());
          maxAngleFromPlaneSlider.setValue(parameters.getMaxAngleFromPlane());
          minNormalQualitySlider.setValue(parameters.getMinNormalQuality());
+         minRegionSizeSlider.setValue(parameters.getMinRegionSize());
       }
    }
 
@@ -86,6 +90,7 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
       parameters.setMaxDistanceFromPlane(maxDistanceFromPlaneSlider.getValue());
       parameters.setMaxAngleFromPlane(maxAngleFromPlaneSlider.getValue());
       parameters.setMinNormalQuality(minNormalQualitySlider.getValue());
+      parameters.setMinRegionSize((int) minRegionSizeSlider.getValue());
       return parameters;
    }
 }

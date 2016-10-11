@@ -36,8 +36,10 @@ public class PlanarRegionCalculator
       allRegionNodes.clear();
 
       planarRegions.stream().forEach(region -> removeBadNodesFromRegion(boundingBox, parameters, region));
+      planarRegions = planarRegions.stream().filter(region -> !region.isEmpty()).collect(Collectors.toList());
       planarRegions.stream().forEach(region -> region.nodeStream().forEach(allRegionNodes::add));
       planarRegions.stream().forEach(region -> growPlanarRegion(root, region, boundingBox, parameters));
+      planarRegions = planarRegions.stream().filter(region -> region.getNumberOfNodes() > parameters.getMinRegionSize()).collect(Collectors.toList());
       planarRegions.parallelStream().forEach(PlanarRegionCalculator::flipNormalOfOutliers);
       
       Set<NormalOcTreeNode> nodeSet = new HashSet<>();
@@ -158,7 +160,7 @@ public class PlanarRegionCalculator
          @Override
          public void doActionOnNeighbor(NormalOcTreeNode node)
          {
-            if (otherRegion.containsNode(node))
+            if (otherRegion.contains(node))
                foundNeighborFromOtherRegion.setTrue();
          }
 
@@ -187,9 +189,7 @@ public class PlanarRegionCalculator
          int regionId = random.nextInt(Integer.MAX_VALUE);
          PlanarRegion planarRegion = createNewPlanarRegion(root, node, regionId, boundingBox, parameters);
 
-         if (planarRegion.getNumberOfNodes() < 10)
-            planarRegion.clearRegion();
-         else
+         if (planarRegion.getNumberOfNodes() > parameters.getMinRegionSize())
             newPlanarRegions.add(planarRegion);
       }
 

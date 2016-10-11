@@ -73,6 +73,12 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
       }
    }
 
+   @FXML
+   public void clear()
+   {
+      send(new REAMessage(REAModuleAPI.OcTreePlanarRegionSegmentationClear, true));
+   }
+
    private PlanarRegionSegmentationParameters createParameters()
    {
       PlanarRegionSegmentationParameters parameters = new PlanarRegionSegmentationParameters();

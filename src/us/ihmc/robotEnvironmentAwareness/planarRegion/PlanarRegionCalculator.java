@@ -52,9 +52,19 @@ public class PlanarRegionCalculator
       planarRegions = mergePlanarRegionsIfPossible(root, planarRegions, parameters);
    }
 
+   public void removeDeadNodes()
+   {
+      planarRegions.stream().forEach(region -> removeDeadNodesFromRegion(region));
+   }
+
    public List<PlanarRegion> getPlanarRegions()
    {
       return planarRegions;
+   }
+
+   public void clear()
+   {
+      planarRegions.clear();
    }
 
    private IteratorSelectionRule<NormalOcTreeNode> leafInBoundingBoxWithNormalSetRule(OcTreeBoundingBoxInterface boundingBox)
@@ -245,6 +255,15 @@ public class PlanarRegionCalculator
       planarRegion.removeNodesAndUpdate(nodesToRemove);
    }
 
+   private static void removeDeadNodesFromRegion(PlanarRegion planarRegion)
+   {
+      List<NormalOcTreeNode> nodesToRemove = planarRegion.nodeStream()
+            .collect(Collectors.groupingBy(node -> isNodeDead(node)))
+            .getOrDefault(true, Collections.emptyList());
+
+      planarRegion.removeNodesAndUpdate(nodesToRemove);
+   }
+
    private static boolean isNodeInBoundingBox(NormalOcTreeNode node, OcTreeBoundingBoxInterface boundingBox)
    {
       return boundingBox == null || boundingBox.isInBoundingBox(node.getX(), node.getY(), node.getZ());
@@ -252,12 +271,17 @@ public class PlanarRegionCalculator
 
    private static boolean isBadNode(NormalOcTreeNode node, PlanarRegion planarRegion, OcTreeBoundingBoxInterface boundingBox, PlanarRegionSegmentationParameters parameters)
    {
-      if (!node.isNormalSet())
+      if (isNodeDead(node))
          return true;
 
       double maxDistanceFromPlane = parameters.getMaxDistanceFromPlane();
       double dotThreshold = Math.cos(parameters.getMaxAngleFromPlane());
       return isNodeInBoundingBox(node, boundingBox) && !isNodePartOfRegion(node, planarRegion, maxDistanceFromPlane, dotThreshold);
+   }
+
+   private static boolean isNodeDead(NormalOcTreeNode node)
+   {
+      return !node.isNormalSet();
    }
 
    public static boolean isNodePartOfRegion(NormalOcTreeNode node, PlanarRegion planarRegion, double maxDistanceFromPlane, double dotThreshold)

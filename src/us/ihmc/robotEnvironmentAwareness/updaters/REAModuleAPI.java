@@ -34,6 +34,7 @@ public class REAModuleAPI
 
    // TODO Review the names
    public static final String OcTreePlanarRegionSegmentationEnable = Input + OcTree + PlanarRegionSegmentation + "Enable";
+   public static final String OcTreePlanarRegionSegmentationClear = Input + OcTree + PlanarRegionSegmentation + "Clear";
    public static final String OcTreePlanarRegionSegmentationParameters = Input + OcTree + PlanarRegionSegmentation + "Parameters";
    public static final String OcTreePlanarRegionFeaturesPolygonizerEnable = Input + OcTree + PlanarRegionFeatures + Polygonizer + "Enable";
    public static final String OcTreePlanarRegionFeaturesIntersectionEnable = Input + OcTree + PlanarRegionFeatures + Intersection + "Enable";

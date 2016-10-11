@@ -41,6 +41,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
    private final AtomicReference<Boolean> isOcTreeEnabled;
    private final AtomicReference<Boolean> enableSegmentation;
+   private final AtomicReference<Boolean> clearSegmentation;
    private final AtomicReference<Boolean> enablePolygonizer;
    private final AtomicReference<Boolean> enableIntersectionCalulator;
    private final AtomicReference<PlanarRegionSegmentationParameters> planarRegionSegmentationParameters;
@@ -53,6 +54,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
       isOcTreeEnabled = inputManager.createInput(REAModuleAPI.OcTreeEnable);
       enableSegmentation = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationEnable);
+      clearSegmentation = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationClear);
       enablePolygonizer = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
       enableIntersectionCalulator = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
       planarRegionSegmentationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, new PlanarRegionSegmentationParameters());
@@ -67,8 +69,17 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       convexHullsVertices.clear();
       intersectionCalculator.clear();
 
-      if (!isSegmentationEnabled())
+      if (shouldClearSegmentation())
+      {
+         planarRegionCalculator.clear();
          return;
+      }
+
+      if (!isSegmentationEnabled())
+      {
+         planarRegionCalculator.removeDeadNodes();
+         return;
+      }
 
       updateSegmentation();
       updatePolygons();
@@ -236,6 +247,11 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    public boolean isOcTreeEnabled()
    {
       return isOcTreeEnabled.get() == null ? false : isOcTreeEnabled.get();
+   }
+
+   public boolean shouldClearSegmentation()
+   {
+      return clearSegmentation.get() == null ? false : clearSegmentation.getAndSet(null);
    }
    
    /** Just for clarity. */

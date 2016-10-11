@@ -46,75 +46,57 @@ import us.ihmc.robotics.time.TimeTools;
  * @author Sylvain
  *
  */
-public class SimpleConcaveHullFactory
+public abstract class SimpleConcaveHullFactory
 {
    private static final boolean VERBOSE = false;
    private static final boolean REPORT_TIME = false;
-   private final StopWatch stopWatch = REPORT_TIME ? new StopWatch() : null;
+   private static final int DEFAULT_MAX_NUMBER_OF_ITERATIONS = 5000;
 
-   private final GeometryFactory geometryFactory = new GeometryFactory();
-
-   /** Maximum length that each edge of the computed concave hull can have. This is the only parameter. */
-   private double edgeLengthThreshold = Double.NaN;
-
-   private int maxNumberOfIterations = 5000;
-
-   /** Coordinates of the set points from which the concave hull is to be computed */
-   private MultiPoint multiPoint;
-
-   /** Triangles with at least one edge that belongs to the concave hull. */
-   private final Set<QuadEdgeTriangle> borderTriangles = new HashSet<>();
-   /** Vertices of the concave hull */
-   private final Set<Vertex> borderVertices = new HashSet<>();
-   /** Edges of the concave hull */
-   private final Set<QuadEdge> borderEdges = new HashSet<>();
-   /** The concave hull represented as a {@link Geometry} */
-   private Geometry concaveHullGeometry = null;
-
-   public SimpleConcaveHullFactory()
+   public static List<Point2d> createConcaveHullAsPoint2dList(List<Point2d> pointCloud2d, double edgeLengthThreshold)
    {
+      return createConcaveHullAsPoint2dList(pointCloud2d, edgeLengthThreshold, DEFAULT_MAX_NUMBER_OF_ITERATIONS);
    }
 
-   public void setMaxNumberOfIterations(int maxNumberOfIterations)
+   public static List<Point2d> createConcaveHullAsPoint2dList(List<Point2d> pointCloud2d, double edgeLengthThreshold, int maxNumberOfIterations)
    {
-      this.maxNumberOfIterations = maxNumberOfIterations;
+      if (pointCloud2d.size() <= 3)
+         return pointCloud2d;
+
+
+      MultiPoint multiPoint = createMultiPoint(pointCloud2d);
+      Set<QuadEdge> borderEdges = computeBorderEdges(multiPoint, edgeLengthThreshold, maxNumberOfIterations);
+      Geometry concaveHullGeometry = computeConcaveHullGeometry(borderEdges);
+      return convertGeometryToPoint2dList(concaveHullGeometry);
    }
 
-   public void setEdgeLengthThreshold(double edgeLengthThreshold)
+   public static List<Point3d> createConcaveHullAsPoint3dList(List<Point2d> pointCloud2d, double edgeLengthThreshold, double zConstant)
    {
-      this.edgeLengthThreshold = edgeLengthThreshold;
+      return createConcaveHullAsPoint3dList(pointCloud2d, edgeLengthThreshold, DEFAULT_MAX_NUMBER_OF_ITERATIONS, zConstant);
    }
 
-   public void setPointCloud(List<Point2d> newPointCloud)
+   public static List<Point3d> createConcaveHullAsPoint3dList(List<Point2d> pointCloud2d, double edgeLengthThreshold, int maxNumberOfIterations, double zConstant)
    {
-      Coordinate[] coordinates = new Coordinate[newPointCloud.size()];
+      List<Point2d> concaveHullAsPoint2dList = createConcaveHullAsPoint2dList(pointCloud2d, edgeLengthThreshold, maxNumberOfIterations);
+      return convertPoint2dListToPoint3dList(concaveHullAsPoint2dList, zConstant);
+   }
 
-      for (int i = 0; i < newPointCloud.size(); i++)
+   private static MultiPoint createMultiPoint(List<Point2d> pointCloud2d)
+   {
+      Coordinate[] coordinates = new Coordinate[pointCloud2d.size()];
+
+      for (int i = 0; i < pointCloud2d.size(); i++)
       {
-         Point2d point2d = newPointCloud.get(i);
+         Point2d point2d = pointCloud2d.get(i);
          coordinates[i] = new Coordinate(point2d.getX(), point2d.getY());
       }
 
-      multiPoint = geometryFactory.createMultiPoint(coordinates);
-
-      borderTriangles.clear();
-      borderEdges.clear();
-      borderVertices.clear();
-      concaveHullGeometry = null;
+      return new GeometryFactory().createMultiPoint(coordinates);
    }
 
-   public void computeConcaveHull()
+   private static Geometry computeConcaveHullGeometry(Set<QuadEdge> borderEdges)
    {
-      if (multiPoint.getNumPoints() <= 3)
-      {
-         return;
-      }
-      computeBorderTriangles();
-      computeConcaveHullGeometry();
-   }
+      GeometryFactory geometryFactory = new GeometryFactory();
 
-   private void computeConcaveHullGeometry()
-   {
       // concave hull creation
       List<LineString> edges = new ArrayList<LineString>();
       for (QuadEdge edge : borderEdges)
@@ -132,16 +114,18 @@ public class SimpleConcaveHullFactory
       {
          LinearRing linearRing = new LinearRing(merge.getCoordinateSequence(), geometryFactory);
          Polygon concaveHull = new Polygon(linearRing, null, geometryFactory);
-         concaveHullGeometry = concaveHull;
+         return concaveHull;
       }
       else
       {
-         concaveHullGeometry = merge;
+         return merge;
       }
    }
 
-   private void computeBorderTriangles()
+   private static Set<QuadEdge> computeBorderEdges(MultiPoint multiPoint, double edgeLengthThreshold, int maxNumberOfIterations)
    {
+      StopWatch stopWatch = REPORT_TIME ? new StopWatch() : null;
+
       if (REPORT_TIME)
       {
          stopWatch.reset();
@@ -167,9 +151,14 @@ public class SimpleConcaveHullFactory
       // All the triangles resulting from the triangulation.
       @SuppressWarnings("unchecked")
       List<QuadEdgeTriangle> allTriangles = QuadEdgeTriangle.createOn(subdivision);
+      // Vertices of the concave hull
+      Set<Vertex> borderVertices = new HashSet<>();
+      // Triangles with at least one edge that belongs to the concave hull.
+      Set<QuadEdgeTriangle> borderTriangles = new HashSet<>();
       // Former border triangles. Used to figure out border edges as triangles are being filtered out.
       Set<QuadEdgeTriangle> outerTriangles = new HashSet<>();
-      //
+      // The output of this method, the edges defining the concave hull
+      Set<QuadEdge> borderEdges = new HashSet<>();
       QuadEdgeComparator quadEdgeComparator = new QuadEdgeComparator();
       PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> sortedByLengthMap = new PriorityQueue<>(quadEdgeComparator);
 
@@ -276,6 +265,8 @@ public class SimpleConcaveHullFactory
          stopWatch.stop();
          System.out.println("Concave hull computation took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()) + " sec.");
       }
+
+      return borderEdges;
    }
 
    private static int numberOfBorderEdges(QuadEdgeTriangle triangle, Set<QuadEdge> borderEdges)
@@ -303,31 +294,28 @@ public class SimpleConcaveHullFactory
       return QuadEdgeTriangle.nextIndex(QuadEdgeTriangle.nextIndex(edgeIndex));
    }
 
-   public List<Point2d> concaveHullAsListOfPoint2d()
+   public static List<Point2d> convertGeometryToPoint2dList(Geometry geometry)
    {
-      List<Point2d> concaveHullVertices = new ArrayList<>();
-      concaveHullAsPoint2dList(concaveHullVertices);
-      return concaveHullVertices;
+      List<Point2d> geometryVertices = new ArrayList<>();
+      for (Coordinate vertex : geometry.getCoordinates())
+         geometryVertices.add(new Point2d(vertex.x, vertex.y));
+      return geometryVertices;
    }
 
-   public void concaveHullAsPoint2dList(List<Point2d> concaveHullVerticesToPack)
+   public static List<Point3d> convertGeometryToPoint3dList(Geometry geometry, double zConstant)
    {
-      concaveHullVerticesToPack.clear();
-      for (Coordinate vertex : concaveHullGeometry.getCoordinates())
-         concaveHullVerticesToPack.add(new Point2d(vertex.x, vertex.y));
+      List<Point3d> geometryVertices = new ArrayList<>();
+      for (Coordinate vertex : geometry.getCoordinates())
+         geometryVertices.add(new Point3d(vertex.x, vertex.y, zConstant));
+      return geometryVertices;
    }
 
-   public List<Point3d> concaveHullAsListOfPoint3d()
+   public static List<Point3d> convertPoint2dListToPoint3dList(List<Point2d> point2ds, double zConstant)
    {
-      return concaveHullAsListOfPoint3d(0.0);
-   }
-
-   public List<Point3d> concaveHullAsListOfPoint3d(double z)
-   {
-      List<Point3d> vertices = new ArrayList<>();
-      for (Coordinate vertex : concaveHullGeometry.getCoordinates())
-         vertices.add(new Point3d(vertex.x, vertex.y, z));
-      return vertices;
+      List<Point3d> point3ds = new ArrayList<>();
+      for (Point2d point2d : point2ds)
+         point3ds.add(new Point3d(point2d.x, point2d.y, zConstant));
+      return point3ds;
    }
 
    private static class QuadEdgeComparator implements Comparator<ImmutablePair<QuadEdge, QuadEdgeTriangle>>

@@ -9,9 +9,9 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
 
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullDecomposition;
-import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullPruningFilteringTools;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools;
+import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
 import us.ihmc.robotics.geometry.GeometryTools;
 
@@ -24,12 +24,26 @@ public class PlanarRegionPolygonizer
    private final Quat4d orientation = new Quat4d();
    private final Point3d origin = new Point3d();
    private final List<Point2d> pointsInPlane = new ArrayList<>();
-   private final SimpleConcaveHullFactory concaveHullFactory = new SimpleConcaveHullFactory();
 
    private final PolygonizerParameters parameters = new PolygonizerParameters();
 
    public PlanarRegionPolygonizer()
    {
+   }
+
+   public void compute(List<PlanarRegion> planarRegions, PolygonizerParameters parameters)
+   {
+      for (PlanarRegion planarRegion : planarRegions)
+      {
+         if (planarRegion.getNumberOfNodes() < parameters.getMinNumberOfNodes())
+            continue;
+         
+         Point3d origin = planarRegion.getOrigin();
+         Quat4d orientation = new Quat4d();
+         orientation.set(GeometryTools.getRotationBasedOnNormal(planarRegion.getNormal()));
+         
+         
+      }
    }
 
    public void compute(PlanarRegion planarRegion)
@@ -43,10 +57,7 @@ public class PlanarRegionPolygonizer
 
       updateRegionProperties(planarRegion);
 
-      concaveHullFactory.setEdgeLengthThreshold(parameters.getConcaveHullThreshold());
-      concaveHullFactory.setPointCloud(pointsInPlane);
-      concaveHullFactory.computeConcaveHull();
-      concaveHullFactory.concaveHullAsPoint2dList(concaveHullVerticesInPlane);
+      concaveHullVerticesInPlane.addAll(SimpleConcaveHullFactory.createConcaveHullAsPoint2dList(pointsInPlane, parameters.getConcaveHullThreshold()));
       
       ConcaveHullTools.ensureClockwiseOrdering(concaveHullVerticesInPlane);
       ConcaveHullTools.removeSuccessiveDuplicateVertices(concaveHullVerticesInPlane);
@@ -130,6 +141,13 @@ public class PlanarRegionPolygonizer
       return toPointInPlane(point, origin, orientation);
    }
 
+   private static List<Point2d> toPointsInPlane(List<Point3d> pointsToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   {
+      List<Point2d> pointsInPlane = new ArrayList<>();
+      pointsToTransform.parallelStream().map(point -> toPointInPlane(point, planeOrigin, planeOrientation)).forEach(pointsInPlane::add);
+      return pointsInPlane;
+   }
+
    private static Point2d toPointInPlane(Point3d pointToTransform, Point3d planeOrigin, Quat4d planeOrientation)
    {
       Point2d pointInPlane = new Point2d();
@@ -161,6 +179,13 @@ public class PlanarRegionPolygonizer
    private Point3d getPointInWorld(Point2d point)
    {
       return toPointInWorld(point, origin, orientation);
+   }
+
+   private static List<Point3d> toPointsInWorld(List<Point2d> pointsInPlane, Point3d planeOrigin, Quat4d planeOrientation)
+   {
+      List<Point3d> pointsInWorld = new ArrayList<>();
+      pointsInPlane.parallelStream().map(point -> toPointInWorld(point, planeOrigin, planeOrientation)).forEach(pointsInWorld::add);
+      return pointsInWorld;
    }
 
    private static Point3d toPointInWorld(Point2d pointInPlane, Point3d planeOrigin, Quat4d planeOrientation)

@@ -100,11 +100,12 @@ public class REAOcTreeUpdater
    {
       if (isUsingBoundingBox() && atomicBoundingBox.get() != null && latestLidarPoseReference.get() != null)
       {
-         OcTreeBoundingBoxWithCenterAndYaw newBoundingBox = new OcTreeBoundingBoxWithCenterAndYaw(octree.getResolution(), octree.getTreeDepth());
+         OcTreeBoundingBoxWithCenterAndYaw newBoundingBox = new OcTreeBoundingBoxWithCenterAndYaw();
          newBoundingBox.setLocalBoundingBox(atomicBoundingBox.get());
          LidarPosePacket lidarPosePacket = latestLidarPoseReference.get();
-         newBoundingBox.setOffsetCoordinate(lidarPosePacket.getPosition());
+         newBoundingBox.setOffset(lidarPosePacket.getPosition());
          newBoundingBox.setYawFromQuaternion(lidarPosePacket.getOrientation());
+         newBoundingBox.update(octree.getResolution(), octree.getTreeDepth());
          octree.setBoundingBox(newBoundingBox);
       }
       else

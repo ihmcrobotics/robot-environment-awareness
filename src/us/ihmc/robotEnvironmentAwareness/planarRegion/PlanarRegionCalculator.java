@@ -131,6 +131,11 @@ public class PlanarRegionCalculator
          return false;
 
       double searchRadius = parameters.getSearchRadius();
+      double searchRadiusSquared = searchRadius * searchRadius;
+
+      if (currentRegion.distanceSquaredFromOtherRegionBoundingBox(potentialRegionToMerge) > searchRadiusSquared)
+         return false;
+
       PlanarRegion regionToNavigate;
       PlanarRegion otherRegion;
 
@@ -146,6 +151,7 @@ public class PlanarRegionCalculator
       }
 
       return regionToNavigate.nodeStream()
+                             .filter(node -> otherRegion.distanceFromBoundingBox(node) < searchRadiusSquared)
                              .filter(node -> isNodeInOtherRegionNeighborhood(root, node, otherRegion, searchRadius))
                              .findFirst()
                              .isPresent();

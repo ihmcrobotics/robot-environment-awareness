@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -27,6 +28,9 @@ public class PlanarRegion implements Iterable<NormalOcTreeNode>
    private final PointMean point = new PointMean();
    private final Vector3d temporaryVector = new Vector3d();
 
+   private final Point3d min = new Point3d(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+   private final Point3d max = new Point3d(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
+
    private final List<NormalOcTreeNode> nodes = new ArrayList<>();
    private final Set<NormalOcTreeNode> nodeSet = new HashSet<>();
 
@@ -48,6 +52,7 @@ public class PlanarRegion implements Iterable<NormalOcTreeNode>
       {
          updateNormalAndOriginOnly(node);
          nodes.add(node);
+         updateBoundingBoxWithNewNode(node);
       }
       return isRegionModified;
    }
@@ -67,7 +72,27 @@ public class PlanarRegion implements Iterable<NormalOcTreeNode>
       return nodeSet.contains(node);
    }
 
-   public void recomputeNormalAndOrigin()
+   public void removeNode(int index)
+   {
+      NormalOcTreeNode removedNode = nodes.remove(index);
+      nodeSet.remove(removedNode);
+   }
+
+   public void removeNodesAndUpdate(Collection<NormalOcTreeNode> nodesToRemove)
+   {
+      boolean containsAtLeastOne = nodesToRemove.parallelStream().filter(nodeSet::contains).findFirst().isPresent();
+
+      if (containsAtLeastOne)
+      {
+         nodes.removeAll(nodesToRemove);
+         recomputeNormalAndOrigin();
+         nodesToRemove.stream()
+                      .filter(nodeSet::remove)
+                      .forEach(this::updateBoundingBoxAfterRemovingNode);
+      }
+   }
+
+   private void recomputeNormalAndOrigin()
    {
       point.clear();
       normal.clear();
@@ -84,9 +109,137 @@ public class PlanarRegion implements Iterable<NormalOcTreeNode>
       point.update(node.getHitLocationX(), node.getHitLocationY(), node.getHitLocationZ());
    }
 
-   public double distanceFromCenterSquared(Point3d point)
+   public boolean isInsideBoundingBox(NormalOcTreeNode node)
    {
-      return this.point.distanceSquared(point);
+      double nodeX = node.getX();
+      if (nodeX < min.getX() || nodeX > max.getX())
+         return false;
+
+      double nodeY = node.getY();
+      if (nodeY < min.getY() || nodeY > max.getY()) 
+         return false;
+
+      double nodeZ = node.getZ();
+      if (nodeZ < min.getZ() || nodeZ > max.getZ()) 
+         return false;
+
+      return true;
+   }
+
+   public double distanceFromBoundingBox(NormalOcTreeNode node)
+   {
+      return Math.sqrt(distanceSquaredFromBoundingBox(node));
+   }
+
+   public double distanceSquaredFromBoundingBox(NormalOcTreeNode node)
+   {
+      if (isInsideBoundingBox(node))
+         return 0.0;
+
+      double nodeX = node.getX();
+      double nodeY = node.getY();
+      double nodeZ = node.getZ();
+
+      double dx = max(min.getX() - nodeX, 0.0, nodeX - max.getX());
+      double dy = max(min.getY() - nodeY, 0.0, nodeY - max.getY());
+      double dz = max(min.getZ() - nodeZ, 0.0, nodeZ - max.getZ());
+      return dx * dx + dy * dy + dz * dz;
+   }
+
+   public double distanceFromOtherRegionBoundingBox(PlanarRegion other)
+   {
+      return Math.sqrt(distanceSquaredFromOtherRegionBoundingBox(other));
+   }
+
+   public double distanceSquaredFromOtherRegionBoundingBox(PlanarRegion other)
+   {
+      double dx = max(min.getX() - other.max.getX(), 0.0, other.min.getX() - max.getX());
+      double dy = max(min.getY() - other.max.getY(), 0.0, other.min.getY() - max.getY());
+      double dz = max(min.getZ() - other.max.getZ(), 0.0, other.min.getZ() - max.getZ());
+      return dx * dx + dy * dy + dz * dz;
+   }
+
+   private static double max(double a, double b, double c)
+   {
+      if (a > b)
+         return a > c ? a : c;
+      else
+         return b > c ? b : c;
+   }
+
+   private void updateBoundingBoxWithNewNode(NormalOcTreeNode newNode)
+   {
+      double nodeX = newNode.getX();
+      if (nodeX < min.getX())
+         min.setX(nodeX);
+      else if (nodeX > max.getX())
+         max.setX(nodeX);
+
+      double nodeY = newNode.getY();
+      if (nodeY < min.getY())
+         min.setY(nodeY);
+      else if (nodeY > max.getY()) 
+         max.setY(nodeY);
+
+      double nodeZ = newNode.getZ();
+      if (nodeZ < min.getZ())
+         min.setZ(nodeZ);
+      else if (nodeZ > max.getZ()) 
+         max.setZ(nodeZ);
+   }
+
+   private void updateBoundingBoxAfterRemovingNode(NormalOcTreeNode removedNode)
+   {
+      if (nodes.isEmpty())
+      {
+         min.set(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+         max.set(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+      }
+
+      double nodeX = removedNode.getX();
+      double nodeY = removedNode.getY();
+      double nodeZ = removedNode.getZ();
+      double epsilon = 1.0e-3;
+
+      if (Math.abs(nodeX - min.getX()) < epsilon)
+         min.setX(findMin((node1, node2) -> node1.getX() < node2.getX() ? -1 : 1).getX());
+      else if (Math.abs(nodeX - max.getX()) < epsilon)
+         max.setX(findMax((node1, node2) -> node1.getX() < node2.getX() ? -1 : 1).getX());
+
+      if (Math.abs(nodeY - min.getY()) < epsilon)
+         min.setY(findMin((node1, node2) -> node1.getY() < node2.getY() ? -1 : 1).getY());
+      else if (Math.abs(nodeY - max.getY()) < epsilon)
+         max.setY(findMax((node1, node2) -> node1.getY() < node2.getY() ? -1 : 1).getY());
+      
+      if (Math.abs(nodeZ - min.getZ()) < epsilon)
+         min.setZ(findMin((node1, node2) -> node1.getZ() < node2.getZ() ? -1 : 1).getZ());
+      else if (Math.abs(nodeZ - max.getZ()) < epsilon)
+         max.setZ(findMax((node1, node2) -> node1.getZ() < node2.getZ() ? -1 : 1).getZ());
+   }
+
+   private NormalOcTreeNode findMin(Comparator<NormalOcTreeNode> nodeComparator)
+   {
+      return nodes.parallelStream().min(nodeComparator).get();
+   }
+
+   private NormalOcTreeNode findMax(Comparator<NormalOcTreeNode> nodeComparator)
+   {
+      return nodes.parallelStream().max(nodeComparator).get();
+   }
+
+   public int getId()
+   {
+      return id;
+   }
+
+   public void getPoint(int index, Point3d pointToPack)
+   {
+      nodes.get(index).getHitLocation(pointToPack);
+   }
+
+   public NormalOcTreeNode getNode(int index)
+   {
+      return nodes.get(index);
    }
 
    public double orthogonalDistance(Point3d point)
@@ -161,48 +314,6 @@ public class PlanarRegion implements Iterable<NormalOcTreeNode>
    public Point3d getOrigin()
    {
       return point;
-   }
-
-   public void getPoint(int index, Point3d pointToPack)
-   {
-      nodes.get(index).getHitLocation(pointToPack);
-   }
-
-   public int getId()
-   {
-      return id;
-   }
-
-   public NormalOcTreeNode getNode(int index)
-   {
-      return nodes.get(index);
-   }
-
-   public void clearRegion()
-   {
-      nodes.clear();
-      point.clear();
-      normal.clear();
-   }
-
-   public void removeNode(int index)
-   {
-      NormalOcTreeNode removedNode = nodes.remove(index);
-      nodeSet.remove(removedNode);
-   }
-
-   public void removeNodesAndUpdate(Collection<NormalOcTreeNode> nodesToRemove)
-   {
-      boolean containsAtLeastOne = nodesToRemove.parallelStream()
-                                                .filter(nodeSet::contains)
-                                                .findFirst()
-                                                .isPresent();
-
-      if (containsAtLeastOne)
-      {
-         nodes.removeAll(nodesToRemove);
-         recomputeNormalAndOrigin();
-      }
    }
 
    public boolean isEmpty()

@@ -8,7 +8,7 @@ public class REAModuleAPI
    private static final String Graphics = "Graphics/";
    private static final String Input = "Input/";
    private static final String Output = "Output/";
-   private static final String NormaleEstimation = "NormalEstimation/";
+   private static final String NormalEstimation = "NormalEstimation/";
    private static final String PlanarRegionSegmentation = "PlanarRegionSegmentation/";
    private static final String PlanarRegionFeatures = "PlanarRegionFeatures/";
    private static final String Intersection = "Intersection/";
@@ -20,8 +20,9 @@ public class REAModuleAPI
    public static final String OcTreeLIDARMaxRange = Input + OcTree + LIDAR + "MaxRange";
    public static final String OcTreeBoundingBoxEnable = Input + OcTree + BoundingBox + "Enable";
    public static final String OcTreeBoundingBoxParameters = Input + OcTree + BoundingBox + "Parameters";
-   public static final String OcTreeNormalEstimationEnable = Input + OcTree + NormaleEstimation + "Enable";
-   public static final String OcTreeNormalEstimationParameters = Input + OcTree + NormaleEstimation + "Parameters";
+   public static final String OcTreeNormalEstimationEnable = Input + OcTree + NormalEstimation + "Enable";
+   public static final String OcTreeNormalEstimationClear = Input + OcTree + NormalEstimation + "Clear";
+   public static final String OcTreeNormalEstimationParameters = Input + OcTree + NormalEstimation + "Parameters";
 
    public static final String OcTreeGraphicsBoundingBoxEnable = Input + OcTree + Graphics + BoundingBox + "Enable";
    public static final String OcTreeGraphicsDepth = Input + OcTree + Graphics + "Depth";

@@ -23,6 +23,7 @@ public class REAOcTreeUpdater
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> enableNormalEstimation;
    private final AtomicReference<Boolean> clear;
+   private final AtomicReference<Boolean> clearNormals;
 
    private final AtomicReference<Double> minRange;
    private final AtomicReference<Double> maxRange;
@@ -38,6 +39,7 @@ public class REAOcTreeUpdater
 
       enable = inputManager.createInput(REAModuleAPI.OcTreeEnable);
       enableNormalEstimation = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationEnable);
+      clearNormals = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationClear);
       clear = inputManager.createInput(REAModuleAPI.OcTreeClear);
       minRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMinRange);
       maxRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMaxRange);
@@ -73,6 +75,12 @@ public class REAOcTreeUpdater
          octree.setNormalEstimationParameters(normalEstimationParameters.getAndSet(null));
 
       octree.insertScanCollection(newScan);
+
+      if (shouldClearNormals())
+      {
+         octree.clearNormals();
+         return false;
+      }
 
       if (!isNormalEstimationEnabled())
          return false;
@@ -143,6 +151,11 @@ public class REAOcTreeUpdater
    private boolean isNormalEstimationEnabled()
    {
       return enableNormalEstimation.get() == null ? false : enableNormalEstimation.get();
+   }
+
+   private boolean shouldClearNormals()
+   {
+      return clearNormals.get() == null ? false : clearNormals.getAndSet(null);
    }
 
    private boolean shouldClear()

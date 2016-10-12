@@ -174,7 +174,7 @@ public class NormalOcTreeVisualizer extends Application
                intersectionPlaneBoxCalculator.computeIntersections(plane);
                occupiedMeshBuilder.addPolyon(plane, normalBasedColor);
                if (SHOW_HIT_LOCATIONS)
-                  occupiedMeshBuilder.addCubeMesh(0.01, pointOnPlane, DEFAULT_COLOR);
+                  occupiedMeshBuilder.addCube(0.01, pointOnPlane, DEFAULT_COLOR);
                
                
 
@@ -208,11 +208,11 @@ public class NormalOcTreeVisualizer extends Application
                
             }
             else
-               occupiedMeshBuilder.addCubeMesh((float) boxSize, new Point3f(nodeCenter), normalBasedColor);
+               occupiedMeshBuilder.addCube((float) boxSize, new Point3f(nodeCenter), normalBasedColor);
          }
          else if (SHOW_FREE_CELLS)
          {
-            freeMeshBuilder.addCubeMesh((float) boxSize, new Point3f(nodeCenter));
+            freeMeshBuilder.addCube((float) boxSize, new Point3f(nodeCenter));
          }
       }
 

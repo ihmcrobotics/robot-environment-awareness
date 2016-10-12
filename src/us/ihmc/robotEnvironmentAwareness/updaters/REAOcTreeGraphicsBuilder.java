@@ -148,7 +148,7 @@ public class REAOcTreeGraphicsBuilder
          Point3d end = intersection.getPointB();
          double lineWidth = 0.025;
          Color color = Color.BLACK;
-         polygonsMeshBuilder.addLineMesh(start, end, lineWidth, color);
+         polygonsMeshBuilder.addLine(start, end, lineWidth, color);
       }
 
       for (PlanarRegion planarRegion : regionFeaturesProvider.getPlanarRegions())
@@ -161,7 +161,7 @@ public class REAOcTreeGraphicsBuilder
          int regionId = planarRegion.getId();
          Color regionColor = getRegionColor(regionId);
          List<Point3d> concaveHullVerticesInWorld = planarRegionConcaveHull.getConcaveHullVerticesInWorld();
-         polygonsMeshBuilder.addMultiLineMesh(concaveHullVerticesInWorld, lineWidth, regionColor, true);
+         polygonsMeshBuilder.addMultiLine(concaveHullVerticesInWorld, lineWidth, regionColor, true);
 
          PlanarRegionConvexPolygons planarRegionConvexPolygons = regionFeaturesProvider.getPlanarRegionConvexPolygons(planarRegion);
          if (planarRegionConvexPolygons == null)
@@ -229,7 +229,7 @@ public class REAOcTreeGraphicsBuilder
       }
       else
       {
-         meshBuilder.addCubeMesh(size, node.getX(), node.getY(), node.getZ(), color);
+         meshBuilder.addCube(size, node.getX(), node.getY(), node.getZ(), color);
       }
    }
 

@@ -53,8 +53,8 @@ public class IntersectionPlaneBoxCalculatorVisualizer extends Application
       
       colorMeshBuilder.addPolyon(intersections, Color.DARKCYAN);
       for (int index = 0; index < intersections.size(); index++)
-         colorMeshBuilder.addCubeMesh(0.01, intersections.get(index), Color.FIREBRICK);
-      colorMeshBuilder.addCubeMesh(0.02, pointOnPlane, Color.SLATEGREY);
+         colorMeshBuilder.addCube(0.01, intersections.get(index), Color.FIREBRICK);
+      colorMeshBuilder.addCube(0.02, pointOnPlane, Color.SLATEGREY);
       box = new Box(lx, ly, lz);
       box.setTranslateX(cubeCenter.getX());
       box.setTranslateY(cubeCenter.getY());

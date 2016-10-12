@@ -37,10 +37,8 @@ dependencies {
     compile "org.ros.rosjava_messages:std_msgs:0.5.9"
     compile "org.ros.rosjava_messages:geometry_msgs:1.11.7"
 
+    compile ihmc.getProjectDependency(":Atlas")
     compile ihmc.getProjectDependency(":DarpaRoboticsChallenge")
-    compile ihmc.getProjectDependency(":Graphics3DAdapter")
-    compile ihmc.getProjectDependency(":SimulationConstructionSet")
-    compile ihmc.getProjectDependency(":Plotting")
     compile ihmc.getProjectDependency(":IHMCCommunication")
     compile ihmc.getProjectDependency(":IHMCROSTools")
     compile ihmc.getProjectDependency(":IHMCJavaToolkit")
@@ -50,8 +48,6 @@ dependencies {
     compile ihmc.getProjectDependency(":IHMCPerception")
     compile ihmc.getProjectDependency(":OctoMap")
 
-    testCompile ihmc.getProjectDependency(":Atlas")
-    testCompile ihmc.getProjectDependency(":SensorProcessing")
     testCompile ihmc.getProjectTestDependency(":IHMCHumanoidRobotics")
     testCompile ihmc.getProjectDependency(":IHMCUnitTesting")
 }

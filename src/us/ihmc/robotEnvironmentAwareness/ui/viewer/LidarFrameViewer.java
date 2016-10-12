@@ -10,9 +10,9 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.transform.Affine;
 import us.ihmc.communication.net.PacketConsumer;
+import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
-import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
 
 public class LidarFrameViewer
 {

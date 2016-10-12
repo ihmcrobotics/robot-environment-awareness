@@ -9,7 +9,7 @@ import us.ihmc.darpaRoboticsChallenge.environment.CommonAvatarEnvironmentInterfa
 import us.ihmc.darpaRoboticsChallenge.environment.DRCDemo01NavigationEnvironment;
 import us.ihmc.graphics3DAdapter.Graphics3DAdapter;
 import us.ihmc.graphics3DAdapter.structure.Graphics3DNode;
-import us.ihmc.robotEnvironmentAwareness.communication.LidarSimulationNetClassList;
+import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.robotics.dataStructures.listener.VariableChangedListener;
 import us.ihmc.robotics.dataStructures.variable.EnumYoVariable;
 import us.ihmc.robotics.dataStructures.variable.YoVariable;
@@ -39,7 +39,7 @@ public class FootstepPlanningFastSimulation
 
       Graphics3DAdapter graphics3dAdapter = scs.getGraphics3dAdapter();
       YoGraphicsListRegistry yoGraphicsListRegistry = new YoGraphicsListRegistry();
-      PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.BEHAVIOUR_MODULE_PORT, new LidarSimulationNetClassList());
+      PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
       packetCommunicator.connect();
 
       SimpleLidarRobotController controller = new SimpleLidarRobotController(robot, controlDT, packetCommunicator, graphics3dAdapter, yoGraphicsListRegistry);

@@ -12,9 +12,11 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
+import us.ihmc.humanoidRobotics.communication.packets.sensing.DepthDataStateCommand;
+import us.ihmc.humanoidRobotics.communication.packets.sensing.DepthDataStateCommand.LidarState;
+import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
-import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
-import us.ihmc.robotEnvironmentAwareness.communication.LidarSimulationNetClassList;
+import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.LIDARFilterAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.NormalEstimationAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.OcTreeBasicsAnchorPaneController;
@@ -29,6 +31,8 @@ import us.ihmc.robotEnvironmentAwareness.updaters.REAMessageManager;
 
 public class LIDARBasedEnvironmentAwarenessUI extends Application
 {
+   private static final String SERVER_HOST = "localhost";
+
    private static final String CONFIGURATION_FILE_NAME = "./Configurations/defaultREAConfiguration.txt";
 
    private final PacketCommunicator packetCommunicator;
@@ -56,9 +60,7 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
 
    public LIDARBasedEnvironmentAwarenessUI() throws IOException
    {
-      LidarSimulationNetClassList netClassList = new LidarSimulationNetClassList();
-      packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient("localhost", NetworkPorts.BEHAVIOUR_MODULE_PORT, netClassList);
-      packetCommunicator.connect();
+      packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(SERVER_HOST, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
 
       FXMLLoader loader = new FXMLLoader();
       loader.setController(this);
@@ -70,6 +72,17 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
       
       packetCommunicator.attachListener(LidarPosePacket.class, lidarFrameViewer.createLidarPosePacketConsumer());
       lidarFrameViewer.start();
+
+      packetCommunicator.connect();
+   }
+
+   @FXML // TODO Move me somewhere else, maybe
+   private void sendLidarCommand()
+   {
+      DepthDataStateCommand packet = new DepthDataStateCommand();
+      packet.lidarState = LidarState.ENABLE;
+      packet.publishLidarPose = true;
+      packetCommunicator.send(packet);
    }
 
    @Override

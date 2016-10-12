@@ -10,15 +10,15 @@ import javax.vecmath.Quat4d;
 import sensor_msgs.PointCloud2;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
+import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
-import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
-import us.ihmc.robotEnvironmentAwareness.communication.LidarSimulationNetClassList;
+import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.utilities.ros.RosMainNode;
 import us.ihmc.utilities.ros.subscriber.RosPointCloudSubscriber;
 
 public class MultisensePointCloudReceiver extends RosPointCloudSubscriber
 {
-   PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.BEHAVIOUR_MODULE_PORT, new LidarSimulationNetClassList());
+   PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
 
    public MultisensePointCloudReceiver() throws URISyntaxException, IOException
    {

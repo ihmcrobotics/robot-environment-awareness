@@ -14,8 +14,8 @@ import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.graphics3DAdapter.GPULidar;
 import us.ihmc.graphics3DAdapter.GPULidarScanBuffer;
 import us.ihmc.graphics3DAdapter.Graphics3DAdapter;
+import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
-import us.ihmc.robotEnvironmentAwareness.communication.LidarPosePacket;
 import us.ihmc.robotics.dataStructures.listener.VariableChangedListener;
 import us.ihmc.robotics.dataStructures.registry.YoVariableRegistry;
 import us.ihmc.robotics.dataStructures.variable.BooleanYoVariable;
@@ -144,7 +144,6 @@ public class SimpleLidarRobotController implements RobotController
       lidarJoint.getTransformToWorld(transform);
       transform.get(orientation, position);
       LidarPosePacket lidarPosePacket = new LidarPosePacket(position, orientation);
-      lidarPosePacket.setLidarAngleJoint((float) lidarJoint.getQ());
       return lidarPosePacket;
    }
 

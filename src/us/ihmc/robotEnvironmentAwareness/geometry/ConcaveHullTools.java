@@ -1,6 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import static us.ihmc.robotEnvironmentAwareness.geometry.ListTools.*;
+import static us.ihmc.robotEnvironmentAwareness.geometry.ListWrappingIndexTools.*;
 import static us.ihmc.robotics.geometry.GeometryTools.*;
 
 import java.io.File;

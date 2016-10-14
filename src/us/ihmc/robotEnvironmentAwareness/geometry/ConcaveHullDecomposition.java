@@ -1,7 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
 import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools.*;
-import static us.ihmc.robotEnvironmentAwareness.geometry.ListTools.*;
+import static us.ihmc.robotEnvironmentAwareness.geometry.ListWrappingIndexTools.*;
 
 import java.util.List;
 

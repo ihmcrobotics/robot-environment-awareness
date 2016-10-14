@@ -3,7 +3,7 @@ package us.ihmc.robotEnvironmentAwareness.geometry;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListTools
+public class ListWrappingIndexTools
 {
    /**
     * Safe increment that will always the next index that is inside [0, list.size() - 1].

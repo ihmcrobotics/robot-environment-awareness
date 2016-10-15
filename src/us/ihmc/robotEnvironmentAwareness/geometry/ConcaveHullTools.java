@@ -25,21 +25,21 @@ public class ConcaveHullTools
     */
    public static boolean isVertexPreventingKink(int vertexIndex, List<Point2d> concaveHullVertices)
    {
-      int vertexPreviousIndex = decrement(vertexIndex, concaveHullVertices);
+      int vertexPreviousIndex = previous(vertexIndex, concaveHullVertices);
       vertexIndex %= concaveHullVertices.size();
-      int vertexNextIndex = increment(vertexIndex, concaveHullVertices);
+      int vertexNextIndex = next(vertexIndex, concaveHullVertices);
 
       Point2d a = concaveHullVertices.get(vertexPreviousIndex);
       Point2d b = concaveHullVertices.get(vertexIndex);
       Point2d c = concaveHullVertices.get(vertexNextIndex);
 
-      int currentIndex = increment(vertexNextIndex, concaveHullVertices);
+      int currentIndex = next(vertexNextIndex, concaveHullVertices);
 
       while (currentIndex != vertexPreviousIndex)
       {
          if (isPointInsideTriangleABC(concaveHullVertices.get(currentIndex), a, b, c))
             return true;
-         currentIndex = increment(currentIndex, concaveHullVertices);
+         currentIndex = next(currentIndex, concaveHullVertices);
       }
 
       return false;
@@ -73,8 +73,8 @@ public class ConcaveHullTools
 
       for (int vertexIndex = 0; vertexIndex < concaveHullVertices.size(); vertexIndex++)
       {
-         int previousVertexIndex = decrement(vertexIndex, concaveHullVertices);
-         int nextVertexIndex = increment(vertexIndex, concaveHullVertices);
+         int previousVertexIndex = previous(vertexIndex, concaveHullVertices);
+         int nextVertexIndex = next(vertexIndex, concaveHullVertices);
 
          Point2d previousVertex = concaveHullVertices.get(previousVertexIndex);
          Point2d vertex = concaveHullVertices.get(vertexIndex);
@@ -98,8 +98,8 @@ public class ConcaveHullTools
 
       for (int vertexIndex = 0; vertexIndex < concaveHullVertices.size(); vertexIndex++)
       {
-         int previousVertexIndex = decrement(vertexIndex, concaveHullVertices);
-         int nextVertexIndex = increment(vertexIndex, concaveHullVertices);
+         int previousVertexIndex = previous(vertexIndex, concaveHullVertices);
+         int nextVertexIndex = next(vertexIndex, concaveHullVertices);
 
          Point2d previousVertex = concaveHullVertices.get(previousVertexIndex);
          Point2d vertex = concaveHullVertices.get(vertexIndex);
@@ -120,7 +120,7 @@ public class ConcaveHullTools
       for (int i = 0; i < concaveHullVertices.size(); i++)
       {
          Point2d vertex = concaveHullVertices.get(i);
-         Point2d nextVertex = concaveHullVertices.get(increment(i, concaveHullVertices));
+         Point2d nextVertex = concaveHullVertices.get(next(i, concaveHullVertices));
          perimeter += vertex.distance(nextVertex);
       }
       return perimeter;
@@ -132,7 +132,7 @@ public class ConcaveHullTools
 
       for (int index = 0; index < concaveHullVertices.size();)
       {
-         int nextIndex = increment(index, concaveHullVertices);
+         int nextIndex = next(index, concaveHullVertices);
          if (concaveHullVertices.get(index).equals(concaveHullVertices.get(nextIndex)))
          {
             concaveHullVertices.remove(nextIndex);
@@ -198,8 +198,8 @@ public class ConcaveHullTools
       concaveVertexIndex %= concaveHullVertices.size();
       Point2d concaveVertex = concaveHullVertices.get(concaveVertexIndex);
 
-      int firstBridgeIndex = decrement(concaveVertexIndex, concaveHullVertices);
-      int secondBridgeIndex = increment(concaveVertexIndex, concaveHullVertices);
+      int firstBridgeIndex = previous(concaveVertexIndex, concaveHullVertices);
+      int secondBridgeIndex = next(concaveVertexIndex, concaveHullVertices);
 
       Point2d firstBridgeVertex = concaveHullVertices.get(firstBridgeIndex);
       Point2d secondBridgeVertex = concaveHullVertices.get(secondBridgeIndex);
@@ -214,12 +214,12 @@ public class ConcaveHullTools
       // Doing a loop with the start and end indices going opposite ways at the same time.
       while (true)
       {
-         startIndexCandidate = decrement(startIndexCandidate, concaveHullVertices);
+         startIndexCandidate = previous(startIndexCandidate, concaveHullVertices);
          // Check if all the vertices have been explored
          if (startIndexCandidate == endIndexCandidate)
             break;
 
-         endIndexCandidate = increment(endIndexCandidate, concaveHullVertices);
+         endIndexCandidate = next(endIndexCandidate, concaveHullVertices);
          // Check if all the vertices have been explored
          if (startIndexCandidate == endIndexCandidate)
             break;
@@ -232,8 +232,8 @@ public class ConcaveHullTools
             boolean isBridgeCoveringPocket = false;
 
             // Make sure that the new bridge would go over all the pocket vertices
-            for (int i = increment(startIndexCandidate, concaveHullVertices); i != secondBridgeIndex
-                  && isBridgeCoveringPocket; i = increment(i, concaveHullVertices))
+            for (int i = next(startIndexCandidate, concaveHullVertices); i != secondBridgeIndex
+                  && isBridgeCoveringPocket; i = next(i, concaveHullVertices))
                isBridgeCoveringPocket = !isPointOnLeftSideOfLine(concaveHullVertices.get(i), startCandidate, secondBridgeVertex);
 
             if (isBridgeCoveringPocket)
@@ -249,8 +249,8 @@ public class ConcaveHullTools
             boolean isBridgeCoveringPocket = true;
 
             // Make sure that the new bridge would go over all the pocket vertices
-            for (int i = increment(firstBridgeIndex, concaveHullVertices); i != endIndexCandidate
-                  && isBridgeCoveringPocket; i = increment(i, concaveHullVertices))
+            for (int i = next(firstBridgeIndex, concaveHullVertices); i != endIndexCandidate
+                  && isBridgeCoveringPocket; i = next(i, concaveHullVertices))
                isBridgeCoveringPocket = !isPointOnLeftSideOfLine(concaveHullVertices.get(i), firstBridgeVertex, endCandidate);
 
             if (isBridgeCoveringPocket)
@@ -287,7 +287,7 @@ public class ConcaveHullTools
       Point2d startBridgeVertex = concaveHullVertices.get(startBridgeIndex);
       Point2d endBridgeVertex = concaveHullVertices.get(endBridgeIndex);
 
-      for (int index = increment(startBridgeIndex, concaveHullVertices); index != endBridgeIndex; index = increment(index, concaveHullVertices))
+      for (int index = next(startBridgeIndex, concaveHullVertices); index != endBridgeIndex; index = next(index, concaveHullVertices))
       {
          Point2d vertex = concaveHullVertices.get(index);
          double depth = distanceFromPointToLine(vertex, startBridgeVertex, endBridgeVertex);
@@ -401,8 +401,8 @@ public class ConcaveHullTools
    public static boolean isConvexAtVertex(int vertexIndex, List<Point2d> concaveHullVertices)
    {
       Point2d vertex = concaveHullVertices.get(vertexIndex);
-      Point2d previousVertex = concaveHullVertices.get(decrement(vertexIndex, concaveHullVertices));
-      Point2d nextVertex = concaveHullVertices.get(increment(vertexIndex, concaveHullVertices));
+      Point2d previousVertex = concaveHullVertices.get(previous(vertexIndex, concaveHullVertices));
+      Point2d nextVertex = concaveHullVertices.get(next(vertexIndex, concaveHullVertices));
 
       return GeometryTools.isPointOnLeftSideOfLine(vertex, previousVertex, nextVertex);
    }
@@ -410,8 +410,8 @@ public class ConcaveHullTools
    public static boolean isAlmostConvexAtVertex(int vertexIndex, double angleTolerance, List<Point2d> concaveHullVertices)
    {
       Point2d vertex = concaveHullVertices.get(vertexIndex);
-      Point2d previousVertex = getPreviousWrap(vertexIndex, concaveHullVertices);
-      Point2d nextVertex = getNextWrap(vertexIndex, concaveHullVertices);
+      Point2d previousVertex = getPrevious(vertexIndex, concaveHullVertices);
+      Point2d nextVertex = getNext(vertexIndex, concaveHullVertices);
 
       return getAngleABC(nextVertex, previousVertex, vertex) > -angleTolerance;
    }
@@ -430,8 +430,8 @@ public class ConcaveHullTools
    public static double getAngleFromPreviousEdgeToNextEdge(int vertexIndex, List<Point2d> concaveHullVertices)
    {
       Point2d vertex = concaveHullVertices.get(vertexIndex);
-      Point2d previousVertex = getPreviousWrap(vertexIndex, concaveHullVertices);
-      Point2d nextVertex = getNextWrap(vertexIndex, concaveHullVertices);
+      Point2d previousVertex = getPrevious(vertexIndex, concaveHullVertices);
+      Point2d nextVertex = getNext(vertexIndex, concaveHullVertices);
 
       double previousEdgeX = vertex.getX() - previousVertex.getX();
       double previousEdgeY = vertex.getY() - previousVertex.getY();
@@ -465,8 +465,8 @@ public class ConcaveHullTools
     */
    public static int findInnerClosestEdgeToVertex(int vertexIndex, int deadIndexRegion, List<Point2d> concaveHullVertices, Point2d closestPointToPack)
    {
-      int startSearchIndex = increment(vertexIndex, concaveHullVertices);
-      int endSearchIndex = decrement(vertexIndex, concaveHullVertices);
+      int startSearchIndex = next(vertexIndex, concaveHullVertices);
+      int endSearchIndex = previous(vertexIndex, concaveHullVertices);
       return findInnerClosestEdgeToVertex(vertexIndex, startSearchIndex, endSearchIndex, concaveHullVertices, closestPointToPack);
    }
 
@@ -482,10 +482,10 @@ public class ConcaveHullTools
       Point2d candidateClosestPoint = new Point2d();
 
       // The loop skips the edges to which the given vertex belongs.
-      for (int candidateIndex = startSearchIndex; candidateIndex != endSearchIndex; candidateIndex = increment(candidateIndex, concaveHullVertices))
+      for (int candidateIndex = startSearchIndex; candidateIndex != endSearchIndex; candidateIndex = next(candidateIndex, concaveHullVertices))
       {
          Point2d edgeFirstVertex = concaveHullVertices.get(candidateIndex);
-         Point2d edgeSecondVertex = getNextWrap(candidateIndex, concaveHullVertices);
+         Point2d edgeSecondVertex = getNext(candidateIndex, concaveHullVertices);
 
          edge.set(edgeFirstVertex, edgeSecondVertex);
          edge.getClosestPointOnLineSegment(candidateClosestPoint, vertex);
@@ -498,11 +498,11 @@ public class ConcaveHullTools
             // Before considering it as the new closest point, we need to check that the line goes from the given vertex to the new candidate is fully inside of the polygon.
             boolean isLineInsidePolygon = true;
 
-            int startCheckIndex = increment(startSearchIndex, concaveHullVertices);
-            int endCheckIndex = increment(candidateIndex, concaveHullVertices);
+            int startCheckIndex = next(startSearchIndex, concaveHullVertices);
+            int endCheckIndex = next(candidateIndex, concaveHullVertices);
 
             // The line is inside the polygon if all the vertices in ]vertexIndex; candidateIndex[ are on the left side of the line (vertex, candidateClosestPoint)
-            for (int index = startCheckIndex; index != endCheckIndex && isLineInsidePolygon; index = increment(index, concaveHullVertices))
+            for (int index = startCheckIndex; index != endCheckIndex && isLineInsidePolygon; index = next(index, concaveHullVertices))
                isLineInsidePolygon = isPointOnLeftSideOfLine(concaveHullVertices.get(index), vertex, candidateClosestPoint);
 
             if (isLineInsidePolygon)
@@ -527,9 +527,9 @@ public class ConcaveHullTools
       Line2d rayLine = new Line2d(rayOrigin, rayDirection);
       LineSegment2d edge = new LineSegment2d();
 
-      for (int currentIndex = startSearchIndex; currentIndex != endSearchIndex; currentIndex = increment(currentIndex, concaveHullVertices))
+      for (int currentIndex = startSearchIndex; currentIndex != endSearchIndex; currentIndex = next(currentIndex, concaveHullVertices))
       {
-         int nextIndex = increment(currentIndex, concaveHullVertices);
+         int nextIndex = next(currentIndex, concaveHullVertices);
 
          Point2d current = concaveHullVertices.get(currentIndex);
          Point2d next = concaveHullVertices.get(nextIndex);

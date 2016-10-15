@@ -73,7 +73,7 @@ public class ConcaveHullPruningFilteringTools
          // If convex at b, then b should be on the outside of ac => on the left of the vector ac.
          boolean isConvex = isPointOnLeftSideOfLine(b, a, c);
 
-         int nextIndex = increment(currentIndex, concaveHullVerticesToFilter);
+         int nextIndex = next(currentIndex, concaveHullVerticesToFilter);
          if (isConvex && a.distance(c) / (a.distance(b) + b.distance(c)) > percentageThreshold && !isVertexPreventingKink(nextIndex, concaveHullVerticesToFilter))
          {
             concaveHullVerticesToFilter.remove(nextIndex);
@@ -87,7 +87,7 @@ public class ConcaveHullPruningFilteringTools
             currentIndex++;
          }
 
-         c = getNextWrap(nextIndex, concaveHullVerticesToFilter);
+         c = getNext(nextIndex, concaveHullVerticesToFilter);
       }
 
       return numberOfVerticesRemoved;
@@ -108,9 +108,9 @@ public class ConcaveHullPruningFilteringTools
       for (int startCutIndex = 0; startCutIndex < concaveHullVerticesToFilter.size();)
       {
          firstVertex = concaveHullVerticesToFilter.get(startCutIndex);
-         int intermediateIndex = increment(startCutIndex, concaveHullVerticesToFilter);
+         int intermediateIndex = next(startCutIndex, concaveHullVerticesToFilter);
          intermediateVertex = concaveHullVerticesToFilter.get(intermediateIndex);
-         int lastVertexIndex = increment(intermediateIndex, concaveHullVerticesToFilter);
+         int lastVertexIndex = next(intermediateIndex, concaveHullVerticesToFilter);
          lastVertex = concaveHullVerticesToFilter.get(lastVertexIndex);
 
          perimeter = firstVertex.distance(intermediateVertex);
@@ -133,7 +133,7 @@ public class ConcaveHullPruningFilteringTools
          {
             intermediateVertex = lastVertex;
             endCutIndex = lastVertexIndex;
-            lastVertexIndex = increment(lastVertexIndex, concaveHullVerticesToFilter);
+            lastVertexIndex = next(lastVertexIndex, concaveHullVerticesToFilter);
             lastVertex = concaveHullVerticesToFilter.get(lastVertexIndex);
 
             perimeter += intermediateVertex.distance(lastVertex);
@@ -142,7 +142,7 @@ public class ConcaveHullPruningFilteringTools
             ratio = cuttingDistance / perimeter;
          }
 
-         int firstRemovableVertexIndex = increment(startCutIndex, concaveHullVerticesToFilter);
+         int firstRemovableVertexIndex = next(startCutIndex, concaveHullVerticesToFilter);
 
          for (int checkIndex = firstRemovableVertexIndex; checkIndex != endCutIndex;)
          {
@@ -161,7 +161,7 @@ public class ConcaveHullPruningFilteringTools
             }
             else
             {
-               checkIndex = increment(checkIndex, concaveHullVerticesToFilter);
+               checkIndex = next(checkIndex, concaveHullVerticesToFilter);
             }
          }
 
@@ -200,7 +200,7 @@ public class ConcaveHullPruningFilteringTools
       {
          // If convex at b, then b should be on the outside of ac => on the left of the vector ac.
          boolean isConvex = isPointOnLeftSideOfLine(b, a, c);
-         int nextIndex = increment(currentIndex, concaveHullVerticesToFilter);
+         int nextIndex = next(currentIndex, concaveHullVerticesToFilter);
          if (isConvex && computeTriangleArea(a, b, c) < areaThreshold && !isVertexPreventingKink(nextIndex, concaveHullVerticesToFilter))
          {
             concaveHullVerticesToFilter.remove(nextIndex);
@@ -214,7 +214,7 @@ public class ConcaveHullPruningFilteringTools
             currentIndex++;
          }
 
-         c = concaveHullVerticesToFilter.get(increment(nextIndex, concaveHullVerticesToFilter));
+         c = concaveHullVerticesToFilter.get(next(nextIndex, concaveHullVerticesToFilter));
       }
 
       return numberOfVerticesRemoved;
@@ -278,9 +278,9 @@ public class ConcaveHullPruningFilteringTools
 
       for (int beforeEdgeVertexIndex = 0; beforeEdgeVertexIndex < concaveHullVerticesToFilter.size();)
       {
-         int firstEdgeVertexIndex = increment(beforeEdgeVertexIndex, concaveHullVerticesToFilter);
-         int secondEdgeVertexIndex = increment(firstEdgeVertexIndex, concaveHullVerticesToFilter);
-         int afterEdgeVertexIndex = increment(secondEdgeVertexIndex, concaveHullVerticesToFilter);
+         int firstEdgeVertexIndex = next(beforeEdgeVertexIndex, concaveHullVerticesToFilter);
+         int secondEdgeVertexIndex = next(firstEdgeVertexIndex, concaveHullVerticesToFilter);
+         int afterEdgeVertexIndex = next(secondEdgeVertexIndex, concaveHullVerticesToFilter);
 
          Point2d firstEdgeVertex = concaveHullVerticesToFilter.get(firstEdgeVertexIndex);
          Point2d secondEdgeVertex = concaveHullVerticesToFilter.get(secondEdgeVertexIndex);
@@ -407,16 +407,16 @@ public class ConcaveHullPruningFilteringTools
       for (int currentIndex = 0; currentIndex < concaveHullVerticesToFilter.size(); currentIndex++)
       {
          Point2d rayOrigin = concaveHullVerticesToFilter.get(currentIndex);
-         rayDirection.sub(getNextWrap(currentIndex, concaveHullVerticesToFilter), getPreviousWrap(currentIndex, concaveHullVerticesToFilter));
+         rayDirection.sub(getNext(currentIndex, concaveHullVerticesToFilter), getPrevious(currentIndex, concaveHullVerticesToFilter));
          rayDirection.set(rayDirection.getY(), -rayDirection.getX());
 
-         int startSearchIndex = increment(currentIndex, concaveHullVerticesToFilter);
-         int endSearchIndex = decrement(currentIndex, concaveHullVerticesToFilter);
+         int startSearchIndex = next(currentIndex, concaveHullVerticesToFilter);
+         int endSearchIndex = previous(currentIndex, concaveHullVerticesToFilter);
          int edgeFirstVertexIndex = findClosestIntersectionWithRay(rayOrigin, rayDirection, startSearchIndex, endSearchIndex, concaveHullVerticesToFilter, intersection);
 
          if (rayOrigin.distanceSquared(intersection) < thresholdSquared)
          {
-            int edgeSecondVertexIndex = increment(edgeFirstVertexIndex, concaveHullVerticesToFilter);
+            int edgeSecondVertexIndex = next(edgeFirstVertexIndex, concaveHullVerticesToFilter);
             int firstSubLength = subLengthInclusive(currentIndex, edgeFirstVertexIndex, concaveHullVerticesToFilter);
             int secondSubLength = subLengthInclusive(edgeSecondVertexIndex, currentIndex, concaveHullVerticesToFilter);
 
@@ -448,7 +448,7 @@ public class ConcaveHullPruningFilteringTools
 
          if (closestPoint.distanceSquared(currentVertex) < alphaSquared)
          {
-            int closestEdgeSecondVertexIndex = increment(closestEdgeFirstVertexIndex, concaveHullVerticesToFilter);
+            int closestEdgeSecondVertexIndex = next(closestEdgeFirstVertexIndex, concaveHullVerticesToFilter);
             int firstSubLength = subLengthInclusive(currentIndex, closestEdgeFirstVertexIndex, concaveHullVerticesToFilter);
             int secondSubLength = subLengthInclusive(closestEdgeSecondVertexIndex, currentIndex, concaveHullVerticesToFilter);
 

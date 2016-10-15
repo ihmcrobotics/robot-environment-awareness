@@ -82,7 +82,7 @@ public class ConcaveHullDecomposition
       int endBridgeIndex = pocket.getEndBridgeIndex();
 
       int otherVertexIndexForCutting = findClosestIntersectionWithRay(deepestVertex, cutDirection, endBridgeIndex, startBridgeIndex, concaveHullVertices, otherVertexForCutting);
-      otherVertexIndexForCutting = increment(otherVertexIndexForCutting, concaveHullVertices);
+      otherVertexIndexForCutting = next(otherVertexIndexForCutting, concaveHullVertices);
       
       if (otherVertexIndexForCutting == -1)
       {

@@ -1,7 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import static us.ihmc.robotEnvironmentAwareness.geometry.ListWrappingIndexTools.*;
 import static us.ihmc.robotics.geometry.GeometryTools.*;
+import static us.ihmc.robotics.lists.ListWrappingIndexTools.*;
 
 import java.io.File;
 import java.io.FileWriter;

@@ -8,96 +8,88 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
 
 <BorderPane prefHeight="560.0" prefWidth="893.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
 	<center>
 		<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="568.0" prefWidth="945.0" BorderPane.alignment="CENTER" />
 	</center>
-	<bottom>
-		<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="205.0" prefWidth="893.0" BorderPane.alignment="CENTER">
+   <top>
+      <HBox BorderPane.alignment="CENTER">
          <children>
-            <BorderPane prefHeight="200.0" prefWidth="893.0">
-               <center>
-                  <TabPane prefHeight="204.0" prefWidth="893.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
-                     <tabs>
-                        <Tab text="PointCloud">
-                           <content>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                 <children>
-                                    <fx:include fx:id="pointCloudAnchorPane" source="PointCloudAnchorPane.fxml" />
-                                 </children>
-                              </AnchorPane>
-                           </content>
-                        </Tab>
-                        <Tab text="OcTree">
-                           <content>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                 <children>
-                                    <fx:include fx:id="ocTreeBasicsAnchorPane" source="OcTreeBasicsAnchorPane.fxml" />
-                                 </children>
-                              </AnchorPane>
-                           </content>
-                        </Tab>
-                        <Tab text="LIDAR Filter">
-                           <content>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                 <children>
-                                    <fx:include fx:id="lidarFilterAnchorPane" source="LIDARFilterAnchorPane.fxml" />
-                                 </children>
-                              </AnchorPane>
-                           </content>
-                        </Tab>
-                        <Tab text="NormalEstimation">
-                           <content>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                 <children>
-                                    <fx:include fx:id="normalEstimationAnchorPane" source="NormalEstimationAnchorPane.fxml" />
-                                 </children>
-                              </AnchorPane>
-                           </content>
-                        </Tab>
-                        <Tab text="RegionSegmentation">
-                           <content>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                 <children>
-                                    <fx:include fx:id="regionSegmentationAnchorPane" source="RegionSegmentationAnchorPane.fxml" />
-                                 </children>
-                              </AnchorPane>
-                           </content>
-                        </Tab>
-                        <Tab text="Polygonizer">
-                           <content>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                 <children>
-                                    <fx:include fx:id="polygonizerAnchorPane" source="PolygonizerAnchorPane.fxml" />
-                                 </children>
-                              </AnchorPane>
-                           </content>
-                        </Tab>
-                     </tabs>
-                  </TabPane>
-               </center>
-               <left>
-                  <VBox prefHeight="200.0" prefWidth="27.0" BorderPane.alignment="CENTER">
-                     <children>
-                        <Button minHeight="0.0" minWidth="0.0" mnemonicParsing="false" onAction="#sendLidarCommand" prefHeight="28.0" prefWidth="25.0">
-                           <effect>
-                              <ImageInput>
-                                 <source>
-                                    <Image url="file:/C:/Users/Sylvain/Desktop/Workspace1/RobotEnvironmentAwareness/resources/us/ihmc/robotEnvironmentAwareness/ui/LiDARPulseIcon.png" />
-                                 </source>
-                              </ImageInput>
-                           </effect>
-                           <tooltip>
-                              <Tooltip text="Enable lidar in network processor" />
-                           </tooltip>
-                        </Button>
-                     </children>
-                  </VBox>
-               </left>
-            </BorderPane>
+            <Button minHeight="0.0" minWidth="0.0" mnemonicParsing="false" onAction="#sendLidarCommand" prefHeight="28.0" prefWidth="25.0">
+               <effect>
+                  <ImageInput>
+                     <source>
+                        <Image url="file:/C:/Users/Sylvain/Desktop/Workspace1/RobotEnvironmentAwareness/resources/us/ihmc/robotEnvironmentAwareness/ui/LiDARPulseIcon.png" />
+                     </source>
+                  </ImageInput>
+               </effect>
+               <tooltip>
+                  <Tooltip text="Enable lidar in network processor" />
+               </tooltip>
+            </Button>
          </children>
-		</AnchorPane>
-	</bottom>
+      </HBox>
+   </top>
+   <bottom>
+      <TabPane prefHeight="204.0" prefWidth="893.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+         <tabs>
+            <Tab text="PointCloud">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <fx:include fx:id="pointCloudAnchorPane" source="PointCloudAnchorPane.fxml" />
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+            <Tab text="OcTree">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <fx:include fx:id="ocTreeBasicsAnchorPane" source="OcTreeBasicsAnchorPane.fxml" />
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+            <Tab text="LIDAR Filter">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <fx:include fx:id="lidarFilterAnchorPane" source="LIDARFilterAnchorPane.fxml" />
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+            <Tab text="NormalEstimation">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <fx:include fx:id="normalEstimationAnchorPane" source="NormalEstimationAnchorPane.fxml" />
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+            <Tab text="RegionSegmentation">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <fx:include fx:id="regionSegmentationAnchorPane" source="RegionSegmentationAnchorPane.fxml" />
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+            <Tab text="Polygonizer">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <fx:include fx:id="polygonizerAnchorPane" source="PolygonizerAnchorPane.fxml" />
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+         </tabs>
+      </TabPane>
+   </bottom>
 </BorderPane>

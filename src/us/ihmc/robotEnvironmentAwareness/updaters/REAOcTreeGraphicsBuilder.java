@@ -27,7 +27,7 @@ import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.octoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegion;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
 import us.ihmc.robotics.geometry.LineSegment3d;
@@ -151,19 +151,19 @@ public class REAOcTreeGraphicsBuilder
          polygonsMeshBuilder.addLine(start, end, lineWidth, color);
       }
 
-      for (PlanarRegion planarRegion : regionFeaturesProvider.getPlanarRegions())
+      for (OcTreeNodePlanarRegion ocTreeNodePlanarRegion : regionFeaturesProvider.getOcTreePlanarRegions())
       {
-         PlanarRegionConcaveHull planarRegionConcaveHull = regionFeaturesProvider.getPlanarRegionConcaveHull(planarRegion);
+         PlanarRegionConcaveHull planarRegionConcaveHull = regionFeaturesProvider.getPlanarRegionConcaveHull(ocTreeNodePlanarRegion);
          if (planarRegionConcaveHull == null)
             continue;
 
          double lineWidth = 0.01;
-         int regionId = planarRegion.getId();
+         int regionId = ocTreeNodePlanarRegion.getId();
          Color regionColor = getRegionColor(regionId);
          List<Point3d> concaveHullVerticesInWorld = planarRegionConcaveHull.getConcaveHullVerticesInWorld();
          polygonsMeshBuilder.addMultiLine(concaveHullVerticesInWorld, lineWidth, regionColor, true);
 
-         PlanarRegionConvexPolygons planarRegionConvexPolygons = regionFeaturesProvider.getPlanarRegionConvexPolygons(planarRegion);
+         PlanarRegionConvexPolygons planarRegionConvexPolygons = regionFeaturesProvider.getPlanarRegionConvexPolygons(ocTreeNodePlanarRegion);
          if (planarRegionConvexPolygons == null)
             continue;
 
@@ -186,16 +186,16 @@ public class REAOcTreeGraphicsBuilder
       int currentDepth = getCurrentTreeDepthForDisplay();
       Set<NormalOcTreeNode> nodes = getNodes(currentDepth);
 
-      for (PlanarRegion planarRegion : regionFeaturesProvider.getPlanarRegions())
+      for (OcTreeNodePlanarRegion ocTreeNodePlanarRegion : regionFeaturesProvider.getOcTreePlanarRegions())
       {
-         for (NormalOcTreeNode node : planarRegion)
+         for (NormalOcTreeNode node : ocTreeNodePlanarRegion)
          {
             nodes.remove(node);
 
             if (isHidingPlanarRegionNodes())
                continue;
 
-            Color color = getNodeColor(node, planarRegion.getId());
+            Color color = getNodeColor(node, ocTreeNodePlanarRegion.getId());
             addNodeToMeshBuilder(node, color, occupiedMeshBuilder);
          }
       }
@@ -274,7 +274,7 @@ public class REAOcTreeGraphicsBuilder
 
    private Color getNodeColor(NormalOcTreeNode node)
    {
-      return getNodeColor(node, PlanarRegion.NO_REGION_ID);
+      return getNodeColor(node, OcTreeNodePlanarRegion.NO_REGION_ID);
    }
 
    private Color getNodeColor(NormalOcTreeNode node, int regionId)
@@ -282,7 +282,7 @@ public class REAOcTreeGraphicsBuilder
       switch (getCurrentColoringType())
       {
       case REGION:
-         if (regionId != PlanarRegion.NO_REGION_ID)
+         if (regionId != OcTreeNodePlanarRegion.NO_REGION_ID)
             return getRegionColor(regionId);
          else
             return DEFAULT_COLOR;

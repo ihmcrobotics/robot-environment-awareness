@@ -2,20 +2,20 @@ package us.ihmc.robotEnvironmentAwareness.updaters;
 
 import java.util.List;
 
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegion;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
 import us.ihmc.robotics.geometry.LineSegment3d;
 
 public interface RegionFeaturesProvider
 {
-   List<PlanarRegion> getPlanarRegions();
+   List<OcTreeNodePlanarRegion> getOcTreePlanarRegions();
 
-   boolean hasPolygonizedPlanarRegions();
+   boolean hasPolygonizedOcTreeNodePlanarRegions();
 
-   PlanarRegionConcaveHull getPlanarRegionConcaveHull(PlanarRegion planarRegion);
+   PlanarRegionConcaveHull getPlanarRegionConcaveHull(OcTreeNodePlanarRegion ocTreeNodePlanarRegion);
 
-   PlanarRegionConvexPolygons getPlanarRegionConvexPolygons(PlanarRegion planarRegion);
+   PlanarRegionConvexPolygons getPlanarRegionConvexPolygons(OcTreeNodePlanarRegion ocTreeNodePlanarRegion);
 
    int getNumberOfPlaneIntersections();
 

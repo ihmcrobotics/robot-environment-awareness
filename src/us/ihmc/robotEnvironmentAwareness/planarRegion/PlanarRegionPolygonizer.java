@@ -33,30 +33,30 @@ public class PlanarRegionPolygonizer
    {
    }
 
-   public static Map<PlanarRegion, PlanarRegionConcaveHull> computeConcaveHulls(List<PlanarRegion> planarRegions, PolygonizerParameters parameters)
+   public static Map<OcTreeNodePlanarRegion, PlanarRegionConcaveHull> computeConcaveHulls(List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions, PolygonizerParameters parameters)
    {
-      return planarRegions.parallelStream()
+      return ocTreeNodePlanarRegions.parallelStream()
                           .filter(region -> region.getNumberOfNodes() >= parameters.getMinNumberOfNodes())
                           .map(region -> createConcaveHull(region, parameters))
-                          .collect(Collectors.toConcurrentMap(PlanarRegionConcaveHull::getPlanarRegion, concaveHull -> concaveHull));
+                          .collect(Collectors.toConcurrentMap(PlanarRegionConcaveHull::getOcTreeNodePlanarRegion, concaveHull -> concaveHull));
 
    }
 
-   public static Map<PlanarRegion, PlanarRegionConvexPolygons> computeConvexDecomposition(Map<PlanarRegion, PlanarRegionConcaveHull> concaveHulls, PolygonizerParameters parameters)
+   public static Map<OcTreeNodePlanarRegion, PlanarRegionConvexPolygons> computeConvexDecomposition(Map<OcTreeNodePlanarRegion, PlanarRegionConcaveHull> concaveHulls, PolygonizerParameters parameters)
    {
       return concaveHulls.values().parallelStream()
                   .map(concaveHull -> createConvexPolygons(concaveHull, parameters))
-                  .collect(Collectors.toConcurrentMap(PlanarRegionConvexPolygons::getPlanarRegion, polygons -> polygons));
+                  .collect(Collectors.toConcurrentMap(PlanarRegionConvexPolygons::getOcTreeNodePlanarRegion, polygons -> polygons));
    }
 
-   private static PlanarRegionConcaveHull createConcaveHull(PlanarRegion planarRegion, PolygonizerParameters parameters)
+   private static PlanarRegionConcaveHull createConcaveHull(OcTreeNodePlanarRegion ocTreeNodePlanarRegion, PolygonizerParameters parameters)
    {
       double concaveHullThreshold = parameters.getConcaveHullThreshold();
       double shallowAngleThreshold = parameters.getShallowAngleThreshold();
       double peakAngleThreshold = parameters.getPeakAngleThreshold();
       double lengthThreshold = parameters.getLengthThreshold();
 
-      List<Point2d> pointsInPlane = PolygonizerTools.extractPointsInPlane(planarRegion);
+      List<Point2d> pointsInPlane = PolygonizerTools.extractPointsInPlane(ocTreeNodePlanarRegion);
       List<Point2d> concaveHullVerticesInPlane = SimpleConcaveHullFactory.createConcaveHullAsPoint2dList(pointsInPlane, concaveHullThreshold);
 
       ConcaveHullTools.ensureClockwiseOrdering(concaveHullVerticesInPlane);
@@ -68,7 +68,7 @@ public class PlanarRegionPolygonizer
          ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, concaveHullVerticesInPlane);
       }
 
-      return new PlanarRegionConcaveHull(planarRegion, concaveHullVerticesInPlane);
+      return new PlanarRegionConcaveHull(ocTreeNodePlanarRegion, concaveHullVerticesInPlane);
    }
 
    private static PlanarRegionConvexPolygons createConvexPolygons(PlanarRegionConcaveHull concaveHull, PolygonizerParameters parameters)
@@ -77,11 +77,11 @@ public class PlanarRegionPolygonizer
       double depthThreshold = parameters.getDepthThreshold();
       ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHull.getConcaveHullVerticesInPlane(), depthThreshold, decomposedPolygons);
 
-      PlanarRegion planarRegion = concaveHull.getPlanarRegion();
+      OcTreeNodePlanarRegion planarRegion = concaveHull.getOcTreeNodePlanarRegion();
       return new PlanarRegionConvexPolygons(planarRegion, decomposedPolygons);
    }
 
-   public void compute(PlanarRegion planarRegion)
+   public void compute(OcTreeNodePlanarRegion planarRegion)
    {
       concaveHullVerticesInPlane.clear();
       concaveHullVerticesInWorld.clear();
@@ -150,14 +150,14 @@ public class PlanarRegionPolygonizer
       return convexPolygonsVerticesInWorld.get(polygonIndex);
    }
 
-   private void updateRegionProperties(PlanarRegion planarRegion)
+   private void updateRegionProperties(OcTreeNodePlanarRegion ocTreeNodePlanarRegions)
    {
-      origin.set(planarRegion.getOrigin());
-      orientation.set(GeometryTools.getRotationBasedOnNormal(planarRegion.getNormal()));
-      computePointsInPlane(planarRegion);
+      origin.set(ocTreeNodePlanarRegions.getOrigin());
+      orientation.set(GeometryTools.getRotationBasedOnNormal(ocTreeNodePlanarRegions.getNormal()));
+      computePointsInPlane(ocTreeNodePlanarRegions);
    }
 
-   private void computePointsInPlane(PlanarRegion planarRegion)
+   private void computePointsInPlane(OcTreeNodePlanarRegion planarRegion)
    {
       pointsInPlane.clear();
 

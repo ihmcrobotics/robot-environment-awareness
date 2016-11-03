@@ -14,23 +14,23 @@ import us.ihmc.robotics.geometry.GeometryTools;
 
 public class PlanarRegionConvexPolygons
 {
-   private final PlanarRegion planarRegion;
+   private final OcTreeNodePlanarRegion ocTreeNodePlanarRegion;
    private final List<ConvexPolygon2d> convexPolygonsInPlane;
    private final List<List<Point2d>> convexPolygonsVerticesInPlane = new ArrayList<>();
    private final List<List<Point3d>> convexPolygonsVerticesInWorld;
 
-   public PlanarRegionConvexPolygons(PlanarRegion planarRegion, List<ConvexPolygon2d> convexPolygonsInPlane)
+   public PlanarRegionConvexPolygons(OcTreeNodePlanarRegion ocTreeNodePlanarRegion, List<ConvexPolygon2d> convexPolygonsInPlane)
    {
-      this(planarRegion, convexPolygonsInPlane, true);
+      this(ocTreeNodePlanarRegion, convexPolygonsInPlane, true);
    }
 
-   public PlanarRegionConvexPolygons(PlanarRegion planarRegion, List<ConvexPolygon2d> convexPolygonsInPlane, boolean counterClockwiseOrdering)
+   public PlanarRegionConvexPolygons(OcTreeNodePlanarRegion ocTreeNodePlanarRegion, List<ConvexPolygon2d> convexPolygonsInPlane, boolean counterClockwiseOrdering)
    {
-      this.planarRegion = planarRegion;
+      this.ocTreeNodePlanarRegion = ocTreeNodePlanarRegion;
       this.convexPolygonsInPlane = convexPolygonsInPlane;
-      Point3d planeOrigin = planarRegion.getOrigin();
+      Point3d planeOrigin = ocTreeNodePlanarRegion.getOrigin();
       Quat4d planeOrientation = new Quat4d();
-      planeOrientation.set(GeometryTools.getRotationBasedOnNormal(planarRegion.getNormal()));
+      planeOrientation.set(GeometryTools.getRotationBasedOnNormal(ocTreeNodePlanarRegion.getNormal()));
 
       for (int pIndex = 0; pIndex < convexPolygonsInPlane.size(); pIndex++)
       {
@@ -54,12 +54,12 @@ public class PlanarRegionConvexPolygons
 
    public int getRegionId()
    {
-      return planarRegion.getId();
+      return ocTreeNodePlanarRegion.getId();
    }
 
-   public PlanarRegion getPlanarRegion()
+   public OcTreeNodePlanarRegion getOcTreeNodePlanarRegion()
    {
-      return planarRegion;
+      return ocTreeNodePlanarRegion;
    }
 
    public List<ConvexPolygon2d> getConvexPolygonsInPlane()

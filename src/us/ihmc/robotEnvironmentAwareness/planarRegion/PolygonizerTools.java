@@ -17,12 +17,12 @@ public class PolygonizerTools
       return pointsToTransform.stream().map(point -> toPointInPlane(point, planeOrigin, planeOrientation)).collect(Collectors.toList());
    }
 
-   public static List<Point2d> extractPointsInPlane(PlanarRegion planarRegion)
+   public static List<Point2d> extractPointsInPlane(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
    {
-      Point3d planeOrigin = planarRegion.getOrigin();
+      Point3d planeOrigin = ocTreeNodePlanarRegion.getOrigin();
       Quat4d planeOrientation = new Quat4d();
-      planeOrientation.set(GeometryTools.getRotationBasedOnNormal(planarRegion.getNormal()));
-      return planarRegion.nodeStream().map(node -> toPointInPlane(node, planeOrigin, planeOrientation)).collect(Collectors.toList());
+      planeOrientation.set(GeometryTools.getRotationBasedOnNormal(ocTreeNodePlanarRegion.getNormal()));
+      return ocTreeNodePlanarRegion.nodeStream().map(node -> toPointInPlane(node, planeOrigin, planeOrientation)).collect(Collectors.toList());
    }
 
    public static Point2d toPointInPlane(Point3d pointToTransform, Point3d planeOrigin, Quat4d planeOrientation)

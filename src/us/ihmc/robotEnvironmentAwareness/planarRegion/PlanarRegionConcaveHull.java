@@ -10,13 +10,13 @@ import us.ihmc.robotics.geometry.GeometryTools;
 
 public class PlanarRegionConcaveHull
 {
-   private final PlanarRegion planarRegion;
+   private final OcTreeNodePlanarRegion ocTreeNodePlanarRegion;
    private final List<Point2d> concaveHullVerticesInPlane;
    private final List<Point3d> concaveHullVerticesInWorld;
 
-   public PlanarRegionConcaveHull(PlanarRegion planarRegion, List<Point2d> concaveHullVerticesInPlane)
+   public PlanarRegionConcaveHull(OcTreeNodePlanarRegion planarRegion, List<Point2d> concaveHullVerticesInPlane)
    {
-      this.planarRegion = planarRegion;
+      this.ocTreeNodePlanarRegion = planarRegion;
       this.concaveHullVerticesInPlane = concaveHullVerticesInPlane;
       Point3d planeOrigin = planarRegion.getOrigin();
       Quat4d planeOrientation = new Quat4d();
@@ -26,12 +26,12 @@ public class PlanarRegionConcaveHull
 
    public int getRegionId()
    {
-      return planarRegion.getId();
+      return ocTreeNodePlanarRegion.getId();
    }
 
-   public PlanarRegion getPlanarRegion()
+   public OcTreeNodePlanarRegion getOcTreeNodePlanarRegion()
    {
-      return planarRegion;
+      return ocTreeNodePlanarRegion;
    }
 
    public List<Point2d> getConcaveHullVerticesInPlane()

@@ -18,7 +18,7 @@ import us.ihmc.octoMap.node.NormalOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.geometry.PointMean;
 import us.ihmc.robotEnvironmentAwareness.geometry.VectorMean;
 
-public class PlanarRegion implements Iterable<NormalOcTreeNode>
+public class OcTreeNodePlanarRegion implements Iterable<NormalOcTreeNode>
 {
    public static final int NO_REGION_ID = Integer.MIN_VALUE;
 
@@ -34,12 +34,12 @@ public class PlanarRegion implements Iterable<NormalOcTreeNode>
    private final List<NormalOcTreeNode> nodes = new ArrayList<>();
    private final Set<NormalOcTreeNode> nodeSet = new HashSet<>();
 
-   public PlanarRegion(int id)
+   public OcTreeNodePlanarRegion(int id)
    {
       this.id = id;
    }
 
-   public PlanarRegion(int id, Collection<NormalOcTreeNode> nodes)
+   public OcTreeNodePlanarRegion(int id, Collection<NormalOcTreeNode> nodes)
    {
       this(id);
       addNodes(nodes);
@@ -62,7 +62,7 @@ public class PlanarRegion implements Iterable<NormalOcTreeNode>
       return nodes.stream().filter(this::addNode).findFirst().isPresent();
    }
 
-   public boolean addNodesFromOtherRegion(PlanarRegion other)
+   public boolean addNodesFromOtherRegion(OcTreeNodePlanarRegion other)
    {
       return other.nodeStream().filter(this::addNode).findFirst().isPresent();
    }
@@ -146,12 +146,12 @@ public class PlanarRegion implements Iterable<NormalOcTreeNode>
       return dx * dx + dy * dy + dz * dz;
    }
 
-   public double distanceFromOtherRegionBoundingBox(PlanarRegion other)
+   public double distanceFromOtherRegionBoundingBox(OcTreeNodePlanarRegion other)
    {
       return Math.sqrt(distanceSquaredFromOtherRegionBoundingBox(other));
    }
 
-   public double distanceSquaredFromOtherRegionBoundingBox(PlanarRegion other)
+   public double distanceSquaredFromOtherRegionBoundingBox(OcTreeNodePlanarRegion other)
    {
       double dx = max(min.getX() - other.max.getX(), 0.0, other.min.getX() - max.getX());
       double dy = max(min.getY() - other.max.getY(), 0.0, other.min.getY() - max.getY());
@@ -286,12 +286,12 @@ public class PlanarRegion implements Iterable<NormalOcTreeNode>
       return Math.abs(dot(normal));
    }
 
-   public double dot(PlanarRegion other)
+   public double dot(OcTreeNodePlanarRegion other)
    {
       return dot(other.normal);
    }
 
-   public double absoluteDot(PlanarRegion other)
+   public double absoluteDot(OcTreeNodePlanarRegion other)
    {
       return Math.abs(dot(other));
    }

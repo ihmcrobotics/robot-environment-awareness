@@ -4,8 +4,7 @@ import java.io.IOException;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
-import us.ihmc.darpaRoboticsChallenge.drcRobot.FlatGroundEnvironment;
-import us.ihmc.darpaRoboticsChallenge.environment.DRCDemo01NavigationEnvironment;
+import us.ihmc.darpaRoboticsChallenge.environment.FlatGroundEnvironment;
 import us.ihmc.graphics3DAdapter.Graphics3DAdapter;
 import us.ihmc.graphics3DAdapter.structure.Graphics3DNode;
 import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
@@ -15,6 +14,7 @@ import us.ihmc.robotics.dataStructures.variable.YoVariable;
 import us.ihmc.simulationconstructionset.SimulationConstructionSet;
 import us.ihmc.simulationconstructionset.SimulationConstructionSetParameters;
 import us.ihmc.simulationconstructionset.util.environments.CommonAvatarEnvironmentInterface;
+import us.ihmc.simulationconstructionset.util.environments.DefaultCommonAvatarEnvironment;
 import us.ihmc.simulationconstructionset.yoUtilities.graphics.YoGraphicsListRegistry;
 import us.ihmc.util.RealtimeTools;
 
@@ -71,7 +71,7 @@ public class FootstepPlanningFastSimulation
             switch (groundType.getEnumValue())
             {
             case OBSTACLE_COURSE:
-               environment = new DRCDemo01NavigationEnvironment();
+               environment = new DefaultCommonAvatarEnvironment();
                break;
             case FLAT:
                environment = new FlatGroundEnvironment();

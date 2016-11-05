@@ -11,7 +11,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
-import us.ihmc.jOctoMap.tools.OctoMapTools;
+import us.ihmc.jOctoMap.tools.JOctoMapTools;
 import us.ihmc.tools.io.printing.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;
 
@@ -60,7 +60,7 @@ public class LIDARBasedREAModule
                return;
 
 
-            double currentTime = OctoMapTools.nanoSecondsToSeconds(System.nanoTime());
+            double currentTime = JOctoMapTools.nanoSecondsToSeconds(System.nanoTime());
             
             boolean performCompleteOcTreeUpdate = (Double.isNaN(lastCompleteUpdate.get()) || currentTime - lastCompleteUpdate.get() >= OCTREE_COMPLETE_UPDATE_PERIOD);
             boolean performGraphicsUpdate = (Double.isNaN(lastGraphicsUpdate.get()) || currentTime - lastGraphicsUpdate.get() >= GRAPHICS_REFRESH_PERIOD);
@@ -95,7 +95,7 @@ public class LIDARBasedREAModule
                }
             }
 
-            currentTime = OctoMapTools.nanoSecondsToSeconds(System.nanoTime());
+            currentTime = JOctoMapTools.nanoSecondsToSeconds(System.nanoTime());
             if (performCompleteOcTreeUpdate)
                lastCompleteUpdate.set(currentTime);
             if (performGraphicsUpdate)
@@ -114,7 +114,7 @@ public class LIDARBasedREAModule
 
             if (REPORT_TIME)
             {
-               System.out.println("OcTree update took: " + OctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
+               System.out.println("OcTree update took: " + JOctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
             }
 
             return updatedProperly;
@@ -132,7 +132,7 @@ public class LIDARBasedREAModule
 
             if (REPORT_TIME)
             {
-               System.out.println("OcTreeGraphics update took: " + OctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
+               System.out.println("OcTreeGraphics update took: " + JOctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
             }
          }
 

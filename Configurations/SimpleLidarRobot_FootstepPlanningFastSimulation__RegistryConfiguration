@@ -1,0 +1,4 @@
+root*false*false
+root.SimpleLidarRobot*false*false
+root.SimpleLidarRobot.SimpleLidarRobotController*false*false
+root.SimpleLidarRobot.SimpleLidarRobotController.SweepVizBalls*false*false

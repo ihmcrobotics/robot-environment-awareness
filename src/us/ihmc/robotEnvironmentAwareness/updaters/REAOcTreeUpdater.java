@@ -5,11 +5,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
-import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
-import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
-import us.ihmc.octoMap.normalEstimation.NormalEstimationParameters;
-import us.ihmc.octoMap.ocTree.NormalOcTree;
-import us.ihmc.octoMap.pointCloud.ScanCollection;
+import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
+import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
+import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
+import us.ihmc.jOctoMap.ocTree.NormalOcTree;
+import us.ihmc.jOctoMap.pointCloud.ScanCollection;
 
 public class REAOcTreeUpdater
 {

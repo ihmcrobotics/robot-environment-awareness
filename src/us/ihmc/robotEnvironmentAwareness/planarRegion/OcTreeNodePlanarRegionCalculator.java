@@ -15,13 +15,13 @@ import javax.vecmath.Vector3d;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
-import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxInterface;
-import us.ihmc.octoMap.iterators.OcTreeIterable;
-import us.ihmc.octoMap.iterators.OcTreeIteratorFactory;
-import us.ihmc.octoMap.node.NormalOcTreeNode;
-import us.ihmc.octoMap.rules.interfaces.IteratorSelectionRule;
-import us.ihmc.octoMap.tools.OcTreeNearestNeighborTools;
-import us.ihmc.octoMap.tools.OcTreeNearestNeighborTools.NeighborActionRule;
+import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxInterface;
+import us.ihmc.jOctoMap.iterators.OcTreeIterable;
+import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
+import us.ihmc.jOctoMap.node.NormalOcTreeNode;
+import us.ihmc.jOctoMap.rules.interfaces.IteratorSelectionRule;
+import us.ihmc.jOctoMap.tools.OcTreeNearestNeighborTools;
+import us.ihmc.jOctoMap.tools.OcTreeNearestNeighborTools.NeighborActionRule;
 import us.ihmc.robotEnvironmentAwareness.exception.PlanarRegionSegmentationException;
 
 public class OcTreeNodePlanarRegionCalculator

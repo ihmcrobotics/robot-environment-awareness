@@ -7,9 +7,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.lang3.time.StopWatch;
 
 import gnu.trove.list.array.TIntArrayList;
-import us.ihmc.octoMap.boundingBox.OcTreeBoundingBoxInterface;
-import us.ihmc.octoMap.node.NormalOcTreeNode;
-import us.ihmc.octoMap.ocTree.NormalOcTree;
+import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxInterface;
+import us.ihmc.jOctoMap.node.NormalOcTreeNode;
+import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegionCalculator;

@@ -6,7 +6,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
-import us.ihmc.octoMap.boundingBox.OcTreeSimpleBoundingBox;
+import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 

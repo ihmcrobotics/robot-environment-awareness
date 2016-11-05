@@ -46,7 +46,7 @@ dependencies {
     compile ihmc.getProjectDependency(":IHMCJavaFXToolkit")
     compile ihmc.getProjectDependency(":IHMCHumanoidRobotics")
     compile ihmc.getProjectDependency(":IHMCPerception")
-    compile ihmc.getProjectDependency(":OctoMap")
+    compile ihmc.getProjectDependency(":JOctoMap")
 
     testCompile ihmc.getProjectTestDependency(":IHMCHumanoidRobotics")
     testCompile ihmc.getProjectDependency(":IHMCUnitTesting")

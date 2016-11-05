@@ -4,8 +4,8 @@ import javafx.beans.InvalidationListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
+import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.javaFXToolkit.StringConverterTools;
-import us.ihmc.octoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 

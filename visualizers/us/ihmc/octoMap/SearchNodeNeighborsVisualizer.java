@@ -14,11 +14,11 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.stage.Stage;
+import us.ihmc.jOctoMap.key.OcTreeKey;
+import us.ihmc.jOctoMap.tools.OcTreeKeyConversionTools;
+import us.ihmc.jOctoMap.tools.OcTreeKeyTools;
 import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
-import us.ihmc.octoMap.key.OcTreeKey;
-import us.ihmc.octoMap.tools.OcTreeKeyConversionTools;
-import us.ihmc.octoMap.tools.OcTreeKeyTools;
 
 public class SearchNodeNeighborsVisualizer extends Application
 {

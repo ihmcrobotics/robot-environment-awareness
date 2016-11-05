@@ -7,7 +7,7 @@ import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
 
-import us.ihmc.octoMap.node.NormalOcTreeNode;
+import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.robotics.geometry.GeometryTools;
 
 public class PolygonizerTools

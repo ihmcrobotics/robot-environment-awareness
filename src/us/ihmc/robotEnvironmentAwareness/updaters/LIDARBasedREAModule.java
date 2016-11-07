@@ -22,7 +22,7 @@ public class LIDARBasedREAModule
    private static final double OCTREE_COMPLETE_UPDATE_PERIOD = 0.5; // in seconds
    private static final double GRAPHICS_REFRESH_PERIOD = 0.5; // in seconds
    private static final double OCTREE_RESOLUTION = 0.02;
-   protected static final boolean DEBUG = true;
+   protected static final boolean DEBUG = false;
 
    private final StopWatch stopWatch = REPORT_TIME ? new StopWatch() : null;
    private final NormalOcTree octree = new NormalOcTree(OCTREE_RESOLUTION);

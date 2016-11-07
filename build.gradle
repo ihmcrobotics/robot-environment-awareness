@@ -38,7 +38,7 @@ dependencies {
     compile "org.ros.rosjava_messages:geometry_msgs:1.11.7"
 
     compile ihmc.getProjectDependency(":Atlas")
-    compile ihmc.getProjectDependency(":DarpaRoboticsChallenge")
+    compile ihmc.getProjectDependency(":IHMCAvatarInterfaces")
     compile ihmc.getProjectDependency(":IHMCCommunication")
     compile ihmc.getProjectDependency(":IHMCROSTools")
     compile ihmc.getProjectDependency(":IHMCJavaToolkit")

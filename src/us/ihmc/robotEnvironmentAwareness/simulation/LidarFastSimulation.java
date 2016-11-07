@@ -18,7 +18,7 @@ import us.ihmc.simulationconstructionset.util.environments.DefaultCommonAvatarEn
 import us.ihmc.simulationconstructionset.yoUtilities.graphics.YoGraphicsListRegistry;
 import us.ihmc.util.RealtimeTools;
 
-public class FootstepPlanningFastSimulation
+public class LidarFastSimulation
 {
    private enum GroundType
    {
@@ -28,7 +28,7 @@ public class FootstepPlanningFastSimulation
    public static final int POINT_CLOUD_PUBLISHING_PERIOD_MILLSECONDS = 100;
    public static final double DEFAULT_SPIN_VELOCITY = 0.3;
 
-   public FootstepPlanningFastSimulation() throws IOException
+   public LidarFastSimulation() throws IOException
    {
       SimpleLidarRobot robot = new SimpleLidarRobot();
       SimulationConstructionSetParameters parameters = new SimulationConstructionSetParameters(true, RealtimeTools.nextPowerOfTwo(200000));
@@ -86,6 +86,6 @@ public class FootstepPlanningFastSimulation
 
    public static void main(String[] args) throws IOException
    {
-      new FootstepPlanningFastSimulation();
+      new LidarFastSimulation();
    }
 }

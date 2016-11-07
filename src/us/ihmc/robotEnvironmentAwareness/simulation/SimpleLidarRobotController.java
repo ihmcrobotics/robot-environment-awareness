@@ -64,7 +64,7 @@ public class SimpleLidarRobotController implements RobotController
       lidarJoint = lidarRobot.getLidarJoint();
       rootJoint = lidarRobot.getRootJoint();
 
-      desiredLidarVelocity.set(FootstepPlanningFastSimulation.DEFAULT_SPIN_VELOCITY);
+      desiredLidarVelocity.set(LidarFastSimulation.DEFAULT_SPIN_VELOCITY);
       spinLidar.set(true);
       lidarRange.set(7.0);
 
@@ -86,7 +86,7 @@ public class SimpleLidarRobotController implements RobotController
       gpuLidar = graphics3dAdapter.createGPULidar(gpuLidarScanBuffer, lidarScanParameters);
       sweepViz = BagOfBalls.createRainbowBag(lidarScanParameters.getPointsPerSweep() / vizualizeEveryNPoints, 0.005, "SweepViz", registry, yoGraphicsListRegistry);
 
-      executorService.scheduleAtFixedRate(this::sendPackets, 0, FootstepPlanningFastSimulation.POINT_CLOUD_PUBLISHING_PERIOD_MILLSECONDS, TimeUnit.MILLISECONDS);
+      executorService.scheduleAtFixedRate(this::sendPackets, 0, LidarFastSimulation.POINT_CLOUD_PUBLISHING_PERIOD_MILLSECONDS, TimeUnit.MILLISECONDS);
    }
 
    @Override

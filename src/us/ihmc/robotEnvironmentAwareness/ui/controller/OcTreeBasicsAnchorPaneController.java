@@ -9,6 +9,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
+import us.ihmc.javaFXToolkit.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAOcTreeGraphicsBuilder.ColoringType;
@@ -27,6 +28,10 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    private ToggleButton showEstimatedSurfacesButton;
    @FXML
    private ComboBox<ColoringType> coloringTypeComboBox;
+   @FXML
+   private ToggleButton showBufferButton;
+   @FXML
+   private Slider bufferSizeSlider;
 
    private final IntegerProperty depthIntegerProperty = new SimpleIntegerProperty(this, "depthInteger");
 
@@ -40,6 +45,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       coloringTypeComboBox.setItems(options);
       coloringTypeComboBox.setValue(options.get(0));
       depthIntegerProperty.bind(depthSlider.valueProperty());
+      bufferSizeSlider.setLabelFormatter(StringConverterTools.thousandRounding(true));
    }
 
    @Override
@@ -52,6 +58,8 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       sendMessageOnPropertyChange(showOcTreeNodesButton, REAModuleAPI.OcTreeGraphicsShowOcTreeNodes);
       sendMessageOnPropertyChange(showEstimatedSurfacesButton, REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces);
       sendMessageOnPropertyChange(coloringTypeComboBox.valueProperty(), REAModuleAPI.OcTreeGraphicsColoringMode);
+      sendMessageOnPropertyChange(showBufferButton, REAModuleAPI.OcTreeGraphicsShowBuffer);
+      sendMessageOnPropertyChange(bufferSizeSlider, REAModuleAPI.OcTreeBufferSize);
       fireAllListeners();
 
       load();
@@ -70,6 +78,8 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       loadPropertyAndUpdateUIControl(showOcTreeNodesButton, REAModuleAPI.OcTreeGraphicsShowOcTreeNodes);
       loadPropertyAndUpdateUIControl(showEstimatedSurfacesButton, REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces);
       loadPropertyAndUpdateUIControl(coloringTypeComboBox, REAModuleAPI.OcTreeGraphicsColoringMode);
+      loadPropertyAndUpdateUIControl(showBufferButton, REAModuleAPI.OcTreeGraphicsShowBuffer);
+      loadPropertyAndUpdateUIControl(bufferSizeSlider, REAModuleAPI.OcTreeBufferSize);
    }
 
    @FXML
@@ -80,5 +90,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       saveProperty(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, showOcTreeNodesButton.isSelected());
       saveProperty(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, showEstimatedSurfacesButton.isSelected());
       saveProperty(REAModuleAPI.OcTreeGraphicsColoringMode, coloringTypeComboBox.getValue().toString());
+      saveProperty(REAModuleAPI.OcTreeGraphicsShowBuffer, showBufferButton.isSelected());
+      saveProperty(REAModuleAPI.OcTreeBufferSize, bufferSizeSlider.getValue());
    }
 }

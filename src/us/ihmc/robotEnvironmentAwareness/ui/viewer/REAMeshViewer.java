@@ -18,10 +18,12 @@ public class REAMeshViewer
    private final Group root = new Group();
 
    private final MeshView occupiedLeafsMeshView = new MeshView();
+   private final MeshView bufferLeafsMeshView = new MeshView();
    private final MeshView planarRegionMeshView = new MeshView();
    private Box ocTreeBoundingBoxGraphics = null;
 
    private final AtomicReference<Pair<Mesh, Material>> occupiedMeshToRender;
+   private final AtomicReference<Pair<Mesh, Material>> bufferMeshToRender;
    private final AtomicReference<Pair<Mesh, Material>> planarRegionPolygonMeshToRender;
    private final AtomicReference<Box> boundingBoxMeshToRender;
 
@@ -30,10 +32,11 @@ public class REAMeshViewer
    public REAMeshViewer(REAMessageManager inputManager)
    {
       occupiedMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsOccupiedMesh);
+      bufferMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBufferMesh);
       planarRegionPolygonMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh);
       boundingBoxMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh);
 
-      root.getChildren().addAll(occupiedLeafsMeshView, planarRegionMeshView);
+      root.getChildren().addAll(occupiedLeafsMeshView, bufferLeafsMeshView, planarRegionMeshView);
       root.setMouseTransparent(true);
 
       renderMeshAnimation = new AnimationTimer()
@@ -47,6 +50,11 @@ public class REAMeshViewer
             if (occupiedMeshToRender.get() != null)
             {
                updateMeshView(occupiedLeafsMeshView, occupiedMeshToRender.getAndSet(null));
+            }
+
+            if (bufferMeshToRender.get() != null)
+            {
+               updateMeshView(bufferLeafsMeshView, bufferMeshToRender.getAndSet(null));
             }
 
             if (planarRegionPolygonMeshToRender.get() != null)

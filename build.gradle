@@ -24,6 +24,9 @@ repositories {
     maven {
         url "https://bengal.ihmc.us/nexus/content/repositories/thirdparty/"
     }
+    maven {
+         url "http://artifactory.ihmc.us/artifactory/releases/"
+    }
 
 dependencies {
 
@@ -37,6 +40,8 @@ dependencies {
     compile "org.ros.rosjava_messages:std_msgs:0.5.9"
     compile "org.ros.rosjava_messages:geometry_msgs:1.11.7"
 
+	compile group: 'us.ihmc', name: 'JOctoMap', version: '1.0'
+
     compile ihmc.getProjectDependency(":Atlas")
     compile ihmc.getProjectDependency(":IHMCAvatarInterfaces")
     compile ihmc.getProjectDependency(":IHMCCommunication")
@@ -46,7 +51,6 @@ dependencies {
     compile ihmc.getProjectDependency(":IHMCJavaFXToolkit")
     compile ihmc.getProjectDependency(":IHMCHumanoidRobotics")
     compile ihmc.getProjectDependency(":IHMCPerception")
-    compile ihmc.getProjectDependency(":JOctoMap")
 
     testCompile ihmc.getProjectTestDependency(":IHMCHumanoidRobotics")
     testCompile ihmc.getProjectDependency(":IHMCUnitTesting")

@@ -10,7 +10,6 @@ import javax.vecmath.Vector3d;
 
 import org.junit.Test;
 
-import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotics.random.RandomTools;
 
 public class IntersectionPlaneBoxCalculatorTest

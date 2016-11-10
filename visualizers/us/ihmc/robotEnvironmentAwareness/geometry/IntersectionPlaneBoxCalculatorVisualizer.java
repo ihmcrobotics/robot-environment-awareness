@@ -19,7 +19,6 @@ import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
-import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
 
 public class IntersectionPlaneBoxCalculatorVisualizer extends Application
 {

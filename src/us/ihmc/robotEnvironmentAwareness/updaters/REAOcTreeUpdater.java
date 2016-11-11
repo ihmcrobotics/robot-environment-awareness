@@ -6,28 +6,21 @@ import javax.vecmath.Point3d;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
-import us.ihmc.jOctoMap.pointCloud.ScanCollection;
 
 public class REAOcTreeUpdater
 {
-   private static final int NUMBER_OF_SAMPLES = 100000;
-
    private final NormalOcTree referenceOctree;
-   private final NormalOcTree bufferOctree;
+   private final REAOcTreeBuffer reaOcTreeBuffer;
 
    private final AtomicReference<LidarPosePacket> latestLidarPoseReference = new AtomicReference<>(null);
-   private final AtomicReference<PointCloudWorldPacket> latestPointCloudWorldPacket = new AtomicReference<>(null);
-   private final AtomicReference<ScanCollection> newFullScanReference = new AtomicReference<>(null);
 
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> enableNormalEstimation;
    private final AtomicReference<Boolean> clearNormals;
-   private final AtomicReference<Double> bufferSize;
 
    private final AtomicReference<Double> minRange;
    private final AtomicReference<Double> maxRange;
@@ -40,7 +33,8 @@ public class REAOcTreeUpdater
    public REAOcTreeUpdater(NormalOcTree octree, REAMessageManager inputManager, REAMessager outputMessager)
    {
       this.referenceOctree = octree;
-      bufferOctree = new NormalOcTree(octree.getResolution());
+
+      reaOcTreeBuffer = new REAOcTreeBuffer(inputManager, outputMessager, octree.getResolution());
 
       enable = inputManager.createInput(REAModuleAPI.OcTreeEnable);
       enableNormalEstimation = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationEnable);
@@ -50,7 +44,11 @@ public class REAOcTreeUpdater
       useBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable);
       atomicBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters);
       normalEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters);
-      bufferSize = inputManager.createInput(REAModuleAPI.OcTreeBufferSize, 10000.0);
+   }
+
+   public Runnable createBufferThread()
+   {
+      return reaOcTreeBuffer.createBufferThread();
    }
 
    public boolean update(boolean performCompleteUpdate)
@@ -58,31 +56,28 @@ public class REAOcTreeUpdater
       if (!isEnabled())
          return false;
 
-      updateScanCollection();
-
-      ScanCollection newScan = newFullScanReference.getAndSet(null);
-
-      if (newScan == null)
-         return false;
-
       handleBoundingBox();
 
       if (minRange.get() != null && maxRange.get() != null)
       {
-         bufferOctree.setBoundsInsertRange(minRange.get(), maxRange.get());
          referenceOctree.setBoundsInsertRange(minRange.get(), maxRange.get());
       }
 
       if (normalEstimationParameters.get() != null)
          referenceOctree.setNormalEstimationParameters(normalEstimationParameters.getAndSet(null));
 
-      Point3d sensorOrigin = newScan.getScan(newScan.getNumberOfScans() - 1).getSensorOrigin();
-      bufferOctree.insertScanCollection(newScan);
+      if (latestLidarPoseReference.get() == null)
+         return false;
 
-      int numberOfLeafNodesInBuffer = bufferOctree.getNumberOfLeafNodes();
-      boolean updateReference = numberOfLeafNodesInBuffer >= bufferSize.get().intValue();
+      Point3d sensorOrigin = latestLidarPoseReference.get().getPosition();
 
-      if (updateReference)
+      boolean isBufferFull = reaOcTreeBuffer.isBufferFull();
+      if (isBufferFull)
+         reaOcTreeBuffer.submitBufferRequest();
+
+      NormalOcTree bufferOctree = reaOcTreeBuffer.pollNewBuffer();
+
+      if (bufferOctree != null)
       {
          referenceOctree.insertNormalOcTree(sensorOrigin, bufferOctree);
          bufferOctree.clear();
@@ -94,7 +89,7 @@ public class REAOcTreeUpdater
          return false;
       }
 
-      if (!updateReference || !isNormalEstimationEnabled())
+      if (bufferOctree == null || !isNormalEstimationEnabled())
          return false;
 
       if (performCompleteUpdate)
@@ -106,7 +101,6 @@ public class REAOcTreeUpdater
    public void clearOcTree()
    {
       referenceOctree.clear();
-      bufferOctree.clear();
    }
 
    private void handleBoundingBox()
@@ -120,45 +114,23 @@ public class REAOcTreeUpdater
          newBoundingBox.setYawFromQuaternion(lidarPosePacket.getOrientation());
          newBoundingBox.update(referenceOctree.getResolution(), referenceOctree.getTreeDepth());
          referenceOctree.setBoundingBox(newBoundingBox);
-         bufferOctree.setBoundingBox(newBoundingBox);
       }
       else
       {
          referenceOctree.disableBoundingBox();
-         bufferOctree.disableBoundingBox();
       }
-   }
-
-   private void updateScanCollection()
-   {
-      LidarPosePacket lidarPosePacket = latestLidarPoseReference.get();
-      PointCloudWorldPacket pointCloudPacket = latestPointCloudWorldPacket.getAndSet(null);
-
-      if (!isEnabled() || lidarPosePacket == null || pointCloudPacket == null)
-         return;
-
-      ScanCollection scanCollection = new ScanCollection();
-      newFullScanReference.set(scanCollection);
-      scanCollection.setSubSampleSize(NUMBER_OF_SAMPLES);
-      scanCollection.addScan(pointCloudPacket.decayingWorldScan, lidarPosePacket.position);
    }
 
    public void attachListeners(PacketCommunicator packetCommunicator)
    {
       packetCommunicator.attachListener(LidarPosePacket.class, this::handlePacket);
-      packetCommunicator.attachListener(PointCloudWorldPacket.class, this::handlePacket);
+      reaOcTreeBuffer.attachListeners(packetCommunicator);
    }
 
    private void handlePacket(LidarPosePacket packet)
    {
       if (packet != null)
          latestLidarPoseReference.set(new LidarPosePacket(packet));
-   }
-
-   private void handlePacket(PointCloudWorldPacket packet)
-   {
-      if (packet != null)
-         latestPointCloudWorldPacket.set(packet);
    }
 
    private boolean isEnabled()
@@ -179,10 +151,5 @@ public class REAOcTreeUpdater
    private boolean isUsingBoundingBox()
    {
       return useBoundingBox.get() == null ? false : useBoundingBox.get();
-   }
-
-   public NormalOcTree getBufferOctree()
-   {
-      return bufferOctree;
    }
 }

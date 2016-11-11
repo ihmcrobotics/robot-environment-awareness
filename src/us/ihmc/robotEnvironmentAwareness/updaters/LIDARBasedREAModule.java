@@ -19,9 +19,10 @@ import us.ihmc.tools.thread.ThreadTools;
 public class LIDARBasedREAModule
 {
    private static final boolean REPORT_TIME = false;
-   private static final int THREAD_PERIOD_MILLISECONDS = 50;
+   private static final int THREAD_PERIOD_MILLISECONDS = 200;
+   private static final int BUFFER_THREAD_PERIOD_MILLISECONDS = 10;
    private static final double OCTREE_COMPLETE_UPDATE_PERIOD = 0.5; // in seconds
-   private static final double GRAPHICS_REFRESH_PERIOD = 0.5; // in seconds
+   private static final double GRAPHICS_REFRESH_PERIOD = 2.0; // in seconds
    private static final double OCTREE_RESOLUTION = 0.02;
    protected static final boolean DEBUG = true;
 
@@ -40,9 +41,8 @@ public class LIDARBasedREAModule
    public LIDARBasedREAModule(REAMessageManager uiOutputManager, REAMessager uiInputMessager)
    {
       updater = new REAOcTreeUpdater(octree, uiOutputManager, uiInputMessager);
-      NormalOcTree bufferOctree = updater.getBufferOctree();
       planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(octree, uiOutputManager, uiInputMessager);
-      graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, bufferOctree, planarRegionFeatureUpdater, uiOutputManager, uiInputMessager);
+      graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, planarRegionFeatureUpdater, uiOutputManager, uiInputMessager);
       clearOcTree = uiOutputManager.createInput(REAModuleAPI.OcTreeClear, false);
    }
 
@@ -84,7 +84,7 @@ public class LIDARBasedREAModule
                      return;
 
                   if (performCompleteOcTreeUpdate)
-                     planarRegionFeatureUpdater.update();
+                     callPlanarRegionFeatureUpdater();
                }
 
                if (isThreadInterrupted())
@@ -117,18 +117,38 @@ public class LIDARBasedREAModule
          {
             if (REPORT_TIME)
             {
-               stopWatch.reset();
-               stopWatch.start();
+               if (performCompleteUpdate)
+               {
+                  stopWatch.reset();
+                  stopWatch.start();
+               }
             }
 
             boolean updatedProperly = updater.update(performCompleteUpdate);
 
             if (REPORT_TIME)
             {
-               System.out.println("OcTree update took: " + JOctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
+               if (performCompleteUpdate && updatedProperly)
+                  System.out.println("OcTree update took: " + JOctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
             }
 
             return updatedProperly;
+         }
+
+         private void callPlanarRegionFeatureUpdater()
+         {
+            if (REPORT_TIME)
+            {
+               stopWatch.reset();
+               stopWatch.start();
+            }
+
+            planarRegionFeatureUpdater.update();
+
+            if (REPORT_TIME)
+            {
+               System.out.println("OcTreePlanarRegion update took: " + JOctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
+            }
          }
 
          private void callGraphicsBuilder()
@@ -160,7 +180,10 @@ public class LIDARBasedREAModule
    public void start()
    {
       if (scheduled == null)
+      {
          scheduled = executorService.scheduleAtFixedRate(createUpdater(), 0, THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
+         executorService.scheduleAtFixedRate(updater.createBufferThread(), 0, BUFFER_THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
+      }
    }
 
    public void stop()

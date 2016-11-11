@@ -28,7 +28,6 @@ import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.javaFXToolkit.graphics.JavaFXMeshDataInterpreter;
-import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
@@ -47,7 +46,6 @@ public class REAOcTreeGraphicsBuilder
    private static final Color OCTREE_BBX_COLOR = new Color(Color.DARKGREY.getRed(), Color.DARKGREY.getGreen(), Color.DARKGREY.getBlue(), 0.0);
 
    private final NormalOcTree octree;
-   private final NormalOcTree bufferOctree;
    private final RegionFeaturesProvider regionFeaturesProvider;
 
    private final AtomicReference<Boolean> enable;
@@ -64,12 +62,10 @@ public class REAOcTreeGraphicsBuilder
    private final AtomicReference<Boolean> showOcTreeNodes;
    private final AtomicReference<Boolean> showEstimatedSurfaces;
    private final AtomicReference<Boolean> hidePlanarRegionNodes;
-   private final AtomicReference<Boolean> showBuffer;
 
    private final AtomicBoolean processPropertyChange = new AtomicBoolean(false);
 
    private final MultiColorMeshBuilder occupiedMeshBuilder;
-   private final MeshBuilder bufferMeshBuilder;
    private final MultiColorMeshBuilder polygonsMeshBuilder;
 
    private final Vector3d ocTreeBoundingBoxSize = new Vector3d();
@@ -90,13 +86,7 @@ public class REAOcTreeGraphicsBuilder
    public REAOcTreeGraphicsBuilder(NormalOcTree octree, RegionFeaturesProvider regionFeaturesProvider,
          REAMessageManager inputManager, REAMessager outputMessager)
    {
-      this(octree, null, regionFeaturesProvider, inputManager, outputMessager);
-   }
-   public REAOcTreeGraphicsBuilder(NormalOcTree octree, NormalOcTree bufferOctree, RegionFeaturesProvider regionFeaturesProvider,
-         REAMessageManager inputManager, REAMessager outputMessager)
-   {
       this.octree = octree;
-      this.bufferOctree = bufferOctree;
       this.regionFeaturesProvider = regionFeaturesProvider;
       this.outputMessager = outputMessager;
       enable = inputManager.createInput(REAModuleAPI.OcTreeEnable);
@@ -110,12 +100,10 @@ public class REAOcTreeGraphicsBuilder
       hidePlanarRegionNodes = inputManager.createInput(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes);
       showOcTreeBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxShow);
       useOcTreeBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxEnable);
-      showBuffer = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer);
 
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);
       occupiedMeshBuilder = new MultiColorMeshBuilder(normalBasedColorPalette1D);
-      bufferMeshBuilder = new MeshBuilder();
       TextureColorPalette2D regionColorPalette1D = new TextureColorPalette2D();
       regionColorPalette1D.setHueBrightnessBased(0.9);
       polygonsMeshBuilder = new MultiColorMeshBuilder(regionColorPalette1D);
@@ -129,7 +117,6 @@ public class REAOcTreeGraphicsBuilder
       if (shoudClear())
       {
          outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsOccupiedMesh, new Pair<Mesh, Material>(null, null)));
-         outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBufferMesh, new Pair<Mesh, Material>(null, null)));
          outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh, new Pair<Mesh, Material>(null, null)));
          return null;
       }
@@ -140,11 +127,9 @@ public class REAOcTreeGraphicsBuilder
       processPropertyChange.set(false);
 
       occupiedMeshBuilder.clear();
-      bufferMeshBuilder.clear();
       polygonsMeshBuilder.clear();
 
       addCellsToMeshBuilders(occupiedMeshBuilder);
-      addBufferCellsToMeshBuilder(bufferMeshBuilder);
       addPolygonsToMeshBuilders(polygonsMeshBuilder);
 
       if (Thread.interrupted())
@@ -160,11 +145,9 @@ public class REAOcTreeGraphicsBuilder
    private Runnable createMeshCreationFutureTask()
    {
       MeshDataHolder occupiedMeshDataHolder = occupiedMeshBuilder.generateMeshDataHolder();
-      MeshDataHolder bufferMeshDataHolder = bufferMeshBuilder.generateMeshDataHolder();
       MeshDataHolder planarRegionMeshDataHolder = polygonsMeshBuilder.generateMeshDataHolder();
 
       Material occupiedLeafMaterial = getOccupiedMeshMaterial();
-      Material bufferMaterial = new PhongMaterial(Color.RED);
       Material planarRegionMaterial = polygonsMeshBuilder.generateMaterial();
 
       return new Runnable()
@@ -173,7 +156,6 @@ public class REAOcTreeGraphicsBuilder
          public void run()
          {
             processAndSubmitMesh(REAModuleAPI.OcTreeGraphicsOccupiedMesh, occupiedMeshDataHolder, occupiedLeafMaterial);
-            processAndSubmitMesh(REAModuleAPI.OcTreeGraphicsBufferMesh, bufferMeshDataHolder, bufferMaterial);
             processAndSubmitMesh(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh, planarRegionMeshDataHolder, planarRegionMaterial);
          }
       };
@@ -253,18 +235,6 @@ public class REAOcTreeGraphicsBuilder
          Color color = getNodeColor(node);
          addNodeToMeshBuilder(node, color, occupiedMeshBuilder);
       }
-   }
-
-   private void addBufferCellsToMeshBuilder(MeshBuilder meshBuilder)
-   {
-      if (!isShowingBuffer() || bufferOctree == null)
-         return;
-
-      int currentDepth = getCurrentTreeDepthForDisplay();
-      Set<NormalOcTreeNode> nodes = getNodes(bufferOctree, currentDepth);
-
-      for (NormalOcTreeNode node : nodes)
-         meshBuilder.addCube(node.getSize(), node.getX(), node.getY(), node.getZ());
    }
 
    private void addNodeToMeshBuilder(NormalOcTreeNode node, Color color, MultiColorMeshBuilder meshBuilder)
@@ -464,11 +434,6 @@ public class REAOcTreeGraphicsBuilder
    private boolean useOcTreeBoundingBox()
    {
       return useOcTreeBoundingBox.get() == null ? false : useOcTreeBoundingBox.get();
-   }
-
-   private boolean isShowingBuffer()
-   {
-      return showBuffer.get() == null ? false : showBuffer.get();
    }
    
    private ColoringType getCurrentColoringType()

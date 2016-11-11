@@ -1,18 +1,18 @@
 #
-#Tue Nov 08 15:11:09 CST 2016
+#Wed Nov 09 18:38:01 CST 2016
 Input/OcTree/BoundingBox/Enable=true
 Input/OcTree/BoundingBox/Parameters=min\: (0.0, -2.0, -1.2), max\: (5.0, 2.0, 1.0)
-Input/OcTree/Buffer/Size=10000.0
+Input/OcTree/Buffer/Size=30000.0
 Input/OcTree/Enable=true
 Input/OcTree/Graphics/BoundingBox/Show=false
-Input/OcTree/Graphics/Buffer/Show=true
+Input/OcTree/Graphics/Buffer/Show=false
 Input/OcTree/Graphics/ColoringMode=REGION
 Input/OcTree/Graphics/Depth=16
 Input/OcTree/Graphics/HidePlanarRegionNodes=false
 Input/OcTree/Graphics/ShowEstimatedSurfaces=true
 Input/OcTree/Graphics/ShowOcTreeNodes=true
 Input/OcTree/Graphics/ShowPlanarRegions=false
-Input/OcTree/LIDAR/MaxRange=3.0
+Input/OcTree/LIDAR/MaxRange=5.0
 Input/OcTree/LIDAR/MinRange=0.2
 Input/OcTree/NormalEstimation/Enable=true
 Input/OcTree/NormalEstimation/Parameters=search radius\: 0.08, max distance from plane\: 0.02, min consensus ratio\: 0.51, max average deviation ratio\: 0.74

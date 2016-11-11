@@ -40,7 +40,7 @@ dependencies {
     compile "org.ros.rosjava_messages:std_msgs:0.5.9"
     compile "org.ros.rosjava_messages:geometry_msgs:1.11.7"
 
-	compile group: 'us.ihmc', name: 'JOctoMap', version: '1.2.0'
+	compile group: 'us.ihmc', name: 'JOctoMap', version: '1.3.1'
 
     compile ihmc.getProjectDependency(":Atlas")
     compile ihmc.getProjectDependency(":IHMCAvatarInterfaces")

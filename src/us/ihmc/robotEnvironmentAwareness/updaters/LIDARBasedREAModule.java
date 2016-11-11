@@ -34,7 +34,7 @@ public class LIDARBasedREAModule
 
    private final AtomicReference<Boolean> clearOcTree;
 
-   private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
+   private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(3, ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
    private ScheduledFuture<?> scheduled;
 
    public LIDARBasedREAModule(REAMessageManager uiOutputManager, REAMessager uiInputMessager)
@@ -139,7 +139,9 @@ public class LIDARBasedREAModule
                stopWatch.start();
             }
 
-            graphicsBuilder.update();
+            Runnable futureTask = graphicsBuilder.update();
+            if (futureTask != null)
+               executorService.execute(futureTask);
 
             if (REPORT_TIME)
             {

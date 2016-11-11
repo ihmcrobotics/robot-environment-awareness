@@ -7,7 +7,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.vecmath.Point3d;
+import javax.vecmath.Point3f;
+import javax.vecmath.TexCoord2f;
 import javax.vecmath.Vector3d;
+import javax.vecmath.Vector3f;
 
 import javafx.geometry.Point3D;
 import javafx.scene.paint.Color;
@@ -15,13 +18,16 @@ import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.scene.shape.Mesh;
+import javafx.scene.shape.TriangleMesh;
 import javafx.scene.transform.Rotate;
 import javafx.util.Pair;
+import us.ihmc.graphics3DDescription.MeshDataHolder;
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.jOctoMap.iterators.OcTreeIterable;
 import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
+import us.ihmc.javaFXToolkit.graphics.JavaFXMeshDataInterpreter;
 import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
@@ -118,18 +124,18 @@ public class REAOcTreeGraphicsBuilder
    private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
    private final IntersectionPlaneBoxCalculator intersectionPlaneBoxCalculator = new IntersectionPlaneBoxCalculator();
 
-   public void update()
+   public Runnable update()
    {
       if (shoudClear())
       {
          outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsOccupiedMesh, new Pair<Mesh, Material>(null, null)));
          outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBufferMesh, new Pair<Mesh, Material>(null, null)));
          outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh, new Pair<Mesh, Material>(null, null)));
-         return;
+         return null;
       }
 
       if (!isEnabled() && !processPropertyChange.get())
-         return;
+         return null;
 
       processPropertyChange.set(false);
 
@@ -142,18 +148,43 @@ public class REAOcTreeGraphicsBuilder
       addPolygonsToMeshBuilders(polygonsMeshBuilder);
 
       if (Thread.interrupted())
-         return;
+         return null;
 
-      Material occupiedLeafMaterial = getOccupiedMeshMaterial();
-      Pair<Mesh, Material> occupiedMeshAndMaterial = new Pair<Mesh, Material>(occupiedMeshBuilder.generateMesh(), occupiedLeafMaterial);
-      Pair<Mesh, Material> bufferMeshAndMaterial = new Pair<Mesh, Material>(bufferMeshBuilder.generateMesh(), new PhongMaterial(Color.RED));
-      Pair<Mesh, Material> planarRegionPolygonsMesh = new Pair<>(polygonsMeshBuilder.generateMesh(), polygonsMeshBuilder.generateMaterial());
-
-      outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsOccupiedMesh, occupiedMeshAndMaterial));
-      outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBufferMesh, bufferMeshAndMaterial));
-      outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh, planarRegionPolygonsMesh));
+      Runnable meshCreationFutureTask = createMeshCreationFutureTask();
 
       handleOcTreeBoundingBox();
+
+      return meshCreationFutureTask;
+   }
+
+   private Runnable createMeshCreationFutureTask()
+   {
+      MeshDataHolder occupiedMeshDataHolder = occupiedMeshBuilder.generateMeshDataHolder();
+      MeshDataHolder bufferMeshDataHolder = bufferMeshBuilder.generateMeshDataHolder();
+      MeshDataHolder planarRegionMeshDataHolder = polygonsMeshBuilder.generateMeshDataHolder();
+
+      Material occupiedLeafMaterial = getOccupiedMeshMaterial();
+      Material bufferMaterial = new PhongMaterial(Color.RED);
+      Material planarRegionMaterial = polygonsMeshBuilder.generateMaterial();
+
+      return new Runnable()
+      {
+         @Override
+         public void run()
+         {
+            processAndSubmitMesh(REAModuleAPI.OcTreeGraphicsOccupiedMesh, occupiedMeshDataHolder, occupiedLeafMaterial);
+            processAndSubmitMesh(REAModuleAPI.OcTreeGraphicsBufferMesh, bufferMeshDataHolder, bufferMaterial);
+            processAndSubmitMesh(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh, planarRegionMeshDataHolder, planarRegionMaterial);
+         }
+      };
+   }
+
+   private void processAndSubmitMesh(String messageId, MeshDataHolder meshDataHolder, Material material)
+   {
+      TriangleMesh mesh = JavaFXMeshDataInterpreter.interpretMeshData(meshDataHolder);
+      Pair<Mesh, Material> meshAndMaterial = new Pair<Mesh, Material>(mesh, material);
+      REAMessage message = new REAMessage(messageId, meshAndMaterial);
+      outputMessager.submitMessage(message);
    }
 
    private void addPolygonsToMeshBuilders(MultiColorMeshBuilder polygonsMeshBuilder)
@@ -238,23 +269,11 @@ public class REAOcTreeGraphicsBuilder
 
    private void addNodeToMeshBuilder(NormalOcTreeNode node, Color color, MultiColorMeshBuilder meshBuilder)
    {
-      Vector3d planeNormal = new Vector3d();
-      Point3d pointOnPlane = new Point3d();
       double size = node.getSize();
 
       if (node.isNormalSet() && isShowingEstimatedSurfaces())
       {
-         node.getNormal(planeNormal);
-
-         if (node.isHitLocationSet())
-            node.getHitLocation(pointOnPlane);
-         else
-            node.getCoordinate(pointOnPlane);
-
-         intersectionPlaneBoxCalculator.setCube(size, node.getX(), node.getY(), node.getZ());
-         intersectionPlaneBoxCalculator.setPlane(pointOnPlane, planeNormal);
-         intersectionPlaneBoxCalculator.computeIntersections(plane);
-         meshBuilder.addPolyon(plane, color);
+         meshBuilder.addMesh(createNormalBasedPlane(node), color);
       }
       else
       {
@@ -359,6 +378,50 @@ public class REAOcTreeGraphicsBuilder
       default:
          throw new RuntimeException("Unhandled ColoringType value: " + getCurrentColoringType());
       }
+   }
+
+   private MeshDataHolder createNormalBasedPlane(NormalOcTreeNode node)
+   {
+      Vector3d planeNormal = new Vector3d();
+      Point3d pointOnPlane = new Point3d();
+      double size = node.getSize();
+
+      node.getNormal(planeNormal);
+
+      if (node.isHitLocationSet())
+         node.getHitLocation(pointOnPlane);
+      else
+         node.getCoordinate(pointOnPlane);
+
+      intersectionPlaneBoxCalculator.setCube(size, node.getX(), node.getY(), node.getZ());
+      intersectionPlaneBoxCalculator.setPlane(pointOnPlane, planeNormal);
+      intersectionPlaneBoxCalculator.computeIntersections(plane);
+
+      if (plane.size() < 3)
+         return null;
+
+      int numberOfTriangles = plane.size() - 2;
+      int[] triangleIndices = new int[3 * numberOfTriangles];
+      int index = 0;
+      for (int j = 2; j < plane.size(); j++)
+      {
+         triangleIndices[index++] = 0;
+         triangleIndices[index++] = j - 1;
+         triangleIndices[index++] = j;
+      }
+
+      Point3f[] vertices = new Point3f[plane.size()];
+      TexCoord2f[] texCoords = new TexCoord2f[plane.size()];
+      Vector3f[] normals = new Vector3f[plane.size()];
+
+      for (int i = 0; i < plane.size(); i++)
+      {
+         vertices[i] = new Point3f(plane.get(i));
+         texCoords[i] = new TexCoord2f(); // No need for real coordinates, the MultiColorMeshBuilder creates new ones.
+         normals[i] = new Vector3f(planeNormal);
+      }
+
+      return new MeshDataHolder(vertices, texCoords, triangleIndices, normals);
    }
 
    private boolean isEnabled()

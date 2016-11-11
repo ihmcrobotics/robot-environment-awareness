@@ -32,6 +32,7 @@ public class LIDARBasedREAModule
    private final REAOcTreeUpdater updater;
    private final REAPlanarRegionFeatureUpdater planarRegionFeatureUpdater;
    private final REAOcTreeGraphicsBuilder graphicsBuilder;
+   private final REAPlanarRegionNetworkProvider planarRegionNetworkProvider;
 
    private final AtomicReference<Boolean> clearOcTree;
 
@@ -43,12 +44,14 @@ public class LIDARBasedREAModule
       updater = new REAOcTreeUpdater(octree, uiOutputManager, uiInputMessager);
       planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(octree, uiOutputManager, uiInputMessager);
       graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, planarRegionFeatureUpdater, uiOutputManager, uiInputMessager);
+      planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater);
       clearOcTree = uiOutputManager.createInput(REAModuleAPI.OcTreeClear, false);
    }
 
    public void attachListeners(PacketCommunicator packetCommunicator)
    {
       updater.attachListeners(packetCommunicator);
+      planarRegionNetworkProvider.attachPacketCommunicator(packetCommunicator);
    }
 
    private Runnable createUpdater()
@@ -93,6 +96,7 @@ public class LIDARBasedREAModule
                if (performGraphicsUpdate)
                   callGraphicsBuilder();
 
+               planarRegionNetworkProvider.update(performCompleteOcTreeUpdate);
             }
             catch (Exception e)
             {

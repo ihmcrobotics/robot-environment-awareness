@@ -4,6 +4,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang3.time.StopWatch;
 
@@ -31,6 +32,8 @@ public class LIDARBasedREAModule
    private final REAPlanarRegionFeatureUpdater planarRegionFeatureUpdater;
    private final REAOcTreeGraphicsBuilder graphicsBuilder;
 
+   private final AtomicReference<Boolean> clearOcTree;
+
    private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
    private ScheduledFuture<?> scheduled;
 
@@ -40,6 +43,7 @@ public class LIDARBasedREAModule
       NormalOcTree bufferOctree = updater.getBufferOctree();
       planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(octree, uiOutputManager, uiInputMessager);
       graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, bufferOctree, planarRegionFeatureUpdater, uiOutputManager, uiInputMessager);
+      clearOcTree = uiOutputManager.createInput(REAModuleAPI.OcTreeClear, false);
    }
 
    public void attachListeners(PacketCommunicator packetCommunicator)
@@ -60,7 +64,6 @@ public class LIDARBasedREAModule
             if (isThreadInterrupted())
                return;
 
-
             double currentTime = JOctoMapTools.nanoSecondsToSeconds(System.nanoTime());
             
             boolean performCompleteOcTreeUpdate = (Double.isNaN(lastCompleteUpdate.get()) || currentTime - lastCompleteUpdate.get() >= OCTREE_COMPLETE_UPDATE_PERIOD);
@@ -68,17 +71,24 @@ public class LIDARBasedREAModule
 
             try
             {
-               performCompleteOcTreeUpdate &= callOcTreeUpdater(performCompleteOcTreeUpdate);
+               if (clearOcTree.getAndSet(false))
+               {
+                  updater.clearOcTree();
+                  planarRegionFeatureUpdater.clearOcTree();
+               }
+               else
+               {
+                  performCompleteOcTreeUpdate &= callOcTreeUpdater(performCompleteOcTreeUpdate);
+
+                  if (isThreadInterrupted())
+                     return;
+
+                  if (performCompleteOcTreeUpdate)
+                     planarRegionFeatureUpdater.update();
+               }
 
                if (isThreadInterrupted())
                   return;
-
-               if (performCompleteOcTreeUpdate)
-                  planarRegionFeatureUpdater.update();
-
-               if (isThreadInterrupted())
-                  return;
-
 
                if (performGraphicsUpdate)
                   callGraphicsBuilder();

@@ -26,7 +26,6 @@ public class REAOcTreeUpdater
 
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> enableNormalEstimation;
-   private final AtomicReference<Boolean> clear;
    private final AtomicReference<Boolean> clearNormals;
    private final AtomicReference<Double> bufferSize;
 
@@ -46,7 +45,6 @@ public class REAOcTreeUpdater
       enable = inputManager.createInput(REAModuleAPI.OcTreeEnable);
       enableNormalEstimation = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationEnable);
       clearNormals = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationClear);
-      clear = inputManager.createInput(REAModuleAPI.OcTreeClear);
       minRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMinRange);
       maxRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMaxRange);
       useBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable);
@@ -57,12 +55,6 @@ public class REAOcTreeUpdater
 
    public boolean update(boolean performCompleteUpdate)
    {
-      if (shouldClear())
-      {
-         clear();
-         return false;
-      }
-
       if (!isEnabled())
          return false;
 
@@ -111,7 +103,7 @@ public class REAOcTreeUpdater
       return true;
    }
 
-   private void clear()
+   public void clearOcTree()
    {
       referenceOctree.clear();
       bufferOctree.clear();
@@ -182,11 +174,6 @@ public class REAOcTreeUpdater
    private boolean shouldClearNormals()
    {
       return clearNormals.get() == null ? false : clearNormals.getAndSet(null);
-   }
-
-   private boolean shouldClear()
-   {
-      return clear.get() == null ? false : clear.getAndSet(null);
    }
 
    private boolean isUsingBoundingBox()

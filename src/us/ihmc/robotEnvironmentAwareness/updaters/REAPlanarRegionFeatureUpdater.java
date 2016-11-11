@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang3.time.StopWatch;
 
-import gnu.trove.list.array.TIntArrayList;
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxInterface;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
@@ -32,7 +31,6 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private final OcTreeNodePlanarRegionCalculator planarRegionCalculator = new OcTreeNodePlanarRegionCalculator();
    private final PlanarRegionIntersectionCalculator intersectionCalculator = new PlanarRegionIntersectionCalculator();
    
-   private final TIntArrayList regionIds = new TIntArrayList();
    private Map<OcTreeNodePlanarRegion, PlanarRegionConcaveHull> concaveHulls = null;
    private Map<OcTreeNodePlanarRegion, PlanarRegionConvexPolygons> convexPolygons = null;
 
@@ -61,7 +59,6 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
    public void update()
    {
-      regionIds.reset();
       intersectionCalculator.clear();
 
       if (shouldClearSegmentation())
@@ -79,6 +76,12 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       updateSegmentation();
       updatePolygons();
       updateIntersections();
+   }
+
+   public void clearOcTree()
+   {
+      intersectionCalculator.clear();
+      planarRegionCalculator.clear();
    }
 
    private void updateSegmentation()

@@ -36,6 +36,7 @@ public class LidarFastSimulation
       double simDT = 0.0001;
       double controlDT = 0.01;
       scs.setDT(simDT, 10);
+      scs.setSimulateDoneCriterion(() -> false);
 
       Graphics3DAdapter graphics3dAdapter = scs.getGraphics3dAdapter();
       YoGraphicsListRegistry yoGraphicsListRegistry = new YoGraphicsListRegistry();

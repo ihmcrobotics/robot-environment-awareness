@@ -78,10 +78,7 @@ public class REAOcTreeUpdater
       NormalOcTree bufferOctree = reaOcTreeBuffer.pollNewBuffer();
 
       if (bufferOctree != null)
-      {
          referenceOctree.insertNormalOcTree(sensorOrigin, bufferOctree);
-         bufferOctree.clear();
-      }
 
       if (shouldClearNormals())
       {

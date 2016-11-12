@@ -66,7 +66,7 @@ public class SimpleLidarRobotController implements RobotController
 
       desiredLidarVelocity.set(LidarFastSimulation.DEFAULT_SPIN_VELOCITY);
       spinLidar.set(true);
-      lidarRange.set(7.0);
+      lidarRange.set(30.0);
 
       final YoFrameOrientation lidarYawPitchRoll = new YoFrameOrientation("lidar", null, registry);
       lidarYawPitchRoll.attachVariableChangedListener(new VariableChangedListener()

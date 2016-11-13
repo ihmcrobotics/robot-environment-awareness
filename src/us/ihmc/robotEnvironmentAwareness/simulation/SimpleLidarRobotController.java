@@ -3,7 +3,6 @@ package us.ihmc.robotEnvironmentAwareness.simulation;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.vecmath.Point3d;
@@ -85,8 +84,6 @@ public class SimpleLidarRobotController implements RobotController
       gpuLidarScanBuffer = new GPULidarScanBuffer(lidarScanParameters);
       gpuLidar = graphics3dAdapter.createGPULidar(gpuLidarScanBuffer, lidarScanParameters);
       sweepViz = BagOfBalls.createRainbowBag(lidarScanParameters.getPointsPerSweep() / vizualizeEveryNPoints, 0.005, "SweepViz", registry, yoGraphicsListRegistry);
-
-      executorService.scheduleAtFixedRate(this::sendPackets, 0, LidarFastSimulation.POINT_CLOUD_PUBLISHING_PERIOD_MILLSECONDS, TimeUnit.MILLISECONDS);
    }
 
    @Override
@@ -134,6 +131,7 @@ public class SimpleLidarRobotController implements RobotController
       }
 
       lidarPosePacketToSend.set(generateLidarPosePacket());
+      executorService.execute(this::sendPackets);
    }
 
    private LidarPosePacket generateLidarPosePacket()

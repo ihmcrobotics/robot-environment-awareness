@@ -34,6 +34,7 @@ public class REAModuleAPI
    public static final String OcTreeGraphicsHidePlanarRegionNodes = Input + OcTree + Graphics + "HidePlanarRegionNodes";
    public static final String OcTreeGraphicsBoundingBoxShow = Input + OcTree + Graphics + BoundingBox + "Show";
    public static final String OcTreeGraphicsShowBuffer = Input + OcTree + Graphics + Buffer + "Show";
+   public static final String OcTreeGraphicsShowInputScan = Input + OcTree + Graphics + "ShowInputScan";
 
    // TODO Review the names
    public static final String OcTreePlanarRegionSegmentationEnable = Input + OcTree + PlanarRegionSegmentation + "Enable";
@@ -48,6 +49,7 @@ public class REAModuleAPI
 
    public static final String OcTreeGraphicsOccupiedMesh = Output + OcTree + Graphics + "OccupiedMesh";
    public static final String OcTreeGraphicsBufferMesh = Output + OcTree + Graphics + Buffer + "Mesh";
+   public static final String OcTreeGraphicsInputScanMesh = Output + OcTree + Graphics + "InputScan";
    public static final String OcTreeGraphicsPlanarPolygonMesh = Output + OcTree + Graphics + "PlanarPolygonMesh";
    public static final String OcTreeGraphicsBoundingBoxMesh = Output + OcTree + Graphics + BoundingBox + "Mesh";
 }

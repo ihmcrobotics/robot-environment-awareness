@@ -63,7 +63,7 @@ public class REAOcTreeBuffer
                isBufferRequested.set(false);
             }
 
-            graphicsBuilder.update(bufferOctree);
+            graphicsBuilder.update(bufferOctree, newScan);
          }
       };
    }

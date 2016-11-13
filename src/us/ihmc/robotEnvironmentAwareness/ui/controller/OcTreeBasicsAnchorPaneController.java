@@ -32,6 +32,8 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    private ToggleButton showBufferButton;
    @FXML
    private Slider bufferSizeSlider;
+   @FXML
+   private ToggleButton showInputScanButton;
 
    private final IntegerProperty depthIntegerProperty = new SimpleIntegerProperty(this, "depthInteger");
 
@@ -60,6 +62,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       sendMessageOnPropertyChange(coloringTypeComboBox.valueProperty(), REAModuleAPI.OcTreeGraphicsColoringMode);
       sendMessageOnPropertyChange(showBufferButton, REAModuleAPI.OcTreeGraphicsShowBuffer);
       sendMessageOnPropertyChange(bufferSizeSlider, REAModuleAPI.OcTreeBufferSize);
+      sendMessageOnPropertyChange(showInputScanButton, REAModuleAPI.OcTreeGraphicsShowInputScan);
       fireAllListeners();
 
       load();
@@ -80,6 +83,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       loadPropertyAndUpdateUIControl(coloringTypeComboBox, REAModuleAPI.OcTreeGraphicsColoringMode);
       loadPropertyAndUpdateUIControl(showBufferButton, REAModuleAPI.OcTreeGraphicsShowBuffer);
       loadPropertyAndUpdateUIControl(bufferSizeSlider, REAModuleAPI.OcTreeBufferSize);
+      loadPropertyAndUpdateUIControl(showInputScanButton, REAModuleAPI.OcTreeGraphicsShowInputScan);
    }
 
    @FXML
@@ -92,5 +96,6 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       saveProperty(REAModuleAPI.OcTreeGraphicsColoringMode, coloringTypeComboBox.getValue().toString());
       saveProperty(REAModuleAPI.OcTreeGraphicsShowBuffer, showBufferButton.isSelected());
       saveProperty(REAModuleAPI.OcTreeBufferSize, bufferSizeSlider.getValue());
+      saveProperty(REAModuleAPI.OcTreeGraphicsShowInputScan, showInputScanButton.isSelected());
    }
 }

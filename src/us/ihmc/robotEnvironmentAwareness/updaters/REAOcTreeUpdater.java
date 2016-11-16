@@ -39,6 +39,8 @@ public class REAOcTreeUpdater
    public REAOcTreeUpdater(NormalOcTree octree, REAMessageManager inputManager, REAMessager outputMessager)
    {
       this.referenceOctree = octree;
+      referenceOctree.enableParallelComputationForNormals(true);
+      referenceOctree.enableParallelInsertionOfMisses(true);
 
       reaOcTreeBuffer = new REAOcTreeBuffer(inputManager, outputMessager, octree.getResolution());
 

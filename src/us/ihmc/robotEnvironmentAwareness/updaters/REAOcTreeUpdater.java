@@ -3,13 +3,19 @@ package us.ihmc.robotEnvironmentAwareness.updaters;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.vecmath.Point3d;
+import javax.vecmath.Vector3d;
+
+import org.apache.commons.math3.util.Precision;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
+import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
+import us.ihmc.jOctoMap.ocTree.NormalOcTree.RayMissProbabilityUpdater;
+import us.ihmc.jOctoMap.occupancy.OccupancyParameters;
 
 public class REAOcTreeUpdater
 {
@@ -44,6 +50,39 @@ public class REAOcTreeUpdater
       useBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable);
       atomicBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters);
       normalEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters);
+
+      RayMissProbabilityUpdater rayMissProbabilityUpdater = new RayMissProbabilityUpdater()
+      {
+         @Override
+         public double computeRayMissProbability(Point3d rayOrigin, Point3d rayEnd, Vector3d rayDirection, NormalOcTreeNode node,
+               OccupancyParameters parameters)
+         {
+            Point3d hitLocation = new Point3d();
+            node.getHitLocation(hitLocation);
+
+            if (hitLocation.distanceSquared(rayEnd) < 0.06 * 0.06)
+            {
+               return 0.47;
+            }
+            else if (node.getNormalConsensusSize() > 10 && node.isNormalSet())
+            {
+               Point3d nodeHitLocation = new Point3d();
+               Vector3d nodeNormal = new Vector3d();
+               node.getHitLocation(nodeHitLocation);
+               node.getNormal(nodeNormal);
+
+               if (Precision.equals(Math.abs(nodeNormal.angle(rayDirection)) - Math.PI / 2.0, 0.0, Math.toRadians(30.0)))// && distanceFromPointToLine(nodeHitLocation, rayOrigin, rayEnd) > 0.01)
+                  return 0.45;
+               else
+                  return parameters.getMissProbability();
+            }
+            else
+            {
+               return parameters.getMissProbability();
+            }
+         }
+      };
+      referenceOctree.setCustomRayMissProbabilityUpdater(rayMissProbabilityUpdater);
    }
 
    public Runnable createBufferThread()

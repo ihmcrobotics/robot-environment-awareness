@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="76.0" prefWidth="122.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Label contentDisplay="CENTER" prefHeight="17.0" prefWidth="126.0" text="Start Service">
+         <VBox.margin>
+            <Insets bottom="10.0" left="10.0" top="10.0" />
+         </VBox.margin>
+      </Label>
+      <ToggleButton fx:id="toggleButton" mnemonicParsing="false" onAction="#togleButtonStateChanged" prefHeight="27.0" prefWidth="100.0" text="Start" textAlignment="CENTER">
+         <VBox.margin>
+            <Insets left="10.0" />
+         </VBox.margin>
+      </ToggleButton>
+   </children>
+</VBox>

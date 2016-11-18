@@ -80,26 +80,24 @@ public class REAOcTreeGraphicsBuilder
 
    private final AtomicReference<Boolean> showOcTreeBoundingBox;
    private final AtomicReference<Boolean> useOcTreeBoundingBox;
+   private final REAMessager reaMessager;
 
-   private final REAMessager outputMessager;
-
-   public REAOcTreeGraphicsBuilder(NormalOcTree octree, RegionFeaturesProvider regionFeaturesProvider,
-         REAMessageManager inputManager, REAMessager outputMessager)
+   public REAOcTreeGraphicsBuilder(NormalOcTree octree, RegionFeaturesProvider regionFeaturesProvider, REAMessager reaMessager)
    {
       this.octree = octree;
       this.regionFeaturesProvider = regionFeaturesProvider;
-      this.outputMessager = outputMessager;
-      enable = inputManager.createInput(REAModuleAPI.OcTreeEnable);
-      clear = inputManager.createInput(REAModuleAPI.OcTreeClear);
+      this.reaMessager = reaMessager;
+      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable);
+      clear = reaMessager.createInput(REAModuleAPI.OcTreeClear);
 
-      treeDepthForDisplay = inputManager.createInput(REAModuleAPI.OcTreeGraphicsDepth);
-      coloringType = inputManager.createInput(REAModuleAPI.OcTreeGraphicsColoringMode);
+      treeDepthForDisplay = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsDepth);
+      coloringType = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsColoringMode);
 
-      showOcTreeNodes = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes);
-      showEstimatedSurfaces = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces);
-      hidePlanarRegionNodes = inputManager.createInput(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes);
-      showOcTreeBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxShow);
-      useOcTreeBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxEnable);
+      showOcTreeNodes = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes);
+      showEstimatedSurfaces = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces);
+      hidePlanarRegionNodes = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes);
+      showOcTreeBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxShow);
+      useOcTreeBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxEnable);
 
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);
@@ -116,8 +114,8 @@ public class REAOcTreeGraphicsBuilder
    {
       if (shoudClear())
       {
-         outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsOccupiedMesh, new Pair<Mesh, Material>(null, null)));
-         outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh, new Pair<Mesh, Material>(null, null)));
+         reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsOccupiedMesh, new Pair<Mesh, Material>(null, null)));
+         reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh, new Pair<Mesh, Material>(null, null)));
          return null;
       }
 
@@ -166,7 +164,7 @@ public class REAOcTreeGraphicsBuilder
       TriangleMesh mesh = JavaFXMeshDataInterpreter.interpretMeshData(meshDataHolder);
       Pair<Mesh, Material> meshAndMaterial = new Pair<Mesh, Material>(mesh, material);
       REAMessage message = new REAMessage(messageId, meshAndMaterial);
-      outputMessager.submitMessage(message);
+      reaMessager.submitMessage(message);
    }
 
    private void addPolygonsToMeshBuilders(MultiColorMeshBuilder polygonsMeshBuilder)
@@ -266,7 +264,7 @@ public class REAOcTreeGraphicsBuilder
    {
       if (!isShowingBoundingBox())
       {
-         outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, (Box) null));
+         reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, (Box) null));
          return;
       }
 
@@ -287,7 +285,7 @@ public class REAOcTreeGraphicsBuilder
       ocTreeBoundingBoxGraphics.setRotate(Math.toDegrees(yaw));
 
       ocTreeBoundingBoxGraphics.setMaterial(ocTreeBoundingBoxMaterial);
-      outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, ocTreeBoundingBoxGraphics));
+      reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, ocTreeBoundingBoxGraphics));
    }
 
    private Color getNodeColor(NormalOcTreeNode node)

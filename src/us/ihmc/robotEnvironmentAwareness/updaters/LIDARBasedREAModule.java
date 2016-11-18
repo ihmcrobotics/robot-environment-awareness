@@ -39,13 +39,13 @@ public class LIDARBasedREAModule
    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(3, ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
    private ScheduledFuture<?> scheduled;
 
-   public LIDARBasedREAModule(REAMessageManager uiOutputManager, REAMessager uiInputMessager)
+   public LIDARBasedREAModule(REAMessager reaMessager)
    {
-      updater = new REAOcTreeUpdater(octree, uiOutputManager, uiInputMessager);
-      planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(octree, uiOutputManager, uiInputMessager);
-      graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, planarRegionFeatureUpdater, uiOutputManager, uiInputMessager);
+      updater = new REAOcTreeUpdater(octree, reaMessager);
+      planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(octree, reaMessager);
+      graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, planarRegionFeatureUpdater, reaMessager);
       planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater);
-      clearOcTree = uiOutputManager.createInput(REAModuleAPI.OcTreeClear, false);
+      clearOcTree = reaMessager.createInput(REAModuleAPI.OcTreeClear, false);
    }
 
    public void attachListeners(PacketCommunicator packetCommunicator)

@@ -36,22 +36,22 @@ public class REAOcTreeUpdater
    private final AtomicReference<Boolean> useBoundingBox;
    private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
 
-   public REAOcTreeUpdater(NormalOcTree octree, REAMessageManager inputManager, REAMessager outputMessager)
+   public REAOcTreeUpdater(NormalOcTree octree, REAMessager reaMessager)
    {
       this.referenceOctree = octree;
       referenceOctree.enableParallelComputationForNormals(true);
       referenceOctree.enableParallelInsertionOfMisses(true);
 
-      reaOcTreeBuffer = new REAOcTreeBuffer(inputManager, outputMessager, octree.getResolution());
+      reaOcTreeBuffer = new REAOcTreeBuffer(octree.getResolution(), reaMessager);
 
-      enable = inputManager.createInput(REAModuleAPI.OcTreeEnable);
-      enableNormalEstimation = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationEnable);
-      clearNormals = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationClear);
-      minRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMinRange);
-      maxRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMaxRange);
-      useBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable);
-      atomicBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters);
-      normalEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters);
+      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable);
+      enableNormalEstimation = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationEnable);
+      clearNormals = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationClear);
+      minRange = reaMessager.createInput(REAModuleAPI.OcTreeLIDARMinRange);
+      maxRange = reaMessager.createInput(REAModuleAPI.OcTreeLIDARMaxRange);
+      useBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable);
+      atomicBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters);
+      normalEstimationParameters = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters);
 
       RayMissProbabilityUpdater rayMissProbabilityUpdater = new RayMissProbabilityUpdater()
       {

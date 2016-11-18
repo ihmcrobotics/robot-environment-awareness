@@ -28,12 +28,12 @@ public class REAOcTreeBuffer
 
    private final double octreeResolution;
 
-   public REAOcTreeBuffer(REAMessageManager inputManager, REAMessager outputMessager, double octreeResolution)
+   public REAOcTreeBuffer(double octreeResolution, REAMessager reaMessager)
    {
       this.octreeResolution = octreeResolution;
-      enable = inputManager.createInput(REAModuleAPI.OcTreeEnable);
-      bufferSize = inputManager.createInput(REAModuleAPI.OcTreeBufferSize, 10000.0);
-      graphicsBuilder = new REAOcTreeBufferGraphicsBuilder(inputManager, outputMessager);
+      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable);
+      bufferSize = reaMessager.createInput(REAModuleAPI.OcTreeBufferSize, 10000.0);
+      graphicsBuilder = new REAOcTreeBufferGraphicsBuilder(reaMessager);
    }
 
    public Runnable createBufferThread()

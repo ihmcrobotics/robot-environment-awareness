@@ -16,7 +16,7 @@ import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
 
 public abstract class REABasicUIController
 {
-   private REAMessager outputMessager;
+   private REAMessager reaMessager;
    private FilePropertyHelper filePropertyHelper;
    private final Set<InvalidationListener> invalidationListeners = new HashSet<>();
 
@@ -88,9 +88,10 @@ public abstract class REABasicUIController
       return filePropertyHelper.loadProperty(propertyName);
    }
 
-   public void attachOutputMessager(REAMessager outputMessager)
+
+   public void attachREAMessager(REAMessager reaMessager)
    {
-      this.outputMessager = outputMessager;
+      this.reaMessager = reaMessager;
    }
 
    protected void sendMessageOnPropertyChange(ToggleButton toggleButton, String messageName)
@@ -110,7 +111,7 @@ public abstract class REABasicUIController
 
    protected <T> void sendMessageOnPropertyChange(Property<T> property, String messageName)
    {
-      invalidationListeners.add(ListenerTools.sendMessageOnPropertyChange(property, outputMessager, messageName));
+      invalidationListeners.add(ListenerTools.sendMessageOnPropertyChange(property, reaMessager, messageName));
    }
 
    protected void registerListener(InvalidationListener listener)
@@ -126,6 +127,6 @@ public abstract class REABasicUIController
 
    protected void send(REAMessage message)
    {
-      outputMessager.submitMessage(message);
+      reaMessager.submitMessage(message);
    }
 }

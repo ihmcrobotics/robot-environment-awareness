@@ -12,10 +12,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.DepthDataStateCommand;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.DepthDataStateCommand.LidarState;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.LIDARFilterAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.NormalEstimationAnchorPaneController;
@@ -26,135 +23,132 @@ import us.ihmc.robotEnvironmentAwareness.ui.controller.RegionSegmentationAnchorP
 import us.ihmc.robotEnvironmentAwareness.ui.scene3D.RobotEnvironmentAwareness3DScene;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.LidarFrameViewer;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.REAMeshViewer;
-import us.ihmc.robotEnvironmentAwareness.updaters.LIDARBasedREAModule;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAMessageManager;
+import us.ihmc.robotEnvironmentAwareness.updaters.REAMessagerOverNetwork;
+import us.ihmc.robotEnvironmentAwareness.updaters.REAMessagerSharedVariables;
+import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
 
-public class LIDARBasedEnvironmentAwarenessUI extends Application
-{
-   private static final String SERVER_HOST = "localhost";
+public class LIDARBasedEnvironmentAwarenessUI extends Application {
 
-   private static final String CONFIGURATION_FILE_NAME = "./Configurations/defaultREAConfiguration.txt";
+    private static final String SERVER_HOST = "localhost";
+    private static final String CONFIGURATION_FILE_NAME = "./Configurations/defaultREAConfiguration.txt";
 
-   private final PacketCommunicator packetCommunicator;
-   private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
-   private final BorderPane mainPane;
 
-   private final REAMessageManager uiInputManager = new REAMessageManager();
-   private final REAMessageManager uiOutputManager = new REAMessageManager();
-   private final LIDARBasedREAModule lidarBasedREAModule = new LIDARBasedREAModule(uiOutputManager, uiInputManager);
-   private final REAMeshViewer reaMeshViewer = new REAMeshViewer(uiInputManager);
-   private final LidarFrameViewer lidarFrameViewer = new LidarFrameViewer();
+    private final PacketCommunicator reaModulePacketCommunicator;
+    private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
+    private final BorderPane mainPane;
 
-   @FXML
-   private PointCloudAnchorPaneController pointCloudAnchorPaneController;
-   @FXML
-   private OcTreeBasicsAnchorPaneController ocTreeBasicsAnchorPaneController;
-   @FXML
-   private LIDARFilterAnchorPaneController lidarFilterAnchorPaneController;
-   @FXML
-   private NormalEstimationAnchorPaneController normalEstimationAnchorPaneController;
-   @FXML
-   private RegionSegmentationAnchorPaneController regionSegmentationAnchorPaneController;
-   @FXML
-   private PolygonizerAnchorPaneController polygonizerAnchorPaneController;
+    private final REAMessager reaMessager;
 
-   public LIDARBasedEnvironmentAwarenessUI() throws IOException
-   {
-      packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(SERVER_HOST, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
+    private final REAMeshViewer reaMeshViewer;
+    private final LidarFrameViewer lidarFrameViewer = new LidarFrameViewer();
 
-      FXMLLoader loader = new FXMLLoader();
-      loader.setController(this);
-      loader.setLocation(getClass().getResource(getClass().getSimpleName() + ".fxml"));
-      mainPane = loader.load();
 
-      lidarBasedREAModule.attachListeners(packetCommunicator);
-      lidarBasedREAModule.start();
-      
-      packetCommunicator.attachListener(LidarPosePacket.class, lidarFrameViewer.createLidarPosePacketConsumer());
-      lidarFrameViewer.start();
+    @FXML
+    private PointCloudAnchorPaneController pointCloudAnchorPaneController;
+    @FXML
+    private OcTreeBasicsAnchorPaneController ocTreeBasicsAnchorPaneController;
+    @FXML
+    private LIDARFilterAnchorPaneController lidarFilterAnchorPaneController;
+    @FXML
+    private NormalEstimationAnchorPaneController normalEstimationAnchorPaneController;
+    @FXML
+    private RegionSegmentationAnchorPaneController regionSegmentationAnchorPaneController;
+    @FXML
+    private PolygonizerAnchorPaneController polygonizerAnchorPaneController;
 
-      packetCommunicator.connect();
-   }
+    public LIDARBasedEnvironmentAwarenessUI() throws IOException {
 
-   @FXML // TODO Move me somewhere else, maybe
-   private void sendLidarCommand()
-   {
-      DepthDataStateCommand packet = new DepthDataStateCommand();
-      packet.lidarState = LidarState.ENABLE;
-      packet.publishLidarPose = true;
-      packetCommunicator.send(packet);
-   }
+        reaModulePacketCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.REA_MODULE_UI_PORT, new IHMCCommunicationKryoNetClassList());
+        reaModulePacketCommunicator.connect();
+        reaMessager = new REAMessagerOverNetwork(reaModulePacketCommunicator);
 
-   @Override
-   public void start(Stage primaryStage) throws Exception
-   {
-      mainPane.setCenter(scene3D);
+        reaMeshViewer = new REAMeshViewer(reaMessager);
 
-      pointCloudAnchorPaneController.start();
-      scene3D.attachChild(pointCloudAnchorPaneController.getRoot());
-      scene3D.attachChild(reaMeshViewer.getRoot());
-      scene3D.attachChild(lidarFrameViewer.getRoot());
+        FXMLLoader loader = new FXMLLoader();
+        loader.setController(this);
+        loader.setLocation(getClass().getResource(getClass().getSimpleName() + ".fxml"));
 
-      packetCommunicator.attachListener(PointCloudWorldPacket.class, pointCloudAnchorPaneController.getPointCloudWorldPacketConsumer());
-      pointCloudAnchorPaneController.bindControls();
+        mainPane = loader.load();
 
-      File configurationFile = new File(CONFIGURATION_FILE_NAME);
+        lidarFrameViewer.start();
 
-      ocTreeBasicsAnchorPaneController.setConfigurationFile(configurationFile);
-      ocTreeBasicsAnchorPaneController.attachOutputMessager(uiOutputManager);
-      ocTreeBasicsAnchorPaneController.bindControls();
+        // TODO get LIDAR pose from the service
+        reaModulePacketCommunicator.attachListener(LidarPosePacket.class, lidarFrameViewer.createLidarPosePacketConsumer());
+    }
 
-      lidarFilterAnchorPaneController.setConfigurationFile(configurationFile);
-      lidarFilterAnchorPaneController.attachOutputMessager(uiOutputManager);
-      lidarFilterAnchorPaneController.bindControls();
-      
-      normalEstimationAnchorPaneController.setConfigurationFile(configurationFile);
-      normalEstimationAnchorPaneController.attachOutputMessager(uiOutputManager);
-      normalEstimationAnchorPaneController.bindControls();
-      
-      regionSegmentationAnchorPaneController.setConfigurationFile(configurationFile);
-      regionSegmentationAnchorPaneController.attachOutputMessager(uiOutputManager);
-      regionSegmentationAnchorPaneController.bindControls();
-      
-      polygonizerAnchorPaneController.setConfigurationFile(configurationFile);
-      polygonizerAnchorPaneController.attachOutputMessager(uiOutputManager);
-      polygonizerAnchorPaneController.bindControls();
+//   @FXML // TODO Move me somewhere else, maybe
+//   private void sendLidarCommand()
+//   {
+//      DepthDataStateCommand packet = new DepthDataStateCommand();
+//      packet.lidarState = LidarState.ENABLE;
+//      packet.publishLidarPose = true;
+//      packetCommunicator.send(packet);
+//   }
 
-      reaMeshViewer.start();
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        mainPane.setCenter(scene3D);
 
-      primaryStage.setTitle(getClass().getSimpleName());
-      primaryStage.setMaximized(true);
-      Scene mainScene = new Scene(mainPane, 600, 400);
-      primaryStage.setScene(mainScene);
-      primaryStage.show();
-      primaryStage.setOnCloseRequest(event -> stop());
+        pointCloudAnchorPaneController.start();
+        scene3D.attachChild(pointCloudAnchorPaneController.getRoot());
+        scene3D.attachChild(reaMeshViewer.getRoot());
+        scene3D.attachChild(lidarFrameViewer.getRoot());
 
-   }
+        pointCloudAnchorPaneController.bindControls();
 
-   @Override
-   public void stop()
-   {
-      try
-      {
-         packetCommunicator.closeConnection();
-         packetCommunicator.close();
-         if (scene3D != null)
-            scene3D.stop();
-         if (pointCloudAnchorPaneController != null)
-            pointCloudAnchorPaneController.stop();
-         lidarBasedREAModule.stop();
-         reaMeshViewer.stop();
-         lidarFrameViewer.stop();
-         Platform.exit();
-      }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-      }
-   }
+        File configurationFile = new File(CONFIGURATION_FILE_NAME);
 
-   public static void main(String[] args)
-   {
-      launch(args);
-   }
+        ocTreeBasicsAnchorPaneController.setConfigurationFile(configurationFile);
+        ocTreeBasicsAnchorPaneController.attachREAMessager(reaMessager);
+        ocTreeBasicsAnchorPaneController.bindControls();
+
+        lidarFilterAnchorPaneController.setConfigurationFile(configurationFile);
+        lidarFilterAnchorPaneController.attachREAMessager(reaMessager);
+        lidarFilterAnchorPaneController.bindControls();
+
+        normalEstimationAnchorPaneController.setConfigurationFile(configurationFile);
+        normalEstimationAnchorPaneController.attachREAMessager(reaMessager);
+        normalEstimationAnchorPaneController.bindControls();
+
+        regionSegmentationAnchorPaneController.setConfigurationFile(configurationFile);
+        regionSegmentationAnchorPaneController.attachREAMessager(reaMessager);
+        regionSegmentationAnchorPaneController.bindControls();
+
+        polygonizerAnchorPaneController.setConfigurationFile(configurationFile);
+        polygonizerAnchorPaneController.attachREAMessager(reaMessager);
+        polygonizerAnchorPaneController.bindControls();
+
+        reaMeshViewer.start();
+
+        primaryStage.setTitle(getClass().getSimpleName());
+        primaryStage.setMaximized(true);
+        Scene mainScene = new Scene(mainPane, 600, 400);
+        primaryStage.setScene(mainScene);
+        primaryStage.show();
+        primaryStage.setOnCloseRequest(event -> stop());
+
+    }
+
+    @Override
+    public void stop() {
+        try {
+            reaModulePacketCommunicator.closeConnection();
+            reaModulePacketCommunicator.close();
+
+            if (scene3D != null)
+                scene3D.stop();
+            if (pointCloudAnchorPaneController != null)
+                pointCloudAnchorPaneController.stop();
+
+            reaMeshViewer.stop();
+            lidarFrameViewer.stop();
+            Platform.exit();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
 }

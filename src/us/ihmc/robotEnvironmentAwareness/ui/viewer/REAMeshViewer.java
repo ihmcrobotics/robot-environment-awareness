@@ -10,7 +10,7 @@ import javafx.scene.shape.Box;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAMessageManager;
+import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 
 public class REAMeshViewer
@@ -31,13 +31,13 @@ public class REAMeshViewer
 
    private final AnimationTimer renderMeshAnimation;
 
-   public REAMeshViewer(REAMessageManager inputManager)
+   public REAMeshViewer(REAMessager reaMessager)
    {
-      occupiedMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsOccupiedMesh);
-      bufferMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBufferMesh);
-      scanInputMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsInputScanMesh);
-      planarRegionPolygonMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh);
-      boundingBoxMeshToRender = inputManager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh);
+      occupiedMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsOccupiedMesh);
+      bufferMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsBufferMesh);
+      scanInputMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsInputScanMesh);
+      planarRegionPolygonMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh);
+      boundingBoxMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh);
 
       root.getChildren().addAll(occupiedLeafsMeshView, bufferLeafsMeshView, scanInputMeshView, planarRegionMeshView);
       root.setMouseTransparent(true);

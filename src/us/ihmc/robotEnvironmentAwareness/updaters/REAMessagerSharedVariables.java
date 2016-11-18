@@ -7,13 +7,14 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 
-public class REAMessageManager implements REAMessager
+public class REAMessagerSharedVariables implements REAMessager
 {
    private final ConcurrentHashMap<String, List<AtomicReference<Object>>> boundVariables = new ConcurrentHashMap<>();
 
-   public REAMessageManager()
+   public REAMessagerSharedVariables()
    {
    }
+
 
    @Override
    public void submitMessage(REAMessage message)
@@ -27,10 +28,10 @@ public class REAMessageManager implements REAMessager
       }
    }
 
-   public <T extends Object> AtomicReference<T> createInput(String messageName)
-   {
-      return createInput(messageName, null);
-   }
+//   public <T extends Object> AtomicReference<T> createInput(String messageName)
+//   {
+//      return createInput(messageName, null);
+//   }
 
    @SuppressWarnings("unchecked")
    public <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue)

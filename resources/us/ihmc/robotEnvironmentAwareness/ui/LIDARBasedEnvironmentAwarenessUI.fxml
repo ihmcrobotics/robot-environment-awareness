@@ -17,7 +17,8 @@
    <top>
       <HBox BorderPane.alignment="CENTER">
          <children>
-            <Button minHeight="0.0" minWidth="0.0" mnemonicParsing="false" onAction="#sendLidarCommand" prefHeight="28.0" prefWidth="25.0">
+            <!--<Button minHeight="0.0" minWidth="0.0" mnemonicParsing="false" onAction="#sendLidarCommand" prefHeight="28.0" prefWidth="25.0">-->
+            <Button minHeight="0.0" minWidth="0.0" mnemonicParsing="false" prefHeight="28.0" prefWidth="25.0">
                <effect>
                   <ImageInput>
                      <source>

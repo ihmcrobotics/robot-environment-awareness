@@ -30,18 +30,17 @@ public class REAOcTreeBufferGraphicsBuilder
    private final Material bufferMaterial = new PhongMaterial(DEFAULT_BUFFER_COLOR);
    private final MultiColorMeshBuilder scanMeshBuilder;;
 
-   private REAMessager outputMessager;
+   private final REAMessager reaMessageManager;
 
    private boolean hasClearedBufferGraphics = false;
    private boolean hasClearedScanGraphics = false;
 
-   public REAOcTreeBufferGraphicsBuilder(REAMessageManager inputManager, REAMessager outputMessager)
+   public REAOcTreeBufferGraphicsBuilder(REAMessager reaMessager)
    {
-      this.outputMessager = outputMessager;
-
-      enable = inputManager.createInput(REAModuleAPI.OcTreeEnable, false);
-      showBuffer = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer, false);
-      showInputScan = inputManager.createInput(REAModuleAPI.OcTreeGraphicsShowInputScan, true);
+      this.reaMessageManager = reaMessager;
+      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
+      showBuffer = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer, false);
+      showInputScan = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowInputScan, true);
 
       TextureColorPalette1D scanColorPalette = new TextureColorPalette1D();
       scanColorPalette.setHueBased(1.0, 1.0);
@@ -63,7 +62,7 @@ public class REAOcTreeBufferGraphicsBuilder
             bufferMeshBuilder.addCube(NODE_SCALE * node.getSize(), node.getX(), node.getY(), node.getZ());
          
          Pair<Mesh, Material> meshAndMaterial = new Pair<>(bufferMeshBuilder.generateMesh(), bufferMaterial);
-         outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBufferMesh, meshAndMaterial));
+         reaMessageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBufferMesh, meshAndMaterial));
       }
 
       if (!showInputScan.get())
@@ -90,7 +89,7 @@ public class REAOcTreeBufferGraphicsBuilder
          }
 
          Pair<Mesh, Material> meshAndMaterial = new Pair<>(scanMeshBuilder.generateMesh(), scanMeshBuilder.generateMaterial());
-         outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsInputScanMesh, meshAndMaterial));
+         reaMessageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsInputScanMesh, meshAndMaterial));
       }
    }
 
@@ -98,7 +97,7 @@ public class REAOcTreeBufferGraphicsBuilder
    {
       if (hasClearedBufferGraphics)
          return;
-      outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBufferMesh, new Pair<Mesh, Material>(null, null)));
+      reaMessageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBufferMesh, new Pair<Mesh, Material>(null, null)));
       hasClearedBufferGraphics = true;
    }
 
@@ -106,7 +105,7 @@ public class REAOcTreeBufferGraphicsBuilder
    {
       if (hasClearedScanGraphics)
          return;
-      outputMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsInputScanMesh, new Pair<Mesh, Material>(null, null)));
+      reaMessageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsInputScanMesh, new Pair<Mesh, Material>(null, null)));
       hasClearedScanGraphics = true;
    }
 }

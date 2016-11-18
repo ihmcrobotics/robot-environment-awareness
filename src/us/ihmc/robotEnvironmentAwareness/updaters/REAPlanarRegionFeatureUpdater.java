@@ -43,18 +43,18 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private final AtomicReference<IntersectionEstimationParameters> intersectionEstimationParameters;
    private final AtomicReference<PolygonizerParameters> polygonizerParameters;
 
-   public REAPlanarRegionFeatureUpdater(NormalOcTree octree, REAMessageManager inputManager, REAMessager outputMessager)
+   public REAPlanarRegionFeatureUpdater(NormalOcTree octree, REAMessager reaMessager)
    {
       this.octree = octree;
 
-      isOcTreeEnabled = inputManager.createInput(REAModuleAPI.OcTreeEnable);
-      enableSegmentation = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationEnable);
-      clearSegmentation = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationClear);
-      enablePolygonizer = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
-      enableIntersectionCalulator = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
-      planarRegionSegmentationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, new PlanarRegionSegmentationParameters());
-      intersectionEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters);
-      polygonizerParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, new PolygonizerParameters());
+      isOcTreeEnabled = reaMessager.createInput(REAModuleAPI.OcTreeEnable);
+      enableSegmentation = reaMessager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationEnable);
+      clearSegmentation = reaMessager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationClear);
+      enablePolygonizer = reaMessager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
+      enableIntersectionCalulator = reaMessager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
+      planarRegionSegmentationParameters = reaMessager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, new PlanarRegionSegmentationParameters());
+      intersectionEstimationParameters = reaMessager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters);
+      polygonizerParameters = reaMessager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, new PolygonizerParameters());
    }
 
    public void update()

@@ -6,10 +6,6 @@ import javax.vecmath.Point3f;
 import javax.vecmath.Vector3d;
 
 import javafx.application.Application;
-import javafx.event.Event;
-import javafx.scene.Group;
-import javafx.scene.PerspectiveCamera;
-import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.MeshView;
@@ -21,12 +17,11 @@ import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.PointCloud;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
-import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler;
-import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
+import us.ihmc.robotEnvironmentAwareness.tools.View3DFactory;
 import us.ihmc.robotics.geometry.RotationTools;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
@@ -133,16 +128,9 @@ public class NormalOcTreeVisualizer extends Application
    {
       primaryStage.setTitle("OcTree Visualizer");
 
-      Group rootNode = new Group();
-      Scene scene = new Scene(rootNode, 600, 400, true);
-      scene.setFill(Color.GRAY);
-      rootNode.setMouseTransparent(true);
-      setupCamera(rootNode, scene);
-      JavaFXCoordinateSystem worldCoordinateSystem = new JavaFXCoordinateSystem(0.3);
-      rootNode.getChildren().add(worldCoordinateSystem);
-
-      primaryStage.setScene(scene);
-      primaryStage.show();
+      View3DFactory view3dFactory = new View3DFactory(600, 400);
+      view3dFactory.addCameraController();
+      view3dFactory.addWorldCoordinateSystem(0.3);
 
       TextureColorPalette1D palette = new TextureColorPalette1D();
       palette.setHueBased(0.9, 0.8);
@@ -219,7 +207,8 @@ public class NormalOcTreeVisualizer extends Application
       MeshView occupiedMeshView = new MeshView();
       occupiedMeshView.setMesh(occupiedMeshBuilder.generateMesh());
       occupiedMeshView.setMaterial(occupiedMeshBuilder.generateMaterial());
-      rootNode.getChildren().add(occupiedMeshView);
+      occupiedMeshView.setMouseTransparent(true);
+      view3dFactory.addNodeToView(occupiedMeshView);
 
       if (SHOW_FREE_CELLS)
       {
@@ -228,7 +217,7 @@ public class NormalOcTreeVisualizer extends Application
          PhongMaterial material = new PhongMaterial();
          material.setDiffuseColor(FREE_COLOR);
          freeMeshView.setMaterial(material);
-         rootNode.getChildren().add(freeMeshView);
+         view3dFactory.addNodeToView(freeMeshView);
       }
 
       if (SHOW_POINT_CLOUD)
@@ -239,9 +228,12 @@ public class NormalOcTreeVisualizer extends Application
             sphere.setTranslateX(pointcloud.getPoint(i).getX());
             sphere.setTranslateY(pointcloud.getPoint(i).getY());
             sphere.setTranslateZ(pointcloud.getPoint(i).getZ());
-            rootNode.getChildren().add(sphere);
+            view3dFactory.addNodeToView(sphere);
          }
       }
+
+      primaryStage.setScene(view3dFactory.getScene());
+      primaryStage.show();
    }
 
    private static final Color DEFAULT_COLOR = Color.DARKCYAN;
@@ -259,19 +251,6 @@ public class NormalOcTreeVisualizer extends Application
          color = Color.hsb(hue, 1.0, 1.0);
       }
       return color;
-   }
-
-   private void setupCamera(Group root, Scene scene)
-   {
-      PerspectiveCamera camera = new PerspectiveCamera(true);
-      camera.setNearClip(0.05);
-      camera.setFarClip(50.0);
-      scene.setCamera(camera);
-
-      Vector3d up = new Vector3d(0.0, 0.0, 1.0);
-      FocusBasedCameraMouseEventHandler cameraController = new FocusBasedCameraMouseEventHandler(scene.widthProperty(), scene.heightProperty(), camera, up);
-      scene.addEventHandler(Event.ANY, cameraController);
-      root.getChildren().add(cameraController.getFocusPointViz());
    }
 
    public static void main(String[] args)

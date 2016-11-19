@@ -7,11 +7,6 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import javafx.application.Application;
-import javafx.event.Event;
-import javafx.scene.Group;
-import javafx.scene.PerspectiveCamera;
-import javafx.scene.Scene;
-import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
@@ -20,9 +15,8 @@ import javafx.util.Pair;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
 import us.ihmc.jOctoMap.tools.JOctoMapRandomTools;
-import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler;
-import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
+import us.ihmc.robotEnvironmentAwareness.tools.View3DFactory;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAMessageManager;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAOcTreeGraphicsBuilder;
@@ -73,39 +67,23 @@ public class MergingPlanarRegionsVisualizer extends Application
    {
       primaryStage.setTitle("OcTree Visualizer");
 
-      Group rootNode = new Group();
-      Scene scene = new Scene(rootNode, 600, 400, true);
-      scene.setFill(Color.GRAY);
-      rootNode.setMouseTransparent(true);
-      setupCamera(rootNode, scene);
-      JavaFXCoordinateSystem worldCoordinateSystem = new JavaFXCoordinateSystem(0.3);
-      rootNode.getChildren().add(worldCoordinateSystem);
-
-      primaryStage.setScene(scene);
-      primaryStage.show();
+      View3DFactory view3dFactory = new View3DFactory(600, 400);
+      view3dFactory.addCameraController();
+      view3dFactory.addWorldCoordinateSystem(0.3);
+      view3dFactory.setRootMouseTransparent(true);
 
       MeshView occupiedMeshView = new MeshView();
       occupiedMeshView.setMesh(occupiedMeshToRender.get().getKey());
       occupiedMeshView.setMaterial(occupiedMeshToRender.get().getValue());
-      rootNode.getChildren().add(occupiedMeshView);
+      view3dFactory.addNodeToView(occupiedMeshView);
 
       MeshView polygonizedRegionsMeshView = new MeshView();
       polygonizedRegionsMeshView.setMesh(planarRegionPolygonMeshToRender.get().getKey());
       polygonizedRegionsMeshView.setMaterial(planarRegionPolygonMeshToRender.get().getValue());
-      rootNode.getChildren().add(polygonizedRegionsMeshView);
-   }
+      view3dFactory.addNodeToView(polygonizedRegionsMeshView);
 
-   private void setupCamera(Group root, Scene scene)
-   {
-      PerspectiveCamera camera = new PerspectiveCamera(true);
-      camera.setNearClip(0.05);
-      camera.setFarClip(50.0);
-      scene.setCamera(camera);
-
-      Vector3d up = new Vector3d(0.0, 0.0, 1.0);
-      FocusBasedCameraMouseEventHandler cameraController = new FocusBasedCameraMouseEventHandler(scene.widthProperty(), scene.heightProperty(), camera, up);
-      scene.addEventHandler(Event.ANY, cameraController);
-      root.getChildren().add(cameraController.getFocusPointViz());
+      primaryStage.setScene(view3dFactory.getScene());
+      primaryStage.show();
    }
 
    public static void main(String[] args)

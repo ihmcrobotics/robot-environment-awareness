@@ -78,7 +78,8 @@ public class REAPlanarRegionNetworkProvider
       for (OcTreeNodePlanarRegion ocTreeNodePlanarRegion : ocTreePlanarRegions)
       {
          PlanarRegionConvexPolygons planarRegionConvexPolygons = regionFeaturesProvider.getPlanarRegionConvexPolygons(ocTreeNodePlanarRegion);
-         planarRegionMessages.add(createPlanarRegionMessage(planarRegionConvexPolygons));
+         if (planarRegionConvexPolygons != null)
+            planarRegionMessages.add(createPlanarRegionMessage(planarRegionConvexPolygons));
       }
 
       return new PlanarRegionsListMessage(planarRegionMessages);
@@ -99,6 +100,7 @@ public class REAPlanarRegionNetworkProvider
          Point2f[] convexPolygonVertices = new Point2f[convexPolygon.getNumberOfVertices()];
          for (int vertexIndex = 0; vertexIndex < convexPolygon.getNumberOfVertices(); vertexIndex++)
             convexPolygonVertices[vertexIndex] = new Point2f(convexPolygon.getVertex(vertexIndex));
+         convexPolygonsVertices.add(convexPolygonVertices);
       }
 
       return new PlanarRegionMessage(regionOrigin, regionNormal, convexPolygonsVertices);

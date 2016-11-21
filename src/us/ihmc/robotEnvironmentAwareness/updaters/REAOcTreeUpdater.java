@@ -36,13 +36,13 @@ public class REAOcTreeUpdater
    private final AtomicReference<Boolean> useBoundingBox;
    private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
 
-   public REAOcTreeUpdater(NormalOcTree octree, REAMessager reaMessager)
+   public REAOcTreeUpdater(NormalOcTree octree, REAMessager reaMessager, REAMessager reaMessengerNet)
    {
       this.referenceOctree = octree;
       referenceOctree.enableParallelComputationForNormals(true);
       referenceOctree.enableParallelInsertionOfMisses(true);
 
-      reaOcTreeBuffer = new REAOcTreeBuffer(octree.getResolution(), reaMessager);
+      reaOcTreeBuffer = new REAOcTreeBuffer(octree.getResolution(), reaMessager, reaMessengerNet);
 
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable);
       enableNormalEstimation = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationEnable);

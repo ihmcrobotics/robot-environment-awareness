@@ -14,11 +14,13 @@ import us.ihmc.humanoidRobotics.communication.packets.sensing.DepthDataStateComm
 import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
+import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.*;
 import us.ihmc.robotEnvironmentAwareness.ui.scene3D.RobotEnvironmentAwareness3DScene;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.LidarFrameViewer;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.REAMeshViewer;
 import us.ihmc.robotEnvironmentAwareness.updaters.LIDARBasedREAModule;
+import us.ihmc.robotEnvironmentAwareness.updaters.REAMessagerOverNetwork;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAMessagerSharedVariables;
 import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
 
@@ -32,13 +34,23 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
    private static final String CONFIGURATION_FILE_NAME = "./Configurations/defaultREAConfiguration.txt";
 
    private final PacketCommunicator packetCommunicator;
+
    private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
    private final BorderPane mainPane;
 
    private final REAMessager reaMessager = new REAMessagerSharedVariables();
 
-   private final LIDARBasedREAModule lidarBasedREAModule = new LIDARBasedREAModule(reaMessager);
-   private final REAMeshViewer reaMeshViewer = new REAMeshViewer(reaMessager);
+
+   private final PacketCommunicator reaModulePacketCommunicatorServer;
+   private final PacketCommunicator reaModulePacketCommunicatorClient;
+   private final REAMessager reaMessagerOverNetworkClient;
+   private final REAMessager reaMessagerOverNetworkServer;
+
+
+   private final LIDARBasedREAModule lidarBasedREAModule;
+
+
+   private final REAMeshViewer reaMeshViewer;
    private final LidarFrameViewer lidarFrameViewer = new LidarFrameViewer();
 
 
@@ -65,6 +77,18 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       loader.setLocation(getClass().getResource("LIDARBasedEnvironmentAwarenessUI.fxml")); // temporary
       mainPane = loader.load();
 
+
+      // Client
+      reaModulePacketCommunicatorClient = PacketCommunicator.createTCPPacketCommunicatorClient(SERVER_HOST, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      reaMessagerOverNetworkClient = new REAMessagerOverNetwork(reaModulePacketCommunicatorClient);
+      reaMeshViewer = new REAMeshViewer(reaMessager, reaMessagerOverNetworkClient);
+
+      // Server
+      reaModulePacketCommunicatorServer = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      reaMessagerOverNetworkServer = new REAMessagerOverNetwork(reaModulePacketCommunicatorServer);
+
+      lidarBasedREAModule = new LIDARBasedREAModule(reaMessager, reaMessagerOverNetworkServer);
+
       lidarBasedREAModule.attachListeners(packetCommunicator);
       lidarBasedREAModule.start();
       
@@ -72,6 +96,9 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       lidarFrameViewer.start();
 
       packetCommunicator.connect();
+
+      reaModulePacketCommunicatorServer.connect();
+      reaModulePacketCommunicatorClient.connect();
    }
 
    @FXML // TODO Move me somewhere else, maybe
@@ -136,6 +163,14 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       {
          packetCommunicator.closeConnection();
          packetCommunicator.close();
+
+
+         reaModulePacketCommunicatorServer.closeConnection();
+         reaModulePacketCommunicatorServer.close();
+
+         reaModulePacketCommunicatorClient.closeConnection();
+         reaModulePacketCommunicatorClient.close();
+
          if (scene3D != null)
             scene3D.stop();
          if (pointCloudAnchorPaneController != null)

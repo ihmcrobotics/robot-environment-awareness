@@ -1,13 +1,8 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
-import javafx.scene.shape.Mesh;
-import javafx.util.Pair;
-import us.ihmc.graphics3DDescription.MeshDataGenerator;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.PointCloud;
@@ -17,34 +12,33 @@ import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 
+import javax.vecmath.Point3d;
+import javax.vecmath.Point3f;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
+
 public class REAOcTreeBufferGraphicsBuilder
 {
-   private static final Color DEFAULT_BUFFER_COLOR = Color.RED;
-   private static final double NODE_SCALE = 0.5;
-   private static final float SCAN_POINT_SIZE = 0.0075f;
 
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> showInputScan;
    private final AtomicReference<Boolean> showBuffer;
-   private final MeshBuilder bufferMeshBuilder = new MeshBuilder();
-   private final Material bufferMaterial = new PhongMaterial(DEFAULT_BUFFER_COLOR);
-   private final MultiColorMeshBuilder scanMeshBuilder;;
 
-   private final REAMessager reaMessageManager;
+   private final REAMessager reaMessagerNet;
 
    private boolean hasClearedBufferGraphics = false;
    private boolean hasClearedScanGraphics = false;
 
-   public REAOcTreeBufferGraphicsBuilder(REAMessager reaMessager)
+   public REAOcTreeBufferGraphicsBuilder(REAMessager reaMessager, REAMessager reaMessagerNet)
    {
-      this.reaMessageManager = reaMessager;
+      this.reaMessagerNet = reaMessagerNet;
+
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
       showBuffer = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer, false);
       showInputScan = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowInputScan, true);
 
       TextureColorPalette1D scanColorPalette = new TextureColorPalette1D();
       scanColorPalette.setHueBased(1.0, 1.0);
-      scanMeshBuilder = new MultiColorMeshBuilder(scanColorPalette);
    }
 
    public void update(NormalOcTree bufferOcTree, ScanCollection scanCollection)
@@ -55,14 +49,20 @@ public class REAOcTreeBufferGraphicsBuilder
       }
       else
       {
-         bufferMeshBuilder.clear();
          hasClearedBufferGraphics = false;
-         
+
+         double size = 0;
+         ArrayList<Point3d> nodePositions = new ArrayList(bufferOcTree.getNumberOfNodes());
          for (NormalOcTreeNode node : bufferOcTree)
-            bufferMeshBuilder.addCube(NODE_SCALE * node.getSize(), node.getX(), node.getY(), node.getZ());
-         
-         Pair<Mesh, Material> meshAndMaterial = new Pair<>(bufferMeshBuilder.generateMesh(), bufferMaterial);
-         reaMessageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBufferMesh, meshAndMaterial));
+         {
+            Point3d point = new Point3d();
+            node.getCoordinate(point);
+            nodePositions.add(point);
+            size = node.getSize(); // Not sure how to access only one node
+         }
+
+         reaMessagerNet.submitMessage(new REAMessage(REAModuleAPI.BufferOctreeNodeSize, size));
+         reaMessagerNet.submitMessage(new REAMessage(REAModuleAPI.BufferOctree, nodePositions));
       }
 
       if (!showInputScan.get())
@@ -71,25 +71,24 @@ public class REAOcTreeBufferGraphicsBuilder
       }
       else
       {
-         scanMeshBuilder.clear();
          hasClearedScanGraphics = false;
 
          System.err.println("Nb of scans: " + scanCollection.getNumberOfScans());
-         
+
+         ArrayList<Point3f[]> scannedPoints = new ArrayList<>(scanCollection.getNumberOfScans());
          for (int scanIndex = 0; scanIndex < scanCollection.getNumberOfScans(); scanIndex++)
          {
             PointCloud pointCloud = scanCollection.getScan(scanIndex).getPointCloud();
+            Point3f[] points = new Point3f[pointCloud.getNumberOfPoints()];
 
             for (int pointIndex = 0; pointIndex < pointCloud.getNumberOfPoints(); pointIndex++)
-            {
-               double alpha = pointIndex / (double) pointCloud.getNumberOfPoints();
-               Color color = Color.hsb(alpha * 240.0, 1.0, 1.0);
-               scanMeshBuilder.addMesh(MeshDataGenerator.Tetrahedron(SCAN_POINT_SIZE), pointCloud.getPoint(pointIndex), color);
-            }
+               points[pointIndex] = pointCloud.getPoint(pointIndex);
+
+            scannedPoints.add(points);
          }
 
-         Pair<Mesh, Material> meshAndMaterial = new Pair<>(scanMeshBuilder.generateMesh(), scanMeshBuilder.generateMaterial());
-         reaMessageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsInputScanMesh, meshAndMaterial));
+         if (!scannedPoints.isEmpty())
+            reaMessagerNet.submitMessage(new REAMessage(REAModuleAPI.ScanPointsCollection, scannedPoints));
       }
    }
 
@@ -97,7 +96,8 @@ public class REAOcTreeBufferGraphicsBuilder
    {
       if (hasClearedBufferGraphics)
          return;
-      reaMessageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBufferMesh, new Pair<Mesh, Material>(null, null)));
+      reaMessagerNet.submitMessage(new REAMessage(REAModuleAPI.BufferOctreeNodeSize, null));
+      reaMessagerNet.submitMessage(new REAMessage(REAModuleAPI.BufferOctree, null));
       hasClearedBufferGraphics = true;
    }
 
@@ -105,7 +105,7 @@ public class REAOcTreeBufferGraphicsBuilder
    {
       if (hasClearedScanGraphics)
          return;
-      reaMessageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsInputScanMesh, new Pair<Mesh, Material>(null, null)));
+      reaMessagerNet.submitMessage(new REAMessage(REAModuleAPI.ScanPointsCollection, null));
       hasClearedScanGraphics = true;
    }
 }

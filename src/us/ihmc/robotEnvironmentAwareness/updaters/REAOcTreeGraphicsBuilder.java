@@ -36,6 +36,9 @@ import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
+import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.updaters.RegionFeaturesProvider;
 import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;

@@ -52,4 +52,8 @@ public class REAModuleAPI
    public static final String OcTreeGraphicsInputScanMesh = Output + OcTree + Graphics + "InputScan";
    public static final String OcTreeGraphicsPlanarPolygonMesh = Output + OcTree + Graphics + "PlanarPolygonMesh";
    public static final String OcTreeGraphicsBoundingBoxMesh = Output + OcTree + Graphics + BoundingBox + "Mesh";
+
+   public static final String BufferOctreeNodeSize = Output + OcTree + Graphics + "BufferOctreeNodeSize";
+   public static final String BufferOctree = Output + OcTree + Graphics + "BufferOctree";
+   public static final String ScanPointsCollection = Output + OcTree + Graphics + "ScanPointsCollection";
 }

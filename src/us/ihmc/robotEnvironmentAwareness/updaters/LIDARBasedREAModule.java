@@ -13,6 +13,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.tools.JOctoMapTools;
+
 import us.ihmc.tools.io.printing.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;
 
@@ -39,11 +40,16 @@ public class LIDARBasedREAModule
    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(3, ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
    private ScheduledFuture<?> scheduled;
 
-   public LIDARBasedREAModule(REAMessager reaMessager)
+   public LIDARBasedREAModule(REAMessager reaMessager, REAMessager reaMessagerNet)
    {
-      updater = new REAOcTreeUpdater(octree, reaMessager);
+      updater = new REAOcTreeUpdater(octree, reaMessager, reaMessagerNet);
+
       planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(octree, reaMessager);
+
+      // TODO move Graphics builder to UI
       graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, planarRegionFeatureUpdater, reaMessager);
+
+
       planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater);
       clearOcTree = reaMessager.createInput(REAModuleAPI.OcTreeClear, false);
    }
@@ -186,7 +192,7 @@ public class LIDARBasedREAModule
       if (scheduled == null)
       {
          scheduled = executorService.scheduleAtFixedRate(createUpdater(), 0, THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
-         executorService.scheduleAtFixedRate(updater.createBufferThread(), 0, BUFFER_THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
+         executorService.scheduleAtFixedRate(updater.createBufferThread(), 0, BUFFER_THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);// TODO Start Here!  balancer les infos sur le network
       }
    }
 

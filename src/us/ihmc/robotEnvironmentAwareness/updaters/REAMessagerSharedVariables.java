@@ -28,10 +28,6 @@ public class REAMessagerSharedVariables implements REAMessager
       }
    }
 
-//   public <T extends Object> AtomicReference<T> createInput(String messageName)
-//   {
-//      return createInput(messageName, null);
-//   }
 
    @SuppressWarnings("unchecked")
    public <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue)

@@ -28,12 +28,12 @@ public class REAOcTreeBuffer
 
    private final double octreeResolution;
 
-   public REAOcTreeBuffer(double octreeResolution, REAMessager reaMessager)
+   public REAOcTreeBuffer(double octreeResolution, REAMessager reaMessager, REAMessager reaMessengerNet)
    {
       this.octreeResolution = octreeResolution;
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable);
       bufferSize = reaMessager.createInput(REAModuleAPI.OcTreeBufferSize, 10000.0);
-      graphicsBuilder = new REAOcTreeBufferGraphicsBuilder(reaMessager);
+      graphicsBuilder = new REAOcTreeBufferGraphicsBuilder(reaMessager, reaMessengerNet);
    }
 
    public Runnable createBufferThread()
@@ -63,7 +63,7 @@ public class REAOcTreeBuffer
                isBufferRequested.set(false);
             }
 
-            graphicsBuilder.update(bufferOctree, newScan);
+            graphicsBuilder.update(bufferOctree, newScan);  // TODO garder le graphic builder --> send stuff at this point copy octree and send it over the network
          }
       };
    }

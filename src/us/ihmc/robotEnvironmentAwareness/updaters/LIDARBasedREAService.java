@@ -8,6 +8,7 @@ import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
 import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
+import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
 
 import java.io.IOException;
 
@@ -28,7 +29,7 @@ public class LIDARBasedREAService {
     public LIDARBasedREAService() throws IOException
     {
         //      Packet communicator receives UI data
-        reaUIPacketCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(SERVER_HOST, NetworkPorts.REA_MODULE_UI_PORT, new IHMCCommunicationKryoNetClassList());
+        reaUIPacketCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(SERVER_HOST, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
         reaMessager = new REAMessagerOverNetwork(reaUIPacketCommunicator);
         reaUIPacketCommunicator.connect();
 
@@ -37,7 +38,7 @@ public class LIDARBasedREAService {
 
         // Packet communicator client receives Lidar data
         packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(SERVER_HOST, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
-        lidarBasedREAModule = new LIDARBasedREAModule(reaMessager);
+        lidarBasedREAModule = new LIDARBasedREAModule(reaMessager, null);
         lidarBasedREAModule.attachListeners(packetCommunicator);
         packetCommunicator.connect();
 

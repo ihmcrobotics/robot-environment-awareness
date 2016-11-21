@@ -28,7 +28,7 @@ public class REAMessagerOverNetwork implements REAMessager {
         if (packet == null)
             return;
 
-        System.out.println("  packet received with message: "+ packet.getMessageName());
+        System.out.println("Packet received with message: "+ packet.getMessageName());
 
         List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(packet.getMessageName());
         if (boundVariablesForTopic != null)
@@ -45,7 +45,7 @@ public class REAMessagerOverNetwork implements REAMessager {
         if (message.getMessageName() == null)
             throw new IllegalArgumentException("message name is null");
 
-        System.out.println("submit message: "+ message.getMessageName());
+        System.out.println("Submit message: "+ message.getMessageName());
 
         packetCommunicator.send(new REAMessagePacket(message.getMessageName(), message.getMessageContent()));
     }

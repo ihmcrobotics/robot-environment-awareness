@@ -10,6 +10,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import us.ihmc.communication.configuration.NetworkParameterKeys;
+import us.ihmc.communication.configuration.NetworkParameters;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.DepthDataStateCommand;
@@ -31,7 +33,7 @@ import us.ihmc.robotEnvironmentAwareness.updaters.REAMessageManager;
 
 public class LIDARBasedEnvironmentAwarenessUI extends Application
 {
-   private static final String SERVER_HOST = "localhost";
+   private static final String SERVER_HOST = NetworkParameters.getHost(NetworkParameterKeys.networkManager);
 
    private static final String CONFIGURATION_FILE_NAME = "./Configurations/defaultREAConfiguration.txt";
 

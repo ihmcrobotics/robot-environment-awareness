@@ -70,7 +70,7 @@ public class REAPlanarRegionNetworkProvider
       listenersForSingleUpdate.clear();
    }
 
-   private PlanarRegionsListMessage createPlanarRegionsListMessage()
+   public PlanarRegionsListMessage createPlanarRegionsListMessage()
    {
       List<OcTreeNodePlanarRegion> ocTreePlanarRegions = regionFeaturesProvider.getOcTreePlanarRegions();
       List<PlanarRegionMessage> planarRegionMessages = new ArrayList<>();
@@ -103,7 +103,9 @@ public class REAPlanarRegionNetworkProvider
          convexPolygonsVertices.add(convexPolygonVertices);
       }
 
-      return new PlanarRegionMessage(regionOrigin, regionNormal, convexPolygonsVertices);
+      PlanarRegionMessage planarRegionMessage = new PlanarRegionMessage(regionOrigin, regionNormal, convexPolygonsVertices);
+      planarRegionMessage.setRegionId(planarRegionConvexPolygons.getRegionId());
+      return planarRegionMessage;
    }
 
    private void processRequests()

@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.updaters;
+package us.ihmc.robotEnvironmentAwareness.communication;
 
 public class REAModuleAPI
 {
@@ -14,7 +14,7 @@ public class REAModuleAPI
    private static final String Intersection = "Intersection/";
    private static final String Polygonizer = "Polygonizer/";
    private static final String Buffer = "Buffer/";
-   
+
    public static final String OcTreeEnable = Input + OcTree + "Enable";
    public static final String OcTreeClear = Input + OcTree + "Clear";
    public static final String OcTreeLIDARMinRange = Input + OcTree + LIDAR + "MinRange";
@@ -55,5 +55,11 @@ public class REAModuleAPI
 
    public static final String BufferOctreeNodeSize = Output + OcTree + Graphics + "BufferOctreeNodeSize";
    public static final String BufferOctree = Output + OcTree + Graphics + "BufferOctree";
+
    public static final String ScanPointsCollection = Output + OcTree + Graphics + "ScanPointsCollection";
+
+   public static final String OctreeNodes = Output + OcTree + Graphics + "OctreeNodes";
+
+   public static final byte BufferOctreeMessageID = 0x1;
+   public static final byte OctreeMessageID = 0x2;
 }

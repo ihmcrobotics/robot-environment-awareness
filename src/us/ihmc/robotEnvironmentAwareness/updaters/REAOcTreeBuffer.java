@@ -8,6 +8,8 @@ import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 
 public class REAOcTreeBuffer
 {
@@ -28,12 +30,12 @@ public class REAOcTreeBuffer
 
    private final double octreeResolution;
 
-   public REAOcTreeBuffer(double octreeResolution, REAMessager reaMessager, REAMessager reaMessengerNet)
+   public REAOcTreeBuffer(double octreeResolution, REAMessager reaMessager)
    {
       this.octreeResolution = octreeResolution;
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable);
       bufferSize = reaMessager.createInput(REAModuleAPI.OcTreeBufferSize, 10000.0);
-      graphicsBuilder = new REAOcTreeBufferGraphicsBuilder(reaMessager, reaMessengerNet);
+      graphicsBuilder = new REAOcTreeBufferGraphicsBuilder(reaMessager);
    }
 
    public Runnable createBufferThread()

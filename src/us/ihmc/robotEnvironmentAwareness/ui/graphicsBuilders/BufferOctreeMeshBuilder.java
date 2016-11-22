@@ -5,9 +5,13 @@ import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
+import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeData;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.REAMessagePacket;
 
 import javax.vecmath.Point3d;
 import java.util.ArrayList;
@@ -33,18 +37,31 @@ public class BufferOctreeMeshBuilder implements Runnable
 
    private BufferOctreeMeshBuilderListener listener;
 
-   private AtomicReference<Boolean> renderingPaused = new AtomicReference<>(false);
+   private final AtomicReference<ArrayList<OctreeNodeData>> octreeNodeDataList = new AtomicReference<>(null);
 
-   private final AtomicReference<ArrayList<Point3d>> bufferOctreeData;
-   private final AtomicReference<Double> bufferOctreeNodeSize;
+   private final AtomicReference<Boolean> enable;
+   private final AtomicReference<Boolean> showBuffer;
+
+   private boolean hasClearedBufferGraphics = false;
 
    public BufferOctreeMeshBuilder(REAMessager reaMessager, BufferOctreeMeshBuilderListener bufferOctreeMeshBuilderListener)
    {
-      bufferOctreeNodeSize = reaMessager.createInput(REAModuleAPI.BufferOctreeNodeSize);
-      bufferOctreeData = reaMessager.createInput(REAModuleAPI.BufferOctree);
+      // local
+      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
+      showBuffer = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer, true);
 
       setListener(bufferOctreeMeshBuilderListener);
+
+      reaMessager.getPacketCommunicator().attachListener(OctreeNodeMessage.class, octreeNodeMessagePacketConsumer);
    }
+
+   public PacketConsumer<OctreeNodeMessage> octreeNodeMessagePacketConsumer = (PacketConsumer<OctreeNodeMessage>) packet ->
+   {
+      if (packet == null || packet.getMessageID() != REAModuleAPI.BufferOctreeMessageID)
+         return;
+
+      octreeNodeDataList.set(packet.getOctreeNodeDataList());
+   };
 
    private void setListener(BufferOctreeMeshBuilderListener listener)
    {
@@ -55,30 +72,39 @@ public class BufferOctreeMeshBuilder implements Runnable
 
    @Override public void run()
    {
-
-      if (renderingPaused.get())
-         return;
-
-      bufferMeshBuilder.clear();
-
-      if (bufferOctreeData.get() != null && bufferOctreeNodeSize != null)
+      if (!enable.get() || !showBuffer.get())
       {
-         double size = bufferOctreeNodeSize.getAndSet(null).doubleValue();
-         List<Point3d> nodePositions = bufferOctreeData.getAndSet(null);
-
-         for (Point3d nodePosition : nodePositions)
-            bufferMeshBuilder.addCube(NODE_SCALE * size, nodePosition.getX(), nodePosition.getY(), nodePosition.getZ());
-
-         Pair<Mesh, Material> meshAndMaterial = new Pair<>(bufferMeshBuilder.generateMesh(), bufferMaterial);
-         listener.meshAndMaterialChanged(meshAndMaterial);
+         clearBufferGraphicsIfNeeded();
       }
+      else
+      {
+         bufferMeshBuilder.clear();
 
+         if (octreeNodeDataList.get() != null)
+         {
+            ArrayList<OctreeNodeData> data = octreeNodeDataList.getAndSet(null);
+            for (OctreeNodeData octreeNodeData : data)
+               bufferMeshBuilder.addCube(NODE_SCALE * octreeNodeData.getSize(), octreeNodeData.getHitLocationX(), octreeNodeData.getHitLocationY(),
+                                         octreeNodeData.getHitLocationZ());
+
+            Pair<Mesh, Material> meshAndMaterial = new Pair<>(bufferMeshBuilder.generateMesh(), bufferMaterial);
+            listener.meshAndMaterialChanged(meshAndMaterial);
+
+            hasClearedBufferGraphics = false;
+         }
+      }
 
    }
 
-   public void setRenderingPaused(boolean isPaused)
+   private void clearBufferGraphicsIfNeeded()
    {
-      renderingPaused.set(isPaused);
+      if (hasClearedBufferGraphics)
+         return;
+      bufferMeshBuilder.clear();
+      Pair<Mesh, Material> meshAndMaterial = new Pair<>(bufferMeshBuilder.generateMesh(), bufferMaterial);
+      listener.meshAndMaterialChanged(meshAndMaterial);
+
+      hasClearedBufferGraphics = true;
    }
 
 }

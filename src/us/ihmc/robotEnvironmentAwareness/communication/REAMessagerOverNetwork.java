@@ -1,16 +1,17 @@
-package us.ihmc.robotEnvironmentAwareness.updaters;
+package us.ihmc.robotEnvironmentAwareness.communication;
 
 import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.REAMessagePacket;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.REAMessagePacket;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class REAMessagerOverNetwork implements REAMessager {
+public class REAMessagerOverNetwork implements REAMessager
+{
 
     private final ConcurrentHashMap<String, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
     private final PacketCommunicator packetCommunicator;
@@ -28,7 +29,7 @@ public class REAMessagerOverNetwork implements REAMessager {
         if (packet == null)
             return;
 
-        System.out.println("Packet received with message: "+ packet.getMessageName());
+        System.out.println("Packet received from network with message name: "+ packet.getMessageName());
 
         List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(packet.getMessageName());
         if (boundVariablesForTopic != null)
@@ -47,7 +48,17 @@ public class REAMessagerOverNetwork implements REAMessager {
 
         System.out.println("Submit message: "+ message.getMessageName());
 
+        // Variable update over network
         packetCommunicator.send(new REAMessagePacket(message.getMessageName(), message.getMessageContent()));
+
+        // Local update of variable map
+        List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(message.getMessageName());
+        if (boundVariablesForTopic != null)
+        {
+            for (int i = 0; i < boundVariablesForTopic.size(); i++)
+                boundVariablesForTopic.get(i).set(message.getMessageContent());
+        }
+
     }
 
 
@@ -69,4 +80,16 @@ public class REAMessagerOverNetwork implements REAMessager {
     public List<REAMessage> getUnprocessedMessages() {
         return null;
     }
+
+
+
+    public PacketCommunicator getPacketCommunicator()
+    {
+        return packetCommunicator;
+    }
+
+
+
+
+
 }

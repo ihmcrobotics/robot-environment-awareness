@@ -1,17 +1,5 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.TexCoord2f;
-import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
-
 import javafx.geometry.Point3D;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
@@ -32,16 +20,26 @@ import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeData;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeMessage;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.updaters.RegionFeaturesProvider;
 import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
+
+import javax.vecmath.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class REAOcTreeGraphicsBuilder
 {
@@ -117,8 +115,8 @@ public class REAOcTreeGraphicsBuilder
    {
       if (shoudClear())
       {
-         reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsOccupiedMesh, new Pair<Mesh, Material>(null, null)));
-         reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh, new Pair<Mesh, Material>(null, null)));
+//         reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsOccupiedMesh, new Pair<Mesh, Material>(null, null)));
+//         reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh, new Pair<Mesh, Material>(null, null)));
          return null;
       }
 
@@ -167,7 +165,7 @@ public class REAOcTreeGraphicsBuilder
       TriangleMesh mesh = JavaFXMeshDataInterpreter.interpretMeshData(meshDataHolder);
       Pair<Mesh, Material> meshAndMaterial = new Pair<Mesh, Material>(mesh, material);
       REAMessage message = new REAMessage(messageId, meshAndMaterial);
-      reaMessager.submitMessage(message);
+//      reaMessager.submitMessage(message);
    }
 
    private void addPolygonsToMeshBuilders(MultiColorMeshBuilder polygonsMeshBuilder)
@@ -215,27 +213,43 @@ public class REAOcTreeGraphicsBuilder
          return;
 
       int currentDepth = getCurrentTreeDepthForDisplay();
+      //TODO  get all nodes from the octree
       Set<NormalOcTreeNode> nodes = getNodes(octree, currentDepth);
 
+      ArrayList<OctreeNodeData> nodesData = new ArrayList<>(octree.size());
+
+
+      //TODO Go through all nodes for all regions
       for (OcTreeNodePlanarRegion ocTreeNodePlanarRegion : regionFeaturesProvider.getOcTreePlanarRegions())
       {
+         int regionId = ocTreeNodePlanarRegion.getId();
          for (NormalOcTreeNode node : ocTreeNodePlanarRegion)
          {
             nodes.remove(node);
 
+            nodesData.add(new OctreeNodeData((float) node.getNormalX(),(float) node.getNormalY(), (float) node.getNormalZ(),
+                                             (float) node.getHitLocationX(),(float) node.getHitLocationY(), (float) node.getHitLocationZ(), (float) node.getSize(), regionId));
+
             if (isHidingPlanarRegionNodes())
                continue;
-
+      // give these region's node a color
             Color color = getNodeColor(node, ocTreeNodePlanarRegion.getId());
             addNodeToMeshBuilder(node, color, occupiedMeshBuilder);
          }
       }
 
+      // only go through nodes that don't belong to any region
       for (NormalOcTreeNode node : nodes)
       {
          Color color = getNodeColor(node);
          addNodeToMeshBuilder(node, color, occupiedMeshBuilder);
+
+         nodesData.add(new OctreeNodeData((float) node.getNormalX(),(float) node.getNormalY(), (float) node.getNormalZ(),
+                                          (float) node.getHitLocationX(),(float) node.getHitLocationY(), (float) node.getHitLocationZ(), (float) node.getSize(), OcTreeNodePlanarRegion.NO_REGION_ID));
       }
+
+      reaMessager.getPacketCommunicator().send(new OctreeNodeMessage(REAModuleAPI.OctreeMessageID, nodesData));  // TODO progressvely remove Graphics for this at least
+
    }
 
    private void addNodeToMeshBuilder(NormalOcTreeNode node, Color color, MultiColorMeshBuilder meshBuilder)
@@ -267,7 +281,7 @@ public class REAOcTreeGraphicsBuilder
    {
       if (!isShowingBoundingBox())
       {
-         reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, (Box) null));
+         //reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, (Box) null));
          return;
       }
 
@@ -288,7 +302,7 @@ public class REAOcTreeGraphicsBuilder
       ocTreeBoundingBoxGraphics.setRotate(Math.toDegrees(yaw));
 
       ocTreeBoundingBoxGraphics.setMaterial(ocTreeBoundingBoxMaterial);
-      reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, ocTreeBoundingBoxGraphics));
+//      reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, ocTreeBoundingBoxGraphics));
    }
 
    private Color getNodeColor(NormalOcTreeNode node)

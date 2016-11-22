@@ -7,7 +7,7 @@ import javafx.scene.control.ToggleButton;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.javaFXToolkit.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 
 public class NormalEstimationAnchorPaneController extends REABasicUIController
 {

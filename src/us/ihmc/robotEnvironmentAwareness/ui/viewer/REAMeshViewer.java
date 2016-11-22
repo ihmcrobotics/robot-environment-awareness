@@ -1,7 +1,5 @@
 package us.ihmc.robotEnvironmentAwareness.ui.viewer;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -15,18 +13,12 @@ import javafx.scene.shape.Box;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
-import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.communication.util.NetworkPorts;
-import us.ihmc.jOctoMap.pointCloud.PointCloud;
-import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BufferOctreeMeshBuilder;
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.ScanMeshBuilder;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAMessagerOverNetwork;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.tools.thread.ThreadTools;
-
-import javax.vecmath.Point3f;
 
 public class REAMeshViewer
 {
@@ -49,32 +41,31 @@ public class REAMeshViewer
 
    private final AnimationTimer renderMeshAnimation;
 
-
    private final ScanMeshBuilder scanMeshBuilder;
    private final BufferOctreeMeshBuilder bufferOctreeMeshBuilder;
+   private final OcTreeMeshBuilder ocTreeMeshBuilder;
 
-
-   public REAMeshViewer(REAMessager reaMessager, REAMessager reaMessagerOverNetwork)
+   public REAMeshViewer(REAMessager reaMessager)
    {
-      occupiedMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsOccupiedMesh);
+      //      occupiedMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsOccupiedMesh);
+      occupiedMeshToRender = new AtomicReference<>(null);
       bufferMeshToRender = new AtomicReference<>(null);
-
       scanInputMeshToRender = new AtomicReference<>(null);
 
       planarRegionPolygonMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh);
       boundingBoxMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh);
 
       // TEST Communication over network
-      scanMeshBuilder = new ScanMeshBuilder(reaMessagerOverNetwork, scanMeshBuilderListener);
-      bufferOctreeMeshBuilder = new BufferOctreeMeshBuilder(reaMessagerOverNetwork, bufferOctreeMeshBuilderListener);
+      scanMeshBuilder = new ScanMeshBuilder(reaMessager, scanMeshBuilderListener);
+      bufferOctreeMeshBuilder = new BufferOctreeMeshBuilder(reaMessager, bufferOctreeMeshBuilderListener);
+      ocTreeMeshBuilder = new OcTreeMeshBuilder(reaMessager, octreeMeshBuilderListener);
 
       root.getChildren().addAll(occupiedLeafsMeshView, bufferLeafsMeshView, scanInputMeshView, planarRegionMeshView);
       root.setMouseTransparent(true);
 
       renderMeshAnimation = new AnimationTimer()
       {
-         @Override
-         public void handle(long now)
+         @Override public void handle(long now)
          {
             if (Thread.interrupted())
                return;
@@ -89,12 +80,10 @@ public class REAMeshViewer
                updateMeshView(bufferLeafsMeshView, bufferMeshToRender.getAndSet(null));
             }
 
-
             if (scanInputMeshToRender.get() != null)
             {
                updateMeshView(scanInputMeshView, scanInputMeshToRender.getAndSet(null));
             }
-
 
             if (planarRegionPolygonMeshToRender.get() != null)
             {
@@ -145,7 +134,6 @@ public class REAMeshViewer
       return root;
    }
 
-
    private ScanMeshBuilder.ScanMeshBuilderListener scanMeshBuilderListener = new ScanMeshBuilder.ScanMeshBuilderListener()
    {
       @Override public void scanMeshAndMaterialChanged(Pair<Mesh, Material> meshMaterial)
@@ -159,6 +147,14 @@ public class REAMeshViewer
       @Override public void meshAndMaterialChanged(Pair<Mesh, Material> meshMaterial)
       {
          bufferMeshToRender.set(meshMaterial);
+      }
+   };
+
+   private OcTreeMeshBuilder.OctreeMeshBuilderListener octreeMeshBuilderListener = new OcTreeMeshBuilder.OctreeMeshBuilderListener()
+   {
+      @Override public void meshAndMaterialChanged(Pair<Mesh, Material> meshMaterial)
+      {
+         occupiedMeshToRender.set(meshMaterial);
       }
    };
 

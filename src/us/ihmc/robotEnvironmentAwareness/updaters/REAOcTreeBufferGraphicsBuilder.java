@@ -1,16 +1,16 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Material;
-import javafx.scene.paint.PhongMaterial;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.PointCloud;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
-import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
-import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
-import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
+import us.ihmc.jOctoMap.tools.OcTreeKeyConversionTools;
+import us.ihmc.jOctoMap.tools.OcTreeNodeTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeData;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeMessage;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Point3f;
@@ -24,55 +24,36 @@ public class REAOcTreeBufferGraphicsBuilder
    private final AtomicReference<Boolean> showInputScan;
    private final AtomicReference<Boolean> showBuffer;
 
-   private final REAMessager reaMessagerNet;
+   private final REAMessager reaMessager;
 
-   private boolean hasClearedBufferGraphics = false;
-   private boolean hasClearedScanGraphics = false;
 
-   public REAOcTreeBufferGraphicsBuilder(REAMessager reaMessager, REAMessager reaMessagerNet)
+   public REAOcTreeBufferGraphicsBuilder(REAMessager reaMessager)
    {
-      this.reaMessagerNet = reaMessagerNet;
+      this.reaMessager = reaMessager;
 
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
       showBuffer = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer, false);
       showInputScan = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowInputScan, true);
-
-      TextureColorPalette1D scanColorPalette = new TextureColorPalette1D();
-      scanColorPalette.setHueBased(1.0, 1.0);
    }
 
    public void update(NormalOcTree bufferOcTree, ScanCollection scanCollection)
    {
-      if (!enable.get() || !showBuffer.get())
+      if (enable.get()  && showBuffer.get())
       {
-         clearBufferGraphicsIfNeeded();
-      }
-      else
-      {
-         hasClearedBufferGraphics = false;
+         float size = (float) OcTreeKeyConversionTools.computeNodeSize(bufferOcTree.getTreeDepth(), bufferOcTree.getResolution(), bufferOcTree.getTreeDepth());
 
-         double size = 0;
-         ArrayList<Point3d> nodePositions = new ArrayList(bufferOcTree.getNumberOfNodes());
+         ArrayList<OctreeNodeData> nodesData = new ArrayList<>(bufferOcTree.size());
+
          for (NormalOcTreeNode node : bufferOcTree)
          {
-            Point3d point = new Point3d();
-            node.getCoordinate(point);
-            nodePositions.add(point);
-            size = node.getSize(); // Not sure how to access only one node
+            nodesData.add(new OctreeNodeData(Float.NaN, Float.NaN, Float.NaN, (float) node.getHitLocationX(),(float) node.getHitLocationY(), (float) node.getHitLocationZ(), size));
          }
 
-         reaMessagerNet.submitMessage(new REAMessage(REAModuleAPI.BufferOctreeNodeSize, size));
-         reaMessagerNet.submitMessage(new REAMessage(REAModuleAPI.BufferOctree, nodePositions));
+         reaMessager.getPacketCommunicator().send(new OctreeNodeMessage(REAModuleAPI.BufferOctreeMessageID, nodesData));
       }
 
-      if (!showInputScan.get())
+      if (showInputScan.get())
       {
-         clearScanGraphicsIfNeeded();
-      }
-      else
-      {
-         hasClearedScanGraphics = false;
-
          System.err.println("Nb of scans: " + scanCollection.getNumberOfScans());
 
          ArrayList<Point3f[]> scannedPoints = new ArrayList<>(scanCollection.getNumberOfScans());
@@ -88,24 +69,9 @@ public class REAOcTreeBufferGraphicsBuilder
          }
 
          if (!scannedPoints.isEmpty())
-            reaMessagerNet.submitMessage(new REAMessage(REAModuleAPI.ScanPointsCollection, scannedPoints));
+            reaMessager.submitMessage(new REAMessage(REAModuleAPI.ScanPointsCollection, scannedPoints));
       }
    }
 
-   private void clearBufferGraphicsIfNeeded()
-   {
-      if (hasClearedBufferGraphics)
-         return;
-      reaMessagerNet.submitMessage(new REAMessage(REAModuleAPI.BufferOctreeNodeSize, null));
-      reaMessagerNet.submitMessage(new REAMessage(REAModuleAPI.BufferOctree, null));
-      hasClearedBufferGraphics = true;
-   }
 
-   private void clearScanGraphicsIfNeeded()
-   {
-      if (hasClearedScanGraphics)
-         return;
-      reaMessagerNet.submitMessage(new REAMessage(REAModuleAPI.ScanPointsCollection, null));
-      hasClearedScanGraphics = true;
-   }
 }

@@ -4,7 +4,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.Property;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 
 public class ListenerTools
 {

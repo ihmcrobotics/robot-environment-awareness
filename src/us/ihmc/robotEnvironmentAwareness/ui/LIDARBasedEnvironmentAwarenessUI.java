@@ -15,8 +15,8 @@
 //import us.ihmc.robotEnvironmentAwareness.ui.scene3D.RobotEnvironmentAwareness3DScene;
 //import us.ihmc.robotEnvironmentAwareness.ui.viewer.LidarFrameViewer;
 //import us.ihmc.robotEnvironmentAwareness.ui.viewer.REAMeshViewer;
-//import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
-//import us.ihmc.robotEnvironmentAwareness.updaters.REAMessagerOverNetwork;
+//import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+//import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
 //
 //import java.io.File;
 //import java.io.IOException;

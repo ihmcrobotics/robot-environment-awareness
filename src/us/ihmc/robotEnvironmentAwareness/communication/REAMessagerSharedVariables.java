@@ -1,11 +1,13 @@
-package us.ihmc.robotEnvironmentAwareness.updaters;
+package us.ihmc.robotEnvironmentAwareness.communication;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 
 public class REAMessagerSharedVariables implements REAMessager
 {
@@ -44,9 +46,17 @@ public class REAMessagerSharedVariables implements REAMessager
       return boundVariable;
    }
 
+   @Override public PacketCommunicator getPacketCommunicator()
+   {
+      return null;
+   }
+
    @Override
    public List<REAMessage> getUnprocessedMessages()
    {
       return null;
    }
+
+
+
 }

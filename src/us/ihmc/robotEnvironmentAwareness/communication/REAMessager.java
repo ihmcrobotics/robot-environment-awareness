@@ -1,9 +1,9 @@
-package us.ihmc.robotEnvironmentAwareness.updaters;
+package us.ihmc.robotEnvironmentAwareness.communication;
+
+import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 
 public interface REAMessager
 {
@@ -18,5 +18,9 @@ public interface REAMessager
    {
       return createInput(messageName, null);
    }
+
+
+
+   PacketCommunicator getPacketCommunicator();
 
 }

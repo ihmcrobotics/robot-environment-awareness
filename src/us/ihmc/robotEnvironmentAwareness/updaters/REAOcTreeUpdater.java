@@ -16,6 +16,8 @@ import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree.RayMissProbabilityUpdater;
 import us.ihmc.jOctoMap.occupancy.OccupancyParameters;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 
 public class REAOcTreeUpdater
 {
@@ -36,13 +38,13 @@ public class REAOcTreeUpdater
    private final AtomicReference<Boolean> useBoundingBox;
    private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
 
-   public REAOcTreeUpdater(NormalOcTree octree, REAMessager reaMessager, REAMessager reaMessengerNet)
+   public REAOcTreeUpdater(NormalOcTree octree, REAMessager reaMessager)
    {
       this.referenceOctree = octree;
       referenceOctree.enableParallelComputationForNormals(true);
       referenceOctree.enableParallelInsertionOfMisses(true);
 
-      reaOcTreeBuffer = new REAOcTreeBuffer(octree.getResolution(), reaMessager, reaMessengerNet);
+      reaOcTreeBuffer = new REAOcTreeBuffer(octree.getResolution(), reaMessager);
 
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable);
       enableNormalEstimation = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationEnable);

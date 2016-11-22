@@ -14,6 +14,8 @@ import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.tools.JOctoMapTools;
 
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.tools.io.printing.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;
 
@@ -32,7 +34,9 @@ public class LIDARBasedREAModule
 
    private final REAOcTreeUpdater updater;
    private final REAPlanarRegionFeatureUpdater planarRegionFeatureUpdater;
+
    private final REAOcTreeGraphicsBuilder graphicsBuilder;
+
    private final REAPlanarRegionNetworkProvider planarRegionNetworkProvider;
 
    private final AtomicReference<Boolean> clearOcTree;
@@ -40,16 +44,16 @@ public class LIDARBasedREAModule
    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(3, ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
    private ScheduledFuture<?> scheduled;
 
-   public LIDARBasedREAModule(REAMessager reaMessager, REAMessager reaMessagerNet)
+   public LIDARBasedREAModule(REAMessager reaMessager)
    {
-      updater = new REAOcTreeUpdater(octree, reaMessager, reaMessagerNet);
+      updater = new REAOcTreeUpdater(octree, reaMessager);
 
       planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(octree, reaMessager);
 
       // TODO move Graphics builder to UI
       graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, planarRegionFeatureUpdater, reaMessager);
 
-
+      // lui donner le messager
       planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater);
       clearOcTree = reaMessager.createInput(REAModuleAPI.OcTreeClear, false);
    }
@@ -169,6 +173,8 @@ public class LIDARBasedREAModule
                stopWatch.start();
             }
 
+            // TODO: Here Send stuff to GUI
+
             Runnable futureTask = graphicsBuilder.update();
             if (futureTask != null)
                executorService.execute(futureTask);
@@ -192,7 +198,7 @@ public class LIDARBasedREAModule
       if (scheduled == null)
       {
          scheduled = executorService.scheduleAtFixedRate(createUpdater(), 0, THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
-         executorService.scheduleAtFixedRate(updater.createBufferThread(), 0, BUFFER_THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);// TODO Start Here!  balancer les infos sur le network
+         executorService.scheduleAtFixedRate(updater.createBufferThread(), 0, BUFFER_THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
       }
    }
 

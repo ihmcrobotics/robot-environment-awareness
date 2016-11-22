@@ -8,7 +8,7 @@ import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 
 public class LIDARFilterAnchorPaneController extends REABasicUIController
 {

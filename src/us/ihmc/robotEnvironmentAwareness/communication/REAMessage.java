@@ -1,6 +1,8 @@
 package us.ihmc.robotEnvironmentAwareness.communication;
 
-public final class REAMessage
+import us.ihmc.robotEnvironmentAwareness.communication.packets.REAMessageIdentifier;
+
+public final class REAMessage implements REAMessageIdentifier
 {
    private final String messageName;
    private final Object messageContent;

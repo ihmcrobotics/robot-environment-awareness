@@ -20,9 +20,9 @@ import us.ihmc.robotEnvironmentAwareness.ui.scene3D.RobotEnvironmentAwareness3DS
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.LidarFrameViewer;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.REAMeshViewer;
 import us.ihmc.robotEnvironmentAwareness.updaters.LIDARBasedREAModule;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAMessagerOverNetwork;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAMessagerSharedVariables;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerSharedVariables;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,8 +37,6 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
 
    private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
    private final BorderPane mainPane;
-
-   private final REAMessager reaMessager = new REAMessagerSharedVariables();
 
 
    private final PacketCommunicator reaModulePacketCommunicatorServer;
@@ -81,13 +79,13 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       // Client
       reaModulePacketCommunicatorClient = PacketCommunicator.createTCPPacketCommunicatorClient(SERVER_HOST, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
       reaMessagerOverNetworkClient = new REAMessagerOverNetwork(reaModulePacketCommunicatorClient);
-      reaMeshViewer = new REAMeshViewer(reaMessager, reaMessagerOverNetworkClient);
+      reaMeshViewer = new REAMeshViewer(reaMessagerOverNetworkClient);
 
       // Server
       reaModulePacketCommunicatorServer = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
       reaMessagerOverNetworkServer = new REAMessagerOverNetwork(reaModulePacketCommunicatorServer);
 
-      lidarBasedREAModule = new LIDARBasedREAModule(reaMessager, reaMessagerOverNetworkServer);
+      lidarBasedREAModule = new LIDARBasedREAModule(reaMessagerOverNetworkServer);
 
       lidarBasedREAModule.attachListeners(packetCommunicator);
       lidarBasedREAModule.start();
@@ -126,23 +124,23 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       File configurationFile = new File(CONFIGURATION_FILE_NAME);
 
       ocTreeBasicsAnchorPaneController.setConfigurationFile(configurationFile);
-      ocTreeBasicsAnchorPaneController.attachREAMessager(reaMessager);
+      ocTreeBasicsAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
       ocTreeBasicsAnchorPaneController.bindControls();
 
       lidarFilterAnchorPaneController.setConfigurationFile(configurationFile);
-      lidarFilterAnchorPaneController.attachREAMessager(reaMessager);
+      lidarFilterAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
       lidarFilterAnchorPaneController.bindControls();
       
       normalEstimationAnchorPaneController.setConfigurationFile(configurationFile);
-      normalEstimationAnchorPaneController.attachREAMessager(reaMessager);
+      normalEstimationAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
       normalEstimationAnchorPaneController.bindControls();
       
       regionSegmentationAnchorPaneController.setConfigurationFile(configurationFile);
-      regionSegmentationAnchorPaneController.attachREAMessager(reaMessager);
+      regionSegmentationAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
       regionSegmentationAnchorPaneController.bindControls();
       
       polygonizerAnchorPaneController.setConfigurationFile(configurationFile);
-      polygonizerAnchorPaneController.attachREAMessager(reaMessager);
+      polygonizerAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
       polygonizerAnchorPaneController.bindControls();
 
       reaMeshViewer.start();

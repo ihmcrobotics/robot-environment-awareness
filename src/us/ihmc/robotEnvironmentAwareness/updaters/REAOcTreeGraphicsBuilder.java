@@ -28,7 +28,7 @@ import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.javaFXToolkit.graphics.JavaFXMeshDataInterpreter;
-import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
+import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
@@ -65,8 +65,8 @@ public class REAOcTreeGraphicsBuilder
 
    private final AtomicBoolean processPropertyChange = new AtomicBoolean(false);
 
-   private final MultiColorMeshBuilder occupiedMeshBuilder;
-   private final MultiColorMeshBuilder polygonsMeshBuilder;
+   private final JavaFXMultiColorMeshBuilder occupiedMeshBuilder;
+   private final JavaFXMultiColorMeshBuilder polygonsMeshBuilder;
 
    private final Vector3d ocTreeBoundingBoxSize = new Vector3d();
    private final Point3d ocTreeBoundingBoxCenter = new Point3d();
@@ -103,10 +103,10 @@ public class REAOcTreeGraphicsBuilder
 
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);
-      occupiedMeshBuilder = new MultiColorMeshBuilder(normalBasedColorPalette1D);
+      occupiedMeshBuilder = new JavaFXMultiColorMeshBuilder(normalBasedColorPalette1D);
       TextureColorPalette2D regionColorPalette1D = new TextureColorPalette2D();
       regionColorPalette1D.setHueBrightnessBased(0.9);
-      polygonsMeshBuilder = new MultiColorMeshBuilder(regionColorPalette1D);
+      polygonsMeshBuilder = new JavaFXMultiColorMeshBuilder(regionColorPalette1D);
    }
 
    private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
@@ -169,7 +169,7 @@ public class REAOcTreeGraphicsBuilder
       outputMessager.submitMessage(message);
    }
 
-   private void addPolygonsToMeshBuilders(MultiColorMeshBuilder polygonsMeshBuilder)
+   private void addPolygonsToMeshBuilders(JavaFXMultiColorMeshBuilder polygonsMeshBuilder)
    {
       for (int i = 0; i < regionFeaturesProvider.getNumberOfPlaneIntersections(); i++)
       {
@@ -208,7 +208,7 @@ public class REAOcTreeGraphicsBuilder
       }
    }
 
-   private void addCellsToMeshBuilders(MultiColorMeshBuilder occupiedMeshBuilder)
+   private void addCellsToMeshBuilders(JavaFXMultiColorMeshBuilder occupiedMeshBuilder)
    {
       if (!isShowingOcTreeNodes())
          return;
@@ -237,7 +237,7 @@ public class REAOcTreeGraphicsBuilder
       }
    }
 
-   private void addNodeToMeshBuilder(NormalOcTreeNode node, Color color, MultiColorMeshBuilder meshBuilder)
+   private void addNodeToMeshBuilder(NormalOcTreeNode node, Color color, JavaFXMultiColorMeshBuilder meshBuilder)
    {
       double size = node.getSize();
 

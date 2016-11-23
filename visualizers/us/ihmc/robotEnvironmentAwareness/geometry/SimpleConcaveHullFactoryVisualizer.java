@@ -16,7 +16,7 @@ import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.scene.shape.MeshView;
 import javafx.stage.Stage;
-import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
+import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.tools.View3DFactory;
 import us.ihmc.robotics.geometry.GeometryTools;
 import us.ihmc.robotics.linearAlgebra.PrincipalComponentAnalysis3D;
@@ -27,7 +27,7 @@ public class SimpleConcaveHullFactoryVisualizer extends Application
 
    private final List<Point3d> pointCloud3d = new ArrayList<>();
    private final List<Point2d> pointCloud = new ArrayList<>();
-   private final MultiColorMeshBuilder meshBuilder = new MultiColorMeshBuilder();
+   private final JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder();
 
    public SimpleConcaveHullFactoryVisualizer() throws IOException
    {

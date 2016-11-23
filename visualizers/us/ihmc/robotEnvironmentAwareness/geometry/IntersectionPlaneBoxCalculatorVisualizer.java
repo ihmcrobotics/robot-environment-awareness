@@ -11,14 +11,14 @@ import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.scene.shape.MeshView;
 import javafx.stage.Stage;
-import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
+import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.robotEnvironmentAwareness.tools.View3DFactory;
 
 public class IntersectionPlaneBoxCalculatorVisualizer extends Application
 {
    private final TextureColorPalette1D colorPalette = new TextureColorPalette1D();
-   private final MultiColorMeshBuilder colorMeshBuilder = new MultiColorMeshBuilder(colorPalette);
+   private final JavaFXMultiColorMeshBuilder colorMeshBuilder = new JavaFXMultiColorMeshBuilder(colorPalette);
    private final IntersectionPlaneBoxCalculator calculator = new IntersectionPlaneBoxCalculator();
    private final Box box;
 //   private final Cylinder normalCylinder;

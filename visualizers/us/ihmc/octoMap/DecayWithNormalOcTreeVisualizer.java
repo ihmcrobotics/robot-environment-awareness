@@ -11,14 +11,15 @@ import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.Sphere;
 import javafx.stage.Stage;
+import us.ihmc.graphics3DDescription.MeshDataBuilder;
 import us.ihmc.jOctoMap.iterators.OcTreeIterable;
 import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.PointCloud;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
-import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
-import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
+import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
+import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotEnvironmentAwareness.tools.View3DFactory;
@@ -117,8 +118,8 @@ public class DecayWithNormalOcTreeVisualizer extends Application
 
       TextureColorPalette1D palette = new TextureColorPalette1D();
       palette.setHueBased(0.9, 0.8);
-      MultiColorMeshBuilder occupiedMeshBuilder = new MultiColorMeshBuilder(palette);
-      MeshBuilder freeMeshBuilder = new MeshBuilder();
+      JavaFXMultiColorMeshBuilder occupiedMeshBuilder = new JavaFXMultiColorMeshBuilder(palette);
+      JavaFXMeshBuilder freeMeshBuilder = new JavaFXMeshBuilder();
 
       OcTreeIterable<NormalOcTreeNode> leafIterable = OcTreeIteratorFactory.createLeafIteratable(ocTree.getRoot());
       for (NormalOcTreeNode node : leafIterable)

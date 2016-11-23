@@ -12,8 +12,8 @@ import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.PointCloud;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
-import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
-import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
+import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
+import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 
@@ -26,9 +26,9 @@ public class REAOcTreeBufferGraphicsBuilder
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> showInputScan;
    private final AtomicReference<Boolean> showBuffer;
-   private final MeshBuilder bufferMeshBuilder = new MeshBuilder();
+   private final JavaFXMeshBuilder bufferMeshBuilder = new JavaFXMeshBuilder();
    private final Material bufferMaterial = new PhongMaterial(DEFAULT_BUFFER_COLOR);
-   private final MultiColorMeshBuilder scanMeshBuilder;;
+   private final JavaFXMultiColorMeshBuilder scanMeshBuilder;;
 
    private REAMessager outputMessager;
 
@@ -45,7 +45,7 @@ public class REAOcTreeBufferGraphicsBuilder
 
       TextureColorPalette1D scanColorPalette = new TextureColorPalette1D();
       scanColorPalette.setHueBased(1.0, 1.0);
-      scanMeshBuilder = new MultiColorMeshBuilder(scanColorPalette);
+      scanMeshBuilder = new JavaFXMultiColorMeshBuilder(scanColorPalette);
    }
 
    public void update(NormalOcTree bufferOcTree, ScanCollection scanCollection)

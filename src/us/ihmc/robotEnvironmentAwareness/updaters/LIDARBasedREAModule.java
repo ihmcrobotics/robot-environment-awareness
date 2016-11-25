@@ -136,7 +136,7 @@ public class LIDARBasedREAModule
                   System.out.println("OcTree update took: " + JOctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
             }
 
-            return updatedProperly;
+            return performCompleteUpdate && updatedProperly;
          }
 
          private void callPlanarRegionFeatureUpdater()

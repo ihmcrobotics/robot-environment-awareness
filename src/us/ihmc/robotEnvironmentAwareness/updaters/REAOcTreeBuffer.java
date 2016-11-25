@@ -20,6 +20,7 @@ public class REAOcTreeBuffer
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Double> bufferSize;
 
+   private final AtomicBoolean clearBuffer = new AtomicBoolean(false);
    private final AtomicBoolean isBufferFull = new AtomicBoolean(false);
    private final AtomicBoolean isBufferRequested = new AtomicBoolean(false);
    private final AtomicReference<NormalOcTree> newBuffer = new AtomicReference<>(null);
@@ -31,7 +32,7 @@ public class REAOcTreeBuffer
    public REAOcTreeBuffer(REAMessageManager inputManager, REAMessager outputMessager, double octreeResolution)
    {
       this.octreeResolution = octreeResolution;
-      enable = inputManager.createInput(REAModuleAPI.OcTreeEnable);
+      enable = inputManager.createInput(REAModuleAPI.OcTreeEnable, false);
       bufferSize = inputManager.createInput(REAModuleAPI.OcTreeBufferSize, 10000.0);
       graphicsBuilder = new REAOcTreeBufferGraphicsBuilder(inputManager, outputMessager);
    }
@@ -47,6 +48,14 @@ public class REAOcTreeBuffer
          {
             updateScanCollection();
             ScanCollection newScan = newFullScanReference.getAndSet(null);
+
+            if (clearBuffer.getAndSet(false))
+            {
+               bufferOctree.clear();
+               isBufferFull.set(false);
+               isBufferRequested.set(false);
+               return;
+            }
 
             if (newScan == null)
                return;
@@ -66,6 +75,11 @@ public class REAOcTreeBuffer
             graphicsBuilder.update(bufferOctree, newScan);
          }
       };
+   }
+
+   public void clearBuffer()
+   {
+      clearBuffer.set(true);
    }
 
    public void submitBufferRequest()
@@ -88,7 +102,7 @@ public class REAOcTreeBuffer
       LidarPosePacket lidarPosePacket = latestLidarPoseReference.get();
       PointCloudWorldPacket pointCloudPacket = latestPointCloudWorldPacket.getAndSet(null);
 
-      if (!isEnabled() || lidarPosePacket == null || pointCloudPacket == null)
+      if (!enable.get() || lidarPosePacket == null || pointCloudPacket == null)
          return;
 
       ScanCollection scanCollection = new ScanCollection();
@@ -113,10 +127,5 @@ public class REAOcTreeBuffer
    {
       if (packet != null)
          latestPointCloudWorldPacket.set(packet);
-   }
-
-   private boolean isEnabled()
-   {
-      return enable.get() == null ? false : enable.get();
    }
 }

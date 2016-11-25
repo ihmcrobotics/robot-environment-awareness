@@ -12,7 +12,7 @@ import javafx.scene.control.ToggleButton;
 import us.ihmc.javaFXToolkit.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAOcTreeGraphicsBuilder.ColoringType;
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.REAOcTreeGraphicsBuilder.ColoringType;
 
 public class OcTreeBasicsAnchorPaneController extends REABasicUIController
 {

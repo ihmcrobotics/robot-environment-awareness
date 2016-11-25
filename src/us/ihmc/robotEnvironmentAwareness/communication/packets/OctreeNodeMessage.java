@@ -14,6 +14,7 @@ public class OctreeNodeMessage extends Packet<OctreeNodeMessage>
 
    private byte messageID;
    private ArrayList<OctreeNodeData> octreeNodeDataList;
+   private float defaultNodeSize;
 
    public OctreeNodeMessage(Random random)
    {
@@ -24,10 +25,11 @@ public class OctreeNodeMessage extends Packet<OctreeNodeMessage>
       setDestination(PacketDestination.REA_MODULE); // or use broadcast
    }
 
-   public OctreeNodeMessage(byte messageID, ArrayList<OctreeNodeData> octreeNodeDataList)
+   public OctreeNodeMessage(byte messageID, ArrayList<OctreeNodeData> octreeNodeDataList, float defaultNodeSize)
    {
       this.messageID = messageID;
       this.octreeNodeDataList = octreeNodeDataList;
+      this.defaultNodeSize = defaultNodeSize;
    }
 
    public ArrayList<OctreeNodeData> getOctreeNodeDataList()
@@ -38,6 +40,11 @@ public class OctreeNodeMessage extends Packet<OctreeNodeMessage>
    public byte getMessageID()
    {
       return messageID;
+   }
+
+   public float getDefaultNodeSize()
+   {
+      return defaultNodeSize;
    }
 
    @Override public boolean epsilonEquals(OctreeNodeMessage other, double epsilon)

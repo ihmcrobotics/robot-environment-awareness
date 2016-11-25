@@ -6,6 +6,7 @@ import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
 import us.ihmc.communication.net.PacketConsumer;
+import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
@@ -38,6 +39,7 @@ public class BufferOctreeMeshBuilder implements Runnable
    private BufferOctreeMeshBuilderListener listener;
 
    private final AtomicReference<ArrayList<OctreeNodeData>> octreeNodeDataList = new AtomicReference<>(null);
+   private final AtomicReference<Float> defaultNodeSize = new AtomicReference<>(null);
 
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> showBuffer;
@@ -61,6 +63,8 @@ public class BufferOctreeMeshBuilder implements Runnable
          return;
 
       octreeNodeDataList.set(packet.getOctreeNodeDataList());
+      defaultNodeSize.set(packet.getDefaultNodeSize());
+
    };
 
    private void setListener(BufferOctreeMeshBuilderListener listener)
@@ -78,14 +82,18 @@ public class BufferOctreeMeshBuilder implements Runnable
       }
       else
       {
+
          bufferMeshBuilder.clear();
 
          if (octreeNodeDataList.get() != null)
          {
             ArrayList<OctreeNodeData> data = octreeNodeDataList.getAndSet(null);
+            float size = defaultNodeSize.getAndSet(null);
             for (OctreeNodeData octreeNodeData : data)
-               bufferMeshBuilder.addCube(NODE_SCALE * octreeNodeData.getSize(), octreeNodeData.getHitLocationX(), octreeNodeData.getHitLocationY(),
-                                         octreeNodeData.getHitLocationZ());
+            {
+               NormalOcTreeNode normalOcTreeNode = octreeNodeData.getNormalOcTreeNode();
+               bufferMeshBuilder.addCube(NODE_SCALE * size, normalOcTreeNode.getHitLocationX(), normalOcTreeNode.getHitLocationY(), normalOcTreeNode.getHitLocationZ());
+            }
 
             Pair<Mesh, Material> meshAndMaterial = new Pair<>(bufferMeshBuilder.generateMesh(), bufferMaterial);
             listener.meshAndMaterialChanged(meshAndMaterial);
@@ -93,7 +101,6 @@ public class BufferOctreeMeshBuilder implements Runnable
             hasClearedBufferGraphics = false;
          }
       }
-
    }
 
    private void clearBufferGraphicsIfNeeded()

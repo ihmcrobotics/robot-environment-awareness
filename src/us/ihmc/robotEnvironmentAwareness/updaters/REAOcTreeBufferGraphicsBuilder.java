@@ -5,14 +5,12 @@ import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.PointCloud;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
 import us.ihmc.jOctoMap.tools.OcTreeKeyConversionTools;
-import us.ihmc.jOctoMap.tools.OcTreeNodeTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeData;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeMessage;
 
-import javax.vecmath.Point3d;
 import javax.vecmath.Point3f;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicReference;
@@ -46,10 +44,10 @@ public class REAOcTreeBufferGraphicsBuilder
 
          for (NormalOcTreeNode node : bufferOcTree)
          {
-            nodesData.add(new OctreeNodeData(Float.NaN, Float.NaN, Float.NaN, (float) node.getHitLocationX(),(float) node.getHitLocationY(), (float) node.getHitLocationZ(), size));
+            nodesData.add(new OctreeNodeData(node,  Integer.MIN_VALUE));
          }
 
-         reaMessager.getPacketCommunicator().send(new OctreeNodeMessage(REAModuleAPI.BufferOctreeMessageID, nodesData));
+         reaMessager.getPacketCommunicator().send(new OctreeNodeMessage(REAModuleAPI.BufferOctreeMessageID, nodesData, size));
       }
 
       if (showInputScan.get())

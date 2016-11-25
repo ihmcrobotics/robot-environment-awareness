@@ -5,6 +5,7 @@ import us.ihmc.communication.packets.Packet;
 import us.ihmc.communication.packets.PacketDestination;
 import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.jOctoMap.key.OcTreeKey;
+import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeData;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeMessage;
@@ -12,8 +13,8 @@ import us.ihmc.robotEnvironmentAwareness.communication.packets.REAMessagePacket;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAOcTreeGraphicsBuilder;
-
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.REAOcTreeGraphicsBuilder;
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.REAOcTreeGraphicsBuilder.ColoringType;
 import javax.vecmath.Point3d;
 import javax.vecmath.Point3f;
 import javax.vecmath.Quat4d;
@@ -59,6 +60,7 @@ public class REACommunicationKryoNetClassList extends NetClassList
 
       registerPacketClass(OctreeNodeMessage.class);
       registerPacketField(OctreeNodeData.class);
+      registerPacketField(NormalOcTreeNode.class);
 
 
 

@@ -175,9 +175,11 @@ public class LIDARBasedREAModule
 
             // TODO: Here Send stuff to GUI
 
-            Runnable futureTask = graphicsBuilder.update();
-            if (futureTask != null)
-               executorService.execute(futureTask);
+            graphicsBuilder.update();
+//
+//            Runnable futureTask = graphicsBuilder.update();
+//            if (futureTask != null)
+//               executorService.execute(futureTask);
 
             if (REPORT_TIME)
             {

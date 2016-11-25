@@ -47,12 +47,11 @@ public class REAMeshViewer
 
    public REAMeshViewer(REAMessager reaMessager)
    {
-      //      occupiedMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsOccupiedMesh);
       occupiedMeshToRender = new AtomicReference<>(null);
+      planarRegionPolygonMeshToRender = new AtomicReference<>(null);
       bufferMeshToRender = new AtomicReference<>(null);
       scanInputMeshToRender = new AtomicReference<>(null);
 
-      planarRegionPolygonMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh);
       boundingBoxMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh);
 
       // TEST Communication over network
@@ -72,6 +71,7 @@ public class REAMeshViewer
 
             if (occupiedMeshToRender.get() != null)
             {
+               System.out.println("Updating occupied mesh view");
                updateMeshView(occupiedLeafsMeshView, occupiedMeshToRender.getAndSet(null));
             }
 
@@ -110,6 +110,7 @@ public class REAMeshViewer
       renderMeshAnimation.start();
       executorService.scheduleAtFixedRate(scanMeshBuilder, 0, SCAN_MESH_BUILDER_RUN_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
       executorService.scheduleAtFixedRate(bufferOctreeMeshBuilder, 0, SCAN_MESH_BUILDER_RUN_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
+      executorService.scheduleAtFixedRate(ocTreeMeshBuilder, 0, SCAN_MESH_BUILDER_RUN_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
    }
 
    public void stop()
@@ -152,10 +153,16 @@ public class REAMeshViewer
 
    private OcTreeMeshBuilder.OctreeMeshBuilderListener octreeMeshBuilderListener = new OcTreeMeshBuilder.OctreeMeshBuilderListener()
    {
-      @Override public void meshAndMaterialChanged(Pair<Mesh, Material> meshMaterial)
+      @Override public void occupiedMeshAndMaterialChanged(Pair<Mesh, Material> meshAndMaterial)
       {
-         occupiedMeshToRender.set(meshMaterial);
+         occupiedMeshToRender.set(meshAndMaterial);
       }
+
+      @Override public void planarRegionMeshAndMaterialChanged(Pair<Mesh, Material> meshAndMaterial)
+      {
+         planarRegionPolygonMeshToRender.set(meshAndMaterial);
+      }
+
    };
 
 }

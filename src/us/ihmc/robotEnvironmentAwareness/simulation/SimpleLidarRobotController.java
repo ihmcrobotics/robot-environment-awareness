@@ -94,6 +94,7 @@ public class SimpleLidarRobotController implements RobotController
          sweepViz = BagOfBalls.createRainbowBag(lidarScanParameters.getPointsPerSweep() / vizualizeEveryNPoints, 0.005, "SweepViz", registry, yoGraphicsListRegistry);
       else
          sweepViz = null;
+      yoGraphicPlanarRegionsList.hideGraphicObject();
       yoGraphicsListRegistry.registerYoGraphic("Regions", yoGraphicPlanarRegionsList);
       packetCommunicator.attachListener(PlanarRegionsListMessage.class, this::handlePacket);
    }

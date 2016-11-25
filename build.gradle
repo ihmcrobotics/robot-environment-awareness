@@ -14,6 +14,27 @@ apply plugin: "us.ihmc.gradle.ihmc-build"
 sourceCompatibility = 1.8
 version = '1.0'
 
+project.sourceSets {
+    main {
+        java {
+            srcDirs = ['src', 'visualizers']
+        }
+
+        resources {
+            srcDirs = ['src', 'resources']
+        }
+    }
+
+    test {
+        java {
+            srcDirs = ['test']
+        }
+
+        resources {
+            srcDirs = ['testResources']
+        }
+    }
+}
 
 repositories ihmc.ihmcDefaultArtifactProxies()
 

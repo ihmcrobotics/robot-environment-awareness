@@ -1,5 +1,17 @@
 package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.vecmath.Point3d;
+import javax.vecmath.Point3f;
+import javax.vecmath.TexCoord2f;
+import javax.vecmath.Vector3d;
+import javax.vecmath.Vector3f;
+
 import javafx.geometry.Point3D;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
@@ -16,14 +28,12 @@ import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.javaFXToolkit.graphics.JavaFXMeshDataInterpreter;
-import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
+import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeData;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeMessage;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
@@ -32,14 +42,6 @@ import us.ihmc.robotEnvironmentAwareness.updaters.RegionFeaturesProvider;
 import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
-
-import javax.vecmath.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class REAOcTreeGraphicsBuilder
 {
@@ -66,8 +68,8 @@ public class REAOcTreeGraphicsBuilder
 
    private final AtomicBoolean processPropertyChange = new AtomicBoolean(false);
 
-   private final MultiColorMeshBuilder occupiedMeshBuilder;
-   private final MultiColorMeshBuilder polygonsMeshBuilder;
+   private final JavaFXMultiColorMeshBuilder occupiedMeshBuilder;
+   private final JavaFXMultiColorMeshBuilder polygonsMeshBuilder;
 
    private final Vector3d ocTreeBoundingBoxSize = new Vector3d();
    private final Point3d ocTreeBoundingBoxCenter = new Point3d();
@@ -102,10 +104,10 @@ public class REAOcTreeGraphicsBuilder
 
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);
-      occupiedMeshBuilder = new MultiColorMeshBuilder(normalBasedColorPalette1D);
+      occupiedMeshBuilder = new JavaFXMultiColorMeshBuilder(normalBasedColorPalette1D);
       TextureColorPalette2D regionColorPalette1D = new TextureColorPalette2D();
       regionColorPalette1D.setHueBrightnessBased(0.9);
-      polygonsMeshBuilder = new MultiColorMeshBuilder(regionColorPalette1D);
+      polygonsMeshBuilder = new JavaFXMultiColorMeshBuilder(regionColorPalette1D);
    }
 
    private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
@@ -170,7 +172,7 @@ public class REAOcTreeGraphicsBuilder
 //      reaMessager.submitMessage(message);
    }
 
-   private void addPolygonsToMeshBuilders(MultiColorMeshBuilder polygonsMeshBuilder)
+   private void addPolygonsToMeshBuilders(JavaFXMultiColorMeshBuilder polygonsMeshBuilder)
    {
       for (int i = 0; i < regionFeaturesProvider.getNumberOfPlaneIntersections(); i++)
       {
@@ -254,7 +256,7 @@ public class REAOcTreeGraphicsBuilder
 //
 //   }
 
-   private void addNodeToMeshBuilder(NormalOcTreeNode node, Color color, MultiColorMeshBuilder meshBuilder)
+   private void addNodeToMeshBuilder(NormalOcTreeNode node, Color color, JavaFXMultiColorMeshBuilder meshBuilder)
    {
       double size = node.getSize();
 

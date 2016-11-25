@@ -6,24 +6,19 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import javafx.application.Application;
-import javafx.event.Event;
-import javafx.scene.Group;
-import javafx.scene.PerspectiveCamera;
-import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.scene.shape.MeshView;
 import javafx.stage.Stage;
-import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler;
-import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
-import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
+import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
+import us.ihmc.robotEnvironmentAwareness.tools.View3DFactory;
 
 public class IntersectionPlaneBoxCalculatorVisualizer extends Application
 {
    private final TextureColorPalette1D colorPalette = new TextureColorPalette1D();
-   private final MultiColorMeshBuilder colorMeshBuilder = new MultiColorMeshBuilder(colorPalette);
+   private final JavaFXMultiColorMeshBuilder colorMeshBuilder = new JavaFXMultiColorMeshBuilder(colorPalette);
    private final IntersectionPlaneBoxCalculator calculator = new IntersectionPlaneBoxCalculator();
    private final Box box;
 //   private final Cylinder normalCylinder;
@@ -88,21 +83,15 @@ public class IntersectionPlaneBoxCalculatorVisualizer extends Application
    @Override
    public void start(Stage primaryStage) throws Exception
    {
-      Group rootNode = new Group();
-      Scene scene = new Scene(rootNode, 800, 600, true);
-      scene.setFill(Color.GRAY);
-      rootNode.setMouseTransparent(true);
-      setupCamera(rootNode, scene);
-      JavaFXCoordinateSystem worldCoordinateSystem = new JavaFXCoordinateSystem(0.3);
-      rootNode.getChildren().add(worldCoordinateSystem);
+      View3DFactory view3dFactory = new View3DFactory(800, 600);
+      view3dFactory.addCameraController();
+      view3dFactory.addWorldCoordinateSystem(0.3);
 
-      primaryStage.setScene(scene);
-      primaryStage.show();
 
       MeshView meshView = new MeshView();
       meshView.setMesh(colorMeshBuilder.generateMesh());
       meshView.setMaterial(colorMeshBuilder.generateMaterial());
-      rootNode.getChildren().add(meshView);
+      view3dFactory.addNodeToView(meshView);
 
       PhongMaterial material = new PhongMaterial(Color.DARKCYAN);
 //      normalCylinder.setMaterial(material);
@@ -110,21 +99,10 @@ public class IntersectionPlaneBoxCalculatorVisualizer extends Application
       material = new PhongMaterial();
       material.setDiffuseColor(new Color(1.0, 1.0, 0.0, 0.0));
       box.setMaterial(material);
-      rootNode.getChildren().add(box);
+      view3dFactory.addNodeToView(box);
 
-   }
-
-   private void setupCamera(Group root, Scene scene)
-   {
-      PerspectiveCamera camera = new PerspectiveCamera(true);
-      camera.setNearClip(0.05);
-      camera.setFarClip(50.0);
-      scene.setCamera(camera);
-
-      Vector3d up = new Vector3d(0.0, 0.0, 1.0);
-      FocusBasedCameraMouseEventHandler cameraController = new FocusBasedCameraMouseEventHandler(scene.widthProperty(), scene.heightProperty(), camera, up);
-      scene.addEventHandler(Event.ANY, cameraController);
-      root.getChildren().add(cameraController.getFocusPointViz());
+      primaryStage.setScene(view3dFactory.getScene());
+      primaryStage.show();
    }
 
    public static void main(String[] args)

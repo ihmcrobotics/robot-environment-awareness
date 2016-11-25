@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.vecmath.Point2f;
 import javax.vecmath.Point3f;
@@ -23,6 +24,7 @@ public class REAPlanarRegionNetworkProvider
 {
    private final Set<PacketDestination> listenersForContinuousUpdate = new HashSet<>();
    private final Set<PacketDestination> listenersForSingleUpdate = new HashSet<>();
+   private final AtomicBoolean hasReceivedClearRequest = new AtomicBoolean(false);
    private PacketCommunicator packetCommunicator;
    private final RegionFeaturesProvider regionFeaturesProvider;
 
@@ -70,7 +72,7 @@ public class REAPlanarRegionNetworkProvider
       listenersForSingleUpdate.clear();
    }
 
-   private PlanarRegionsListMessage createPlanarRegionsListMessage()
+   public PlanarRegionsListMessage createPlanarRegionsListMessage()
    {
       List<OcTreeNodePlanarRegion> ocTreePlanarRegions = regionFeaturesProvider.getOcTreePlanarRegions();
       List<PlanarRegionMessage> planarRegionMessages = new ArrayList<>();
@@ -78,7 +80,8 @@ public class REAPlanarRegionNetworkProvider
       for (OcTreeNodePlanarRegion ocTreeNodePlanarRegion : ocTreePlanarRegions)
       {
          PlanarRegionConvexPolygons planarRegionConvexPolygons = regionFeaturesProvider.getPlanarRegionConvexPolygons(ocTreeNodePlanarRegion);
-         planarRegionMessages.add(createPlanarRegionMessage(planarRegionConvexPolygons));
+         if (planarRegionConvexPolygons != null)
+            planarRegionMessages.add(createPlanarRegionMessage(planarRegionConvexPolygons));
       }
 
       return new PlanarRegionsListMessage(planarRegionMessages);
@@ -99,9 +102,12 @@ public class REAPlanarRegionNetworkProvider
          Point2f[] convexPolygonVertices = new Point2f[convexPolygon.getNumberOfVertices()];
          for (int vertexIndex = 0; vertexIndex < convexPolygon.getNumberOfVertices(); vertexIndex++)
             convexPolygonVertices[vertexIndex] = new Point2f(convexPolygon.getVertex(vertexIndex));
+         convexPolygonsVertices.add(convexPolygonVertices);
       }
 
-      return new PlanarRegionMessage(regionOrigin, regionNormal, convexPolygonsVertices);
+      PlanarRegionMessage planarRegionMessage = new PlanarRegionMessage(regionOrigin, regionNormal, convexPolygonsVertices);
+      planarRegionMessage.setRegionId(planarRegionConvexPolygons.getRegionId());
+      return planarRegionMessage;
    }
 
    private void processRequests()
@@ -121,10 +127,18 @@ public class REAPlanarRegionNetworkProvider
          case STOP_UPDATE:
             listenersForContinuousUpdate.remove(source);
             break;
+         case CLEAR:
+            hasReceivedClearRequest.set(true);
+            break;
          default:
             break;
          }
       }
+   }
+
+   public boolean pollClearRequest()
+   {
+      return hasReceivedClearRequest.getAndSet(false);
    }
 
    private final ConcurrentLinkedQueue<RequestPlanarRegionsListMessage> requestsToProcess = new ConcurrentLinkedQueue<>();

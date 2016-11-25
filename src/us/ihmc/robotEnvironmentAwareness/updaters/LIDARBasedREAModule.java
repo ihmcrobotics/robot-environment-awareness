@@ -68,6 +68,11 @@ public class LIDARBasedREAModule
       planarRegionNetworkProvider.attachPacketCommunicator(packetCommunicator);
    }
 
+   public void clear()
+   {
+      clearOcTree.set(true);
+   }
+
    private Runnable createUpdater()
    {
       Runnable runnable = new Runnable()
@@ -82,7 +87,7 @@ public class LIDARBasedREAModule
                return;
 
             double currentTime = JOctoMapTools.nanoSecondsToSeconds(System.nanoTime());
-            
+
             boolean performCompleteOcTreeUpdate = (Double.isNaN(lastCompleteUpdate.get()) || currentTime - lastCompleteUpdate.get() >= OCTREE_COMPLETE_UPDATE_PERIOD);
             boolean performGraphicsUpdate = (Double.isNaN(lastGraphicsUpdate.get()) || currentTime - lastGraphicsUpdate.get() >= GRAPHICS_REFRESH_PERIOD);
 
@@ -90,6 +95,7 @@ public class LIDARBasedREAModule
             {
                if (clearOcTree.getAndSet(false))
                {
+                  updater.clearBuffer();
                   updater.clearOcTree();
                   planarRegionFeatureUpdater.clearOcTree();
                }
@@ -113,6 +119,9 @@ public class LIDARBasedREAModule
                planarRegionNetworkProvider.update(performCompleteOcTreeUpdate);
 
                planarRegionNetworkProviderGUI.update(performCompleteOcTreeUpdate);
+
+               if (planarRegionNetworkProvider.pollClearRequest())
+                  clear();
             }
             catch (Exception e)
             {
@@ -152,7 +161,7 @@ public class LIDARBasedREAModule
                   System.out.println("OcTree update took: " + JOctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
             }
 
-            return updatedProperly;
+            return performCompleteUpdate && updatedProperly;
          }
 
          private void callPlanarRegionFeatureUpdater()

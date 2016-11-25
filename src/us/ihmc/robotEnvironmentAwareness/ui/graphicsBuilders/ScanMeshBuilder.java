@@ -1,19 +1,19 @@
 package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.vecmath.Point3f;
+
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
 import us.ihmc.graphics3DDescription.MeshDataGenerator;
-import us.ihmc.javaFXToolkit.shapes.MultiColorMeshBuilder;
+import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
-
-import javax.vecmath.Point3f;
-import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by adrien on 11/20/16.
@@ -28,7 +28,7 @@ public class ScanMeshBuilder implements Runnable
 
    private static final float SCAN_POINT_SIZE = 0.0075f;
 
-   private final MultiColorMeshBuilder multiColorMeshBuilder;
+   private final JavaFXMultiColorMeshBuilder multiColorMeshBuilder;
    private ScanMeshBuilderListener listener;
 
 
@@ -51,7 +51,7 @@ public class ScanMeshBuilder implements Runnable
 
       TextureColorPalette1D scanColorPalette = new TextureColorPalette1D();
       scanColorPalette.setHueBased(1.0, 1.0);
-      multiColorMeshBuilder = new MultiColorMeshBuilder(scanColorPalette);
+      multiColorMeshBuilder = new JavaFXMultiColorMeshBuilder(scanColorPalette);
 
       setListener(scanMeshBuilderListener);
    }

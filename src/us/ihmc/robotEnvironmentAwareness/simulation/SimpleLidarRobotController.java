@@ -10,10 +10,15 @@ import javax.vecmath.Quat4d;
 
 import gnu.trove.list.array.TFloatArrayList;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
+import us.ihmc.communication.packets.PlanarRegionMessageConverter;
+import us.ihmc.communication.packets.PlanarRegionsListMessage;
+import us.ihmc.communication.packets.RequestPlanarRegionsListMessage;
+import us.ihmc.communication.packets.RequestPlanarRegionsListMessage.RequestType;
 import us.ihmc.graphics3DAdapter.GPULidar;
 import us.ihmc.graphics3DAdapter.GPULidarScanBuffer;
 import us.ihmc.graphics3DAdapter.Graphics3DAdapter;
 import us.ihmc.graphics3DDescription.yoGraphics.BagOfBalls;
+import us.ihmc.graphics3DDescription.yoGraphics.YoGraphicPlanarRegionsList;
 import us.ihmc.graphics3DDescription.yoGraphics.YoGraphicsListRegistry;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
@@ -55,6 +60,8 @@ public class SimpleLidarRobotController implements RobotController
 
    private final PacketCommunicator packetCommunicator;
 
+   private final YoGraphicPlanarRegionsList yoGraphicPlanarRegionsList = new YoGraphicPlanarRegionsList("region", 100, 150, registry);
+
    public SimpleLidarRobotController(SimpleLidarRobot lidarRobot, double dt, PacketCommunicator packetCommunicator, Graphics3DAdapter graphics3dAdapter,
          YoGraphicsListRegistry yoGraphicsListRegistry)
    {
@@ -83,7 +90,13 @@ public class SimpleLidarRobotController implements RobotController
       lidarScanParameters = lidarRobot.getLidarScanParameters();
       gpuLidarScanBuffer = new GPULidarScanBuffer(lidarScanParameters);
       gpuLidar = graphics3dAdapter.createGPULidar(gpuLidarScanBuffer, lidarScanParameters);
-      sweepViz = BagOfBalls.createRainbowBag(lidarScanParameters.getPointsPerSweep() / vizualizeEveryNPoints, 0.005, "SweepViz", registry, yoGraphicsListRegistry);
+      if (LidarFastSimulation.VISUALIZE_GPU_LIDAR)
+         sweepViz = BagOfBalls.createRainbowBag(lidarScanParameters.getPointsPerSweep() / vizualizeEveryNPoints, 0.005, "SweepViz", registry, yoGraphicsListRegistry);
+      else
+         sweepViz = null;
+      yoGraphicPlanarRegionsList.hideGraphicObject();
+      yoGraphicsListRegistry.registerYoGraphic("Regions", yoGraphicPlanarRegionsList);
+      packetCommunicator.attachListener(PlanarRegionsListMessage.class, this::handlePacket);
    }
 
    @Override
@@ -109,9 +122,12 @@ public class SimpleLidarRobotController implements RobotController
       {
          LidarScan scan = gpuLidarScanBuffer.poll();
 
-         for (int i = 0; i < scan.size(); i += vizualizeEveryNPoints)
+         if (LidarFastSimulation.VISUALIZE_GPU_LIDAR)
          {
-            sweepViz.setBallLoop(new FramePoint(ReferenceFrame.getWorldFrame(), scan.getPoint(i)));
+            for (int i = 0; i < scan.size(); i += vizualizeEveryNPoints)
+            {
+               sweepViz.setBallLoop(new FramePoint(ReferenceFrame.getWorldFrame(), scan.getPoint(i)));
+            }
          }
 
          TFloatArrayList newScan = new TFloatArrayList();
@@ -132,6 +148,9 @@ public class SimpleLidarRobotController implements RobotController
 
       lidarPosePacketToSend.set(generateLidarPosePacket());
       executorService.execute(this::sendPackets);
+
+      packetCommunicator.send(new RequestPlanarRegionsListMessage(RequestType.CONTINUOUS_UPDATE));
+      yoGraphicPlanarRegionsList.processPlanarRegionsListQueue();
    }
 
    private LidarPosePacket generateLidarPosePacket()
@@ -164,6 +183,12 @@ public class SimpleLidarRobotController implements RobotController
          pointCloudWorldPacket.decayingWorldScan = entireScan.toArray();
          packetCommunicator.send(pointCloudWorldPacket);
       }
+   }
+
+   public void handlePacket(PlanarRegionsListMessage message)
+   {
+      if (message != null)
+         yoGraphicPlanarRegionsList.submitPlanarRegionsListToRender(PlanarRegionMessageConverter.convertToPlanarRegionsList(message));
    }
 
    @Override

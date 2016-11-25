@@ -1,5 +1,10 @@
 package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
+
+import com.badlogic.gdx.graphics.g3d.utils.MeshBuilder;
+
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
@@ -7,17 +12,11 @@ import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
 import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
-import us.ihmc.javaFXToolkit.shapes.MeshBuilder;
+import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeData;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeMessage;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.REAMessagePacket;
-
-import javax.vecmath.Point3d;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by adrien on 11/20/16.
@@ -33,7 +32,7 @@ public class BufferOctreeMeshBuilder implements Runnable
    private static final Color DEFAULT_BUFFER_COLOR = Color.RED;
    private static final double NODE_SCALE = 0.5;
 
-   private final MeshBuilder bufferMeshBuilder = new MeshBuilder();
+   private final JavaFXMeshBuilder bufferMeshBuilder = new JavaFXMeshBuilder();
    private final Material bufferMaterial = new PhongMaterial(DEFAULT_BUFFER_COLOR);
 
    private BufferOctreeMeshBuilderListener listener;

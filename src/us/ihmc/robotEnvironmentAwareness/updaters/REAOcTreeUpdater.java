@@ -138,6 +138,11 @@ public class REAOcTreeUpdater
       return true;
    }
 
+   public void clearBuffer()
+   {
+      reaOcTreeBuffer.clearBuffer();
+   }
+
    public void clearOcTree()
    {
       referenceOctree.clear();

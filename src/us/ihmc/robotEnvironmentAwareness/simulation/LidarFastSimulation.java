@@ -1,10 +1,12 @@
 package us.ihmc.robotEnvironmentAwareness.simulation;
 
 import java.io.IOException;
+import java.util.EnumMap;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.graphics3DAdapter.Graphics3DAdapter;
+import us.ihmc.graphics3DDescription.Graphics3DObject;
 import us.ihmc.graphics3DDescription.structure.Graphics3DNode;
 import us.ihmc.graphics3DDescription.yoGraphics.YoGraphicsListRegistry;
 import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
@@ -13,7 +15,6 @@ import us.ihmc.robotics.dataStructures.variable.EnumYoVariable;
 import us.ihmc.robotics.dataStructures.variable.YoVariable;
 import us.ihmc.simulationconstructionset.SimulationConstructionSet;
 import us.ihmc.simulationconstructionset.SimulationConstructionSetParameters;
-import us.ihmc.simulationconstructionset.util.environments.CommonAvatarEnvironmentInterface;
 import us.ihmc.simulationconstructionset.util.environments.DefaultCommonAvatarEnvironment;
 import us.ihmc.simulationconstructionset.util.environments.FlatGroundEnvironment;
 import us.ihmc.util.RealtimeTools;
@@ -22,11 +23,12 @@ public class LidarFastSimulation
 {
    private enum GroundType
    {
-      OBSTACLE_COURSE, FLAT
+      OBSTACLE_COURSE, FLAT, NOTHING
    }
 
    public static final int POINT_CLOUD_PUBLISHING_PERIOD_MILLSECONDS = 100;
    public static final double DEFAULT_SPIN_VELOCITY = 0.3;
+   public static final boolean VISUALIZE_GPU_LIDAR = false;
 
    public LidarFastSimulation() throws IOException
    {
@@ -45,7 +47,7 @@ public class LidarFastSimulation
 
       SimpleLidarRobotController controller = new SimpleLidarRobotController(robot, controlDT, packetCommunicator, graphics3dAdapter, yoGraphicsListRegistry);
       robot.setController(controller, (int) (controlDT / simDT));
-//      scs.addYoGraphicsListRegistry(yoGraphicsListRegistry);
+      scs.addYoGraphicsListRegistry(yoGraphicsListRegistry);
 
       createGroundTypeListener(scs);
 
@@ -58,6 +60,11 @@ public class LidarFastSimulation
    {
       final EnumYoVariable<GroundType> groundType = new EnumYoVariable<>("GroundType", scs.getRootRegistry(), GroundType.class, false);
 
+      final EnumMap<GroundType, Graphics3DObject> environmentsGraphics = new EnumMap<>(GroundType.class);
+      environmentsGraphics.put(GroundType.OBSTACLE_COURSE, new DefaultCommonAvatarEnvironment().getTerrainObject3D().getLinkGraphics());
+      environmentsGraphics.put(GroundType.FLAT, new FlatGroundEnvironment().getTerrainObject3D().getLinkGraphics());
+      environmentsGraphics.put(GroundType.NOTHING, new Graphics3DObject());
+
       VariableChangedListener listener = new VariableChangedListener()
       {
          private Graphics3DNode groundGraphicsNode = null;
@@ -67,19 +74,7 @@ public class LidarFastSimulation
          {
             if (groundGraphicsNode != null)
                scs.removeGraphics3dNode(groundGraphicsNode);
-
-            CommonAvatarEnvironmentInterface environment = null;
-
-            switch (groundType.getEnumValue())
-            {
-            case OBSTACLE_COURSE:
-               environment = new DefaultCommonAvatarEnvironment();
-               break;
-            case FLAT:
-               environment = new FlatGroundEnvironment();
-               break;
-            }
-            groundGraphicsNode = scs.addStaticLinkGraphics(environment.getTerrainObject3D().getLinkGraphics());
+            groundGraphicsNode = scs.addStaticLinkGraphics(environmentsGraphics.get(groundType.getEnumValue()));
          }
       };
       groundType.addVariableChangedListener(listener);

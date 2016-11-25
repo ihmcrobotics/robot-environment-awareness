@@ -103,6 +103,9 @@ public class LIDARBasedREAModule
                   callGraphicsBuilder();
 
                planarRegionNetworkProvider.update(performCompleteOcTreeUpdate);
+
+               if (planarRegionNetworkProvider.pollClearRequest())
+                  clear();
             }
             catch (Exception e)
             {

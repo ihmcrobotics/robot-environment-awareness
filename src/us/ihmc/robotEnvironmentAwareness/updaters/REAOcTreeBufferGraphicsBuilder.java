@@ -5,11 +5,11 @@ import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.PointCloud;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
 import us.ihmc.jOctoMap.tools.OcTreeKeyConversionTools;
+import us.ihmc.robotEnvironmentAwareness.communication.OcTreeMessageConverter;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeData;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
 
 import javax.vecmath.Point3f;
 import java.util.ArrayList;
@@ -24,7 +24,6 @@ public class REAOcTreeBufferGraphicsBuilder
 
    private final REAMessager reaMessager;
 
-
    public REAOcTreeBufferGraphicsBuilder(REAMessager reaMessager)
    {
       this.reaMessager = reaMessager;
@@ -36,18 +35,11 @@ public class REAOcTreeBufferGraphicsBuilder
 
    public void update(NormalOcTree bufferOcTree, ScanCollection scanCollection)
    {
-      if (enable.get()  && showBuffer.get())
+      if (enable.get() && showBuffer.get() && bufferOcTree.getRoot() != null)
       {
-         float size = (float) OcTreeKeyConversionTools.computeNodeSize(bufferOcTree.getTreeDepth(), bufferOcTree.getResolution(), bufferOcTree.getTreeDepth());
-
-         ArrayList<OctreeNodeData> nodesData = new ArrayList<>(bufferOcTree.size());
-
-         for (NormalOcTreeNode node : bufferOcTree)
-         {
-            nodesData.add(new OctreeNodeData(node,  Integer.MIN_VALUE));
-         }
-
-         reaMessager.getPacketCommunicator().send(new OctreeNodeMessage(REAModuleAPI.BufferOctreeMessageID, nodesData, size));
+         NormalOcTreeMessage normalOcTreeMessage = OcTreeMessageConverter.convertToMessage(bufferOcTree);
+         normalOcTreeMessage.messageID = REAModuleAPI.BufferOctreeMessageID;
+         reaMessager.getPacketCommunicator().send(normalOcTreeMessage);
       }
 
       if (showInputScan.get())
@@ -70,6 +62,5 @@ public class REAOcTreeBufferGraphicsBuilder
             reaMessager.submitMessage(new REAMessage(REAModuleAPI.ScanPointsCollection, scannedPoints));
       }
    }
-
 
 }

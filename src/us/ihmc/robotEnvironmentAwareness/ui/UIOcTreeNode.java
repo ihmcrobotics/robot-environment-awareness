@@ -22,6 +22,20 @@ public class UIOcTreeNode extends AbstractOccupancyOcTreeNode<UIOcTreeNode>
 
    private final long numberOfHits;
 
+   public UIOcTreeNode() // TODO TEMPORARY figure out why/where Kryo needs that for serialization
+   {
+      regionId = Integer.MIN_VALUE;
+      normalX = Float.NaN;
+      normalY = Float.NaN;
+      normalZ = Float.NaN;
+      normalAverageDeviation = Float.NaN;
+      normalConsensusSize = Integer.MIN_VALUE;
+      hitLocationX = Float.NaN;
+      hitLocationY = Float.NaN;
+      hitLocationZ = Float.NaN;
+      numberOfHits = Integer.MIN_VALUE;
+   }
+
    public UIOcTreeNode(NormalOcTreeNodeMessage normalOcTreeNodeMessage, double resolution, int treeDepth)
    {
       int k0 = normalOcTreeNodeMessage.key0;
@@ -101,20 +115,17 @@ public class UIOcTreeNode extends AbstractOccupancyOcTreeNode<UIOcTreeNode>
       return regionId;
    }
 
-   @Override
-   protected void clear()
+   @Override protected void clear()
    {
       throw new UnsupportedException();
    }
 
-   @Override
-   public void addValue(float logOdds)
+   @Override public void addValue(float logOdds)
    {
       throw new UnsupportedException();
    }
 
-   @Override
-   public void allocateChildren()
+   @Override public void allocateChildren()
    {
       throw new UnsupportedException();
    }

@@ -1,19 +1,11 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
-import us.ihmc.jOctoMap.iterators.OcTreeIterable;
-import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
-import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
-import us.ihmc.jOctoMap.tools.OcTreeKeyConversionTools;
+import us.ihmc.robotEnvironmentAwareness.communication.OcTreeMessageConverter;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeData;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeMessage;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -50,49 +42,53 @@ public class REAOcTreeGraphicsBuilder
 
       processPropertyChange.set(false);
 
-      int currentDepth = getCurrentTreeDepthForDisplay();
+//      int currentDepth = getCurrentTreeDepthForDisplay();
+//
+//      //TODO  get all nodes from the octree
+//      Set<NormalOcTreeNode> nodes = getNodes(octree, currentDepth);
+//
+//      ArrayList<OctreeNodeData> nodesData = new ArrayList<>(octree.size());
+//
+//      //TODO Go through all nodes for all regions
+//      for (OcTreeNodePlanarRegion ocTreeNodePlanarRegion : regionFeaturesProvider.getOcTreePlanarRegions())
+//      {
+//         int regionId = ocTreeNodePlanarRegion.getId();
+//         for (NormalOcTreeNode node : ocTreeNodePlanarRegion)
+//         {
+//            nodes.remove(node);
+//            nodesData.add(new OctreeNodeData(node, regionId));
+//         }
+//      }
+//
+//      // only go through nodes that don't belong to any region
+//      for (NormalOcTreeNode node : nodes)
+//      {
+//         nodesData.add(new OctreeNodeData(node, OcTreeNodePlanarRegion.NO_REGION_ID));
+//      }
+//
+//      float size = (float) OcTreeKeyConversionTools.computeNodeSize(octree.getTreeDepth(), octree.getResolution(), octree.getTreeDepth());
 
-      //TODO  get all nodes from the octree
-      Set<NormalOcTreeNode> nodes = getNodes(octree, currentDepth);
-
-      ArrayList<OctreeNodeData> nodesData = new ArrayList<>(octree.size());
-
-      //TODO Go through all nodes for all regions
-      for (OcTreeNodePlanarRegion ocTreeNodePlanarRegion : regionFeaturesProvider.getOcTreePlanarRegions())
+      if(octree.getRoot() != null)
       {
-         int regionId = ocTreeNodePlanarRegion.getId();
-         for (NormalOcTreeNode node : ocTreeNodePlanarRegion)
-         {
-            nodes.remove(node);
-            nodesData.add(new OctreeNodeData(node, regionId));
-         }
+         NormalOcTreeMessage normalOcTreeMessage = OcTreeMessageConverter.convertToMessage(octree, regionFeaturesProvider.getOcTreePlanarRegions());
+         normalOcTreeMessage.messageID = REAModuleAPI.OctreeMessageID;
+         reaMessager.getPacketCommunicator().send(normalOcTreeMessage);
       }
-
-      // only go through nodes that don't belong to any region
-      for (NormalOcTreeNode node : nodes)
-      {
-         nodesData.add(new OctreeNodeData(node, OcTreeNodePlanarRegion.NO_REGION_ID));
-      }
-
-      float size = (float) OcTreeKeyConversionTools.computeNodeSize(octree.getTreeDepth(), octree.getResolution(), octree.getTreeDepth());
-
-      reaMessager.getPacketCommunicator()
-                 .send(new OctreeNodeMessage(REAModuleAPI.OctreeMessageID, nodesData, size));
 
       if (Thread.interrupted())
          return;
    }
 
-   private Set<NormalOcTreeNode> getNodes(NormalOcTree octree, int currentDepth)
-   {
-      OcTreeIterable<NormalOcTreeNode> iterable = OcTreeIteratorFactory.createLeafIteratable(octree.getRoot(), currentDepth);
-      if (useOcTreeBoundingBox())
-         iterable.setRule(OcTreeIteratorFactory.leavesInsideBoundingBoxOnly(octree.getBoundingBox()));
-
-      Set<NormalOcTreeNode> nodes = new HashSet<>();
-      iterable.forEach(nodes::add);
-      return nodes;
-   }
+//   private Set<NormalOcTreeNode> getNodes(NormalOcTree octree, int currentDepth)
+//   {
+//      OcTreeIterable<NormalOcTreeNode> iterable = OcTreeIteratorFactory.createLeafIteratable(octree.getRoot(), currentDepth);
+//      if (useOcTreeBoundingBox())
+//         iterable.setRule(OcTreeIteratorFactory.leavesInsideBoundingBoxOnly(octree.getBoundingBox()));
+//
+//      Set<NormalOcTreeNode> nodes = new HashSet<>();
+//      iterable.forEach(nodes::add);
+//      return nodes;
+//   }
 
    private boolean isEnabled()
    {

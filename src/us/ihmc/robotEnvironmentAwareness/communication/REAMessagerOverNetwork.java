@@ -2,7 +2,6 @@ package us.ihmc.robotEnvironmentAwareness.communication;
 
 import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.REAMessagePacket;
 
 import java.util.ArrayList;

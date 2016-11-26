@@ -11,8 +11,8 @@ import java.util.Random;
 public class REAMessagePacket extends Packet<REAMessagePacket> implements REAMessageIdentifier
 {
 
-   private String messageName;
-   private Object messageContent; // TODO try to narrow down the type of the object
+   public String messageName;
+   public Object messageContent; // TODO try to narrow down the type of the object
 
    public REAMessagePacket(Random random)
    {

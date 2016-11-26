@@ -34,10 +34,11 @@ import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeData;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.OctreeNodeMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
+import us.ihmc.robotEnvironmentAwareness.ui.UIOcTree;
+import us.ihmc.robotEnvironmentAwareness.ui.UIOcTreeNode;
 import us.ihmc.robotics.geometry.PlanarRegionsList;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
@@ -87,7 +88,7 @@ public class OcTreeMeshBuilder implements Runnable
    private final AtomicReference<Boolean> showOcTreeBoundingBox;
    private final AtomicReference<Boolean> useOcTreeBoundingBox;
 
-   private final AtomicReference<ArrayList<OctreeNodeData>> octreeNodeDataList = new AtomicReference<>(null);
+   private final AtomicReference<UIOcTree> uiOctree = new AtomicReference<>(null);
    private final AtomicReference<Float> nodeDefaultSize = new AtomicReference<>(null);
 
    private OctreeMeshBuilderListener listener;
@@ -130,9 +131,19 @@ public class OcTreeMeshBuilder implements Runnable
 
       setListener(octreeMeshBuilderListener);
 
-      reaMessager.getPacketCommunicator().attachListener(OctreeNodeMessage.class, octreeNodeMessagePacketConsumer);
+      reaMessager.getPacketCommunicator().attachListener(NormalOcTreeMessage.class, normalOctreeMessagePacketConsumer);
       reaMessager.getPacketCommunicator().attachListener(PlanarRegionsListMessage.class, planarRegionListMessagePacketConsumer);
    }
+
+
+   public PacketConsumer<NormalOcTreeMessage> normalOctreeMessagePacketConsumer = (PacketConsumer<NormalOcTreeMessage>) packet ->
+   {
+      if (packet == null || packet.messageID != REAModuleAPI.OctreeMessageID)
+         return;
+
+      UIOcTree temp = new UIOcTree(packet);
+      uiOctree.set(temp);
+   };
 
    public PacketConsumer<PlanarRegionsListMessage> planarRegionListMessagePacketConsumer = (PacketConsumer<PlanarRegionsListMessage>) packet ->
    {
@@ -146,15 +157,13 @@ public class OcTreeMeshBuilder implements Runnable
 
 
 
-   public PacketConsumer<OctreeNodeMessage> octreeNodeMessagePacketConsumer = (PacketConsumer<OctreeNodeMessage>) packet ->
+   public PacketConsumer<NormalOcTreeMessage> octreeNodeMessagePacketConsumer = (PacketConsumer<NormalOcTreeMessage>) packet ->
    {
 
-      if (packet == null || packet.getMessageID() != REAModuleAPI.OctreeMessageID)
+      if (packet == null || packet.messageID != REAModuleAPI.OctreeMessageID)
          return;
 
-      octreeNodeDataList.set(packet.getOctreeNodeDataList());
-      nodeDefaultSize.set(packet.getDefaultNodeSize());
-      System.out.println(" new OctreeMessageID received! ");
+      uiOctree.set(new UIOcTree(packet));
    };
 
 
@@ -184,11 +193,11 @@ public class OcTreeMeshBuilder implements Runnable
       occupiedMeshBuilder.clear();
       polygonsMeshBuilder.clear();
 
-      if(octreeNodeDataList.get() != null)
+      if(uiOctree.get() != null)
       {
-         ArrayList<OctreeNodeData> data = octreeNodeDataList.getAndSet(null);
+         UIOcTree octree = uiOctree.getAndSet(null);
 
-         addCellsToMeshBuilders(occupiedMeshBuilder, data);
+         addCellsToMeshBuilders(occupiedMeshBuilder, octree);
 
 //         addPolygonsToMeshBuilders(polygonsMeshBuilder);
 
@@ -272,23 +281,23 @@ public class OcTreeMeshBuilder implements Runnable
 //         }
 //      }
 
-   private void addCellsToMeshBuilders(JavaFXMultiColorMeshBuilder occupiedMeshBuilder, ArrayList<OctreeNodeData> octreeNodes)
+   private void addCellsToMeshBuilders(JavaFXMultiColorMeshBuilder occupiedMeshBuilder, UIOcTree octree)
    {
       if (!isShowingOcTreeNodes())
          return;
 
       System.out.println(" -->  showing octree nodes ");
-      for (OctreeNodeData node : octreeNodes)
+      for (UIOcTreeNode node : octree)
       {
          if (isHidingPlanarRegionNodes())
             continue;
 
-         Color color = getNodeColor(node.getNormalOcTreeNode(), node.getRegionId());
-         addNodeToMeshBuilder(node.getNormalOcTreeNode(), color, occupiedMeshBuilder);
+         Color color = getNodeColor(node, node.getRegionId());
+         addNodeToMeshBuilder(node, color, occupiedMeshBuilder);
       }
    }
 
-   private void addNodeToMeshBuilder(NormalOcTreeNode node, Color color, JavaFXMultiColorMeshBuilder meshBuilder)
+   private void addNodeToMeshBuilder(UIOcTreeNode node, Color color, JavaFXMultiColorMeshBuilder meshBuilder)
    {
       double size = node.getSize();
 
@@ -342,12 +351,12 @@ public class OcTreeMeshBuilder implements Runnable
    //      //      reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, ocTreeBoundingBoxGraphics));
    //   }
 
-   private Color getNodeColor(NormalOcTreeNode node)
+   private Color getNodeColor(UIOcTreeNode node)
    {
       return getNodeColor(node, OcTreeNodePlanarRegion.NO_REGION_ID);
    }
 
-   private Color getNodeColor(NormalOcTreeNode node, int regionId)
+   private Color getNodeColor(UIOcTreeNode node, int regionId)
    {
       switch (getCurrentColoringType())
       {
@@ -402,12 +411,11 @@ public class OcTreeMeshBuilder implements Runnable
       }
    }
 
-   private MeshDataHolder createNormalBasedPlane(NormalOcTreeNode node)
+   private MeshDataHolder createNormalBasedPlane(UIOcTreeNode node)
    {
       Vector3d planeNormal = new Vector3d();
       Point3d pointOnPlane = new Point3d();
-//      double size = node.getSize();
-      double size = nodeDefaultSize.get(); // TODO What to do?!! node.getSize returns NaN
+      double size = node.getSize();
 
       node.getNormal(planeNormal);
 
@@ -416,7 +424,7 @@ public class OcTreeMeshBuilder implements Runnable
       else
          node.getCoordinate(pointOnPlane);
 
-      intersectionPlaneBoxCalculator.setCube(size, node.getHitLocationX(), node.getHitLocationY(), node.getHitLocationZ()); // TODO What to do?!! node.getX() - getZ() return NaN
+      intersectionPlaneBoxCalculator.setCube(size, node.getX(), node.getY(), node.getZ());
       intersectionPlaneBoxCalculator.setPlane(pointOnPlane, planeNormal);
       intersectionPlaneBoxCalculator.computeIntersections(plane);
 

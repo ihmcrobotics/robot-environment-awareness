@@ -8,7 +8,7 @@ import javax.vecmath.Vector3d;
 import org.apache.commons.math3.util.Precision;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
+import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarScanMessage;
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
@@ -16,13 +16,14 @@ import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree.RayMissProbabilityUpdater;
 import us.ihmc.jOctoMap.occupancy.OccupancyParameters;
+import us.ihmc.robotics.geometry.transformables.Pose;
 
 public class REAOcTreeUpdater
 {
    private final NormalOcTree referenceOctree;
    private final REAOcTreeBuffer reaOcTreeBuffer;
 
-   private final AtomicReference<LidarPosePacket> latestLidarPoseReference = new AtomicReference<>(null);
+   private final AtomicReference<Pose> latestLidarPoseReference = new AtomicReference<>(null);
 
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> enableNormalEstimation;
@@ -110,7 +111,7 @@ public class REAOcTreeUpdater
       if (latestLidarPoseReference.get() == null)
          return false;
 
-      Point3d sensorOrigin = latestLidarPoseReference.get().getPosition();
+      Point3d sensorOrigin = latestLidarPoseReference.get().getPoint();
 
       boolean isBufferFull = reaOcTreeBuffer.isBufferFull();
       if (isBufferFull)
@@ -152,9 +153,9 @@ public class REAOcTreeUpdater
       {
          OcTreeBoundingBoxWithCenterAndYaw newBoundingBox = new OcTreeBoundingBoxWithCenterAndYaw();
          newBoundingBox.setLocalBoundingBox(atomicBoundingBox.get());
-         LidarPosePacket lidarPosePacket = latestLidarPoseReference.get();
-         newBoundingBox.setOffset(lidarPosePacket.getPosition());
-         newBoundingBox.setYawFromQuaternion(lidarPosePacket.getOrientation());
+         Pose lidarPose = latestLidarPoseReference.get();
+         newBoundingBox.setOffset(lidarPose.getPoint());
+         newBoundingBox.setYawFromQuaternion(lidarPose.getOrientation());
          newBoundingBox.update(referenceOctree.getResolution(), referenceOctree.getTreeDepth());
          referenceOctree.setBoundingBox(newBoundingBox);
       }
@@ -166,14 +167,14 @@ public class REAOcTreeUpdater
 
    public void attachListeners(PacketCommunicator packetCommunicator)
    {
-      packetCommunicator.attachListener(LidarPosePacket.class, this::handlePacket);
-      reaOcTreeBuffer.attachListeners(packetCommunicator);
+      packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
+      reaOcTreeBuffer.attachPacketCommunicator(packetCommunicator);
    }
 
-   private void handlePacket(LidarPosePacket packet)
+   private void handlePacket(LidarScanMessage lidarScanMessage)
    {
-      if (packet != null)
-         latestLidarPoseReference.set(new LidarPosePacket(packet));
+      if (lidarScanMessage != null)
+         latestLidarPoseReference.set(new Pose(lidarScanMessage.lidarPosition, lidarScanMessage.lidarOrientation));
    }
 
    private boolean isEnabled()

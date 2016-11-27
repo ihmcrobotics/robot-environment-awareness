@@ -75,8 +75,6 @@ public class REAOcTreeBufferGraphicsBuilder
          scanMeshBuilder.clear();
          hasClearedScanGraphics = false;
 
-         System.err.println("Nb of scans: " + scanCollection.getNumberOfScans());
-         
          for (int scanIndex = 0; scanIndex < scanCollection.getNumberOfScans(); scanIndex++)
          {
             PointCloud pointCloud = scanCollection.getScan(scanIndex).getPointCloud();

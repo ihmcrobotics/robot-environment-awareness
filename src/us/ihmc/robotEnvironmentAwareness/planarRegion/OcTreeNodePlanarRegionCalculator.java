@@ -40,6 +40,7 @@ public class OcTreeNodePlanarRegionCalculator
       ocTreeNodePlanarRegions.stream().forEach(region -> region.nodeStream().forEach(allRegionNodes::add));
       ocTreeNodePlanarRegions.stream().forEach(region -> growPlanarRegion(root, region, boundingBox, parameters));
       ocTreeNodePlanarRegions = ocTreeNodePlanarRegions.stream().filter(region -> region.getNumberOfNodes() > parameters.getMinRegionSize()).collect(Collectors.toList());
+      ocTreeNodePlanarRegions.parallelStream().forEach(OcTreeNodePlanarRegion::recomputeNormalAndOrigin);
       ocTreeNodePlanarRegions.parallelStream().forEach(OcTreeNodePlanarRegionCalculator::flipNormalOfOutliers);
       
       Set<NormalOcTreeNode> nodeSet = new HashSet<>();

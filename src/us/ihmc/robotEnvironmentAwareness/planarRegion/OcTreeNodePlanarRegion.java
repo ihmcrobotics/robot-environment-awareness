@@ -17,6 +17,7 @@ import javax.vecmath.Vector3d;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.geometry.PointMean;
 import us.ihmc.robotEnvironmentAwareness.geometry.VectorMean;
+import us.ihmc.robotics.linearAlgebra.PrincipalComponentAnalysis3D;
 
 public class OcTreeNodePlanarRegion implements Iterable<NormalOcTreeNode>
 {
@@ -24,6 +25,7 @@ public class OcTreeNodePlanarRegion implements Iterable<NormalOcTreeNode>
 
    private int id = NO_REGION_ID;
 
+   private final PrincipalComponentAnalysis3D pca = new PrincipalComponentAnalysis3D();
    private final VectorMean normal = new VectorMean();
    private final PointMean point = new PointMean();
    private final Vector3d temporaryVector = new Vector3d();
@@ -72,12 +74,6 @@ public class OcTreeNodePlanarRegion implements Iterable<NormalOcTreeNode>
       return nodeSet.contains(node);
    }
 
-   public void removeNode(int index)
-   {
-      NormalOcTreeNode removedNode = nodes.remove(index);
-      nodeSet.remove(removedNode);
-   }
-
    public void removeNodesAndUpdate(Collection<NormalOcTreeNode> nodesToRemove)
    {
       boolean containsAtLeastOne = nodesToRemove.parallelStream().filter(nodeSet::contains).findFirst().isPresent();
@@ -92,11 +88,24 @@ public class OcTreeNodePlanarRegion implements Iterable<NormalOcTreeNode>
       }
    }
 
-   private void recomputeNormalAndOrigin()
+   public void recomputeNormalAndOrigin()
    {
+      pca.clear();
+      nodes.stream().forEach(node -> pca.addPoint(node.getHitLocationX(), node.getHitLocationY(), node.getHitLocationZ()));
+      pca.compute();
+
+      Point3d mean = new Point3d();
+      pca.getMean(mean);
+
       point.clear();
+      point.update(mean, getNumberOfNodes());
+
+      Vector3d thirdVector = new Vector3d();
+      pca.getThirdVector(thirdVector);
+      if (thirdVector.dot(normal) < 0.0)
+         thirdVector.negate();
       normal.clear();
-      nodeStream().forEach(this::updateNormalAndOriginOnly);
+      normal.update(thirdVector, getNumberOfNodes());
    }
 
    private void updateNormalAndOriginOnly(NormalOcTreeNode node)

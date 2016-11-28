@@ -42,32 +42,6 @@ public class REAOcTreeGraphicsBuilder
 
       processPropertyChange.set(false);
 
-//      int currentDepth = getCurrentTreeDepthForDisplay();
-//
-//      //TODO  get all nodes from the octree
-//      Set<NormalOcTreeNode> nodes = getNodes(octree, currentDepth);
-//
-//      ArrayList<OctreeNodeData> nodesData = new ArrayList<>(octree.size());
-//
-//      //TODO Go through all nodes for all regions
-//      for (OcTreeNodePlanarRegion ocTreeNodePlanarRegion : regionFeaturesProvider.getOcTreePlanarRegions())
-//      {
-//         int regionId = ocTreeNodePlanarRegion.getId();
-//         for (NormalOcTreeNode node : ocTreeNodePlanarRegion)
-//         {
-//            nodes.remove(node);
-//            nodesData.add(new OctreeNodeData(node, regionId));
-//         }
-//      }
-//
-//      // only go through nodes that don't belong to any region
-//      for (NormalOcTreeNode node : nodes)
-//      {
-//         nodesData.add(new OctreeNodeData(node, OcTreeNodePlanarRegion.NO_REGION_ID));
-//      }
-//
-//      float size = (float) OcTreeKeyConversionTools.computeNodeSize(octree.getTreeDepth(), octree.getResolution(), octree.getTreeDepth());
-
       if(octree.getRoot() != null)
       {
          NormalOcTreeMessage normalOcTreeMessage = OcTreeMessageConverter.convertToMessage(octree, regionFeaturesProvider.getOcTreePlanarRegions());
@@ -79,30 +53,11 @@ public class REAOcTreeGraphicsBuilder
          return;
    }
 
-//   private Set<NormalOcTreeNode> getNodes(NormalOcTree octree, int currentDepth)
-//   {
-//      OcTreeIterable<NormalOcTreeNode> iterable = OcTreeIteratorFactory.createLeafIteratable(octree.getRoot(), currentDepth);
-//      if (useOcTreeBoundingBox())
-//         iterable.setRule(OcTreeIteratorFactory.leavesInsideBoundingBoxOnly(octree.getBoundingBox()));
-//
-//      Set<NormalOcTreeNode> nodes = new HashSet<>();
-//      iterable.forEach(nodes::add);
-//      return nodes;
-//   }
 
    private boolean isEnabled()
    {
       return enable.get() == null ? false : enable.get();
    }
 
-   private int getCurrentTreeDepthForDisplay()
-   {
-      return treeDepthForDisplay.get() == null ? octree.getTreeDepth() : treeDepthForDisplay.get();
-   }
-
-   private boolean useOcTreeBoundingBox()
-   {
-      return useOcTreeBoundingBox.get() == null ? false : useOcTreeBoundingBox.get();
-   }
 
 }

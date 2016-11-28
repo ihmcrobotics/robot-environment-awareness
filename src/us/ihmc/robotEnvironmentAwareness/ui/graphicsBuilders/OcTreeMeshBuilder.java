@@ -1,29 +1,26 @@
 package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.lang.reflect.Array;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.TexCoord2f;
-import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
+import javax.vecmath.*;
 
 import javafx.geometry.Point3D;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
+import javafx.scene.shape.Box;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.TriangleMesh;
 import javafx.scene.transform.Rotate;
 import javafx.util.Pair;
 import us.ihmc.communication.net.PacketConsumer;
-import us.ihmc.communication.packets.PlanarRegionMessageConverter;
-import us.ihmc.communication.packets.PlanarRegionsListMessage;
+import us.ihmc.communication.packets.*;
 import us.ihmc.graphics3DDescription.MeshDataHolder;
+import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.jOctoMap.iterators.OcTreeIterable;
 import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
@@ -37,9 +34,12 @@ import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerTools;
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTree;
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTreeNode;
-import us.ihmc.robotics.geometry.PlanarRegionsList;
+import us.ihmc.robotics.geometry.*;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
 
@@ -52,7 +52,6 @@ public class OcTreeMeshBuilder implements Runnable
    private static final Color DEFAULT_COLOR = Color.DARKCYAN;
    private static final Color OCTREE_BBX_COLOR = new Color(Color.DARKGREY.getRed(), Color.DARKGREY.getGreen(), Color.DARKGREY.getBlue(), 0.0);
 
-
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> clear;
    private final AtomicReference<Integer> treeDepthForDisplay;
@@ -61,8 +60,6 @@ public class OcTreeMeshBuilder implements Runnable
    {
       DEFAULT, NORMAL, HAS_CENTER, REGION
    }
-
-
 
    private final AtomicReference<REAOcTreeGraphicsBuilder.ColoringType> coloringType;
 
@@ -88,17 +85,17 @@ public class OcTreeMeshBuilder implements Runnable
    private final AtomicReference<Boolean> showOcTreeBoundingBox;
    private final AtomicReference<Boolean> useOcTreeBoundingBox;
 
-   private final AtomicReference<UIOcTree> uiOctree = new AtomicReference<>(null);
-   private final AtomicReference<Float> nodeDefaultSize = new AtomicReference<>(null);
-
-   private OctreeMeshBuilderListener listener;
    private boolean hasClearedBufferGraphics = false;
 
    private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
    private final IntersectionPlaneBoxCalculator intersectionPlaneBoxCalculator = new IntersectionPlaneBoxCalculator();
 
+   private final AtomicReference<UIOcTree> uiOctree = new AtomicReference<>(null);
+   private final AtomicReference<List<PlanarRegionMessage>> planarRegionMessageList = new AtomicReference<>();
 
-   private final AtomicReference<PlanarRegionsList> planarRegionsList = new AtomicReference<>();
+   private OctreeMeshBuilderListener listener;
+
+   private final REAMessager reaMessager;
 
    public interface OctreeMeshBuilderListener
    {
@@ -107,8 +104,11 @@ public class OcTreeMeshBuilder implements Runnable
       void planarRegionMeshAndMaterialChanged(Pair<Mesh, Material> meshMaterial);
    }
 
+   //   private final GUIRegionFeatureProvider guiRegionFeatureProvider;
+
    public OcTreeMeshBuilder(REAMessager reaMessager, OctreeMeshBuilderListener octreeMeshBuilderListener)
    {
+      this.reaMessager = reaMessager;
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable);
 
       clear = reaMessager.createInput(REAModuleAPI.OcTreeClear);
@@ -133,8 +133,9 @@ public class OcTreeMeshBuilder implements Runnable
 
       reaMessager.getPacketCommunicator().attachListener(NormalOcTreeMessage.class, normalOctreeMessagePacketConsumer);
       reaMessager.getPacketCommunicator().attachListener(PlanarRegionsListMessage.class, planarRegionListMessagePacketConsumer);
-   }
 
+      //      guiRegionFeatureProvider = new GUIRegionFeatureProvider(reaMessager);
+   }
 
    public PacketConsumer<NormalOcTreeMessage> normalOctreeMessagePacketConsumer = (PacketConsumer<NormalOcTreeMessage>) packet ->
    {
@@ -150,23 +151,12 @@ public class OcTreeMeshBuilder implements Runnable
       if (packet == null)
          return;
 
-      planarRegionsList.set(PlanarRegionMessageConverter.convertToPlanarRegionsList(new PlanarRegionsListMessage())); // TODO figure out what's going on with the planar list and planar list message
-
-      System.out.println("new PlanarRegionList received! ");
+      if (!packet.planarRegions.isEmpty())
+      {
+         planarRegionMessageList.set(packet.getPlanarRegions());
+         System.out.println("new PlanarRegionList received! ");
+      }
    };
-
-
-
-   public PacketConsumer<NormalOcTreeMessage> octreeNodeMessagePacketConsumer = (PacketConsumer<NormalOcTreeMessage>) packet ->
-   {
-
-      if (packet == null || packet.messageID != REAModuleAPI.OctreeMessageID)
-         return;
-
-      uiOctree.set(new UIOcTree(packet));
-   };
-
-
 
    private void setListener(OctreeMeshBuilderListener listener)
    {
@@ -177,7 +167,7 @@ public class OcTreeMeshBuilder implements Runnable
 
    @Override public void run()
    {
-//      System.out.println("run");
+      //      System.out.println("run");
       if (shoudClear())
       {
          //         reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsOccupiedMesh, new Pair<Mesh, Material>(null, null)));
@@ -193,23 +183,23 @@ public class OcTreeMeshBuilder implements Runnable
       occupiedMeshBuilder.clear();
       polygonsMeshBuilder.clear();
 
-      if(uiOctree.get() != null)
+      if (uiOctree.get() != null)
       {
          UIOcTree octree = uiOctree.getAndSet(null);
 
          addCellsToMeshBuilders(occupiedMeshBuilder, octree);
 
-//         addPolygonsToMeshBuilders(polygonsMeshBuilder);
+         addPolygonsToMeshBuilders(polygonsMeshBuilder);
 
-         System.out.println("still runming ");
+         System.out.println("still running ");
          if (Thread.interrupted())
             return;
 
          MeshDataHolder occupiedMeshDataHolder = occupiedMeshBuilder.generateMeshDataHolder();
-         //      MeshDataHolder planarRegionMeshDataHolder = polygonsMeshBuilder.generateMeshDataHolder();
+         MeshDataHolder planarRegionMeshDataHolder = polygonsMeshBuilder.generateMeshDataHolder();
 
          Material occupiedLeafMaterial = getOccupiedMeshMaterial();
-         //      Material planarRegionMaterial = polygonsMeshBuilder.generateMaterial();
+         Material planarRegionMaterial = polygonsMeshBuilder.generateMaterial();
 
          TriangleMesh occupiedMesh = JavaFXMeshDataInterpreter.interpretMeshData(occupiedMeshDataHolder);
          Pair<Mesh, Material> occupiedMeshAndMaterial = new Pair<Mesh, Material>(occupiedMesh, occupiedLeafMaterial);
@@ -217,69 +207,66 @@ public class OcTreeMeshBuilder implements Runnable
          System.out.println(" calling listener ");
          listener.occupiedMeshAndMaterialChanged(occupiedMeshAndMaterial);
 
-//         TriangleMesh planarRegionMesh = JavaFXMeshDataInterpreter.interpretMeshData(planarRegionMeshDataHolder);
-//         Pair<Mesh, Material> planarRegionMeshAndMaterial = new Pair<Mesh, Material>(planarRegionMesh, planarRegionMaterial);
-//         listener.planarRegionMeshAndMaterialChanged(planarRegionMeshAndMaterial);
+         TriangleMesh planarRegionMesh = JavaFXMeshDataInterpreter.interpretMeshData(planarRegionMeshDataHolder);
+         Pair<Mesh, Material> planarRegionMeshAndMaterial = new Pair<Mesh, Material>(planarRegionMesh, planarRegionMaterial);
+         listener.planarRegionMeshAndMaterialChanged(planarRegionMeshAndMaterial);
       }
+
+      requestPlanarRegionListMessage();
    }
 
-   //   private Runnable createMeshCreationFutureTask()
-   //   {
-   //      MeshDataHolder occupiedMeshDataHolder = occupiedMeshBuilder.generateMeshDataHolder();
-   //      MeshDataHolder planarRegionMeshDataHolder = polygonsMeshBuilder.generateMeshDataHolder();
-   //
-   //      Material occupiedLeafMaterial = getOccupiedMeshMaterial();
-   //      Material planarRegionMaterial = polygonsMeshBuilder.generateMaterial();
-   //
-   //      return new Runnable()
-   //      {
-   //         @Override
-   //         public void run()
-   //         {
-   //            processAndSubmitMesh(REAModuleAPI.OcTreeGraphicsOccupiedMesh, occupiedMeshDataHolder, occupiedLeafMaterial);
-   //            processAndSubmitMesh(REAModuleAPI.OcTreeGraphicsPlanarPolygonMesh, planarRegionMeshDataHolder, planarRegionMaterial);
-   //         }
-   //      };
-   //   }
+   private void addPolygonsToMeshBuilders(JavaFXMultiColorMeshBuilder polygonsMeshBuilder)
+   {
+      //      for (int i = 0; i < guiRegionFeatureProvider.getNumberOfPlaneIntersections(); i++)
+      //      {
+      //         LineSegment3d intersection = guiRegionFeatureProvider.getIntersection(i);
+      //         Point3d start = intersection.getPointA();
+      //         Point3d end = intersection.getPointB();
+      //         double lineWidth = 0.025;
+      //         Color color = Color.BLACK;
+      //         polygonsMeshBuilder.addLine(start, end, lineWidth, color);
+      //      }
 
-//      private void addPolygonsToMeshBuilders(MultiColorMeshBuilder polygonsMeshBuilder)
-//      {
-//         for (int i = 0; i < regionFeaturesProvider.getNumberOfPlaneIntersections(); i++)
-//         {
-//            LineSegment3d intersection = regionFeaturesProvider.getIntersection(i);
-//            Point3d start = intersection.getPointA();
-//            Point3d end = intersection.getPointB();
-//            double lineWidth = 0.025;
-//            Color color = Color.BLACK;
-//            polygonsMeshBuilder.addLine(start, end, lineWidth, color);
-//         }
-//
-//         for (OcTreeNodePlanarRegion ocTreeNodePlanarRegion : regionFeaturesProvider.getOcTreePlanarRegions())
-//         {
-//            PlanarRegionConcaveHull planarRegionConcaveHull = regionFeaturesProvider.getPlanarRegionConcaveHull(ocTreeNodePlanarRegion);
-//            if (planarRegionConcaveHull == null)
-//               continue;
-//
-//            double lineWidth = 0.01;
-//            int regionId = ocTreeNodePlanarRegion.getId();
-//            Color regionColor = getRegionColor(regionId);
-//            List<Point3d> concaveHullVerticesInWorld = planarRegionConcaveHull.getConcaveHullVerticesInWorld();
-//            polygonsMeshBuilder.addMultiLine(concaveHullVerticesInWorld, lineWidth, regionColor, true);
-//
-//            PlanarRegionConvexPolygons planarRegionConvexPolygons = regionFeaturesProvider.getPlanarRegionConvexPolygons(ocTreeNodePlanarRegion);
-//            if (planarRegionConvexPolygons == null)
-//               continue;
-//
-//            List<List<Point3d>> convexPolygonsVertices = planarRegionConvexPolygons.getConvexPolygonsVerticesInWorld();
-//            int numberOfConvexPolygons = convexPolygonsVertices.size();
-//            for (int j = 0; j < numberOfConvexPolygons; j++)
-//            {
-//               List<Point3d> convexPolygonVertices = convexPolygonsVertices.get(j);
-//               regionColor = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) j / (double) numberOfConvexPolygons));
-//               polygonsMeshBuilder.addPolyon(convexPolygonVertices, regionColor);
-//            }
-//         }
-//      }
+      if (planarRegionMessageList.get() == null)
+         return;
+
+      List<PlanarRegionMessage> planarRegionMessages = planarRegionMessageList.getAndSet(null);
+
+      for (int index = 0; index < planarRegionMessages.size(); index++)
+      {
+         PlanarRegionMessage planarRegionMessage = planarRegionMessages.get(index);
+
+         PlanarRegion planarRegion = PlanarRegionMessageConverter.convertToPlanarRegion(planarRegionMessage);
+
+         // TODO I don't have that yet
+         //         PlanarRegionConcaveHull planarRegionConcaveHull = guiRegionFeatureProvider.getPlanarRegionConcaveHull(ocTreeNodePlanarRegion);
+         //         if (planarRegionConcaveHull == null)
+         //            continue;
+         //
+         double lineWidth = 0.01;
+         int regionId = planarRegionMessage.getRegionId();
+         Color regionColor = getRegionColor(regionId);
+
+         //         List<Point3d> concaveHullVerticesInWorld = planarRegionConcaveHull.getConcaveHullVerticesInWorld();
+         //         polygonsMeshBuilder.addMultiLine(concaveHullVerticesInWorld, lineWidth, regionColor, true);
+
+         Point3d planeOrigin = new Point3d(planarRegionMessage.getRegionOrigin());
+         Quat4d planeOrientation = new Quat4d();
+         planeOrientation.set(GeometryTools.getRotationBasedOnNormal(new Vector3d(planarRegionMessage.getRegionNormal())));
+
+
+         List<List<Point2d>> convexPolygonsVerticesInPlane = new ArrayList<>();
+         for (int i = 0; i < planarRegion.getNumberOfConvexPolygons(); i++)
+         {
+            RigidBodyTransform rigidBodyTransform = new RigidBodyTransform();
+            planarRegion.getTransformToWorld(rigidBodyTransform);
+            ConvexPolygon2d convexPolygon2d = planarRegion.getConvexPolygon(i);
+            regionColor = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) i / (double) planarRegion.getNumberOfConvexPolygons()));
+            polygonsMeshBuilder.addPolygon(rigidBodyTransform, convexPolygon2d, regionColor);
+         }
+
+      }
+   }
 
    private void addCellsToMeshBuilders(JavaFXMultiColorMeshBuilder occupiedMeshBuilder, UIOcTree octree)
    {
@@ -322,34 +309,34 @@ public class OcTreeMeshBuilder implements Runnable
       return nodes;
    }
 
-   //   private void handleOcTreeBoundingBox() // TODO
-   //   {
-   //
-   ////      if (!isShowingBoundingBox())
-   ////      {
-   ////         //reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, (Box) null));
-   ////         return;
-   ////      }
-   //
-   //      OcTreeBoundingBoxWithCenterAndYaw boundingBox = (OcTreeBoundingBoxWithCenterAndYaw) octree.getBoundingBox();
-   //      boundingBox.getLocalSize(ocTreeBoundingBoxSize);
-   //      boundingBox.getCenterCoordinate(ocTreeBoundingBoxCenter);
-   //
-   //      double yaw = boundingBox.getYaw();
-   //
-   //      Box ocTreeBoundingBoxGraphics = new Box();
-   //      ocTreeBoundingBoxGraphics.setWidth(ocTreeBoundingBoxSize.getX());
-   //      ocTreeBoundingBoxGraphics.setHeight(ocTreeBoundingBoxSize.getY());
-   //      ocTreeBoundingBoxGraphics.setDepth(ocTreeBoundingBoxSize.getZ());
-   //      ocTreeBoundingBoxGraphics.setTranslateX(ocTreeBoundingBoxCenter.getX());
-   //      ocTreeBoundingBoxGraphics.setTranslateY(ocTreeBoundingBoxCenter.getY());
-   //      ocTreeBoundingBoxGraphics.setTranslateZ(ocTreeBoundingBoxCenter.getZ());
-   //      ocTreeBoundingBoxGraphics.setRotationAxis(ocTreeBoudingBoxRotationAxis);
-   //      ocTreeBoundingBoxGraphics.setRotate(Math.toDegrees(yaw));
-   //
-   //      ocTreeBoundingBoxGraphics.setMaterial(ocTreeBoundingBoxMaterial);
-   //      //      reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, ocTreeBoundingBoxGraphics));
-   //   }
+//      private void handleOcTreeBoundingBox() // TODO
+//      {
+//
+//   //      if (!isShowingBoundingBox())
+//   //      {
+//   //         //reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, (Box) null));
+//   //         return;
+//   //      }
+//
+//         OcTreeBoundingBoxWithCenterAndYaw boundingBox = (OcTreeBoundingBoxWithCenterAndYaw) octree.getBoundingBox();
+//         boundingBox.getLocalSize(ocTreeBoundingBoxSize);
+//         boundingBox.getCenterCoordinate(ocTreeBoundingBoxCenter);
+//
+//         double yaw = boundingBox.getYaw();
+//
+//         Box ocTreeBoundingBoxGraphics = new Box();
+//         ocTreeBoundingBoxGraphics.setWidth(ocTreeBoundingBoxSize.getX());
+//         ocTreeBoundingBoxGraphics.setHeight(ocTreeBoundingBoxSize.getY());
+//         ocTreeBoundingBoxGraphics.setDepth(ocTreeBoundingBoxSize.getZ());
+//         ocTreeBoundingBoxGraphics.setTranslateX(ocTreeBoundingBoxCenter.getX());
+//         ocTreeBoundingBoxGraphics.setTranslateY(ocTreeBoundingBoxCenter.getY());
+//         ocTreeBoundingBoxGraphics.setTranslateZ(ocTreeBoundingBoxCenter.getZ());
+//         ocTreeBoundingBoxGraphics.setRotationAxis(ocTreeBoudingBoxRotationAxis);
+//         ocTreeBoundingBoxGraphics.setRotate(Math.toDegrees(yaw));
+//
+//         ocTreeBoundingBoxGraphics.setMaterial(ocTreeBoundingBoxMaterial);
+//         //      reaMessager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh, ocTreeBoundingBoxGraphics));
+//      }
 
    private Color getNodeColor(UIOcTreeNode node)
    {
@@ -480,7 +467,7 @@ public class OcTreeMeshBuilder implements Runnable
       return showEstimatedSurfaces.get() == null ? false : showEstimatedSurfaces.get();
    }
 
-   //   private boolean isShowingBoundingBox()
+   //   private boolean isShowingBoundingBox() // TODO
    //   {
    //      boolean ret = showOcTreeBoundingBox.get() == null ? false : showOcTreeBoundingBox.get();
    //      ret &= octree.getBoundingBox() != null;
@@ -497,4 +484,11 @@ public class OcTreeMeshBuilder implements Runnable
       return coloringType.get() == null ? REAOcTreeGraphicsBuilder.ColoringType.DEFAULT : coloringType.get();
    }
 
+   private void requestPlanarRegionListMessage()
+   {
+      RequestPlanarRegionsListMessage requestPlanarRegionsListMessage = new RequestPlanarRegionsListMessage(
+            RequestPlanarRegionsListMessage.RequestType.SINGLE_UPDATE);
+      requestPlanarRegionsListMessage.setDestination(PacketDestination.REA_MODULE);
+      reaMessager.getPacketCommunicator().send(requestPlanarRegionsListMessage);
+   }
 }

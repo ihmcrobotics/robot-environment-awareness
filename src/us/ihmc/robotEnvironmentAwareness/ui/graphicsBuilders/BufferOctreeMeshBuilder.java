@@ -19,6 +19,8 @@ import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeNodeM
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTree;
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTreeNode;
 
+import javax.vecmath.Point3d;
+
 /**
  * Created by adrien on 11/20/16.
  */
@@ -88,7 +90,7 @@ public class BufferOctreeMeshBuilder implements Runnable
 
             for (UIOcTreeNode uiOcTreeNode : uiOcTree)
             {
-               bufferMeshBuilder.addCube(NODE_SCALE * uiOcTreeNode.getSize(), uiOcTreeNode.getX(), uiOcTreeNode.getY(), uiOcTreeNode.getZ());
+               bufferMeshBuilder.addTetrahedron(NODE_SCALE * uiOcTreeNode.getSize(), new Point3d(uiOcTreeNode.getX(), uiOcTreeNode.getY(), uiOcTreeNode.getZ()));
             }
 
             Pair<Mesh, Material> meshAndMaterial = new Pair<>(bufferMeshBuilder.generateMesh(), bufferMaterial);

@@ -1,10 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.communication;
 
 import us.ihmc.communication.net.NetClassList;
-import us.ihmc.communication.packets.Packet;
-import us.ihmc.communication.packets.PacketDestination;
-import us.ihmc.communication.packets.PlanarRegionMessage;
-import us.ihmc.communication.packets.PlanarRegionsListMessage;
+import us.ihmc.communication.packets.*;
 import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.jOctoMap.key.OcTreeKey;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
@@ -16,10 +13,7 @@ import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationPa
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.REAOcTreeGraphicsBuilder;
 
-import javax.vecmath.Point2f;
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.Quat4d;
+import javax.vecmath.*;
 import java.util.ArrayList;
 
 /**
@@ -62,11 +56,15 @@ public class REACommunicationKryoNetClassList extends NetClassList
 
       registerPacketClass(NormalOcTreeMessage.class);
       registerPacketClass(NormalOcTreeNodeMessage.class);
-      registerPacketClass(NormalOcTreeNodeMessage[].class);
+      registerPacketField(NormalOcTreeNodeMessage[].class);
+      registerPacketClass(RequestPlanarRegionsListMessage.class);
+      registerPacketField(RequestPlanarRegionsListMessage.RequestType.class);
 
       registerPacketClass(PlanarRegionsListMessage.class);
       registerPacketClass(PlanarRegionMessage.class);
       registerPacketField(Point2f[].class);
+      registerPacketField(Point2f.class);
+      registerPacketField(Vector3f.class);
 
    }
 

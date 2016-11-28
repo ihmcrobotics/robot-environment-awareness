@@ -16,7 +16,7 @@ import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.DepthDataStateCommand;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.DepthDataStateCommand.LidarState;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
+import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarScanMessage;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.LIDARFilterAnchorPaneController;
@@ -72,7 +72,7 @@ public class LIDARBasedEnvironmentAwarenessUI extends Application
       lidarBasedREAModule.attachListeners(packetCommunicator);
       lidarBasedREAModule.start();
       
-      packetCommunicator.attachListener(LidarPosePacket.class, lidarFrameViewer.createLidarPosePacketConsumer());
+      packetCommunicator.attachListener(LidarScanMessage.class, lidarFrameViewer.createLidarScanMessageConsumer());
       lidarFrameViewer.start();
 
       packetCommunicator.connect();

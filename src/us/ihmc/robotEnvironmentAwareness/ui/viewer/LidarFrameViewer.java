@@ -2,15 +2,15 @@ package us.ihmc.robotEnvironmentAwareness.ui.viewer;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Quat4d;
+import javax.vecmath.Point3f;
+import javax.vecmath.Quat4f;
 
 import javafx.animation.AnimationTimer;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.transform.Affine;
 import us.ihmc.communication.net.PacketConsumer;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
+import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarScanMessage;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 
@@ -57,17 +57,17 @@ public class LidarFrameViewer
          lidarPose.setToTransform(affine);
    }
 
-   public PacketConsumer<LidarPosePacket> createLidarPosePacketConsumer()
+   public PacketConsumer<LidarScanMessage> createLidarScanMessageConsumer()
    {
       return this::handlePacket;
    }
 
-   private void handlePacket(LidarPosePacket packet)
+   private void handlePacket(LidarScanMessage lidarScanMessage)
    {
-      if (packet == null)
+      if (lidarScanMessage == null)
          return;
-      Quat4d orientation = packet.getOrientation();
-      Point3d position = packet.getPosition();
+      Quat4f orientation = lidarScanMessage.getLidarOrientation();
+      Point3f position = lidarScanMessage.getLidarPosition();
       lastAffine.set(JavaFXTools.createAffineFromQuaternionAndTuple(orientation, position));
    }
 

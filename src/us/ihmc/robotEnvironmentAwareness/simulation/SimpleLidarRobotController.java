@@ -1,12 +1,12 @@
 package us.ihmc.robotEnvironmentAwareness.simulation;
 
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.vecmath.Point3d;
+import javax.vecmath.Point3f;
 import javax.vecmath.Quat4d;
+import javax.vecmath.Quat4f;
 
 import gnu.trove.list.array.TFloatArrayList;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
@@ -20,8 +20,7 @@ import us.ihmc.graphics3DAdapter.Graphics3DAdapter;
 import us.ihmc.graphics3DDescription.yoGraphics.BagOfBalls;
 import us.ihmc.graphics3DDescription.yoGraphics.YoGraphicPlanarRegionsList;
 import us.ihmc.graphics3DDescription.yoGraphics.YoGraphicsListRegistry;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
+import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarScanMessage;
 import us.ihmc.robotics.dataStructures.listener.VariableChangedListener;
 import us.ihmc.robotics.dataStructures.registry.YoVariableRegistry;
 import us.ihmc.robotics.dataStructures.variable.BooleanYoVariable;
@@ -42,7 +41,7 @@ public class SimpleLidarRobotController implements RobotController
 {
    private final YoVariableRegistry registry = new YoVariableRegistry(getClass().getSimpleName());
 
-   private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(ThreadTools.getNamedThreadFactory("PointCloudWorldPacketGenerator"));
+   private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(ThreadTools.getNamedThreadFactory("Messaging"));
 
    private final BooleanYoVariable spinLidar = new BooleanYoVariable("spinLidar", registry);
    private final DoubleYoVariable desiredLidarVelocity = new DoubleYoVariable("desiredLidarVelocity", registry);
@@ -113,8 +112,11 @@ public class SimpleLidarRobotController implements RobotController
       }
 
       RigidBodyTransform transform = new RigidBodyTransform();
+      Point3f lidarPosition = new Point3f();
+      Quat4f lidarOrientation = new Quat4f();
 
       lidarJoint.getTransformToWorld(transform);
+      transform.get(lidarOrientation, lidarPosition);
 
       gpuLidar.setTransformFromWorld(transform, 0);
 
@@ -143,46 +145,13 @@ public class SimpleLidarRobotController implements RobotController
                newScan.add((float) scanPoint.getZ());
             }
          }
-         scansToSend.add(newScan.toArray());
-      }
 
-      lidarPosePacketToSend.set(generateLidarPosePacket());
-      executorService.execute(this::sendPackets);
+         LidarScanMessage lidarScanMessage = new LidarScanMessage(-1L, lidarPosition, lidarOrientation, newScan.toArray());
+         executorService.execute(() -> packetCommunicator.send(lidarScanMessage));
+      }
 
       packetCommunicator.send(new RequestPlanarRegionsListMessage(RequestType.CONTINUOUS_UPDATE));
       yoGraphicPlanarRegionsList.processPlanarRegionsListQueue();
-   }
-
-   private LidarPosePacket generateLidarPosePacket()
-   {
-      Point3d position = new Point3d();
-      Quat4d orientation = new Quat4d();
-      RigidBodyTransform transform = new RigidBodyTransform();
-      lidarJoint.getTransformToWorld(transform);
-      transform.get(orientation, position);
-      LidarPosePacket lidarPosePacket = new LidarPosePacket(position, orientation);
-      return lidarPosePacket;
-   }
-
-   private final AtomicReference<LidarPosePacket> lidarPosePacketToSend = new AtomicReference<LidarPosePacket>(null);
-   private final ConcurrentLinkedDeque<float[]> scansToSend = new ConcurrentLinkedDeque<>();
-
-   private void sendPackets()
-   {
-      LidarPosePacket lidarPosePacket = lidarPosePacketToSend.getAndSet(null);
-      if (lidarPosePacket != null)
-         packetCommunicator.send(lidarPosePacket);
-
-      if (!scansToSend.isEmpty())
-      {
-         TFloatArrayList entireScan = new TFloatArrayList();
-
-         while (!scansToSend.isEmpty())
-            entireScan.addAll(scansToSend.poll());
-         PointCloudWorldPacket pointCloudWorldPacket = new PointCloudWorldPacket();
-         pointCloudWorldPacket.decayingWorldScan = entireScan.toArray();
-         packetCommunicator.send(pointCloudWorldPacket);
-      }
    }
 
    public void handlePacket(PlanarRegionsListMessage message)

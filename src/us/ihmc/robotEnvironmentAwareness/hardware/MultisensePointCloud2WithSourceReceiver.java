@@ -13,8 +13,7 @@ import scan_to_cloud.PointCloud2WithSource;
 import us.ihmc.atlas.sensors.PointCloudWithSourcePoseTester;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
+import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarScanMessage;
 import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.utilities.ros.RosMainNode;
 import us.ihmc.utilities.ros.subscriber.AbstractRosTopicSubscriber;
@@ -44,15 +43,17 @@ public class MultisensePointCloud2WithSourceReceiver extends AbstractRosTopicSub
       UnpackedPointCloud pointCloudData = RosPointCloudSubscriber.unpackPointsAndIntensities(cloudHolder.getCloud());
       Point3d[] points = pointCloudData.getPoints();
       
-      PointCloudWorldPacket pointCloudPacket = new PointCloudWorldPacket();
-      pointCloudPacket.setDecayingWorldScan(points);
       Point translation = cloudHolder.getTranslation();
       Point3d lidarPosition = new Point3d(translation.getX(), translation.getY(),translation.getZ());
       Quaternion orientation = cloudHolder.getOrientation();
       Quat4d lidarQuaternion = new Quat4d(orientation.getX(), orientation.getY(), orientation.getZ(), orientation.getW());
-      LidarPosePacket lidarPosePacket = new LidarPosePacket(lidarPosition, lidarQuaternion);
-      packetCommunicator.send(pointCloudPacket);
-      packetCommunicator.send(lidarPosePacket);
+
+      LidarScanMessage lidarScanMessage = new LidarScanMessage();
+      lidarScanMessage.setLidarPosition(lidarPosition);
+      lidarScanMessage.setLidarOrientation(lidarQuaternion);
+      lidarScanMessage.setScan(points);
+
+      packetCommunicator.send(lidarScanMessage);
    }
 
    public static void main(String[] args) throws URISyntaxException, IOException

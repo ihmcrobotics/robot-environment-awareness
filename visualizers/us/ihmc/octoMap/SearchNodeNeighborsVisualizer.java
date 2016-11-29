@@ -13,7 +13,7 @@ import javafx.stage.Stage;
 import us.ihmc.jOctoMap.key.OcTreeKey;
 import us.ihmc.jOctoMap.tools.OcTreeKeyConversionTools;
 import us.ihmc.jOctoMap.tools.OcTreeKeyTools;
-import us.ihmc.robotEnvironmentAwareness.tools.View3DFactory;
+import us.ihmc.javaFXToolkit.scenes.View3DFactory;
 
 public class SearchNodeNeighborsVisualizer extends Application
 {

@@ -4,8 +4,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarScanMessage;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.RequestLidarScanMessage;
+import us.ihmc.communication.packets.LidarScanMessage;
+import us.ihmc.communication.packets.RequestLidarScanMessage;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
 

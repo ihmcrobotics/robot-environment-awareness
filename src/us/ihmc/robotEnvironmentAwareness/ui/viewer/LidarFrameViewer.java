@@ -10,7 +10,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.transform.Affine;
 import us.ihmc.communication.net.PacketConsumer;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarScanMessage;
+import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 

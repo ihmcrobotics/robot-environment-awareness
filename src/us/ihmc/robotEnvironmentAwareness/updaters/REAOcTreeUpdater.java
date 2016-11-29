@@ -8,7 +8,7 @@ import javax.vecmath.Vector3d;
 import org.apache.commons.math3.util.Precision;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarScanMessage;
+import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;

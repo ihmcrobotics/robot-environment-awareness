@@ -11,8 +11,8 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
-import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 
 public abstract class REABasicUIController
 {

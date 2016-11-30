@@ -6,8 +6,8 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.javaFXToolkit.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
 
 public class RegionSegmentationAnchorPaneController extends REABasicUIController
 {

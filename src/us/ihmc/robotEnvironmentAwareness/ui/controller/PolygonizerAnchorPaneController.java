@@ -9,9 +9,9 @@ import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.javaFXToolkit.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
-import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 
 public class PolygonizerAnchorPaneController extends REABasicUIController
 {

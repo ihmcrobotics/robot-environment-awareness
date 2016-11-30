@@ -1,9 +1,9 @@
 package us.ihmc.robotEnvironmentAwareness.communication.packets;
 
+import java.util.Random;
+
 import us.ihmc.communication.packets.Packet;
 import us.ihmc.communication.packets.PacketDestination;
-
-import java.util.Random;
 
 /**
  * Created by adrien on 11/16/16.

@@ -2,24 +2,20 @@ package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.vecmath.Point3d;
+
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
-
 import us.ihmc.communication.net.PacketConsumer;
-import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
-import us.ihmc.robotEnvironmentAwareness.communication.OcTreeMessageConverter;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeNodeMessage;
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTree;
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTreeNode;
-
-import javax.vecmath.Point3d;
 
 /**
  * Created by adrien on 11/20/16.

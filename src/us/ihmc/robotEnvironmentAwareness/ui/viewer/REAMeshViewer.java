@@ -13,11 +13,11 @@ import javafx.scene.shape.Box;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BufferOctreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.ScanMeshBuilder;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
-import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.tools.thread.ThreadTools;
 
 public class REAMeshViewer

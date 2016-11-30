@@ -1,19 +1,18 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
-import us.ihmc.jOctoMap.node.NormalOcTreeNode;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.vecmath.Point3f;
+
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.PointCloud;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
-import us.ihmc.jOctoMap.tools.OcTreeKeyConversionTools;
 import us.ihmc.robotEnvironmentAwareness.communication.OcTreeMessageConverter;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
-
-import javax.vecmath.Point3f;
-import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class REAOcTreeBufferGraphicsBuilder
 {

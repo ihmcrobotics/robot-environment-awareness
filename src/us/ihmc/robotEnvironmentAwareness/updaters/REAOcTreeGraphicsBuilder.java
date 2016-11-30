@@ -1,13 +1,13 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.OcTreeMessageConverter;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class REAOcTreeGraphicsBuilder
 {

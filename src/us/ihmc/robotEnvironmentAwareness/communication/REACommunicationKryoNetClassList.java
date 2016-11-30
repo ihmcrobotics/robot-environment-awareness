@@ -1,7 +1,19 @@
 package us.ihmc.robotEnvironmentAwareness.communication;
 
+import java.util.ArrayList;
+
+import javax.vecmath.Point2f;
+import javax.vecmath.Point3d;
+import javax.vecmath.Point3f;
+import javax.vecmath.Quat4d;
+import javax.vecmath.Vector3f;
+
 import us.ihmc.communication.net.NetClassList;
-import us.ihmc.communication.packets.*;
+import us.ihmc.communication.packets.Packet;
+import us.ihmc.communication.packets.PacketDestination;
+import us.ihmc.communication.packets.PlanarRegionMessage;
+import us.ihmc.communication.packets.PlanarRegionsListMessage;
+import us.ihmc.communication.packets.RequestPlanarRegionsListMessage;
 import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.jOctoMap.key.OcTreeKey;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
@@ -12,9 +24,6 @@ import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationPara
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.REAOcTreeGraphicsBuilder;
-
-import javax.vecmath.*;
-import java.util.ArrayList;
 
 /**
  * Created by adrien on 11/18/16.

@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-
 public class REAMessagerSharedVariables implements REAMessager
 {
    private final ConcurrentHashMap<String, List<AtomicReference<Object>>> boundVariables = new ConcurrentHashMap<>();

@@ -30,14 +30,18 @@ public class REAOcTreeBuffer
 
    private final double octreeResolution;
 
-   private PacketCommunicator packetCommunicator;
+   private final PacketCommunicator packetCommunicator;
 
-   public REAOcTreeBuffer(double octreeResolution, REAMessager reaMessager)
+   public REAOcTreeBuffer(double octreeResolution, REAMessager reaMessager, PacketCommunicator packetCommunicator)
    {
       this.octreeResolution = octreeResolution;
+      this.packetCommunicator = packetCommunicator;
+
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
       bufferSize = reaMessager.createInput(REAModuleAPI.OcTreeBufferSize, 10000.0);
       graphicsBuilder = new REAOcTreeBufferGraphicsBuilder(reaMessager);
+
+      packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
    }
 
    public Runnable createBufferThread()
@@ -114,12 +118,6 @@ public class REAOcTreeBuffer
       newFullScanReference.set(scanCollection);
       scanCollection.setSubSampleSize(NUMBER_OF_SAMPLES);
       scanCollection.addScan(lidarScanMessage.scan, lidarScanMessage.lidarPosition);
-   }
-
-   public void attachPacketCommunicator(PacketCommunicator packetCommunicator)
-   {
-      this.packetCommunicator = packetCommunicator;
-      packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
    }
 
    private void handlePacket(LidarScanMessage packet)

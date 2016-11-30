@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
+import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -10,7 +11,11 @@ import org.apache.commons.lang3.time.StopWatch;
 
 import com.google.common.util.concurrent.AtomicDouble;
 
+import us.ihmc.communication.configuration.NetworkParameterKeys;
+import us.ihmc.communication.configuration.NetworkParameters;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
+import us.ihmc.communication.util.NetworkPorts;
+import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.tools.JOctoMapTools;
 
@@ -29,6 +34,9 @@ public class LIDARBasedREAModule
    private static final double OCTREE_RESOLUTION = 0.02;
    protected static final boolean DEBUG = true;
 
+   private final String networkManagerHost = NetworkParameters.getHost(NetworkParameterKeys.networkManager);
+   private final PacketCommunicator packetCommunicator;
+
    private final StopWatch stopWatch = REPORT_TIME ? new StopWatch() : null;
    private final NormalOcTree octree = new NormalOcTree(OCTREE_RESOLUTION);
 
@@ -38,7 +46,6 @@ public class LIDARBasedREAModule
    private final REAOcTreeGraphicsBuilder graphicsBuilder;
 
    private final REAPlanarRegionNetworkProvider planarRegionNetworkProvider;
-   private final REAPlanarRegionNetworkProvider planarRegionNetworkProviderGUI;
 
    private final AtomicReference<Boolean> clearOcTree;
 
@@ -47,24 +54,17 @@ public class LIDARBasedREAModule
 
    public LIDARBasedREAModule(REAMessager reaMessager)
    {
-      updater = new REAOcTreeUpdater(octree, reaMessager);
+      packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
+
+      updater = new REAOcTreeUpdater(octree, reaMessager, packetCommunicator);
 
       planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(octree, reaMessager);
 
       // TODO move Graphics builder to UI
       graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, planarRegionFeatureUpdater, reaMessager);
 
-      planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater);
+      planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater, packetCommunicator);
       clearOcTree = reaMessager.createInput(REAModuleAPI.OcTreeClear, false);
-
-      planarRegionNetworkProviderGUI = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater);
-      planarRegionNetworkProviderGUI.attachPacketCommunicator(reaMessager.getPacketCommunicator());
-   }
-
-   public void attachListeners(PacketCommunicator packetCommunicator)
-   {
-      updater.attachListeners(packetCommunicator);
-      planarRegionNetworkProvider.attachPacketCommunicator(packetCommunicator);
    }
 
    public void clear()
@@ -116,8 +116,6 @@ public class LIDARBasedREAModule
                   callGraphicsBuilder();
 
                planarRegionNetworkProvider.update(performCompleteOcTreeUpdate);
-
-               planarRegionNetworkProviderGUI.update(performCompleteOcTreeUpdate);
 
                if (planarRegionNetworkProvider.pollClearRequest())
                   clear();
@@ -213,8 +211,10 @@ public class LIDARBasedREAModule
       return runnable;
    }
 
-   public void start()
+   public void start() throws IOException
    {
+      packetCommunicator.connect();
+
       if (scheduled == null)
       {
          scheduled = executorService.scheduleAtFixedRate(createUpdater(), 0, THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
@@ -224,6 +224,9 @@ public class LIDARBasedREAModule
 
    public void stop()
    {
+      packetCommunicator.closeConnection();
+      packetCommunicator.close();
+
       if (scheduled != null)
       {
          scheduled.cancel(true);

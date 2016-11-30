@@ -26,16 +26,12 @@ public class REAPlanarRegionNetworkProvider
    private final Set<PacketDestination> listenersForContinuousUpdate = new HashSet<>();
    private final Set<PacketDestination> listenersForSingleUpdate = new HashSet<>();
    private final AtomicBoolean hasReceivedClearRequest = new AtomicBoolean(false);
-   private PacketCommunicator packetCommunicator;
+   private final PacketCommunicator packetCommunicator;
    private final RegionFeaturesProvider regionFeaturesProvider;
 
-   public REAPlanarRegionNetworkProvider(RegionFeaturesProvider regionFeaturesProvider)
+   public REAPlanarRegionNetworkProvider(RegionFeaturesProvider regionFeaturesProvider, PacketCommunicator packetCommunicator)
    {
       this.regionFeaturesProvider = regionFeaturesProvider;
-   }
-
-   public void attachPacketCommunicator(PacketCommunicator packetCommunicator)
-   {
       this.packetCommunicator = packetCommunicator;
       packetCommunicator.attachListener(RequestPlanarRegionsListMessage.class, this::handlePacket);
    }

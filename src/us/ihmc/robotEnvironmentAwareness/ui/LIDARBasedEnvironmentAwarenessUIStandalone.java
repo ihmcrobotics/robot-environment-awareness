@@ -11,10 +11,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.communication.util.NetworkPorts;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
-import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
@@ -31,11 +28,7 @@ import us.ihmc.robotEnvironmentAwareness.updaters.LIDARBasedREAModule;
 
 public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
 {
-   private static final String SERVER_HOST = "localhost";
-
    private static final String CONFIGURATION_FILE_NAME = "./Configurations/defaultREAConfiguration.txt";
-
-   private final PacketCommunicator packetCommunicator;
 
    private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
    private final BorderPane mainPane;
@@ -65,15 +58,13 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
 
    public LIDARBasedEnvironmentAwarenessUIStandalone() throws IOException
    {
-      packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(SERVER_HOST, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
-
       FXMLLoader loader = new FXMLLoader();
       loader.setController(this);
       loader.setLocation(getClass().getResource("LIDARBasedEnvironmentAwarenessUI.fxml")); // temporary
       mainPane = loader.load();
 
       // Client
-      reaModulePacketCommunicatorClient = PacketCommunicator.createTCPPacketCommunicatorClient(SERVER_HOST, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      reaModulePacketCommunicatorClient = PacketCommunicator.createTCPPacketCommunicatorClient("localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
       reaMessagerOverNetworkClient = new REAMessagerOverNetwork(reaModulePacketCommunicatorClient);
       reaMeshViewer = new REAMeshViewer(reaMessagerOverNetworkClient);
 
@@ -82,14 +73,11 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       reaMessagerOverNetworkServer = new REAMessagerOverNetwork(reaModulePacketCommunicatorServer);
 
       lidarBasedREAModule = new LIDARBasedREAModule(reaMessagerOverNetworkServer);
-
-      lidarBasedREAModule.attachListeners(packetCommunicator);
       lidarBasedREAModule.start();
 
-      packetCommunicator.attachListener(LidarScanMessage.class, lidarFrameViewer.createLidarScanMessageConsumer());
+      // FIXME
+//      packetCommunicator.attachListener(LidarScanMessage.class, lidarFrameViewer.createLidarScanMessageConsumer());
       lidarFrameViewer.start();
-
-      packetCommunicator.connect();
 
       reaModulePacketCommunicatorServer.connect();
       reaModulePacketCommunicatorClient.connect();
@@ -105,7 +93,8 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       scene3D.attachChild(reaMeshViewer.getRoot());
       scene3D.attachChild(lidarFrameViewer.getRoot());
 
-      packetCommunicator.attachListener(PointCloudWorldPacket.class, pointCloudAnchorPaneController.getPointCloudWorldPacketConsumer());
+      // FIXME
+//      packetCommunicator.attachListener(PointCloudWorldPacket.class, pointCloudAnchorPaneController.getPointCloudWorldPacketConsumer());
       pointCloudAnchorPaneController.bindControls();
 
       File configurationFile = new File(CONFIGURATION_FILE_NAME);
@@ -145,9 +134,6 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
    {
       try
       {
-         packetCommunicator.closeConnection();
-         packetCommunicator.close();
-
          reaModulePacketCommunicatorServer.closeConnection();
          reaModulePacketCommunicatorServer.close();
 

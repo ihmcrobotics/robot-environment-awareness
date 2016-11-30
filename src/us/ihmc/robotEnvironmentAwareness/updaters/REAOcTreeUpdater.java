@@ -39,13 +39,13 @@ public class REAOcTreeUpdater
    private final AtomicReference<Boolean> useBoundingBox;
    private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
 
-   public REAOcTreeUpdater(NormalOcTree octree, REAMessager reaMessager)
+   public REAOcTreeUpdater(NormalOcTree octree, REAMessager reaMessager, PacketCommunicator packetCommunicator)
    {
       this.referenceOctree = octree;
       referenceOctree.enableParallelComputationForNormals(true);
       referenceOctree.enableParallelInsertionOfMisses(true);
 
-      reaOcTreeBuffer = new REAOcTreeBuffer(octree.getResolution(), reaMessager);
+      reaOcTreeBuffer = new REAOcTreeBuffer(octree.getResolution(), reaMessager, packetCommunicator);
 
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable);
       enableNormalEstimation = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationEnable);
@@ -55,6 +55,8 @@ public class REAOcTreeUpdater
       useBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable);
       atomicBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters);
       normalEstimationParameters = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters);
+
+      packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
 
       RayMissProbabilityUpdater rayMissProbabilityUpdater = new RayMissProbabilityUpdater()
       {
@@ -165,12 +167,6 @@ public class REAOcTreeUpdater
       {
          referenceOctree.disableBoundingBox();
       }
-   }
-
-   public void attachListeners(PacketCommunicator packetCommunicator)
-   {
-      packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
-      reaOcTreeBuffer.attachPacketCommunicator(packetCommunicator);
    }
 
    private void handlePacket(LidarScanMessage lidarScanMessage)

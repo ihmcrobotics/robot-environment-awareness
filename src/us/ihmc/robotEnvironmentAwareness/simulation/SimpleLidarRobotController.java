@@ -10,6 +10,7 @@ import javax.vecmath.Quat4f;
 
 import gnu.trove.list.array.TFloatArrayList;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
+import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.communication.packets.PlanarRegionMessageConverter;
 import us.ihmc.communication.packets.PlanarRegionsListMessage;
 import us.ihmc.communication.packets.RequestPlanarRegionsListMessage;
@@ -20,7 +21,6 @@ import us.ihmc.graphics3DAdapter.Graphics3DAdapter;
 import us.ihmc.graphics3DDescription.yoGraphics.BagOfBalls;
 import us.ihmc.graphics3DDescription.yoGraphics.YoGraphicPlanarRegionsList;
 import us.ihmc.graphics3DDescription.yoGraphics.YoGraphicsListRegistry;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarScanMessage;
 import us.ihmc.robotics.dataStructures.listener.VariableChangedListener;
 import us.ihmc.robotics.dataStructures.registry.YoVariableRegistry;
 import us.ihmc.robotics.dataStructures.variable.BooleanYoVariable;

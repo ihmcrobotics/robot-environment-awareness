@@ -11,84 +11,73 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class REAMessagerOverNetwork implements REAMessager
 {
+   private final ConcurrentHashMap<String, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
+   private final PacketCommunicator packetCommunicator;
 
-    private final ConcurrentHashMap<String, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
-    private final PacketCommunicator packetCommunicator;
+   public REAMessagerOverNetwork(PacketCommunicator packetCommunicator)
+   {
+      this.packetCommunicator = packetCommunicator;
+      this.packetCommunicator.attachListener(REAMessagePacket.class, reaMessagePacketConsumer);
+   }
 
+   public PacketConsumer<REAMessagePacket> reaMessagePacketConsumer = (PacketConsumer<REAMessagePacket>) packet -> {
+      if (packet == null)
+         return;
 
-    public REAMessagerOverNetwork(PacketCommunicator packetCommunicator)
-    {
-        this.packetCommunicator = packetCommunicator;
-        this.packetCommunicator.attachListener(REAMessagePacket.class, reaMessagePacketConsumer);
-    }
+      System.out.println("Packet received from network with message name: " + packet.getMessageName());
 
+      List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(packet.getMessageName());
+      if (boundVariablesForTopic != null)
+      {
+         for (int i = 0; i < boundVariablesForTopic.size(); i++)
+            boundVariablesForTopic.get(i).set(packet.getMessageContent());
+      }
+   };
 
-    public PacketConsumer<REAMessagePacket> reaMessagePacketConsumer = (PacketConsumer<REAMessagePacket>) packet ->
-    {
-        if (packet == null)
-            return;
+   @Override
+   public void submitMessage(REAMessage message)
+   {
+      if (message.getMessageName() == null)
+         throw new IllegalArgumentException("message name is null");
 
-        System.out.println("Packet received from network with message name: "+ packet.getMessageName());
+      System.out.println("Submit message: " + message.getMessageName());
 
-        List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(packet.getMessageName());
-        if (boundVariablesForTopic != null)
-        {
-            for (int i = 0; i < boundVariablesForTopic.size(); i++)
-                boundVariablesForTopic.get(i).set(packet.getMessageContent());
-        }
-    };
+      // Variable update over network
+      packetCommunicator.send(new REAMessagePacket(message.getMessageName(), message.getMessageContent()));
 
+      // Local update of variable map
+      List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(message.getMessageName());
+      if (boundVariablesForTopic != null)
+      {
+         for (int i = 0; i < boundVariablesForTopic.size(); i++)
+            boundVariablesForTopic.get(i).set(message.getMessageContent());
+      }
 
-    @Override
-    public void submitMessage(REAMessage message)
-    {
-        if (message.getMessageName() == null)
-            throw new IllegalArgumentException("message name is null");
+   }
 
-        System.out.println("Submit message: "+ message.getMessageName());
+   @SuppressWarnings("unchecked")
+   public <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue)
+   {
+      AtomicReference<T> boundVariable = new AtomicReference<T>(defaultValue);
 
-        // Variable update over network
-        packetCommunicator.send(new REAMessagePacket(message.getMessageName(), message.getMessageContent()));
+      List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(messageName);
+      if (boundVariablesForTopic == null)
+      {
+         boundVariablesForTopic = new ArrayList<>();
+         inputVariablesMap.put(messageName, boundVariablesForTopic);
+      }
+      boundVariablesForTopic.add((AtomicReference<Object>) boundVariable);
+      return boundVariable;
+   }
 
-        // Local update of variable map
-        List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(message.getMessageName());
-        if (boundVariablesForTopic != null)
-        {
-            for (int i = 0; i < boundVariablesForTopic.size(); i++)
-                boundVariablesForTopic.get(i).set(message.getMessageContent());
-        }
+   @Override
+   public List<REAMessage> getUnprocessedMessages()
+   {
+      return null;
+   }
 
-    }
-
-
-    @SuppressWarnings("unchecked")
-    public <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue)
-    {
-        AtomicReference<T> boundVariable = new AtomicReference<T>(defaultValue);
-
-        List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(messageName);
-        if (boundVariablesForTopic == null) {
-            boundVariablesForTopic = new ArrayList<>();
-            inputVariablesMap.put(messageName, boundVariablesForTopic);
-        }
-        boundVariablesForTopic.add((AtomicReference<Object>) boundVariable);
-        return boundVariable;
-    }
-
-    @Override
-    public List<REAMessage> getUnprocessedMessages() {
-        return null;
-    }
-
-
-
-    public PacketCommunicator getPacketCommunicator()
-    {
-        return packetCommunicator;
-    }
-
-
-
-
-
+   public PacketCommunicator getPacketCommunicator()
+   {
+      return packetCommunicator;
+   }
 }

@@ -11,7 +11,6 @@ public interface REAMessager
 
    List<REAMessage> getUnprocessedMessages();
 
-   @SuppressWarnings("unchecked")
    <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue);
 
    default <T extends Object> AtomicReference<T> createInput(String messageName)

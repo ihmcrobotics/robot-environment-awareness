@@ -44,8 +44,6 @@ public class REAOcTreeBufferGraphicsBuilder
 
       if (showInputScan.get())
       {
-         System.err.println("Nb of scans: " + scanCollection.getNumberOfScans());
-
          ArrayList<Point3f[]> scannedPoints = new ArrayList<>(scanCollection.getNumberOfScans());
          for (int scanIndex = 0; scanIndex < scanCollection.getNumberOfScans(); scanIndex++)
          {

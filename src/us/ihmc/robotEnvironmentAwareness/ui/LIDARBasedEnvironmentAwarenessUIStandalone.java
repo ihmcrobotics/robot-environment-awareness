@@ -1,5 +1,8 @@
 package us.ihmc.robotEnvironmentAwareness.ui;
 
+import java.io.File;
+import java.io.IOException;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -8,24 +11,25 @@ import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
+import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.DepthDataStateCommand;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.DepthDataStateCommand.LidarState;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
-import us.ihmc.robotEnvironmentAwareness.ui.controller.*;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
+import us.ihmc.robotEnvironmentAwareness.ui.controller.LIDARFilterAnchorPaneController;
+import us.ihmc.robotEnvironmentAwareness.ui.controller.NormalEstimationAnchorPaneController;
+import us.ihmc.robotEnvironmentAwareness.ui.controller.OcTreeBasicsAnchorPaneController;
+import us.ihmc.robotEnvironmentAwareness.ui.controller.PointCloudAnchorPaneController;
+import us.ihmc.robotEnvironmentAwareness.ui.controller.PolygonizerAnchorPaneController;
+import us.ihmc.robotEnvironmentAwareness.ui.controller.RegionSegmentationAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.scene3D.RobotEnvironmentAwareness3DScene;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.LidarFrameViewer;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.REAMeshViewer;
 import us.ihmc.robotEnvironmentAwareness.updaters.LIDARBasedREAModule;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerSharedVariables;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
-
-import java.io.File;
-import java.io.IOException;
 
 public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
 {
@@ -90,7 +94,7 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       lidarBasedREAModule.attachListeners(packetCommunicator);
       lidarBasedREAModule.start();
       
-      packetCommunicator.attachListener(LidarPosePacket.class, lidarFrameViewer.createLidarPosePacketConsumer());
+      packetCommunicator.attachListener(LidarScanMessage.class, lidarFrameViewer.createLidarScanMessageConsumer());
       lidarFrameViewer.start();
 
       packetCommunicator.connect();

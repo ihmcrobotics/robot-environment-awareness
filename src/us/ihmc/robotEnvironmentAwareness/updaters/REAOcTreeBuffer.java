@@ -4,8 +4,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.LidarPosePacket;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
+import us.ihmc.communication.packets.LidarScanMessage;
+import us.ihmc.communication.packets.RequestLidarScanMessage;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
@@ -15,8 +15,7 @@ public class REAOcTreeBuffer
 {
    private static final int NUMBER_OF_SAMPLES = 100000;
 
-   private final AtomicReference<LidarPosePacket> latestLidarPoseReference = new AtomicReference<>(null);
-   private final AtomicReference<PointCloudWorldPacket> latestPointCloudWorldPacket = new AtomicReference<>(null);
+   private final AtomicReference<LidarScanMessage> latestLidarScanMessage = new AtomicReference<>(null);
    private final AtomicReference<ScanCollection> newFullScanReference = new AtomicReference<>(null);
 
    private final AtomicReference<Boolean> enable;
@@ -30,6 +29,8 @@ public class REAOcTreeBuffer
    private final REAOcTreeBufferGraphicsBuilder graphicsBuilder;
 
    private final double octreeResolution;
+
+   private PacketCommunicator packetCommunicator;
 
    public REAOcTreeBuffer(double octreeResolution, REAMessager reaMessager)
    {
@@ -48,6 +49,9 @@ public class REAOcTreeBuffer
          @Override
          public void run()
          {
+            if (packetCommunicator != null)
+               packetCommunicator.send(new RequestLidarScanMessage());
+
             updateScanCollection();
             ScanCollection newScan = newFullScanReference.getAndSet(null);
 
@@ -101,33 +105,26 @@ public class REAOcTreeBuffer
 
    private void updateScanCollection()
    {
-      LidarPosePacket lidarPosePacket = latestLidarPoseReference.get();
-      PointCloudWorldPacket pointCloudPacket = latestPointCloudWorldPacket.getAndSet(null);
+      LidarScanMessage lidarScanMessage = latestLidarScanMessage.getAndSet(null);
 
-      if (!enable.get() || lidarPosePacket == null || pointCloudPacket == null)
+      if (!enable.get() || lidarScanMessage == null)
          return;
 
       ScanCollection scanCollection = new ScanCollection();
       newFullScanReference.set(scanCollection);
       scanCollection.setSubSampleSize(NUMBER_OF_SAMPLES);
-      scanCollection.addScan(pointCloudPacket.decayingWorldScan, lidarPosePacket.position);
+      scanCollection.addScan(lidarScanMessage.scan, lidarScanMessage.lidarPosition);
    }
 
-   public void attachListeners(PacketCommunicator packetCommunicator)
+   public void attachPacketCommunicator(PacketCommunicator packetCommunicator)
    {
-      packetCommunicator.attachListener(LidarPosePacket.class, this::handlePacket);
-      packetCommunicator.attachListener(PointCloudWorldPacket.class, this::handlePacket);
+      this.packetCommunicator = packetCommunicator;
+      packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
    }
 
-   private void handlePacket(LidarPosePacket packet)
-   {
-      if (packet != null)
-         latestLidarPoseReference.set(new LidarPosePacket(packet));
-   }
-
-   private void handlePacket(PointCloudWorldPacket packet)
+   private void handlePacket(LidarScanMessage packet)
    {
       if (packet != null)
-         latestPointCloudWorldPacket.set(packet);
+         latestLidarScanMessage.set(packet);
    }
 }

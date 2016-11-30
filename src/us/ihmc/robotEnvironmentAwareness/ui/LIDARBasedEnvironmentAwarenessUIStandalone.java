@@ -33,7 +33,6 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
    private final BorderPane mainPane;
 
    private final REAMessager reaMessagerOverNetworkClient;
-   private final REAMessager reaMessagerOverNetworkServer;
 
    private final LIDARBasedREAModule lidarBasedREAModule;
 
@@ -63,19 +62,15 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       // Client
       reaMessagerOverNetworkClient = REAMessagerOverNetwork.createClient("localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
 
-      // Server
-      reaMessagerOverNetworkServer = REAMessagerOverNetwork.createServer(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
-
       reaMeshViewer = new REAMeshViewer(reaMessagerOverNetworkClient);
 
-      lidarBasedREAModule = new LIDARBasedREAModule(reaMessagerOverNetworkServer);
+      lidarBasedREAModule = LIDARBasedREAModule.createRemoteREAModule();
       lidarBasedREAModule.start();
 
       // FIXME
 //      packetCommunicator.attachListener(LidarScanMessage.class, lidarFrameViewer.createLidarScanMessageConsumer());
       lidarFrameViewer.start();
 
-      reaMessagerOverNetworkServer.startMessager();
       reaMessagerOverNetworkClient.startMessager();
    }
 
@@ -130,7 +125,6 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
    {
       try
       {
-         reaMessagerOverNetworkServer.closeMessager();
          reaMessagerOverNetworkClient.closeMessager();
 
          if (scene3D != null)

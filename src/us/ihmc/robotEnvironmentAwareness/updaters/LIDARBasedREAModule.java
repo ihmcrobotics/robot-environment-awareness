@@ -18,8 +18,10 @@ import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.tools.JOctoMapTools;
-
+import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerSharedVariables;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.tools.io.printing.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;
@@ -53,7 +55,7 @@ public class LIDARBasedREAModule
    private ScheduledFuture<?> scheduled;
    private final REAMessager reaMessager;
 
-   public LIDARBasedREAModule(REAMessager reaMessager)
+   private LIDARBasedREAModule(REAMessager reaMessager)
    {
       this.reaMessager = reaMessager;
       packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
@@ -217,6 +219,8 @@ public class LIDARBasedREAModule
    {
       packetCommunicator.connect();
 
+      reaMessager.startMessager();
+
       if (scheduled == null)
       {
          scheduled = executorService.scheduleAtFixedRate(createUpdater(), 0, THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
@@ -242,5 +246,17 @@ public class LIDARBasedREAModule
          executorService.shutdown();
          executorService = null;
       }
+   }
+
+   public static LIDARBasedREAModule createRemoteREAModule()
+   {
+      REAMessager server = REAMessagerOverNetwork.createServer(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      return new LIDARBasedREAModule(server);
+   }
+
+   public static LIDARBasedREAModule createIntraprocessModule()
+   {
+      REAMessager messager = new REAMessagerSharedVariables();
+      return new LIDARBasedREAModule(messager);
    }
 }

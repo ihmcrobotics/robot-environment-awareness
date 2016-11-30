@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.OcTreeMessageConverter;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
@@ -42,22 +43,19 @@ public class REAOcTreeGraphicsBuilder
 
       processPropertyChange.set(false);
 
-      if(octree.getRoot() != null)
+      if (octree.getRoot() != null)
       {
          NormalOcTreeMessage normalOcTreeMessage = OcTreeMessageConverter.convertToMessage(octree, regionFeaturesProvider.getOcTreePlanarRegions());
-         normalOcTreeMessage.messageID = REAModuleAPI.OctreeMessageID;
-         reaMessager.getPacketCommunicator().send(normalOcTreeMessage);
+         reaMessager.submitMessage(new REAMessage(REAModuleAPI.Octree, normalOcTreeMessage));
       }
 
       if (Thread.interrupted())
          return;
    }
 
-
    private boolean isEnabled()
    {
       return enable.get() == null ? false : enable.get();
    }
-
 
 }

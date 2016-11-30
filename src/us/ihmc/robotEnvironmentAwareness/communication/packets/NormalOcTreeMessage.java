@@ -5,7 +5,6 @@ import us.ihmc.robotics.MathTools;
 
 public class NormalOcTreeMessage extends Packet<NormalOcTreeMessage>
 {
-   public byte messageID;
    public int treeDepth = 0;
    public float resolution = Float.NaN;
    public NormalOcTreeNodeMessage root = null;

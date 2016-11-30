@@ -54,10 +54,4 @@ public class REAMessagerSharedVariables implements REAMessager
    {
       boundVariables.clear();
    }
-
-   @Override
-   public PacketCommunicator getPacketCommunicator()
-   {
-      return null;
-   }
 }

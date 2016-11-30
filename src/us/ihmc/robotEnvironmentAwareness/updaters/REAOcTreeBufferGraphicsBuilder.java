@@ -37,8 +37,7 @@ public class REAOcTreeBufferGraphicsBuilder
       if (enable.get() && showBuffer.get() && bufferOcTree.getRoot() != null)
       {
          NormalOcTreeMessage normalOcTreeMessage = OcTreeMessageConverter.convertToMessage(bufferOcTree);
-         normalOcTreeMessage.messageID = REAModuleAPI.BufferOctreeMessageID;
-         reaMessager.getPacketCommunicator().send(normalOcTreeMessage);
+         reaMessager.submitMessage(new REAMessage(REAModuleAPI.BufferOctree, normalOcTreeMessage));
       }
 
       if (showInputScan.get())

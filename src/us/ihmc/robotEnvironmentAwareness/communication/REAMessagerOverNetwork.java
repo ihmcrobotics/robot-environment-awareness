@@ -103,10 +103,4 @@ public class REAMessagerOverNetwork implements REAMessager
       packetCommunicator.closeConnection();
       packetCommunicator.close();
    }
-
-   @Override
-   public PacketCommunicator getPacketCommunicator()
-   {
-      return packetCommunicator;
-   }
 }

@@ -54,12 +54,12 @@ public class REAModuleAPI
    public static final String OcTreeGraphicsBoundingBoxMesh = Output + OcTree + Graphics + BoundingBox + "Mesh";
 
    public static final String BufferOctreeNodeSize = Output + OcTree + Graphics + "BufferOctreeNodeSize";
-   public static final String BufferOctree = Output + OcTree + Graphics + "BufferOctree";
 
    public static final String ScanPointsCollection = Output + OcTree + Graphics + "ScanPointsCollection";
 
-   public static final String OctreeNodes = Output + OcTree + Graphics + "OctreeNodes";
+   public static final String RequestPlanarRegions = Input + OcTree + "RequestPlanarRegions";
 
-   public static final byte BufferOctreeMessageID = 0x1;
-   public static final byte OctreeMessageID = 0x2;
+   public static final String Octree = Output + OcTree + "Octree";
+   public static final String BufferOctree = Output + OcTree + "BufferOctree";
+   public static final String PlanarRegions = Output + "PlanarRegions";
 }

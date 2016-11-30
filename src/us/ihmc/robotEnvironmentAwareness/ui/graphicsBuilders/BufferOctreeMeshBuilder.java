@@ -9,7 +9,6 @@ import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
-import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
@@ -36,10 +35,9 @@ public class BufferOctreeMeshBuilder implements Runnable
 
    private BufferOctreeMeshBuilderListener listener;
 
-   private final AtomicReference<UIOcTree> uiOctree = new AtomicReference<>(null);
-
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> showBuffer;
+   private final AtomicReference<NormalOcTreeMessage> bufferOcTreeMessage;
 
    private boolean hasClearedBufferGraphics = false;
 
@@ -48,19 +46,10 @@ public class BufferOctreeMeshBuilder implements Runnable
       // local
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
       showBuffer = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer, true);
+      bufferOcTreeMessage = reaMessager.createInput(REAModuleAPI.BufferOctree);
 
       setListener(bufferOctreeMeshBuilderListener);
-
-      reaMessager.getPacketCommunicator().attachListener(NormalOcTreeMessage.class, normalOctreeMessagePacketConsumer);
    }
-
-   public PacketConsumer<NormalOcTreeMessage> normalOctreeMessagePacketConsumer = (PacketConsumer<NormalOcTreeMessage>) packet ->
-   {
-      if (packet == null || packet.messageID != REAModuleAPI.BufferOctreeMessageID)
-         return;
-
-      uiOctree.set(new UIOcTree(packet));
-   };
 
    private void setListener(BufferOctreeMeshBuilderListener listener)
    {
@@ -69,31 +58,31 @@ public class BufferOctreeMeshBuilder implements Runnable
       this.listener = listener;
    }
 
-   @Override public void run()
+   @Override
+   public void run()
    {
       if (!enable.get() || !showBuffer.get())
       {
          clearBufferGraphicsIfNeeded();
+         return;
       }
-      else
+
+      bufferMeshBuilder.clear();
+
+      if (bufferOcTreeMessage.get() != null)
       {
+         UIOcTree uiOcTree = new UIOcTree(bufferOcTreeMessage.getAndSet(null));
 
-         bufferMeshBuilder.clear();
-
-         if (uiOctree.get() != null)
+         for (UIOcTreeNode uiOcTreeNode : uiOcTree)
          {
-            UIOcTree uiOcTree = uiOctree.getAndSet(null);
-
-            for (UIOcTreeNode uiOcTreeNode : uiOcTree)
-            {
-               bufferMeshBuilder.addTetrahedron(NODE_SCALE * uiOcTreeNode.getSize(), new Point3d(uiOcTreeNode.getX(), uiOcTreeNode.getY(), uiOcTreeNode.getZ()));
-            }
-
-            Pair<Mesh, Material> meshAndMaterial = new Pair<>(bufferMeshBuilder.generateMesh(), bufferMaterial);
-            listener.meshAndMaterialChanged(meshAndMaterial);
-
-            hasClearedBufferGraphics = false;
+            Point3d nodeCenter = new Point3d(uiOcTreeNode.getX(), uiOcTreeNode.getY(), uiOcTreeNode.getZ());
+            bufferMeshBuilder.addTetrahedron(NODE_SCALE * uiOcTreeNode.getSize(), nodeCenter);
          }
+
+         Pair<Mesh, Material> meshAndMaterial = new Pair<>(bufferMeshBuilder.generateMesh(), bufferMaterial);
+         listener.meshAndMaterialChanged(meshAndMaterial);
+
+         hasClearedBufferGraphics = false;
       }
    }
 
@@ -107,5 +96,4 @@ public class BufferOctreeMeshBuilder implements Runnable
 
       hasClearedBufferGraphics = true;
    }
-
 }

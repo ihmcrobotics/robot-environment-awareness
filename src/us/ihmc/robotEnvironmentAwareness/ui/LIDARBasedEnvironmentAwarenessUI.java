@@ -3,8 +3,6 @@ package us.ihmc.robotEnvironmentAwareness.ui;
 import java.io.File;
 import java.io.IOException;
 
-import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -23,19 +21,15 @@ import us.ihmc.robotEnvironmentAwareness.ui.controller.RegionSegmentationAnchorP
 import us.ihmc.robotEnvironmentAwareness.ui.scene3D.RobotEnvironmentAwareness3DScene;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.LidarFrameViewer;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.REAMeshViewer;
-import us.ihmc.robotEnvironmentAwareness.updaters.LIDARBasedREAModule;
 
-public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
+public class LIDARBasedEnvironmentAwarenessUI
 {
    private static final String CONFIGURATION_FILE_NAME = "./Configurations/defaultREAConfiguration.txt";
 
    private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
    private final BorderPane mainPane;
 
-   private final REAMessager reaMessagerOverNetworkClient;
-
-   private final LIDARBasedREAModule lidarBasedREAModule;
-
+   private final REAMessager reaMessager;
    private final REAMeshViewer reaMeshViewer;
    private final LidarFrameViewer lidarFrameViewer = new LidarFrameViewer();
 
@@ -52,89 +46,82 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
    @FXML
    private PolygonizerAnchorPaneController polygonizerAnchorPaneController;
 
-   public LIDARBasedEnvironmentAwarenessUIStandalone() throws IOException
+   private final Stage primaryStage;
+
+   private LIDARBasedEnvironmentAwarenessUI(REAMessager reaMessager, Stage primaryStage) throws IOException
    {
+      this.primaryStage = primaryStage;
       FXMLLoader loader = new FXMLLoader();
       loader.setController(this);
       loader.setLocation(getClass().getResource("LIDARBasedEnvironmentAwarenessUI.fxml")); // temporary
       mainPane = loader.load();
 
       // Client
-      reaMessagerOverNetworkClient = REAMessagerOverNetwork.createClient("localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      this.reaMessager = reaMessager;
 
-      reaMeshViewer = new REAMeshViewer(reaMessagerOverNetworkClient);
-
-      lidarBasedREAModule = LIDARBasedREAModule.createRemoteREAModule();
-      lidarBasedREAModule.start();
+      reaMeshViewer = new REAMeshViewer(reaMessager);
 
       // FIXME
-//      packetCommunicator.attachListener(LidarScanMessage.class, lidarFrameViewer.createLidarScanMessageConsumer());
-      lidarFrameViewer.start();
+      //      packetCommunicator.attachListener(LidarScanMessage.class, lidarFrameViewer.createLidarScanMessageConsumer());
 
-      reaMessagerOverNetworkClient.startMessager();
-   }
-
-   @Override
-   public void start(Stage primaryStage) throws Exception
-   {
       mainPane.setCenter(scene3D);
 
-      pointCloudAnchorPaneController.start();
       scene3D.attachChild(pointCloudAnchorPaneController.getRoot());
       scene3D.attachChild(reaMeshViewer.getRoot());
       scene3D.attachChild(lidarFrameViewer.getRoot());
 
       // FIXME
-//      packetCommunicator.attachListener(PointCloudWorldPacket.class, pointCloudAnchorPaneController.getPointCloudWorldPacketConsumer());
+      //      packetCommunicator.attachListener(PointCloudWorldPacket.class, pointCloudAnchorPaneController.getPointCloudWorldPacketConsumer());
       pointCloudAnchorPaneController.bindControls();
 
       File configurationFile = new File(CONFIGURATION_FILE_NAME);
 
       ocTreeBasicsAnchorPaneController.setConfigurationFile(configurationFile);
-      ocTreeBasicsAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
+      ocTreeBasicsAnchorPaneController.attachREAMessager(reaMessager);
       ocTreeBasicsAnchorPaneController.bindControls();
 
       lidarFilterAnchorPaneController.setConfigurationFile(configurationFile);
-      lidarFilterAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
+      lidarFilterAnchorPaneController.attachREAMessager(reaMessager);
       lidarFilterAnchorPaneController.bindControls();
 
       normalEstimationAnchorPaneController.setConfigurationFile(configurationFile);
-      normalEstimationAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
+      normalEstimationAnchorPaneController.attachREAMessager(reaMessager);
       normalEstimationAnchorPaneController.bindControls();
 
       regionSegmentationAnchorPaneController.setConfigurationFile(configurationFile);
-      regionSegmentationAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
+      regionSegmentationAnchorPaneController.attachREAMessager(reaMessager);
       regionSegmentationAnchorPaneController.bindControls();
 
       polygonizerAnchorPaneController.setConfigurationFile(configurationFile);
-      polygonizerAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
+      polygonizerAnchorPaneController.attachREAMessager(reaMessager);
       polygonizerAnchorPaneController.bindControls();
-
-      reaMeshViewer.start();
 
       primaryStage.setTitle(getClass().getSimpleName());
       primaryStage.setMaximized(true);
       Scene mainScene = new Scene(mainPane, 600, 400);
       primaryStage.setScene(mainScene);
-      primaryStage.show();
       primaryStage.setOnCloseRequest(event -> stop());
    }
 
-   @Override
+   public void start() throws IOException
+   {
+      lidarFrameViewer.start();
+      pointCloudAnchorPaneController.start();
+      reaMeshViewer.start();
+      reaMessager.startMessager();
+      primaryStage.show();
+   }
+
    public void stop()
    {
       try
       {
-         reaMessagerOverNetworkClient.closeMessager();
+         reaMessager.closeMessager();
 
-         if (scene3D != null)
-            scene3D.stop();
-         if (pointCloudAnchorPaneController != null)
-            pointCloudAnchorPaneController.stop();
-         lidarBasedREAModule.stop();
+         scene3D.stop();
+         pointCloudAnchorPaneController.stop();
          reaMeshViewer.stop();
          lidarFrameViewer.stop();
-         Platform.exit();
       }
       catch (Exception e)
       {
@@ -142,8 +129,9 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       }
    }
 
-   public static void main(String[] args)
+   public static LIDARBasedEnvironmentAwarenessUI creatRemoteUI(Stage primaryStage) throws IOException
    {
-      launch(args);
+      REAMessager uiClientMessager = REAMessagerOverNetwork.createClient("localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      return new LIDARBasedEnvironmentAwarenessUI(uiClientMessager, primaryStage);
    }
 }

@@ -39,13 +39,12 @@ public class REAOcTreeUpdater
    private final AtomicReference<Boolean> useBoundingBox;
    private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
 
-   public REAOcTreeUpdater(NormalOcTree octree, REAMessager reaMessager, PacketCommunicator packetCommunicator)
+   public REAOcTreeUpdater(NormalOcTree octree, REAOcTreeBuffer buffer, REAMessager reaMessager, PacketCommunicator packetCommunicator)
    {
       this.referenceOctree = octree;
+      reaOcTreeBuffer = buffer;
       referenceOctree.enableParallelComputationForNormals(true);
       referenceOctree.enableParallelInsertionOfMisses(true);
-
-      reaOcTreeBuffer = new REAOcTreeBuffer(octree.getResolution(), reaMessager, packetCommunicator);
 
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable);
       enableNormalEstimation = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationEnable);
@@ -92,11 +91,6 @@ public class REAOcTreeUpdater
       referenceOctree.setCustomRayMissProbabilityUpdater(rayMissProbabilityUpdater);
    }
 
-   public Runnable createBufferThread()
-   {
-      return reaOcTreeBuffer.createBufferThread();
-   }
-
    public boolean update(boolean performCompleteUpdate)
    {
       if (!isEnabled())
@@ -139,11 +133,6 @@ public class REAOcTreeUpdater
          referenceOctree.updateNormals();
 
       return true;
-   }
-
-   public void clearBuffer()
-   {
-      reaOcTreeBuffer.clearBuffer();
    }
 
    public void clearOcTree()

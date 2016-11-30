@@ -42,6 +42,7 @@ public class LIDARBasedREAModule
    private final StopWatch stopWatch = REPORT_TIME ? new StopWatch() : null;
    private final NormalOcTree octree = new NormalOcTree(OCTREE_RESOLUTION);
 
+   private final REAOcTreeBuffer buffer;
    private final REAOcTreeUpdater updater;
    private final REAPlanarRegionFeatureUpdater planarRegionFeatureUpdater;
 
@@ -60,20 +61,14 @@ public class LIDARBasedREAModule
       this.reaMessager = reaMessager;
       packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
 
-      updater = new REAOcTreeUpdater(octree, reaMessager, packetCommunicator);
+      buffer = new REAOcTreeBuffer(octree.getResolution(), reaMessager, packetCommunicator);
+      updater = new REAOcTreeUpdater(octree, buffer, reaMessager, packetCommunicator);
 
       planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(octree, reaMessager);
-
-      // TODO move Graphics builder to UI
       graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, planarRegionFeatureUpdater, reaMessager);
 
       planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater, packetCommunicator);
       clearOcTree = reaMessager.createInput(REAModuleAPI.OcTreeClear, false);
-   }
-
-   public void clear()
-   {
-      clearOcTree.set(true);
    }
 
    private Runnable createUpdater()
@@ -98,7 +93,7 @@ public class LIDARBasedREAModule
             {
                if (clearOcTree.getAndSet(false))
                {
-                  updater.clearBuffer();
+                  buffer.clearBuffer();
                   updater.clearOcTree();
                   planarRegionFeatureUpdater.clearOcTree();
                }
@@ -122,11 +117,7 @@ public class LIDARBasedREAModule
                planarRegionNetworkProvider.update(performCompleteOcTreeUpdate);
 
                if (planarRegionNetworkProvider.pollClearRequest())
-                  clear();
-
-
-               if (planarRegionNetworkProvider.pollClearRequest())
-                  clear();
+                  clearOcTree.set(true);
             }
             catch (Exception e)
             {
@@ -193,13 +184,7 @@ public class LIDARBasedREAModule
                stopWatch.start();
             }
 
-            // TODO: Here Send stuff to GUI
-
             graphicsBuilder.update();
-//
-//            Runnable futureTask = graphicsBuilder.update();
-//            if (futureTask != null)
-//               executorService.execute(futureTask);
 
             if (REPORT_TIME)
             {
@@ -224,7 +209,7 @@ public class LIDARBasedREAModule
       if (scheduled == null)
       {
          scheduled = executorService.scheduleAtFixedRate(createUpdater(), 0, THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
-         executorService.scheduleAtFixedRate(updater.createBufferThread(), 0, BUFFER_THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
+         executorService.scheduleAtFixedRate(buffer.createBufferThread(), 0, BUFFER_THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
       }
    }
 
@@ -243,7 +228,7 @@ public class LIDARBasedREAModule
 
       if (executorService != null)
       {
-         executorService.shutdown();
+         executorService.shutdownNow();
          executorService = null;
       }
    }

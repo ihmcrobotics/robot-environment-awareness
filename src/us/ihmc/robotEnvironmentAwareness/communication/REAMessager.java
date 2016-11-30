@@ -15,5 +15,6 @@ public interface REAMessager
       return createInput(messageName, null);
    }
 
+   @Deprecated
    PacketCommunicator getPacketCommunicator();
 }

@@ -17,7 +17,6 @@ public class REAMessagerSharedVariables implements REAMessager
    {
    }
 
-
    @Override
    public void submitMessage(REAMessage message)
    {
@@ -29,7 +28,6 @@ public class REAMessagerSharedVariables implements REAMessager
             boundVariablesForTopic.get(i).set(message.getMessageContent());
       }
    }
-
 
    @SuppressWarnings("unchecked")
    public <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue)
@@ -46,7 +44,8 @@ public class REAMessagerSharedVariables implements REAMessager
       return boundVariable;
    }
 
-   @Override public PacketCommunicator getPacketCommunicator()
+   @Override
+   public PacketCommunicator getPacketCommunicator()
    {
       return null;
    }
@@ -56,7 +55,4 @@ public class REAMessagerSharedVariables implements REAMessager
    {
       return null;
    }
-
-
-
 }

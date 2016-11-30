@@ -1,15 +1,12 @@
 package us.ihmc.robotEnvironmentAwareness.communication;
 
-import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+
+import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 
 public interface REAMessager
 {
    void submitMessage(REAMessage message);
-
-   List<REAMessage> getUnprocessedMessages();
 
    <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue);
 
@@ -18,8 +15,5 @@ public interface REAMessager
       return createInput(messageName, null);
    }
 
-
-
    PacketCommunicator getPacketCommunicator();
-
 }

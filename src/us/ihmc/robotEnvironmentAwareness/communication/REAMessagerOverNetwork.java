@@ -1,30 +1,34 @@
 package us.ihmc.robotEnvironmentAwareness.communication;
 
-import us.ihmc.communication.net.PacketConsumer;
-import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.REAMessagePacket;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import us.ihmc.communication.packetCommunicator.PacketCommunicator;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.REAMessagePacket;
+import us.ihmc.tools.io.printing.PrintTools;
+
 public class REAMessagerOverNetwork implements REAMessager
 {
+   private static final boolean DEBUG = false;
+
    private final ConcurrentHashMap<String, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
    private final PacketCommunicator packetCommunicator;
 
    public REAMessagerOverNetwork(PacketCommunicator packetCommunicator)
    {
       this.packetCommunicator = packetCommunicator;
-      this.packetCommunicator.attachListener(REAMessagePacket.class, reaMessagePacketConsumer);
+      this.packetCommunicator.attachListener(REAMessagePacket.class, this::receiveREAMessagePacket);
    }
 
-   public PacketConsumer<REAMessagePacket> reaMessagePacketConsumer = (PacketConsumer<REAMessagePacket>) packet -> {
+   private void receiveREAMessagePacket(REAMessagePacket packet)
+   {
       if (packet == null)
          return;
 
-      System.out.println("Packet received from network with message name: " + packet.getMessageName());
+      if (DEBUG)
+         PrintTools.info("Packet received from network with message name: " + packet.getMessageName());
 
       List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(packet.getMessageName());
       if (boundVariablesForTopic != null)
@@ -32,7 +36,7 @@ public class REAMessagerOverNetwork implements REAMessager
          for (int i = 0; i < boundVariablesForTopic.size(); i++)
             boundVariablesForTopic.get(i).set(packet.getMessageContent());
       }
-   };
+   }
 
    @Override
    public void submitMessage(REAMessage message)
@@ -40,7 +44,8 @@ public class REAMessagerOverNetwork implements REAMessager
       if (message.getMessageName() == null)
          throw new IllegalArgumentException("message name is null");
 
-      System.out.println("Submit message: " + message.getMessageName());
+      if (DEBUG)
+         PrintTools.info("Submit message: " + message.getMessageName());
 
       // Variable update over network
       packetCommunicator.send(new REAMessagePacket(message.getMessageName(), message.getMessageContent()));
@@ -52,13 +57,13 @@ public class REAMessagerOverNetwork implements REAMessager
          for (int i = 0; i < boundVariablesForTopic.size(); i++)
             boundVariablesForTopic.get(i).set(message.getMessageContent());
       }
-
    }
 
+   @Override
    @SuppressWarnings("unchecked")
    public <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue)
    {
-      AtomicReference<T> boundVariable = new AtomicReference<T>(defaultValue);
+      AtomicReference<T> boundVariable = new AtomicReference<>(defaultValue);
 
       List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(messageName);
       if (boundVariablesForTopic == null)
@@ -71,11 +76,6 @@ public class REAMessagerOverNetwork implements REAMessager
    }
 
    @Override
-   public List<REAMessage> getUnprocessedMessages()
-   {
-      return null;
-   }
-
    public PacketCommunicator getPacketCommunicator()
    {
       return packetCommunicator;

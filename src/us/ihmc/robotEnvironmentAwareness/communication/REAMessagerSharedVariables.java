@@ -6,8 +6,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 
 public class REAMessagerSharedVariables implements REAMessager
 {
@@ -29,10 +27,11 @@ public class REAMessagerSharedVariables implements REAMessager
       }
    }
 
+   @Override
    @SuppressWarnings("unchecked")
    public <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue)
    {
-      AtomicReference<T> boundVariable = new AtomicReference<T>(defaultValue);
+      AtomicReference<T> boundVariable = new AtomicReference<>(defaultValue);
 
       List<AtomicReference<Object>> boundVariablesForTopic = boundVariables.get(messageName);
       if (boundVariablesForTopic == null)
@@ -46,12 +45,6 @@ public class REAMessagerSharedVariables implements REAMessager
 
    @Override
    public PacketCommunicator getPacketCommunicator()
-   {
-      return null;
-   }
-
-   @Override
-   public List<REAMessage> getUnprocessedMessages()
    {
       return null;
    }

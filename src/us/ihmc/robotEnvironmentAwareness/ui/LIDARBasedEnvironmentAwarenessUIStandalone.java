@@ -13,8 +13,6 @@ import javafx.stage.Stage;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.communication.util.NetworkPorts;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.DepthDataStateCommand;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.DepthDataStateCommand.LidarState;
 import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
 import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
@@ -95,15 +93,6 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
 
       reaModulePacketCommunicatorServer.connect();
       reaModulePacketCommunicatorClient.connect();
-   }
-
-   @FXML // TODO Move me somewhere else, maybe
-   private void sendLidarCommand()
-   {
-      DepthDataStateCommand packet = new DepthDataStateCommand();
-      packet.lidarState = LidarState.ENABLE;
-      packet.publishLidarPose = true;
-      packetCommunicator.send(packet);
    }
 
    @Override

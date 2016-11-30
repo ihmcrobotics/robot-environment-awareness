@@ -42,20 +42,15 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
    private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
    private final BorderPane mainPane;
 
-
    private final PacketCommunicator reaModulePacketCommunicatorServer;
    private final PacketCommunicator reaModulePacketCommunicatorClient;
    private final REAMessager reaMessagerOverNetworkClient;
    private final REAMessager reaMessagerOverNetworkServer;
 
-
    private final LIDARBasedREAModule lidarBasedREAModule;
-
 
    private final REAMeshViewer reaMeshViewer;
    private final LidarFrameViewer lidarFrameViewer = new LidarFrameViewer();
-
-
 
    @FXML
    private PointCloudAnchorPaneController pointCloudAnchorPaneController;
@@ -79,7 +74,6 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       loader.setLocation(getClass().getResource("LIDARBasedEnvironmentAwarenessUI.fxml")); // temporary
       mainPane = loader.load();
 
-
       // Client
       reaModulePacketCommunicatorClient = PacketCommunicator.createTCPPacketCommunicatorClient(SERVER_HOST, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
       reaMessagerOverNetworkClient = new REAMessagerOverNetwork(reaModulePacketCommunicatorClient);
@@ -93,7 +87,7 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
 
       lidarBasedREAModule.attachListeners(packetCommunicator);
       lidarBasedREAModule.start();
-      
+
       packetCommunicator.attachListener(LidarScanMessage.class, lidarFrameViewer.createLidarScanMessageConsumer());
       lidarFrameViewer.start();
 
@@ -134,15 +128,15 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       lidarFilterAnchorPaneController.setConfigurationFile(configurationFile);
       lidarFilterAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
       lidarFilterAnchorPaneController.bindControls();
-      
+
       normalEstimationAnchorPaneController.setConfigurationFile(configurationFile);
       normalEstimationAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
       normalEstimationAnchorPaneController.bindControls();
-      
+
       regionSegmentationAnchorPaneController.setConfigurationFile(configurationFile);
       regionSegmentationAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
       regionSegmentationAnchorPaneController.bindControls();
-      
+
       polygonizerAnchorPaneController.setConfigurationFile(configurationFile);
       polygonizerAnchorPaneController.attachREAMessager(reaMessagerOverNetworkClient);
       polygonizerAnchorPaneController.bindControls();
@@ -155,7 +149,6 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       primaryStage.setScene(mainScene);
       primaryStage.show();
       primaryStage.setOnCloseRequest(event -> stop());
-
    }
 
    @Override
@@ -165,7 +158,6 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       {
          packetCommunicator.closeConnection();
          packetCommunicator.close();
-
 
          reaModulePacketCommunicatorServer.closeConnection();
          reaModulePacketCommunicatorServer.close();

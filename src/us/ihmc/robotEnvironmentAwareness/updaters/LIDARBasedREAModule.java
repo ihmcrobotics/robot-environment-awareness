@@ -51,9 +51,11 @@ public class LIDARBasedREAModule
 
    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(3, ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
    private ScheduledFuture<?> scheduled;
+   private final REAMessager reaMessager;
 
    public LIDARBasedREAModule(REAMessager reaMessager)
    {
+      this.reaMessager = reaMessager;
       packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
 
       updater = new REAOcTreeUpdater(octree, reaMessager, packetCommunicator);
@@ -226,6 +228,8 @@ public class LIDARBasedREAModule
    {
       packetCommunicator.closeConnection();
       packetCommunicator.close();
+
+      reaMessager.closeMessager();
 
       if (scheduled != null)
       {

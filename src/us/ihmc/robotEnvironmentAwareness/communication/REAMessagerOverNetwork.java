@@ -1,11 +1,14 @@
 package us.ihmc.robotEnvironmentAwareness.communication;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import us.ihmc.communication.net.NetClassList;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
+import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.REAMessagePacket;
 import us.ihmc.tools.io.printing.PrintTools;
 
@@ -16,7 +19,19 @@ public class REAMessagerOverNetwork implements REAMessager
    private final ConcurrentHashMap<String, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
    private final PacketCommunicator packetCommunicator;
 
-   public REAMessagerOverNetwork(PacketCommunicator packetCommunicator)
+   public static REAMessager createServer(NetworkPorts port, NetClassList netClassList)
+   {
+      PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(port, netClassList);
+      return new REAMessagerOverNetwork(packetCommunicator);
+   }
+
+   public static REAMessager createClient(String host, NetworkPorts port, NetClassList netClassList)
+   {
+      PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(host, port, netClassList);
+      return new REAMessagerOverNetwork(packetCommunicator);
+   }
+
+   private REAMessagerOverNetwork(PacketCommunicator packetCommunicator)
    {
       this.packetCommunicator = packetCommunicator;
       this.packetCommunicator.attachListener(REAMessagePacket.class, this::receiveREAMessagePacket);
@@ -73,6 +88,20 @@ public class REAMessagerOverNetwork implements REAMessager
       }
       boundVariablesForTopic.add((AtomicReference<Object>) boundVariable);
       return boundVariable;
+   }
+
+   @Override
+   public void startMessager() throws IOException
+   {
+      packetCommunicator.connect();
+   }
+
+   @Override
+   public void closeMessager()
+   {
+      inputVariablesMap.clear();
+      packetCommunicator.closeConnection();
+      packetCommunicator.close();
    }
 
    @Override

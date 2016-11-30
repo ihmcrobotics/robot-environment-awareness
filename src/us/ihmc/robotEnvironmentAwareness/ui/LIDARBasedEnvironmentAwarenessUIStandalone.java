@@ -10,7 +10,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
@@ -33,8 +32,6 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
    private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
    private final BorderPane mainPane;
 
-   private final PacketCommunicator reaModulePacketCommunicatorServer;
-   private final PacketCommunicator reaModulePacketCommunicatorClient;
    private final REAMessager reaMessagerOverNetworkClient;
    private final REAMessager reaMessagerOverNetworkServer;
 
@@ -64,13 +61,12 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
       mainPane = loader.load();
 
       // Client
-      reaModulePacketCommunicatorClient = PacketCommunicator.createTCPPacketCommunicatorClient("localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
-      reaMessagerOverNetworkClient = new REAMessagerOverNetwork(reaModulePacketCommunicatorClient);
-      reaMeshViewer = new REAMeshViewer(reaMessagerOverNetworkClient);
+      reaMessagerOverNetworkClient = REAMessagerOverNetwork.createClient("localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
 
       // Server
-      reaModulePacketCommunicatorServer = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
-      reaMessagerOverNetworkServer = new REAMessagerOverNetwork(reaModulePacketCommunicatorServer);
+      reaMessagerOverNetworkServer = REAMessagerOverNetwork.createServer(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+
+      reaMeshViewer = new REAMeshViewer(reaMessagerOverNetworkClient);
 
       lidarBasedREAModule = new LIDARBasedREAModule(reaMessagerOverNetworkServer);
       lidarBasedREAModule.start();
@@ -79,8 +75,8 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
 //      packetCommunicator.attachListener(LidarScanMessage.class, lidarFrameViewer.createLidarScanMessageConsumer());
       lidarFrameViewer.start();
 
-      reaModulePacketCommunicatorServer.connect();
-      reaModulePacketCommunicatorClient.connect();
+      reaMessagerOverNetworkServer.startMessager();
+      reaMessagerOverNetworkClient.startMessager();
    }
 
    @Override
@@ -134,11 +130,8 @@ public class LIDARBasedEnvironmentAwarenessUIStandalone extends Application
    {
       try
       {
-         reaModulePacketCommunicatorServer.closeConnection();
-         reaModulePacketCommunicatorServer.close();
-
-         reaModulePacketCommunicatorClient.closeConnection();
-         reaModulePacketCommunicatorClient.close();
+         reaMessagerOverNetworkServer.closeMessager();
+         reaMessagerOverNetworkClient.closeMessager();
 
          if (scene3D != null)
             scene3D.stop();

@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.communication;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
@@ -14,6 +15,10 @@ public interface REAMessager
    {
       return createInput(messageName, null);
    }
+   
+   void startMessager() throws IOException;
+
+   void closeMessager();
 
    @Deprecated
    PacketCommunicator getPacketCommunicator();

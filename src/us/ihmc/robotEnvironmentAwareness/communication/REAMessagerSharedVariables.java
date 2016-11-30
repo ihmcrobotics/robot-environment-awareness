@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.communication;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,6 +42,17 @@ public class REAMessagerSharedVariables implements REAMessager
       }
       boundVariablesForTopic.add((AtomicReference<Object>) boundVariable);
       return boundVariable;
+   }
+
+   @Override
+   public void startMessager() throws IOException
+   {
+   }
+
+   @Override
+   public void closeMessager()
+   {
+      boundVariables.clear();
    }
 
    @Override

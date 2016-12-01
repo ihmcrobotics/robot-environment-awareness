@@ -39,22 +39,22 @@ public class REAMessagerOverNetwork implements REAMessager
    private REAMessagerOverNetwork(PacketCommunicator packetCommunicator)
    {
       this.packetCommunicator = packetCommunicator;
-      this.packetCommunicator.attachListener(REAMessagePacket.class, this::receiveREAMessagePacket);
+      this.packetCommunicator.attachListener(REAMessage.class, this::receiveREAMessage);
    }
 
-   private void receiveREAMessagePacket(REAMessagePacket packet)
+   private void receiveREAMessage(REAMessage message)
    {
-      if (packet == null)
+      if (message == null)
          return;
 
       if (DEBUG)
-         PrintTools.info("Packet received from network with message name: " + packet.getMessageName());
+         PrintTools.info("Packet received from network with message name: " + message.getMessageName());
 
-      List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(packet.getMessageName());
+      List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(message.getMessageName());
       if (boundVariablesForTopic != null)
       {
          for (int i = 0; i < boundVariablesForTopic.size(); i++)
-            boundVariablesForTopic.get(i).set(packet.getMessageContent());
+            boundVariablesForTopic.get(i).set(message.getMessageContent());
       }
    }
 
@@ -74,7 +74,7 @@ public class REAMessagerOverNetwork implements REAMessager
          PrintTools.info("Submit message: " + message.getMessageName());
 
       // Variable update over network
-      packetCommunicator.send(new REAMessagePacket(message.getMessageName(), message.getMessageContent()));
+      packetCommunicator.send(message);
 
       // Local update of variable map
       List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(message.getMessageName());

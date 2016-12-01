@@ -34,8 +34,9 @@ public class REACommunicationKryoNetClassList extends NetClassList
    public REACommunicationKryoNetClassList()
    {
       registerPacketClass(Packet.class);
+      registerPacketClass(REAMessage.class);
+
       registerPacketField(PacketDestination.class);
-      registerPacketClass(REAMessagePacket.class);
 
       registerPacketField(String.class);
 

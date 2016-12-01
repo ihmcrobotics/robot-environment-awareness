@@ -1,11 +1,15 @@
 package us.ihmc.robotEnvironmentAwareness.communication;
 
-import us.ihmc.robotEnvironmentAwareness.communication.packets.REAMessageIdentifier;
+import us.ihmc.communication.packets.Packet;
 
-public final class REAMessage implements REAMessageIdentifier
+public final class REAMessage extends Packet<REAMessage>
 {
-   private final String messageName;
-   private final Object messageContent;
+   public String messageName;
+   public Object messageContent;
+
+   public REAMessage()
+   {
+   }
 
    public REAMessage(String messageName, Object messageContent)
    {
@@ -21,5 +25,11 @@ public final class REAMessage implements REAMessageIdentifier
    public Object getMessageContent()
    {
       return messageContent;
+   }
+
+   @Override
+   public boolean epsilonEquals(REAMessage other, double epsilon)
+   {
+      return messageName.equals(other.messageName) && messageContent.equals(other.messageContent);
    }
 }

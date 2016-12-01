@@ -16,6 +16,8 @@ public class REAMessagerOverNetwork implements REAMessager
    private static final boolean DEBUG = false;
 
    private final ConcurrentHashMap<String, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
+   private final ConcurrentHashMap<String, List<REAMessageListener<Object>>> listeners = new ConcurrentHashMap<>();
+
    private final PacketCommunicator packetCommunicator;
 
    public static REAMessager createTCPServer(NetworkPorts port, NetClassList netClassList)
@@ -50,12 +52,7 @@ public class REAMessagerOverNetwork implements REAMessager
       if (DEBUG)
          PrintTools.info("Packet received from network with message name: " + message.getMessageName());
 
-      List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(message.getMessageName());
-      if (boundVariablesForTopic != null)
-      {
-         for (int i = 0; i < boundVariablesForTopic.size(); i++)
-            boundVariablesForTopic.get(i).set(message.getMessageContent());
-      }
+      processMessageLocally(message);
    }
 
    @Override
@@ -76,18 +73,24 @@ public class REAMessagerOverNetwork implements REAMessager
       // Variable update over network
       packetCommunicator.send(message);
 
-      // Local update of variable map
-      List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(message.getMessageName());
-      if (boundVariablesForTopic != null)
-      {
-         for (int i = 0; i < boundVariablesForTopic.size(); i++)
-            boundVariablesForTopic.get(i).set(message.getMessageContent());
-      }
+      processMessageLocally(message);
+
+   }
+
+   private void processMessageLocally(REAMessage message)
+   {
+      List<AtomicReference<Object>> inputVariablesForTopic = inputVariablesMap.get(message.getMessageName());
+      if (inputVariablesForTopic != null)
+         inputVariablesForTopic.forEach(variable -> variable.set(message.getMessageContent()));
+
+      List<REAMessageListener<Object>> topicListeners = listeners.get(message.getMessageName());
+      if (topicListeners != null)
+         topicListeners.forEach(listener -> listener.receivedREAMessage(message.getMessageContent()));
    }
 
    @Override
    @SuppressWarnings("unchecked")
-   public <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue)
+   public <T> AtomicReference<T> createInput(String messageName, T defaultValue)
    {
       AtomicReference<T> boundVariable = new AtomicReference<>(defaultValue);
 
@@ -99,6 +102,19 @@ public class REAMessagerOverNetwork implements REAMessager
       }
       boundVariablesForTopic.add((AtomicReference<Object>) boundVariable);
       return boundVariable;
+   }
+
+   @Override
+   @SuppressWarnings("unchecked")
+   public <T> void registerListener(String topic, REAMessageListener<T> listener)
+   {
+      List<REAMessageListener<Object>> topicListeners = listeners.get(topic);
+      if (topicListeners == null)
+      {
+         topicListeners = new ArrayList<>();
+         listeners.put(topic, topicListeners);
+      }
+      topicListeners.add((REAMessageListener<Object>) listener);
    }
 
    @Override

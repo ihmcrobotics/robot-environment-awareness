@@ -9,10 +9,11 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.transform.Affine;
-import us.ihmc.communication.net.PacketConsumer;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 
 public class LidarFrameViewer
 {
@@ -24,11 +25,13 @@ public class LidarFrameViewer
 
    private final Group root = new Group();
 
-   public LidarFrameViewer()
+   public LidarFrameViewer(REAMessager reaMessager)
    {
       lidarCoordinateSystem = new JavaFXCoordinateSystem(0.1);
       lidarCoordinateSystem.getTransforms().add(lidarPose);
       root.getChildren().add(lidarCoordinateSystem);
+
+      reaMessager.registerListener(REAModuleAPI.LidarScanState, this::handleMessage);
 
       lidarUpdater = new AnimationTimer()
       {
@@ -57,12 +60,7 @@ public class LidarFrameViewer
          lidarPose.setToTransform(affine);
    }
 
-   public PacketConsumer<LidarScanMessage> createLidarScanMessageConsumer()
-   {
-      return this::handlePacket;
-   }
-
-   private void handlePacket(LidarScanMessage lidarScanMessage)
+   private void handleMessage(LidarScanMessage lidarScanMessage)
    {
       if (lidarScanMessage == null)
          return;

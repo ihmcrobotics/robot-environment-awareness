@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class REAMessagerSharedVariables implements REAMessager
 {
    private final ConcurrentHashMap<String, List<AtomicReference<Object>>> boundVariables = new ConcurrentHashMap<>();
+   private final ConcurrentHashMap<String, List<REAMessageListener<Object>>> listeners = new ConcurrentHashMap<>();
 
    public REAMessagerSharedVariables()
    {
@@ -18,17 +19,17 @@ public class REAMessagerSharedVariables implements REAMessager
    public void submitMessage(REAMessage message)
    {
       List<AtomicReference<Object>> boundVariablesForTopic = boundVariables.get(message.getMessageName());
-
       if (boundVariablesForTopic != null)
-      {
-         for (int i = 0; i < boundVariablesForTopic.size(); i++)
-            boundVariablesForTopic.get(i).set(message.getMessageContent());
-      }
+         boundVariablesForTopic.forEach(variable -> variable.set(message.getMessageContent()));
+
+      List<REAMessageListener<Object>> topicListeners = listeners.get(message.getMessageName());
+      if (topicListeners != null)
+         topicListeners.forEach(listener -> listener.receivedREAMessage(message.getMessageContent()));
    }
 
    @Override
    @SuppressWarnings("unchecked")
-   public <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue)
+   public <T> AtomicReference<T> createInput(String messageName, T defaultValue)
    {
       AtomicReference<T> boundVariable = new AtomicReference<>(defaultValue);
 
@@ -40,6 +41,19 @@ public class REAMessagerSharedVariables implements REAMessager
       }
       boundVariablesForTopic.add((AtomicReference<Object>) boundVariable);
       return boundVariable;
+   }
+
+   @Override
+   @SuppressWarnings("unchecked")
+   public <T> void registerListener(String topic, REAMessageListener<T> listener)
+   {
+      List<REAMessageListener<Object>> topicListeners = listeners.get(topic);
+      if (topicListeners == null)
+      {
+         topicListeners = new ArrayList<>();
+         listeners.put(topic, topicListeners);
+      }
+      topicListeners.add((REAMessageListener<Object>) listener);
    }
 
    @Override

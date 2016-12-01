@@ -12,12 +12,14 @@ public interface REAMessager
 
    void submitMessage(REAMessage message);
 
-   <T extends Object> AtomicReference<T> createInput(String messageName, T defaultValue);
+   <T> AtomicReference<T> createInput(String messageName, T defaultValue);
 
-   default <T extends Object> AtomicReference<T> createInput(String messageName)
+   default <T> AtomicReference<T> createInput(String messageName)
    {
       return createInput(messageName, null);
    }
+   
+   <T> void registerListener(String topic, REAMessageListener<T> listener);
    
    void startMessager() throws IOException;
 

@@ -26,14 +26,14 @@ import us.ihmc.tools.thread.ThreadTools;
 public class LIDARBasedREAModule
 {
    private static final String ocTreeTimeReport = "OcTree update took: ";
+   private static final String reportOcTreeStateTimeReport = "Reporting OcTree state took: ";
    private static final String planarRegionsTimeReport = "OcTreePlanarRegion update took: ";
-   private static final String graphicsTimeReport = "OcTreeGraphics update took: ";
+   private static final String reportPlanarRegionsStateTimeReport = "Reporting Planar Regions state took: ";
 
    private final TimeReporter timeReporter = new TimeReporter(this);
 
    private static final int THREAD_PERIOD_MILLISECONDS = 200;
    private static final int BUFFER_THREAD_PERIOD_MILLISECONDS = 10;
-   private static final double GRAPHICS_REFRESH_PERIOD = 2.0; // in seconds
    private static final double OCTREE_RESOLUTION = 0.02;
    protected static final boolean DEBUG = true;
 
@@ -46,8 +46,7 @@ public class LIDARBasedREAModule
    private final REAOcTreeUpdater mainUpdater;
    private final REAPlanarRegionFeatureUpdater planarRegionFeatureUpdater;
 
-   private final REAOcTreeGraphicsBuilder graphicsBuilder;
-
+   private final REAModuleStateReporter moduleStateReporter;
    private final REAPlanarRegionNetworkProvider planarRegionNetworkProvider;
 
    private final AtomicReference<Boolean> clearOcTree;
@@ -62,18 +61,20 @@ public class LIDARBasedREAModule
       packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
       packetCommunicator.connect();
 
-      bufferUpdater = new REAOcTreeBuffer(mainOctree.getResolution(), reaMessager, packetCommunicator);
+      timeReporter.enableTimeReport(true);
+
+      moduleStateReporter = new REAModuleStateReporter(reaMessager, packetCommunicator);
+
+      bufferUpdater = new REAOcTreeBuffer(mainOctree.getResolution(), reaMessager, moduleStateReporter, packetCommunicator);
       mainUpdater = new REAOcTreeUpdater(mainOctree, bufferUpdater, reaMessager, packetCommunicator);
 
       planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(mainOctree, reaMessager);
-      graphicsBuilder = new REAOcTreeGraphicsBuilder(mainOctree, planarRegionFeatureUpdater, reaMessager);
 
       planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater, packetCommunicator);
       clearOcTree = reaMessager.createInput(REAModuleAPI.OcTreeClear, false);
    }
 
    private final AtomicDouble lastCompleteUpdate = new AtomicDouble(Double.NaN);
-   private final AtomicDouble lastGraphicsUpdate = new AtomicDouble(Double.NaN);
 
    private void mainUpdate()
    {
@@ -81,8 +82,6 @@ public class LIDARBasedREAModule
          return;
 
       double currentTime = JOctoMapTools.nanoSecondsToSeconds(System.nanoTime());
-
-      boolean performGraphicsUpdate = (Double.isNaN(lastGraphicsUpdate.get()) || currentTime - lastGraphicsUpdate.get() >= GRAPHICS_REFRESH_PERIOD);
 
       boolean ocTreeUpdateSuccess = true;
 
@@ -97,20 +96,19 @@ public class LIDARBasedREAModule
          else
          {
             timeReporter.run(mainUpdater::update, ocTreeTimeReport);
+            timeReporter.run(() -> moduleStateReporter.reportOcTreeState(mainOctree), reportOcTreeStateTimeReport);
 
             if (isThreadInterrupted())
                return;
 
             timeReporter.run(planarRegionFeatureUpdater::update, planarRegionsTimeReport);
+            timeReporter.run(() -> moduleStateReporter.reportPlanarRegionsState(planarRegionFeatureUpdater), reportPlanarRegionsStateTimeReport);
 
             planarRegionNetworkProvider.update(ocTreeUpdateSuccess);
          }
 
          if (isThreadInterrupted())
             return;
-
-         if (performGraphicsUpdate)
-            timeReporter.run(graphicsBuilder::update, graphicsTimeReport);
 
          if (planarRegionNetworkProvider.pollClearRequest())
             clearOcTree.set(true);
@@ -131,8 +129,6 @@ public class LIDARBasedREAModule
 
       if (ocTreeUpdateSuccess)
          lastCompleteUpdate.set(currentTime);
-      if (performGraphicsUpdate)
-         lastGraphicsUpdate.set(currentTime);
    }
 
    private boolean isThreadInterrupted()
@@ -151,6 +147,7 @@ public class LIDARBasedREAModule
 
    public void stop()
    {
+      PrintTools.info("REA Module is going down.");
       packetCommunicator.closeConnection();
       packetCommunicator.close();
 

@@ -31,7 +31,7 @@ public class LIDARBasedEnvironmentAwarenessUI
 
    private final REAMessager reaMessager;
    private final REAMeshViewer reaMeshViewer;
-   private final LidarFrameViewer lidarFrameViewer = new LidarFrameViewer();
+   private final LidarFrameViewer lidarFrameViewer;
 
    @FXML
    private PointCloudAnchorPaneController pointCloudAnchorPaneController;
@@ -56,12 +56,13 @@ public class LIDARBasedEnvironmentAwarenessUI
       loader.setLocation(getClass().getResource("LIDARBasedEnvironmentAwarenessUI.fxml")); // temporary
       mainPane = loader.load();
 
-      lidarFrameViewer.start();
       pointCloudAnchorPaneController.start();
 
       // Client
       this.reaMessager = reaMessager;
 
+      lidarFrameViewer = new LidarFrameViewer(reaMessager);
+      lidarFrameViewer.start();
       reaMeshViewer = new REAMeshViewer(reaMessager);
       reaMeshViewer.start();
 

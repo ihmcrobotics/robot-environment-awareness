@@ -6,11 +6,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
-import us.ihmc.communication.packets.PacketDestination;
 import us.ihmc.communication.packets.PlanarRegionMessageConverter;
 import us.ihmc.communication.packets.PlanarRegionsListMessage;
-import us.ihmc.communication.packets.RequestPlanarRegionsListMessage;
-import us.ihmc.communication.packets.RequestPlanarRegionsListMessage.RequestType;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
@@ -28,9 +25,6 @@ public class PlanarRegionsMeshBuilder implements Runnable
    private final JavaFXMultiColorMeshBuilder polygonsMeshBuilder;
 
    private final AtomicReference<PlanarRegionsListMessage> planarRegionsListMessage;
-
-   private final RequestPlanarRegionsListMessage requestPlanarRegionsListMessage = new RequestPlanarRegionsListMessage(RequestType.SINGLE_UPDATE,
-         PacketDestination.REA_MODULE);
 
    private final AtomicReference<Pair<Mesh, Material>> meshAndMaterialToRender = new AtomicReference<>(null);
 
@@ -63,7 +57,7 @@ public class PlanarRegionsMeshBuilder implements Runnable
       if (!enable.get())
          return;
 
-      reaMessager.submitMessage(REAModuleAPI.RequestPlanarRegions, requestPlanarRegionsListMessage);
+      reaMessager.submitMessage(REAModuleAPI.RequestPlanarRegions, true);
 
       if (newMessage == null)
          return;
@@ -76,20 +70,20 @@ public class PlanarRegionsMeshBuilder implements Runnable
    {
       polygonsMeshBuilder.clear();
 
+      double lineWidth = 0.01;
+      RigidBodyTransform transformToWorld = new RigidBodyTransform();
       PlanarRegionsList planarRegionsList = PlanarRegionMessageConverter.convertToPlanarRegionsList(newMessage);
 
       for (int index = 0; index < planarRegionsList.getNumberOfPlanarRegions(); index++)
       {
          PlanarRegion planarRegion = planarRegionsList.getPlanarRegion(index);
 
-         double lineWidth = 0.01;
          int regionId = planarRegion.getRegionId();
          Color regionColor = getRegionColor(regionId);
-         RigidBodyTransform transformToWorld = new RigidBodyTransform();
+         planarRegion.getTransformToWorld(transformToWorld);
 
          polygonsMeshBuilder.addMultiLine(transformToWorld, planarRegion.getConcaveHull(), lineWidth, regionColor, true);
 
-         planarRegion.getTransformToWorld(transformToWorld);
 
          for (int i = 0; i < planarRegion.getNumberOfConvexPolygons(); i++)
          {

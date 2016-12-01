@@ -8,7 +8,10 @@ public class UIOcTree extends AbstractOcTreeBase<UIOcTreeNode>
    public UIOcTree(NormalOcTreeMessage normalOcTreeMessage)
    {
       super(normalOcTreeMessage.resolution, normalOcTreeMessage.treeDepth);
-      root = new UIOcTreeNode(normalOcTreeMessage.root, resolution, treeDepth);
+      if (normalOcTreeMessage.root != null)
+         root = new UIOcTreeNode(normalOcTreeMessage.root, resolution, treeDepth);
+      else
+         root = null;
    }
 
    @Override

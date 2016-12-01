@@ -4,22 +4,22 @@ import us.ihmc.communication.packets.Packet;
 
 public final class REAMessage extends Packet<REAMessage>
 {
-   public String messageName;
+   public String topic;
    public Object messageContent;
 
    public REAMessage()
    {
    }
 
-   public REAMessage(String messageName, Object messageContent)
+   public REAMessage(String topic, Object messageContent)
    {
-      this.messageName = messageName;
+      this.topic = topic;
       this.messageContent = messageContent;
    }
 
-   public String getMessageName()
+   public String getTopic()
    {
-      return messageName;
+      return topic;
    }
 
    public Object getMessageContent()
@@ -30,6 +30,6 @@ public final class REAMessage extends Packet<REAMessage>
    @Override
    public boolean epsilonEquals(REAMessage other, double epsilon)
    {
-      return messageName.equals(other.messageName) && messageContent.equals(other.messageContent);
+      return topic.equals(other.topic) && messageContent.equals(other.messageContent);
    }
 }

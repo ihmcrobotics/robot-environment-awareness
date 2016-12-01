@@ -50,7 +50,7 @@ public class REAMessagerOverNetwork implements REAMessager
          return;
 
       if (DEBUG)
-         PrintTools.info("Packet received from network with message name: " + message.getMessageName());
+         PrintTools.info("Packet received from network with message name: " + message.getTopic());
 
       processMessageLocally(message);
    }
@@ -64,11 +64,11 @@ public class REAMessagerOverNetwork implements REAMessager
          return;
       }
 
-      if (message.getMessageName() == null)
-         throw new IllegalArgumentException("message name is null");
+      if (message.getTopic() == null)
+         throw new IllegalArgumentException("Topic is null");
 
       if (DEBUG)
-         PrintTools.info("Submit message: " + message.getMessageName());
+         PrintTools.info("Submit message for topic: " + message.getTopic());
 
       // Variable update over network
       packetCommunicator.send(message);
@@ -79,26 +79,26 @@ public class REAMessagerOverNetwork implements REAMessager
 
    private void processMessageLocally(REAMessage message)
    {
-      List<AtomicReference<Object>> inputVariablesForTopic = inputVariablesMap.get(message.getMessageName());
+      List<AtomicReference<Object>> inputVariablesForTopic = inputVariablesMap.get(message.getTopic());
       if (inputVariablesForTopic != null)
          inputVariablesForTopic.forEach(variable -> variable.set(message.getMessageContent()));
 
-      List<REAMessageListener<Object>> topicListeners = listeners.get(message.getMessageName());
+      List<REAMessageListener<Object>> topicListeners = listeners.get(message.getTopic());
       if (topicListeners != null)
          topicListeners.forEach(listener -> listener.receivedREAMessage(message.getMessageContent()));
    }
 
    @Override
    @SuppressWarnings("unchecked")
-   public <T> AtomicReference<T> createInput(String messageName, T defaultValue)
+   public <T> AtomicReference<T> createInput(String topic, T defaultValue)
    {
       AtomicReference<T> boundVariable = new AtomicReference<>(defaultValue);
 
-      List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(messageName);
+      List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(topic);
       if (boundVariablesForTopic == null)
       {
          boundVariablesForTopic = new ArrayList<>();
-         inputVariablesMap.put(messageName, boundVariablesForTopic);
+         inputVariablesMap.put(topic, boundVariablesForTopic);
       }
       boundVariablesForTopic.add((AtomicReference<Object>) boundVariable);
       return boundVariable;

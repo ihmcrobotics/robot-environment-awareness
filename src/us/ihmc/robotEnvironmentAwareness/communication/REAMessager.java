@@ -17,15 +17,15 @@ public interface REAMessager
 
    void submitMessage(REAMessage message);
 
-   <T> AtomicReference<T> createInput(String messageName, T defaultValue);
+   <T> AtomicReference<T> createInput(String topic, T defaultValue);
 
-   default <T> AtomicReference<T> createInput(String messageName)
+   default <T> AtomicReference<T> createInput(String topic)
    {
-      return createInput(messageName, null);
+      return createInput(topic, null);
    }
-   
+
    <T> void registerListener(String topic, REAMessageListener<T> listener);
-   
+
    void startMessager() throws IOException;
 
    void closeMessager();

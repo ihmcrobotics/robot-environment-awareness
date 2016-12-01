@@ -99,24 +99,24 @@ public abstract class REABasicUIController
       return reaMessager.createInput(topic);
    }
 
-   protected void sendMessageOnPropertyChange(ToggleButton toggleButton, String messageName)
+   protected void sendMessageOnPropertyChange(ToggleButton toggleButton, String topic)
    {
-      sendMessageOnPropertyChange(toggleButton.selectedProperty(), messageName);
+      sendMessageOnPropertyChange(toggleButton.selectedProperty(), topic);
    }
 
-   protected <T> void sendMessageOnPropertyChange(ComboBox<T> comboBox, String messageName)
+   protected <T> void sendMessageOnPropertyChange(ComboBox<T> comboBox, String topic)
    {
-      sendMessageOnPropertyChange(comboBox.valueProperty(), messageName);
+      sendMessageOnPropertyChange(comboBox.valueProperty(), topic);
    }
 
-   protected void sendMessageOnPropertyChange(Slider slider, String messageName)
+   protected void sendMessageOnPropertyChange(Slider slider, String topic)
    {
-      sendMessageOnPropertyChange(slider.valueProperty(), messageName);
+      sendMessageOnPropertyChange(slider.valueProperty(), topic);
    }
 
-   protected <T> void sendMessageOnPropertyChange(Property<T> property, String messageName)
+   protected <T> void sendMessageOnPropertyChange(Property<T> property, String topic)
    {
-      invalidationListeners.add(ListenerTools.sendMessageOnPropertyChange(property, reaMessager, messageName));
+      invalidationListeners.add(ListenerTools.sendMessageOnPropertyChange(property, reaMessager, topic));
    }
 
    protected void registerListener(InvalidationListener listener)

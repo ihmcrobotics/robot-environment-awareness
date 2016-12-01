@@ -18,26 +18,26 @@ public class REAMessagerSharedVariables implements REAMessager
    @Override
    public void submitMessage(REAMessage message)
    {
-      List<AtomicReference<Object>> boundVariablesForTopic = boundVariables.get(message.getMessageName());
+      List<AtomicReference<Object>> boundVariablesForTopic = boundVariables.get(message.getTopic());
       if (boundVariablesForTopic != null)
          boundVariablesForTopic.forEach(variable -> variable.set(message.getMessageContent()));
 
-      List<REAMessageListener<Object>> topicListeners = listeners.get(message.getMessageName());
+      List<REAMessageListener<Object>> topicListeners = listeners.get(message.getTopic());
       if (topicListeners != null)
          topicListeners.forEach(listener -> listener.receivedREAMessage(message.getMessageContent()));
    }
 
    @Override
    @SuppressWarnings("unchecked")
-   public <T> AtomicReference<T> createInput(String messageName, T defaultValue)
+   public <T> AtomicReference<T> createInput(String topic, T defaultValue)
    {
       AtomicReference<T> boundVariable = new AtomicReference<>(defaultValue);
 
-      List<AtomicReference<Object>> boundVariablesForTopic = boundVariables.get(messageName);
+      List<AtomicReference<Object>> boundVariablesForTopic = boundVariables.get(topic);
       if (boundVariablesForTopic == null)
       {
          boundVariablesForTopic = new ArrayList<>();
-         boundVariables.put(messageName, boundVariablesForTopic);
+         boundVariables.put(topic, boundVariablesForTopic);
       }
       boundVariablesForTopic.add((AtomicReference<Object>) boundVariable);
       return boundVariable;

@@ -82,7 +82,7 @@ public class REAOcTreeBuffer
                isBufferRequested.set(false);
             }
 
-            graphicsBuilder.update(bufferOctree, newScan);  // TODO garder le graphic builder --> send stuff at this point copy octree and send it over the network
+            graphicsBuilder.update(bufferOctree, newScan);
          }
       };
    }

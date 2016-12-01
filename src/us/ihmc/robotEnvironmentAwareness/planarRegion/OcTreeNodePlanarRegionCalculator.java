@@ -26,12 +26,16 @@ import us.ihmc.robotEnvironmentAwareness.exception.PlanarRegionSegmentationExcep
 
 public class OcTreeNodePlanarRegionCalculator
 {
+   private final Random random = new Random(234324L);
+
    private final Set<NormalOcTreeNode> allRegionNodes = new HashSet<>();
    private List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions = new ArrayList<>();
    private final List<NormalOcTreeNode> nodesWithoutRegion = new ArrayList<>();
-   private final Random random = new Random(234324L);
 
-   public void compute(NormalOcTreeNode root, OcTreeBoundingBoxInterface boundingBox, PlanarRegionSegmentationParameters parameters)
+   private PlanarRegionSegmentationParameters parameters;
+   private OcTreeBoundingBoxInterface boundingBox;
+
+   public void compute(NormalOcTreeNode root)
    {
       allRegionNodes.clear();
 
@@ -299,5 +303,15 @@ public class OcTreeNodePlanarRegionCalculator
 
       double absoluteDot = ocTreeNodePlanarRegion.absoluteDotWithNodeNormal(node);
       return absoluteDot > dotThreshold;
+   }
+
+   public void setParameters(PlanarRegionSegmentationParameters parameters)
+   {
+      this.parameters = parameters;
+   }
+
+   public void setBoundingBox(OcTreeBoundingBoxInterface boundingBox)
+   {
+      this.boundingBox = boundingBox;
    }
 }

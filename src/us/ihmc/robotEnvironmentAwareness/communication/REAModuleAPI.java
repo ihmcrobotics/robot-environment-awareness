@@ -4,6 +4,7 @@ public class REAModuleAPI
 {
    private static final String OcTree = "OcTree/";
    private static final String LIDAR = "LIDAR/";
+   private static final String Scan = "Scan/";
    private static final String BoundingBox = "BoundingBox/";
    private static final String Graphics = "Graphics/";
    private static final String Input = "Input/";
@@ -11,6 +12,7 @@ public class REAModuleAPI
    private static final String NormalEstimation = "NormalEstimation/";
    private static final String PlanarRegionSegmentation = "PlanarRegionSegmentation/";
    private static final String PlanarRegionFeatures = "PlanarRegionFeatures/";
+   private static final String PlanarRegions = "PlanarRegions/";
    private static final String Intersection = "Intersection/";
    private static final String Polygonizer = "Polygonizer/";
    private static final String Buffer = "Buffer/";
@@ -57,9 +59,15 @@ public class REAModuleAPI
 
    public static final String ScanPointsCollection = Output + OcTree + Graphics + "ScanPointsCollection";
 
-   public static final String RequestPlanarRegions = Input + OcTree + "RequestPlanarRegions";
+   public static final String LidarScanState = Output + LIDAR + Scan + "State";
+   public static final String OcTreeState = Output + OcTree + "State";
+   public static final String BufferState = Output + OcTree + Buffer + "State";
+   public static final String PlanarRegionsState = Output + PlanarRegions + "State";
+   public static final String BoundingBoxState = Output + BoundingBox + "State";
 
-   public static final String Octree = Output + OcTree + "Octree";
-   public static final String BufferOctree = Output + OcTree + "BufferOctree";
-   public static final String PlanarRegions = Output + "PlanarRegions";
+   public static final String RequestLidarScan = Input + LIDAR + Scan + "Request";
+   public static final String RequestOctree = Input + OcTree + "Request";
+   public static final String RequestBuffer = Input + OcTree + Buffer + "Request";
+   public static final String RequestPlanarRegions = Output + PlanarRegions + "Request";
+   public static final String RequestBoundingBox = Input + BoundingBox + "Request";
 }

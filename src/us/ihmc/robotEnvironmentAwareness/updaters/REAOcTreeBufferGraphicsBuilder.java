@@ -1,6 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.vecmath.Point3f;
@@ -9,7 +10,6 @@ import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.PointCloud;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.OcTreeMessageConverter;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
@@ -17,9 +17,8 @@ import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessa
 public class REAOcTreeBufferGraphicsBuilder
 {
 
-   private final AtomicReference<Boolean> enable;
-   private final AtomicReference<Boolean> showInputScan;
-   private final AtomicReference<Boolean> showBuffer;
+   private final AtomicReference<Boolean> isBufferRequested;
+   private final AtomicReference<Boolean> isInputScanRequested;
 
    private final REAMessager reaMessager;
 
@@ -27,22 +26,21 @@ public class REAOcTreeBufferGraphicsBuilder
    {
       this.reaMessager = reaMessager;
 
-      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
-      showBuffer = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer, false);
-      showInputScan = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowInputScan, true);
+      isBufferRequested = reaMessager.createInput(REAModuleAPI.RequestBuffer, false);
+      isInputScanRequested = reaMessager.createInput(REAModuleAPI.RequestLidarScan, false);
    }
 
    public void update(NormalOcTree bufferOcTree, ScanCollection scanCollection)
    {
-      if (enable.get() && showBuffer.get() && bufferOcTree.getRoot() != null)
+      if (isBufferRequested.getAndSet(false))
       {
          NormalOcTreeMessage normalOcTreeMessage = OcTreeMessageConverter.convertToMessage(bufferOcTree);
-         reaMessager.submitMessage(new REAMessage(REAModuleAPI.BufferOctree, normalOcTreeMessage));
+         reaMessager.submitMessage(REAModuleAPI.BufferState, normalOcTreeMessage);
       }
 
-      if (showInputScan.get())
+      if (isInputScanRequested.getAndSet(false))
       {
-         ArrayList<Point3f[]> scannedPoints = new ArrayList<>(scanCollection.getNumberOfScans());
+         List<Point3f[]> scannedPoints = new ArrayList<>(scanCollection.getNumberOfScans());
          for (int scanIndex = 0; scanIndex < scanCollection.getNumberOfScans(); scanIndex++)
          {
             PointCloud pointCloud = scanCollection.getScan(scanIndex).getPointCloud();
@@ -55,7 +53,7 @@ public class REAOcTreeBufferGraphicsBuilder
          }
 
          if (!scannedPoints.isEmpty())
-            reaMessager.submitMessage(new REAMessage(REAModuleAPI.ScanPointsCollection, scannedPoints));
+            reaMessager.submitMessage(REAModuleAPI.LidarScanState, scannedPoints);
       }
    }
 

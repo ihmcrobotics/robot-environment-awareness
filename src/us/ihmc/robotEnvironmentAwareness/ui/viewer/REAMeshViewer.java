@@ -3,7 +3,6 @@ package us.ihmc.robotEnvironmentAwareness.ui.viewer;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javafx.animation.AnimationTimer;
 import javafx.scene.Group;
@@ -14,15 +13,18 @@ import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
-import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BoundingBoxMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BufferOctreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.PlanarRegionsMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.ScanMeshBuilder;
 import us.ihmc.tools.thread.ThreadTools;
 
 public class REAMeshViewer
 {
-   private final int SCAN_MESH_BUILDER_RUN_PERIOD_MILLISECONDS = 10;
+   private static final int LOW_RATE_UPDATE_PERIOD = 2000;
+   private static final int HIGH_RATE_UPDATE_PERIOD = 10;
+
    private final Group root = new Group();
 
    private final MeshView occupiedLeafsMeshView = new MeshView();
@@ -31,63 +33,51 @@ public class REAMeshViewer
    private final MeshView planarRegionMeshView = new MeshView();
    private Box ocTreeBoundingBoxGraphics = null;
 
-   private final AtomicReference<Pair<Mesh, Material>> occupiedMeshToRender;
-   private final AtomicReference<Pair<Mesh, Material>> bufferMeshToRender;
-   private final AtomicReference<Pair<Mesh, Material>> scanInputMeshToRender;
-   private final AtomicReference<Pair<Mesh, Material>> planarRegionPolygonMeshToRender;
-   private final AtomicReference<Box> boundingBoxMeshToRender;
-
-   private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(3, ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
+   private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(4, ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
 
    private final AnimationTimer renderMeshAnimation;
 
    private final ScanMeshBuilder scanMeshBuilder;
    private final BufferOctreeMeshBuilder bufferOctreeMeshBuilder;
    private final OcTreeMeshBuilder ocTreeMeshBuilder;
+   private final BoundingBoxMeshBuilder boundingBoxMeshBuilder;
+   private final PlanarRegionsMeshBuilder planarRegionsMeshBuilder;
 
    public REAMeshViewer(REAMessager reaMessager)
    {
-      occupiedMeshToRender = new AtomicReference<>(null);
-      planarRegionPolygonMeshToRender = new AtomicReference<>(null);
-      bufferMeshToRender = new AtomicReference<>(null);
-      scanInputMeshToRender = new AtomicReference<>(null);
-
-      boundingBoxMeshToRender = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxMesh);
-
       // TEST Communication over network
-      scanMeshBuilder = new ScanMeshBuilder(reaMessager, scanMeshBuilderListener);
-      bufferOctreeMeshBuilder = new BufferOctreeMeshBuilder(reaMessager, bufferOctreeMeshBuilderListener);
-      ocTreeMeshBuilder = new OcTreeMeshBuilder(reaMessager, octreeMeshBuilderListener);
+      scanMeshBuilder = new ScanMeshBuilder(reaMessager);
+      bufferOctreeMeshBuilder = new BufferOctreeMeshBuilder(reaMessager);
+      ocTreeMeshBuilder = new OcTreeMeshBuilder(reaMessager);
+      boundingBoxMeshBuilder = new BoundingBoxMeshBuilder(reaMessager);
+      planarRegionsMeshBuilder = new PlanarRegionsMeshBuilder(reaMessager);
 
       root.getChildren().addAll(occupiedLeafsMeshView, bufferLeafsMeshView, scanInputMeshView, planarRegionMeshView);
       root.setMouseTransparent(true);
 
       renderMeshAnimation = new AnimationTimer()
       {
-         @Override public void handle(long now)
+         @Override
+         public void handle(long now)
          {
-            if (Thread.interrupted())
-               return;
-
-            if (occupiedMeshToRender.get() != null)
+            if (ocTreeMeshBuilder.hasNewMeshAndMaterial())
             {
-               System.out.println("Updating occupied mesh view");
-               updateMeshView(occupiedLeafsMeshView, occupiedMeshToRender.getAndSet(null));
+               updateMeshView(occupiedLeafsMeshView, ocTreeMeshBuilder.pollMeshAndMaterial());
             }
 
-            if (bufferMeshToRender.get() != null)
+            if (bufferOctreeMeshBuilder.hasNewMeshAndMaterial())
             {
-               updateMeshView(bufferLeafsMeshView, bufferMeshToRender.getAndSet(null));
+               updateMeshView(bufferLeafsMeshView, bufferOctreeMeshBuilder.pollMeshAndMaterial());
             }
 
-            if (scanInputMeshToRender.get() != null)
+            if (scanMeshBuilder.hasNewMeshAndMaterial())
             {
-               updateMeshView(scanInputMeshView, scanInputMeshToRender.getAndSet(null));
+               updateMeshView(scanInputMeshView, scanMeshBuilder.pollMeshAndMaterial());
             }
 
-            if (planarRegionPolygonMeshToRender.get() != null)
+            if (planarRegionsMeshBuilder.hasNewMeshAndMaterial())
             {
-               updateMeshView(planarRegionMeshView, planarRegionPolygonMeshToRender.getAndSet(null));
+               updateMeshView(planarRegionMeshView, planarRegionsMeshBuilder.pollMeshAndMaterial());
             }
 
             if (ocTreeBoundingBoxGraphics != null)
@@ -96,9 +86,9 @@ public class REAMeshViewer
                ocTreeBoundingBoxGraphics = null;
             }
 
-            if (boundingBoxMeshToRender.get() != null)
+            if (boundingBoxMeshBuilder.hasBoundingBoxToRender())
             {
-               ocTreeBoundingBoxGraphics = boundingBoxMeshToRender.get();
+               ocTreeBoundingBoxGraphics = boundingBoxMeshBuilder.getBoundingBox();
                root.getChildren().add(ocTreeBoundingBoxGraphics);
             }
          }
@@ -108,9 +98,11 @@ public class REAMeshViewer
    public void start()
    {
       renderMeshAnimation.start();
-      executorService.scheduleAtFixedRate(scanMeshBuilder, 0, SCAN_MESH_BUILDER_RUN_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
-      executorService.scheduleAtFixedRate(bufferOctreeMeshBuilder, 0, SCAN_MESH_BUILDER_RUN_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
-      executorService.scheduleAtFixedRate(ocTreeMeshBuilder, 0, SCAN_MESH_BUILDER_RUN_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
+      executorService.scheduleAtFixedRate(scanMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
+      executorService.scheduleAtFixedRate(bufferOctreeMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
+      executorService.scheduleAtFixedRate(ocTreeMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
+      executorService.scheduleAtFixedRate(boundingBoxMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
+      executorService.scheduleAtFixedRate(planarRegionsMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
    }
 
    public void stop()
@@ -134,35 +126,4 @@ public class REAMeshViewer
    {
       return root;
    }
-
-   private ScanMeshBuilder.ScanMeshBuilderListener scanMeshBuilderListener = new ScanMeshBuilder.ScanMeshBuilderListener()
-   {
-      @Override public void scanMeshAndMaterialChanged(Pair<Mesh, Material> meshMaterial)
-      {
-         scanInputMeshToRender.set(meshMaterial);
-      }
-   };
-
-   private BufferOctreeMeshBuilder.BufferOctreeMeshBuilderListener bufferOctreeMeshBuilderListener = new BufferOctreeMeshBuilder.BufferOctreeMeshBuilderListener()
-   {
-      @Override public void meshAndMaterialChanged(Pair<Mesh, Material> meshMaterial)
-      {
-         bufferMeshToRender.set(meshMaterial);
-      }
-   };
-
-   private OcTreeMeshBuilder.OctreeMeshBuilderListener octreeMeshBuilderListener = new OcTreeMeshBuilder.OctreeMeshBuilderListener()
-   {
-      @Override public void occupiedMeshAndMaterialChanged(Pair<Mesh, Material> meshAndMaterial)
-      {
-         occupiedMeshToRender.set(meshAndMaterial);
-      }
-
-      @Override public void planarRegionMeshAndMaterialChanged(Pair<Mesh, Material> meshAndMaterial)
-      {
-         planarRegionPolygonMeshToRender.set(meshAndMaterial);
-      }
-
-   };
-
 }

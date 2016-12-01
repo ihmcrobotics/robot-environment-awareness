@@ -38,7 +38,9 @@ public class TimeReporter
          stopWatch.reset();
          stopWatch.start();
          command.run();
-         PrintTools.info(caller, timeReportPrefix + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()));
+         long nanoTime = stopWatch.getNanoTime();
+         if (nanoTime > minimumNanoTimeToReport.get())
+            PrintTools.info(caller, timeReportPrefix + TimeTools.nanoSecondstoSeconds(nanoTime));
       }
       else
          command.run();

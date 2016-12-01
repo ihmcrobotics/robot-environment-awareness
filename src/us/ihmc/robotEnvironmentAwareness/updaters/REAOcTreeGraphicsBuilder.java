@@ -30,7 +30,7 @@ public class REAOcTreeGraphicsBuilder
       this.octree = octree;
       this.regionFeaturesProvider = regionFeaturesProvider;
       this.reaMessager = reaMessager;
-      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable);
+      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
       treeDepthForDisplay = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsDepth);
       useOcTreeBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxEnable);
    }
@@ -38,7 +38,7 @@ public class REAOcTreeGraphicsBuilder
    public void update()
    {
 
-      if (!isEnabled() && !processPropertyChange.get())
+      if (!enable.get() && !processPropertyChange.get())
          return;
 
       processPropertyChange.set(false);
@@ -52,10 +52,4 @@ public class REAOcTreeGraphicsBuilder
       if (Thread.interrupted())
          return;
    }
-
-   private boolean isEnabled()
-   {
-      return enable.get() == null ? false : enable.get();
-   }
-
 }

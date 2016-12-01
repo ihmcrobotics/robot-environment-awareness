@@ -110,7 +110,8 @@ public class LIDARBasedREAModule
          if (isThreadInterrupted())
             return;
 
-         timeReporter.run(graphicsBuilder::update, graphicsTimeReport);
+         if (performGraphicsUpdate)
+            timeReporter.run(graphicsBuilder::update, graphicsTimeReport);
 
          if (planarRegionNetworkProvider.pollClearRequest())
             clearOcTree.set(true);

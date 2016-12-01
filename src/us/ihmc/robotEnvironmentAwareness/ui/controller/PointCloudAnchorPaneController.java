@@ -1,158 +1,165 @@
 package us.ihmc.robotEnvironmentAwareness.ui.controller;
 
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
-import javax.vecmath.Point3d;
+import javax.vecmath.Point3f;
 
+import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
+import javafx.beans.Observable;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
+import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
-import javafx.scene.shape.Sphere;
-import us.ihmc.communication.net.PacketConsumer;
-import us.ihmc.humanoidRobotics.communication.packets.sensing.PointCloudWorldPacket;
+import javafx.scene.shape.MeshView;
+import us.ihmc.communication.packets.LidarScanMessage;
+import us.ihmc.graphics3DDescription.MeshDataGenerator;
+import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
+import us.ihmc.javaFXToolkit.shapes.TextureColorAdaptivePalette;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.tools.thread.ThreadTools;
 
-public class PointCloudAnchorPaneController
+public class PointCloudAnchorPaneController extends REABasicUIController
 {
-   private static final int MAX_NUMBER_POINTS_TO_PROCESS = 1000;
+   private static final float SCAN_POINT_SIZE = 0.01f;
 
-   private static final Color DEFAULT_COLOR = Color.BLUE;
+   private static final Material defaultMaterial = new PhongMaterial(Color.DARKRED);
 
    @FXML
    private ToggleButton enableButton;
    @FXML
-   private Button clearButton;
+   private Slider scanHistorySizeSlider;
 
-   private final Group pointCloudRoot = new Group();
+   private final Group root = new Group();
 
    private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(ThreadTools.getNamedThreadFactory("PointCloudViewer"));
    private ScheduledFuture<?> scheduled;
 
-   private final int maximumDequeSize = 5000;
-   private final ConcurrentLinkedDeque<Point3d> newPointCoordinates = new ConcurrentLinkedDeque<>();
-
-   private double pointSize = 0.01;
-   private final AtomicInteger index = new AtomicInteger(0);
-   private final AtomicInteger maximumSize = new AtomicInteger(20000);
-   private final AtomicBoolean clearPointCloud = new AtomicBoolean(false);
+   private final AtomicBoolean clear = new AtomicBoolean(false);
    private final AtomicBoolean enable = new AtomicBoolean(false);
+   private final AtomicInteger numberOfScans = new AtomicInteger(20);
+   private final AtomicInteger currentScanIndex = new AtomicInteger(0);
+   private AtomicReference<LidarScanMessage> newMessageToRender;
+   private final AtomicReference<MeshView> scanMeshToRender = new AtomicReference<>(null);
+   private final JavaFXMultiColorMeshBuilder scanMeshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(128));
    private final ObservableList<Node> children;
+
+   private final AnimationTimer pointCloudAnimation;
 
    public PointCloudAnchorPaneController()
    {
-      children = pointCloudRoot.getChildren();
+      children = root.getChildren();
+      pointCloudAnimation = new AnimationTimer()
+      {
+         @Override
+         public void handle(long now)
+         {
+            render();
+         }
+      };
    }
 
    public void bindControls()
    {
+      newMessageToRender = createREAInput(REAModuleAPI.LidarScanState);
+
       enableButton.selectedProperty().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> enable.set(newValue));
       Platform.runLater(() -> enableButton.setSelected(enable.get()));
+      scanHistorySizeSlider.valueProperty().addListener(this::updateNumberOfScans);
    }
 
-   private Runnable createUpdater()
+   private void updateNumberOfScans(Observable observable)
    {
-      return this::processUpdate;
+      numberOfScans.set((int) scanHistorySizeSlider.getValue());
    }
 
-   public void processUpdate()
+   private void render()
    {
-      try
+      MeshView newScanMeshView = scanMeshToRender.getAndSet(null);
+
+      if (clear.getAndSet(false))
       {
-         if (clearPointCloud.getAndSet(false))
-         {
-            Platform.runLater(this::clearNow);
-            return;
-         }
-
-         if (!enable.get())
-            return;
-
-         for (int i = 0; i < 10; i++)
-         {
-            Point3d poll = newPointCoordinates.poll();
-            if (poll == null)
-               break;
-
-            Platform.runLater(() -> addPoint(poll));
-         }
-
+         children.clear();
+         currentScanIndex.set(0);
       }
-      catch (Exception e)
+
+      while (children.size() > numberOfScans.get())
+         children.remove(children.size() - 1);
+
+      if (!enable.get())
+         return;
+
+      if (newScanMeshView != null)
       {
-         e.printStackTrace();
+         if (children.size() <= currentScanIndex.get())
+            children.add(newScanMeshView);
+         else
+            children.set(currentScanIndex.get(), newScanMeshView);
+
+         for (int i = currentScanIndex.get() + 1; i < currentScanIndex.get() + children.size(); i++)
+            ((MeshView) children.get(i % children.size())).setMaterial(defaultMaterial);
+
+         currentScanIndex.set((currentScanIndex.get() + 1) % numberOfScans.get());
       }
+   }
+
+   private void computeScanMesh()
+   {
+      LidarScanMessage message = newMessageToRender.getAndSet(null);
+
+      send(REAModuleAPI.RequestLidarScan, true);
+
+      if (message == null)
+         return;
+
+      Point3f scanPoint = new Point3f();
+      scanMeshBuilder.clear();
+      for (int i = 0; i < message.getNumberOfScanPoints(); i++)
+      {
+         double alpha = i / (double) message.getNumberOfScanPoints();
+         Color color = Color.hsb(alpha * 240.0, 1.0, 1.0);
+
+         message.getScanPoint(i, scanPoint);
+
+         scanMeshBuilder.addMesh(MeshDataGenerator.Tetrahedron(SCAN_POINT_SIZE), scanPoint, color);
+      }
+
+      MeshView scanMeshView = new MeshView(scanMeshBuilder.generateMesh());
+      scanMeshView.setMaterial(scanMeshBuilder.generateMaterial());
+      scanMeshToRender.set(scanMeshView);
+      scanMeshBuilder.clear();
    }
 
    @FXML
    public void clear()
    {
-      clearPointCloud.set(true);
-   }
-
-   private void clearNow()
-   {
-      children.clear();
-      index.set(0);
-   }
-
-   private void addPoint(Point3d pointLocation)
-   {
-      addPoint(pointLocation, DEFAULT_COLOR);
-   }
-
-   private void addPoint(Point3d pointLocation, Color pointColor)
-   {
-      Node point;
-
-      if (children.size() <= index.get())
-      {
-         Sphere sphere = new Sphere(pointSize, 1);
-         PhongMaterial material = new PhongMaterial();
-         material.setDiffuseColor(pointColor);
-         material.setSpecularColor(pointColor.brighter());
-         sphere.setMaterial(material);
-         children.add(sphere);
-         point = sphere;
-      }
-      else
-      {
-         point = children.get(index.get());
-      }
-
-      point.setTranslateX(pointLocation.getX());
-      point.setTranslateY(pointLocation.getY());
-      point.setTranslateZ(pointLocation.getZ());
-
-      index.incrementAndGet();
-
-      if (index.get() == maximumSize.get() - 1)
-         index.set(0);
-
-      while (children.size() > maximumSize.get())
-         children.remove(children.size() - 1);
+      clear.set(true);
    }
 
    public void start()
    {
+      pointCloudAnimation.start();
+
       if (scheduled == null)
-         scheduled = executorService.scheduleAtFixedRate(createUpdater(), 0, 10, TimeUnit.MILLISECONDS);
+         scheduled = executorService.scheduleAtFixedRate(this::computeScanMesh, 0, 10, TimeUnit.MILLISECONDS);
    }
 
    public void stop()
    {
+      pointCloudAnimation.stop();
+
       if (scheduled != null)
       {
          scheduled.cancel(true);
@@ -166,35 +173,8 @@ public class PointCloudAnchorPaneController
       }
    }
 
-   public PacketConsumer<PointCloudWorldPacket> getPointCloudWorldPacketConsumer()
-   {
-      return (packet) -> processNewPacket(packet);
-   }
-
-   private void processNewPacket(PointCloudWorldPacket packet)
-   {
-      if (packet == null || !enable.get())
-         return;
-
-      float[] scan = packet.decayingWorldScan;
-      int numberOfPoints = scan.length / 3;
-      int numberOfPointsToRead = Math.min(numberOfPoints, MAX_NUMBER_POINTS_TO_PROCESS);
-      int increment = numberOfPoints / numberOfPointsToRead;
-
-      for (int i = 0; i < numberOfPoints; i += increment)
-      {
-         if (newPointCoordinates.size() == maximumDequeSize)
-            break;
-
-         int xIndex = i * 3;
-         int yIndex = xIndex + 1;
-         int zIndex = yIndex + 1;
-         newPointCoordinates.add(new Point3d(scan[xIndex], scan[yIndex], scan[zIndex]));
-      }
-   }
-
    public Node getRoot()
    {
-      return pointCloudRoot;
+      return root;
    }
 }

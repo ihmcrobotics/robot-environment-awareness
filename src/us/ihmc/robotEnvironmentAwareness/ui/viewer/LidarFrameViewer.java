@@ -15,49 +15,33 @@ import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 
-public class LidarFrameViewer
+public class LidarFrameViewer extends AnimationTimer
 {
    private final JavaFXCoordinateSystem lidarCoordinateSystem;
    private final Affine lidarPose = new Affine();
 
    private final AtomicReference<Affine> lastAffine = new AtomicReference<>();
-   private final AnimationTimer lidarUpdater;
 
    private final Group root = new Group();
+   private final REAMessager reaMessager;
 
    public LidarFrameViewer(REAMessager reaMessager)
    {
+      this.reaMessager = reaMessager;
       lidarCoordinateSystem = new JavaFXCoordinateSystem(0.1);
       lidarCoordinateSystem.getTransforms().add(lidarPose);
       root.getChildren().add(lidarCoordinateSystem);
 
       reaMessager.registerListener(REAModuleAPI.LidarScanState, this::handleMessage);
-
-      lidarUpdater = new AnimationTimer()
-      {
-         @Override
-         public void handle(long now)
-         {
-            updateLidarPose();
-         }
-      };
    }
 
-   public void start()
-   {
-      lidarUpdater.start();
-   }
-
-   public void stop()
-   {
-      lidarUpdater.stop();
-   }
-
-   private void updateLidarPose()
+   @Override
+   public void handle(long now)
    {
       Affine affine = lastAffine.getAndSet(null);
       if (affine != null)
          lidarPose.setToTransform(affine);
+      reaMessager.submitStateRequest(REAModuleAPI.RequestLidarScan);
    }
 
    private void handleMessage(LidarScanMessage lidarScanMessage)

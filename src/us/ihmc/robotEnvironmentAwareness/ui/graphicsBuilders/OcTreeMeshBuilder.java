@@ -99,7 +99,7 @@ public class OcTreeMeshBuilder implements Runnable
       if (!enable.get())
          return;
 
-      reaMessager.submitMessage(REAModuleAPI.RequestOctree, true);
+      reaMessager.submitStateRequest(REAModuleAPI.RequestOctree);
 
       meshBuilder.clear();
 

@@ -3,6 +3,7 @@ package us.ihmc.robotEnvironmentAwareness.ui.controller;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.Property;
@@ -91,6 +92,11 @@ public abstract class REABasicUIController
    public void attachREAMessager(REAMessager reaMessager)
    {
       this.reaMessager = reaMessager;
+   }
+
+   protected <T> AtomicReference<T> createREAInput(String topic)
+   {
+      return reaMessager.createInput(topic);
    }
 
    protected void sendMessageOnPropertyChange(ToggleButton toggleButton, String messageName)

@@ -33,8 +33,11 @@ public class ScanMeshBuilder implements Runnable
 
    private boolean hasClearedScanGraphics = false;
 
+   private final REAMessager reaMessager;
+
    public ScanMeshBuilder(REAMessager reaMessager)
    {
+      this.reaMessager = reaMessager;
       // over network
       lidarScanToRender = reaMessager.createInput(REAModuleAPI.LidarScanState);
 
@@ -57,20 +60,21 @@ public class ScanMeshBuilder implements Runnable
       }
       multiColorMeshBuilder.clear();
 
-      if (lidarScanToRender.get() != null)
+      LidarScanMessage lidarScan = lidarScanToRender.getAndSet(null);
+      reaMessager.submitStateRequest(REAModuleAPI.RequestLidarScan);
+
+      if (lidarScan == null)
+         return;
+
+      Point3d scanPoint = new Point3d();
+      int numberOfScanPoints = lidarScan.getNumberOfScanPoints();
+
+      for (int pointIndex = 0; pointIndex < numberOfScanPoints; pointIndex++)
       {
-         LidarScanMessage lidarScan = lidarScanToRender.getAndSet(null);
-
-         Point3d scanPoint = new Point3d();
-         int numberOfScanPoints = lidarScan.getNumberOfScanPoints();
-
-         for (int pointIndex = 0; pointIndex < numberOfScanPoints; pointIndex++)
-         {
-            double alpha = pointIndex / (double) numberOfScanPoints;
-            Color color = Color.hsb(alpha * 240.0, 1.0, 1.0);
-            lidarScan.getScanPoint(pointIndex, scanPoint);
-            multiColorMeshBuilder.addMesh(MeshDataGenerator.Tetrahedron(SCAN_POINT_SIZE), scanPoint, color);
-         }
+         double alpha = pointIndex / (double) numberOfScanPoints;
+         Color color = Color.hsb(alpha * 240.0, 1.0, 1.0);
+         lidarScan.getScanPoint(pointIndex, scanPoint);
+         multiColorMeshBuilder.addMesh(MeshDataGenerator.Tetrahedron(SCAN_POINT_SIZE), scanPoint, color);
       }
 
       Pair<Mesh, Material> meshAndMaterial = new Pair<>(multiColorMeshBuilder.generateMesh(), multiColorMeshBuilder.generateMaterial());

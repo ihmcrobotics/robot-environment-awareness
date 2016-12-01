@@ -5,6 +5,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public interface REAMessager
 {
+   default void submitStateRequest(String requestTopic)
+   {
+      submitMessage(requestTopic, true);
+   }
+
    default void submitMessage(String topic, Object messageContent)
    {
       submitMessage(new REAMessage(topic, messageContent));

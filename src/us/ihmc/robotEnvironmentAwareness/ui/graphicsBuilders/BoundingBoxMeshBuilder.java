@@ -47,7 +47,7 @@ public class BoundingBoxMeshBuilder implements Runnable
       if (!enable.get() || showOcTreeBoundingBox.get())
          return;
 
-      reaMessager.submitMessage(REAModuleAPI.RequestBoundingBox, true);
+      reaMessager.submitStateRequest(REAModuleAPI.RequestBoundingBox);
 
       if (newMessage == null)
          return;

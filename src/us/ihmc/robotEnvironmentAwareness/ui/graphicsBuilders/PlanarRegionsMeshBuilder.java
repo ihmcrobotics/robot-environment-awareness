@@ -57,7 +57,7 @@ public class PlanarRegionsMeshBuilder implements Runnable
       if (!enable.get())
          return;
 
-      reaMessager.submitMessage(REAModuleAPI.RequestPlanarRegions, true);
+      reaMessager.submitStateRequest(REAModuleAPI.RequestPlanarRegions);
 
       if (newMessage == null)
          return;

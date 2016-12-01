@@ -31,26 +31,20 @@ public class REAModuleStateReporter
 
    public void reportBufferOcTreeState(NormalOcTree bufferOcTree)
    {
-      if (!isBufferOcTreeRequested.getAndSet(false))
-         return;
-
-      reaMessager.submitMessage(REAModuleAPI.BufferState, OcTreeMessageConverter.convertToMessage(bufferOcTree));
+      if (isBufferOcTreeRequested.getAndSet(false))
+         reaMessager.submitMessage(REAModuleAPI.BufferState, OcTreeMessageConverter.convertToMessage(bufferOcTree));
    }
 
    public void reportOcTreeState(NormalOcTree ocTree)
    {
-      if (!isOcTreeRequested.getAndSet(false))
-         return;
-      
-      reaMessager.submitMessage(REAModuleAPI.OcTreeState, OcTreeMessageConverter.convertToMessage(ocTree));
+      if (isOcTreeRequested.getAndSet(false))
+         reaMessager.submitMessage(REAModuleAPI.OcTreeState, OcTreeMessageConverter.convertToMessage(ocTree));
    }
 
    public void reportPlanarRegionsState(RegionFeaturesProvider regionFeaturesProvider)
    {
-      if (!arePlanarRegionsRequested.getAndSet(false))
-         return;
-
-      reaMessager.submitMessage(REAModuleAPI.PlanarRegionsState, REAPlanarRegionsConverter.createPlanarRegionsListMessage(regionFeaturesProvider));
+      if (arePlanarRegionsRequested.getAndSet(false))
+         reaMessager.submitMessage(REAModuleAPI.PlanarRegionsState, REAPlanarRegionsConverter.createPlanarRegionsListMessage(regionFeaturesProvider));
    }
 
    private void handleLidarScanMessage(LidarScanMessage message)

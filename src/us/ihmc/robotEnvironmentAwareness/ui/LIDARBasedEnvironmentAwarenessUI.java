@@ -56,8 +56,6 @@ public class LIDARBasedEnvironmentAwarenessUI
       loader.setLocation(getClass().getResource("LIDARBasedEnvironmentAwarenessUI.fxml")); // temporary
       mainPane = loader.load();
 
-      pointCloudAnchorPaneController.start();
-
       // Client
       this.reaMessager = reaMessager;
 
@@ -66,20 +64,19 @@ public class LIDARBasedEnvironmentAwarenessUI
       reaMeshViewer = new REAMeshViewer(reaMessager);
       reaMeshViewer.start();
 
-      // FIXME
-      //      packetCommunicator.attachListener(LidarScanMessage.class, lidarFrameViewer.createLidarScanMessageConsumer());
-
       mainPane.setCenter(scene3D);
 
       scene3D.attachChild(pointCloudAnchorPaneController.getRoot());
       scene3D.attachChild(reaMeshViewer.getRoot());
       scene3D.attachChild(lidarFrameViewer.getRoot());
 
-      // FIXME
-      //      packetCommunicator.attachListener(PointCloudWorldPacket.class, pointCloudAnchorPaneController.getPointCloudWorldPacketConsumer());
-      pointCloudAnchorPaneController.bindControls();
 
       File configurationFile = new File(CONFIGURATION_FILE_NAME);
+
+      pointCloudAnchorPaneController.setConfigurationFile(configurationFile);
+      pointCloudAnchorPaneController.attachREAMessager(reaMessager);
+      pointCloudAnchorPaneController.bindControls();
+      pointCloudAnchorPaneController.start();
 
       ocTreeBasicsAnchorPaneController.setConfigurationFile(configurationFile);
       ocTreeBasicsAnchorPaneController.attachREAMessager(reaMessager);

@@ -60,7 +60,7 @@ public class BufferOctreeMeshBuilder implements Runnable
          return;
       }
 
-      reaMessager.submitMessage(REAModuleAPI.RequestBuffer, true);
+      reaMessager.submitStateRequest(REAModuleAPI.RequestBuffer);
 
       bufferMeshBuilder.clear();
 

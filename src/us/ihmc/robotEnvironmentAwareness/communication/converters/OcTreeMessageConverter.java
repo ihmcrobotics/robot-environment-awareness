@@ -1,4 +1,4 @@
-package us.ihmc.robotEnvironmentAwareness.communication;
+package us.ihmc.robotEnvironmentAwareness.communication.converters;
 
 import java.util.List;
 

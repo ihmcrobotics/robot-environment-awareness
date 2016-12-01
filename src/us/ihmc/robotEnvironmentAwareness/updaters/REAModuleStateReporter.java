@@ -5,10 +5,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
-import us.ihmc.robotEnvironmentAwareness.communication.OcTreeMessageConverter;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
-import us.ihmc.robotEnvironmentAwareness.communication.REAPlanarRegionsConverter;
+import us.ihmc.robotEnvironmentAwareness.communication.converters.OcTreeMessageConverter;
+import us.ihmc.robotEnvironmentAwareness.communication.converters.REAPlanarRegionsConverter;
 
 public class REAModuleStateReporter
 {

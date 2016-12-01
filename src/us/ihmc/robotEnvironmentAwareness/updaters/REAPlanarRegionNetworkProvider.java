@@ -9,7 +9,7 @@ import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.PacketDestination;
 import us.ihmc.communication.packets.PlanarRegionsListMessage;
 import us.ihmc.communication.packets.RequestPlanarRegionsListMessage;
-import us.ihmc.robotEnvironmentAwareness.communication.REAPlanarRegionsConverter;
+import us.ihmc.robotEnvironmentAwareness.communication.converters.REAPlanarRegionsConverter;
 
 public class REAPlanarRegionNetworkProvider
 {

@@ -53,8 +53,7 @@ public class REAOcTreeBuffer
          @Override
          public void run()
          {
-            if (packetCommunicator != null)
-               packetCommunicator.send(new RequestLidarScanMessage());
+            packetCommunicator.send(new RequestLidarScanMessage());
 
             updateScanCollection();
             ScanCollection newScan = newFullScanReference.getAndSet(null);

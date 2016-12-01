@@ -38,9 +38,6 @@ public class REAPlanarRegionNetworkProvider
    
    public void update(boolean planarRegionsHaveBeenUpdated)
    {
-      if (packetCommunicator == null)
-         return;
-
       processRequests();
 
       boolean hasAtLeastOneListener = !listenersForContinuousUpdate.isEmpty() || !listenersForSingleUpdate.isEmpty();

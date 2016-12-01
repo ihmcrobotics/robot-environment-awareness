@@ -56,10 +56,14 @@ public class LIDARBasedEnvironmentAwarenessUI
       loader.setLocation(getClass().getResource("LIDARBasedEnvironmentAwarenessUI.fxml")); // temporary
       mainPane = loader.load();
 
+      lidarFrameViewer.start();
+      pointCloudAnchorPaneController.start();
+
       // Client
       this.reaMessager = reaMessager;
 
       reaMeshViewer = new REAMeshViewer(reaMessager);
+      reaMeshViewer.start();
 
       // FIXME
       //      packetCommunicator.attachListener(LidarScanMessage.class, lidarFrameViewer.createLidarScanMessageConsumer());
@@ -103,12 +107,8 @@ public class LIDARBasedEnvironmentAwarenessUI
       primaryStage.setOnCloseRequest(event -> stop());
    }
 
-   public void start() throws IOException
+   public void show()
    {
-      lidarFrameViewer.start();
-      pointCloudAnchorPaneController.start();
-      reaMeshViewer.start();
-      reaMessager.startMessager();
       primaryStage.show();
    }
 
@@ -129,9 +129,17 @@ public class LIDARBasedEnvironmentAwarenessUI
       }
    }
 
+   public static LIDARBasedEnvironmentAwarenessUI creatIntraprocessUI(Stage primaryStage) throws IOException
+   {
+      REAMessager uiMessager = REAMessagerOverNetwork.createIntraprocess(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      uiMessager.startMessager();
+      return new LIDARBasedEnvironmentAwarenessUI(uiMessager, primaryStage);
+   }
+
    public static LIDARBasedEnvironmentAwarenessUI creatRemoteUI(Stage primaryStage) throws IOException
    {
-      REAMessager uiClientMessager = REAMessagerOverNetwork.createClient("localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
-      return new LIDARBasedEnvironmentAwarenessUI(uiClientMessager, primaryStage);
+      REAMessager uiMessager = REAMessagerOverNetwork.createTCPClient("localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      uiMessager.startMessager();
+      return new LIDARBasedEnvironmentAwarenessUI(uiMessager, primaryStage);
    }
 }

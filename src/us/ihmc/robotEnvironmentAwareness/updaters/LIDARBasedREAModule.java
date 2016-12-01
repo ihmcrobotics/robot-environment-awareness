@@ -57,11 +57,11 @@ public class LIDARBasedREAModule
    private ScheduledFuture<?> scheduled;
    private final REAMessager reaMessager;
 
-   private LIDARBasedREAModule(REAMessager reaMessager)
+   private LIDARBasedREAModule(REAMessager reaMessager) throws IOException
    {
       this.reaMessager = reaMessager;
-      packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT,
-            new IHMCCommunicationKryoNetClassList());
+      packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
+      packetCommunicator.connect();
 
       bufferUpdater = new REAOcTreeBuffer(mainOctree.getResolution(), reaMessager, packetCommunicator);
       mainUpdater = new REAOcTreeUpdater(mainOctree, bufferUpdater, reaMessager, packetCommunicator);
@@ -129,6 +129,7 @@ public class LIDARBasedREAModule
       }
 
       currentTime = JOctoMapTools.nanoSecondsToSeconds(System.nanoTime());
+
       if (ocTreeUpdateSuccess)
          lastCompleteUpdate.set(currentTime);
       if (performGraphicsUpdate)
@@ -142,10 +143,6 @@ public class LIDARBasedREAModule
 
    public void start() throws IOException
    {
-      packetCommunicator.connect();
-
-      reaMessager.startMessager();
-
       if (scheduled == null)
       {
          scheduled = executorService.scheduleAtFixedRate(this::mainUpdate, 0, THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
@@ -173,15 +170,17 @@ public class LIDARBasedREAModule
       }
    }
 
-   public static LIDARBasedREAModule createRemoteREAModule()
+   public static LIDARBasedREAModule createRemoteModule() throws IOException
    {
-      REAMessager server = REAMessagerOverNetwork.createServer(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAMessager server = REAMessagerOverNetwork.createTCPServer(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      server.startMessager();
       return new LIDARBasedREAModule(server);
    }
 
-   public static LIDARBasedREAModule createIntraprocessModule()
+   public static LIDARBasedREAModule createIntraprocessModule() throws IOException
    {
-      REAMessager messager = new REAMessagerSharedVariables();
+      REAMessager messager = REAMessagerOverNetwork.createIntraprocess(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      messager.startMessager();
       return new LIDARBasedREAModule(messager);
    }
 }

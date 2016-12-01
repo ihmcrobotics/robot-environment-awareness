@@ -14,10 +14,10 @@ public class LidarBasedREAStandaloneLauncher extends Application
    @Override
    public void start(Stage primaryStage) throws Exception
    {
-      ui = LIDARBasedEnvironmentAwarenessUI.creatRemoteUI(primaryStage);
-      module = LIDARBasedREAModule.createRemoteREAModule();
+      ui = LIDARBasedEnvironmentAwarenessUI.creatIntraprocessUI(primaryStage);
+      module = LIDARBasedREAModule.createIntraprocessModule();
 
-      ui.start();
+      ui.show();
       module.start();
    }
 

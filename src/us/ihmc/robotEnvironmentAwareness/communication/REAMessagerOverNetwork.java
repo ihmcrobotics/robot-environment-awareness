@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import us.ihmc.communication.net.NetClassList;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.REAMessagePacket;
 import us.ihmc.tools.io.printing.PrintTools;
 
 public class REAMessagerOverNetwork implements REAMessager
@@ -19,15 +18,21 @@ public class REAMessagerOverNetwork implements REAMessager
    private final ConcurrentHashMap<String, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
    private final PacketCommunicator packetCommunicator;
 
-   public static REAMessager createServer(NetworkPorts port, NetClassList netClassList)
+   public static REAMessager createTCPServer(NetworkPorts port, NetClassList netClassList)
    {
       PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(port, netClassList);
       return new REAMessagerOverNetwork(packetCommunicator);
    }
 
-   public static REAMessager createClient(String host, NetworkPorts port, NetClassList netClassList)
+   public static REAMessager createTCPClient(String host, NetworkPorts port, NetClassList netClassList)
    {
       PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(host, port, netClassList);
+      return new REAMessagerOverNetwork(packetCommunicator);
+   }
+
+   public static REAMessager createIntraprocess(NetworkPorts port, NetClassList netClassList)
+   {
+      PacketCommunicator packetCommunicator = PacketCommunicator.createIntraprocessPacketCommunicator(port, netClassList);
       return new REAMessagerOverNetwork(packetCommunicator);
    }
 
@@ -56,6 +61,12 @@ public class REAMessagerOverNetwork implements REAMessager
    @Override
    public void submitMessage(REAMessage message)
    {
+      if (!packetCommunicator.isConnected())
+      {
+         PrintTools.warn(this, "This messager is closed.");
+         return;
+      }
+
       if (message.getMessageName() == null)
          throw new IllegalArgumentException("message name is null");
 

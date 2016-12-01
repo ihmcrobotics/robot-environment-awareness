@@ -34,6 +34,7 @@ public class OcTreeMessageConverter
 
    private static void fullDepthCopy(NormalOcTreeNode nodeOriginal, List<OcTreeNodePlanarRegion> planarRegions, NormalOcTreeNodeMessage nodeCopy)
    {
+      // FIXME extremely time consuming!
       if (planarRegions != null)
          planarRegions.parallelStream().filter(region -> region.contains(nodeOriginal)).findFirst().ifPresent(region -> nodeCopy.regionId = region.getId());
 

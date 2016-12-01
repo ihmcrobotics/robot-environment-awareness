@@ -8,7 +8,6 @@ import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.javaFXToolkit.StringConverterTools;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
@@ -90,10 +89,10 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
          @Override
          public void invalidated(Observable observable)
          {
-            send(new REAMessage(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, createPolygonizerParameters()));
+            send(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, createPolygonizerParameters());
          }
       };
-      InvalidationListener sendIntersectionParametersListener = observable -> send(new REAMessage(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters, createIntersectionEstimationParameters()));
+      InvalidationListener sendIntersectionParametersListener = observable -> send(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters, createIntersectionEstimationParameters());
 
       concaveHullThresholdSpinner.valueProperty().addListener(sendPolygonizerParametersListener);
       minRegionSizePolygonizerSpinner.valueProperty().addListener(sendPolygonizerParametersListener);

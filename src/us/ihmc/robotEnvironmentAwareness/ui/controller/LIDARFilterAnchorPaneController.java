@@ -7,7 +7,6 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 
 public class LIDARFilterAnchorPaneController extends REABasicUIController
@@ -57,7 +56,7 @@ public class LIDARFilterAnchorPaneController extends REABasicUIController
       sendMessageOnPropertyChange(lidarMinRange, REAModuleAPI.OcTreeLIDARMinRange);
       sendMessageOnPropertyChange(lidarMaxRange, REAModuleAPI.OcTreeLIDARMaxRange);
 
-      InvalidationListener sendBoundingBoxListener = observable -> send(new REAMessage(REAModuleAPI.OcTreeBoundingBoxParameters, createBoundingBox()));
+      InvalidationListener sendBoundingBoxListener = observable -> send(REAModuleAPI.OcTreeBoundingBoxParameters, createBoundingBox());
       boundingBoxMinXSpinner.valueProperty().addListener(sendBoundingBoxListener);
       boundingBoxMaxXSpinner.valueProperty().addListener(sendBoundingBoxListener);
       boundingBoxMinYSpinner.valueProperty().addListener(sendBoundingBoxListener);

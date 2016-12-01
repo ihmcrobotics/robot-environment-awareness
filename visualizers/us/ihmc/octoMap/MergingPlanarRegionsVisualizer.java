@@ -16,7 +16,6 @@ import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
 import us.ihmc.jOctoMap.tools.JOctoMapRandomTools;
 import us.ihmc.javaFXToolkit.scenes.View3DFactory;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerSharedVariables;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
@@ -50,12 +49,12 @@ public class MergingPlanarRegionsVisualizer extends Application
       ScanCollection sweep2 = JOctoMapRandomTools.createSingleSweepInPlane(random, 1.0, center2, normal2, 2.0, 2.0, 100000);
       ocTree.update(sweep2);
 
-      messageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeEnable, true));
-      messageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, true));
-      messageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, true));
-      messageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreeGraphicsColoringMode, ColoringType.REGION));
+      messageManager.submitMessage(REAModuleAPI.OcTreeEnable, true);
+      messageManager.submitMessage(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, true);
+      messageManager.submitMessage(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, true);
+      messageManager.submitMessage(REAModuleAPI.OcTreeGraphicsColoringMode, ColoringType.REGION);
 
-      messageManager.submitMessage(new REAMessage(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable, true));
+      messageManager.submitMessage(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable, true);
       
 
       featureUpdater.update();

@@ -10,7 +10,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.ToggleButton;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 
@@ -125,8 +124,8 @@ public abstract class REABasicUIController
          invalidationListener.invalidated(null);
    }
 
-   protected void send(REAMessage message)
+   protected void send(String topic, Object messageContent)
    {
-      reaMessager.submitMessage(message);
+      reaMessager.submitMessage(topic, messageContent);
    }
 }

@@ -3,7 +3,6 @@ package us.ihmc.robotEnvironmentAwareness.ui.controller;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.Property;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 
 public class ListenerTools
@@ -15,7 +14,7 @@ public class ListenerTools
          @Override
          public void invalidated(Observable observable)
          {
-            reaMessager.submitMessage(new REAMessage(messageName, property.getValue()));
+            reaMessager.submitMessage(messageName, property.getValue());
          }
       };
       property.addListener(listener);

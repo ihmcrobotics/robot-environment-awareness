@@ -6,7 +6,6 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.javaFXToolkit.StringConverterTools;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 
 public class NormalEstimationAnchorPaneController extends REABasicUIController
@@ -42,7 +41,7 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
       setupControls();
 
       sendMessageOnPropertyChange(enableButton, REAModuleAPI.OcTreeNormalEstimationEnable);
-      InvalidationListener sendParametersListener = observable -> send(new REAMessage(REAModuleAPI.OcTreeNormalEstimationParameters, createNormalEstimationParameters()));
+      InvalidationListener sendParametersListener = observable -> send(REAModuleAPI.OcTreeNormalEstimationParameters, createNormalEstimationParameters());
       searchRadiusSlider.valueProperty().addListener(sendParametersListener);
       maxDistanceFromPlaneSlider.valueProperty().addListener(sendParametersListener);
       minConsensusRatioSlider.valueProperty().addListener(sendParametersListener);
@@ -76,7 +75,7 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
    @FXML
    public void resetNormals()
    {
-      send(new REAMessage(REAModuleAPI.OcTreeNormalEstimationClear, true));
+      send(REAModuleAPI.OcTreeNormalEstimationClear, true);
    }
 
    private NormalEstimationParameters createNormalEstimationParameters()

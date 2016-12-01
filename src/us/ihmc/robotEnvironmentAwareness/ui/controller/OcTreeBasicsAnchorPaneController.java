@@ -10,9 +10,8 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.javaFXToolkit.StringConverterTools;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
-import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.REAOcTreeGraphicsBuilder.ColoringType;
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder.ColoringType;
 
 public class OcTreeBasicsAnchorPaneController extends REABasicUIController
 {
@@ -71,7 +70,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    @FXML
    public void clear()
    {
-      send(new REAMessage(REAModuleAPI.OcTreeClear, true));
+      send(REAModuleAPI.OcTreeClear, true);
    }
 
    public void load()

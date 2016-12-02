@@ -1,12 +1,12 @@
 package us.ihmc.robotEnvironmentAwareness.ui.controller;
 
-import javafx.beans.InvalidationListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.javaFXToolkit.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
+import us.ihmc.robotEnvironmentAwareness.ui.properties.PlanarRegionSegmentationParametersProperty;
 
 public class RegionSegmentationAnchorPaneController extends REABasicUIController
 {
@@ -22,6 +22,8 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
    private Slider minNormalQualitySlider;
    @FXML
    private Slider minRegionSizeSlider;
+
+   private final PlanarRegionSegmentationParametersProperty planarRegionSegmentationParametersProperty = new PlanarRegionSegmentationParametersProperty(this, "planarRegionSegmentationParameters");
 
    public RegionSegmentationAnchorPaneController()
    {
@@ -42,12 +44,12 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
 
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreePlanarRegionSegmentationEnable, enableSegmentationButton.selectedProperty());
 
-      InvalidationListener sendParametersListener = observer -> uiMessager.submitMessageToModule(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, createParameters());
-      searchRadiusSlider.valueProperty().addListener(sendParametersListener);
-      maxDistanceFromPlaneSlider.valueProperty().addListener(sendParametersListener);
-      maxAngleFromPlaneSlider.valueProperty().addListener(sendParametersListener);
-      minNormalQualitySlider.valueProperty().addListener(sendParametersListener);
-      minRegionSizeSlider.valueProperty().addListener(sendParametersListener);
+      planarRegionSegmentationParametersProperty.bindBidirectionalSearchRadius(searchRadiusSlider.valueProperty());
+      planarRegionSegmentationParametersProperty.bindBidirectionalMaxDistanceFromPlane(maxDistanceFromPlaneSlider.valueProperty());
+      planarRegionSegmentationParametersProperty.bindBidirectionalMaxAngleFromPlane(maxAngleFromPlaneSlider.valueProperty());
+      planarRegionSegmentationParametersProperty.bindBidirectionalMinNormalQuality(minNormalQualitySlider.valueProperty());
+      planarRegionSegmentationParametersProperty.bindBidirectionalMinRegionSize(minRegionSizeSlider.valueProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, planarRegionSegmentationParametersProperty);
 
       load();
    }

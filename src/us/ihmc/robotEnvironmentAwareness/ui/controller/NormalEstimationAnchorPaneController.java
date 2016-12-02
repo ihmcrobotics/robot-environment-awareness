@@ -1,12 +1,12 @@
 package us.ihmc.robotEnvironmentAwareness.ui.controller;
 
-import javafx.beans.InvalidationListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.javaFXToolkit.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.ui.properties.NormalEstimationParametersProperty;
 
 public class NormalEstimationAnchorPaneController extends REABasicUIController
 {
@@ -25,6 +25,8 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
    @FXML
    private Slider maxAverageDeviationRatioSlider;
 
+   private final NormalEstimationParametersProperty normalEstimationParametersProperty = new NormalEstimationParametersProperty(this, "normalEstimationParameters");
+
    public NormalEstimationAnchorPaneController()
    {
    }
@@ -42,11 +44,13 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
 
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeNormalEstimationEnable, enableButton.selectedProperty());
 
-      InvalidationListener sendParametersListener = observable -> uiMessager.submitMessageToModule(REAModuleAPI.OcTreeNormalEstimationParameters, createNormalEstimationParameters());
-      searchRadiusSlider.valueProperty().addListener(sendParametersListener);
-      maxDistanceFromPlaneSlider.valueProperty().addListener(sendParametersListener);
-      minConsensusRatioSlider.valueProperty().addListener(sendParametersListener);
-      maxAverageDeviationRatioSlider.valueProperty().addListener(sendParametersListener);
+      normalEstimationParametersProperty.bindBidirectionalSearchRadius(searchRadiusSlider.valueProperty());
+      normalEstimationParametersProperty.bindBidirectionalMaxDistanceFromPlane(maxDistanceFromPlaneSlider.valueProperty());
+      normalEstimationParametersProperty.bindBidirectionalMinConsensusRatio(minConsensusRatioSlider.valueProperty());
+      normalEstimationParametersProperty.bindBidirectionalMaxAverageDeviationRatio(maxAverageDeviationRatioSlider.valueProperty());
+
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeNormalEstimationParameters, normalEstimationParametersProperty);
+
       load();
    }
 

@@ -59,12 +59,12 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeEnable, enableButton.selectedProperty());
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeBufferSize, bufferSizeProperty);
 
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsDepth, depthIntegerProperty);
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, showOcTreeNodesButton.selectedProperty());
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, showEstimatedSurfacesButton.selectedProperty());
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsColoringMode, coloringTypeComboBox.valueProperty());
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowBuffer, showBufferButton.selectedProperty());
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowInputScan, showInputScanButton.selectedProperty());
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsDepth, depthIntegerProperty, true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, showOcTreeNodesButton.selectedProperty(), true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, showEstimatedSurfacesButton.selectedProperty(), true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsColoringMode, coloringTypeComboBox.valueProperty(), true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowBuffer, showBufferButton.selectedProperty(), true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowInputScan, showInputScanButton.selectedProperty(), true);
 
       load();
    }

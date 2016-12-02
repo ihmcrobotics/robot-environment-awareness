@@ -7,15 +7,16 @@ import javax.vecmath.Point3d;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
-import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.BoundingBoxParametersMessage;
 import us.ihmc.robotics.geometry.transformables.Pose;
 
 public class REAOcTreeUpdater
 {
+   private final REAMessager reaMessager;
    private final NormalOcTree referenceOctree;
    private final REAOcTreeBuffer reaOcTreeBuffer;
 
@@ -31,8 +32,7 @@ public class REAOcTreeUpdater
    private final AtomicReference<NormalEstimationParameters> normalEstimationParameters;
 
    private final AtomicReference<Boolean> useBoundingBox;
-   private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
-   private final REAMessager reaMessager;
+   private final AtomicReference<BoundingBoxParametersMessage> atomicBoundingBoxParameters;
 
    public REAOcTreeUpdater(NormalOcTree octree, REAOcTreeBuffer buffer, REAMessager reaMessager, PacketCommunicator packetCommunicator)
    {
@@ -45,11 +45,12 @@ public class REAOcTreeUpdater
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
       enableNormalEstimation = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationEnable, false);
       clearNormals = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationClear, false);
-      minRange = reaMessager.createInput(REAModuleAPI.OcTreeLIDARMinRange);
-      maxRange = reaMessager.createInput(REAModuleAPI.OcTreeLIDARMaxRange);
+      minRange = reaMessager.createInput(REAModuleAPI.OcTreeLIDARMinRange, 0.2);
+      maxRange = reaMessager.createInput(REAModuleAPI.OcTreeLIDARMaxRange, 5.0);
       useBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable, true);
-      atomicBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters);
-      normalEstimationParameters = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters);
+      atomicBoundingBoxParameters = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters, new BoundingBoxParametersMessage(0.0f, -2.0f, -3.0f, 5.0f, 2.0f, 0.5f));
+      normalEstimationParameters = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters, new NormalEstimationParameters());
+      reaMessager.registerTopicListener(REAModuleAPI.OcTreeNormalEstimationParameters, (NormalEstimationParameters params) -> System.out.println(params));
 
       reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, messageContent -> sendCurrentState());
 
@@ -65,6 +66,9 @@ public class REAOcTreeUpdater
       reaMessager.submitMessage(REAModuleAPI.OcTreeLIDARMinRange, minRange.get());
       reaMessager.submitMessage(REAModuleAPI.OcTreeLIDARMaxRange, maxRange.get());
       reaMessager.submitMessage(REAModuleAPI.OcTreeBoundingBoxEnable, useBoundingBox.get());
+
+      reaMessager.submitMessage(REAModuleAPI.OcTreeBoundingBoxParameters, atomicBoundingBoxParameters.get());
+      reaMessager.submitMessage(REAModuleAPI.OcTreeNormalEstimationParameters, normalEstimationParameters.get());
    }
 
    public void update()
@@ -79,8 +83,7 @@ public class REAOcTreeUpdater
          referenceOctree.setBoundsInsertRange(minRange.get(), maxRange.get());
       }
 
-      if (normalEstimationParameters.get() != null)
-         referenceOctree.setNormalEstimationParameters(normalEstimationParameters.getAndSet(null));
+      referenceOctree.setNormalEstimationParameters(normalEstimationParameters.get());
 
       if (latestLidarPoseReference.get() == null)
          return;
@@ -115,20 +118,27 @@ public class REAOcTreeUpdater
 
    private void handleBoundingBox()
    {
-      if (useBoundingBox.get() && atomicBoundingBox.get() != null && latestLidarPoseReference.get() != null)
-      {
-         OcTreeBoundingBoxWithCenterAndYaw newBoundingBox = new OcTreeBoundingBoxWithCenterAndYaw();
-         newBoundingBox.setLocalBoundingBox(atomicBoundingBox.get());
-         Pose lidarPose = latestLidarPoseReference.get();
-         newBoundingBox.setOffset(lidarPose.getPoint());
-         newBoundingBox.setYawFromQuaternion(lidarPose.getOrientation());
-         newBoundingBox.update(referenceOctree.getResolution(), referenceOctree.getTreeDepth());
-         referenceOctree.setBoundingBox(newBoundingBox);
-      }
-      else
+      if (!useBoundingBox.get())
       {
          referenceOctree.disableBoundingBox();
+         return;
       }
+
+      OcTreeBoundingBoxWithCenterAndYaw boundingBox = new OcTreeBoundingBoxWithCenterAndYaw();
+
+      Point3d min = atomicBoundingBoxParameters.get().getMin();
+      Point3d max = atomicBoundingBoxParameters.get().getMax();
+      boundingBox.setLocalMinMaxCoordinates(min, max);
+
+      if (latestLidarPoseReference.get() != null)
+      {
+         Pose lidarPose = latestLidarPoseReference.get();
+         boundingBox.setOffset(lidarPose.getPoint());
+         boundingBox.setYawFromQuaternion(lidarPose.getOrientation());
+      }
+
+      boundingBox.update(referenceOctree.getResolution(), referenceOctree.getTreeDepth());
+      referenceOctree.setBoundingBox(boundingBox);
    }
 
    private void handlePacket(LidarScanMessage lidarScanMessage)

@@ -63,6 +63,7 @@ public class LIDARBasedEnvironmentAwarenessUI
 
       // Client
       this.uiMessager = uiMessager;
+      initializeControllers(uiMessager);
 
       lidarFrameViewer = new LidarFrameViewer(uiMessager);
       lidarFrameViewer.start();
@@ -75,7 +76,25 @@ public class LIDARBasedEnvironmentAwarenessUI
       scene3D.attachChild(reaMeshViewer.getRoot());
       scene3D.attachChild(lidarFrameViewer.getRoot());
 
+      uiConnectionHandler = new UIConnectionHandler(primaryStage, uiMessager);
+      uiConnectionHandler.start();
+      uiMessager.startMessager();
 
+      primaryStage.setTitle(getClass().getSimpleName());
+      primaryStage.setMaximized(true);
+      Scene mainScene = new Scene(mainPane, 600, 400);
+
+      mainScene.setOnKeyPressed(event -> {
+         if (event.getCode() == KeyCode.F5)
+            uiMessager.submitStateRequestToModule(REAModuleAPI.RequestEntireModuleState);
+      });
+
+      primaryStage.setScene(mainScene);
+      primaryStage.setOnCloseRequest(event -> stop());
+   }
+
+   private void initializeControllers(REAUIMessager uiMessager)
+   {
       File configurationFile = new File(CONFIGURATION_FILE_NAME);
 
       pointCloudAnchorPaneController.setConfigurationFile(configurationFile);
@@ -102,22 +121,6 @@ public class LIDARBasedEnvironmentAwarenessUI
       polygonizerAnchorPaneController.setConfigurationFile(configurationFile);
       polygonizerAnchorPaneController.attachREAMessager(uiMessager);
       polygonizerAnchorPaneController.bindControls();
-
-      uiConnectionHandler = new UIConnectionHandler(primaryStage, uiMessager);
-      uiConnectionHandler.start();
-      uiMessager.startMessager();
-
-      primaryStage.setTitle(getClass().getSimpleName());
-      primaryStage.setMaximized(true);
-      Scene mainScene = new Scene(mainPane, 600, 400);
-
-      mainScene.setOnKeyPressed(event -> {
-         if (event.getCode() == KeyCode.F5)
-            uiMessager.submitStateRequestToModule(REAModuleAPI.RequestEntireModuleState);
-      });
-
-      primaryStage.setScene(mainScene);
-      primaryStage.setOnCloseRequest(event -> stop());
    }
 
    public void show() throws IOException

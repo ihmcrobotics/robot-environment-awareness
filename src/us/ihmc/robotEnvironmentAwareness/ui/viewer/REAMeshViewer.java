@@ -8,12 +8,11 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.paint.Material;
-import javafx.scene.shape.Box;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
-import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BoundingBoxMeshBuilder;
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BoundingBoxMeshView;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BufferOctreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.PlanarRegionsMeshBuilder;
@@ -31,7 +30,6 @@ public class REAMeshViewer
    private final MeshView bufferLeafsMeshView = new MeshView();
    private final MeshView scanInputMeshView = new MeshView();
    private final MeshView planarRegionMeshView = new MeshView();
-   private Box ocTreeBoundingBoxGraphics = null;
 
    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(4, ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
 
@@ -40,8 +38,8 @@ public class REAMeshViewer
    private final ScanMeshBuilder scanMeshBuilder;
    private final BufferOctreeMeshBuilder bufferOctreeMeshBuilder;
    private final OcTreeMeshBuilder ocTreeMeshBuilder;
-   private final BoundingBoxMeshBuilder boundingBoxMeshBuilder;
    private final PlanarRegionsMeshBuilder planarRegionsMeshBuilder;
+   private final BoundingBoxMeshView boundingBoxMeshView;
 
    public REAMeshViewer(REAUIMessager uiMessager)
    {
@@ -49,10 +47,10 @@ public class REAMeshViewer
       scanMeshBuilder = new ScanMeshBuilder(uiMessager);
       bufferOctreeMeshBuilder = new BufferOctreeMeshBuilder(uiMessager);
       ocTreeMeshBuilder = new OcTreeMeshBuilder(uiMessager);
-      boundingBoxMeshBuilder = new BoundingBoxMeshBuilder(uiMessager);
+      boundingBoxMeshView = new BoundingBoxMeshView(uiMessager);
       planarRegionsMeshBuilder = new PlanarRegionsMeshBuilder(uiMessager);
 
-      root.getChildren().addAll(occupiedLeafsMeshView, bufferLeafsMeshView, scanInputMeshView, planarRegionMeshView);
+      root.getChildren().addAll(occupiedLeafsMeshView, bufferLeafsMeshView, scanInputMeshView, planarRegionMeshView, boundingBoxMeshView);
       root.setMouseTransparent(true);
 
       renderMeshAnimation = new AnimationTimer()
@@ -79,18 +77,6 @@ public class REAMeshViewer
             {
                updateMeshView(planarRegionMeshView, planarRegionsMeshBuilder.pollMeshAndMaterial());
             }
-
-            if (ocTreeBoundingBoxGraphics != null)
-            {
-               root.getChildren().remove(ocTreeBoundingBoxGraphics);
-               ocTreeBoundingBoxGraphics = null;
-            }
-
-            if (boundingBoxMeshBuilder.hasBoundingBoxToRender())
-            {
-               ocTreeBoundingBoxGraphics = boundingBoxMeshBuilder.getBoundingBox();
-               root.getChildren().add(ocTreeBoundingBoxGraphics);
-            }
          }
       };
    }
@@ -101,7 +87,7 @@ public class REAMeshViewer
       executorService.scheduleAtFixedRate(scanMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
       executorService.scheduleAtFixedRate(bufferOctreeMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
       executorService.scheduleAtFixedRate(ocTreeMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
-      executorService.scheduleAtFixedRate(boundingBoxMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
+      executorService.scheduleAtFixedRate(boundingBoxMeshView, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
       executorService.scheduleAtFixedRate(planarRegionsMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
    }
 

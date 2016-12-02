@@ -72,11 +72,13 @@ public class REAUIMessager
       reaMessagerToModule.registerTopicListener(topic, listener);
    }
 
-   public <T> void bindBidirectionalInternal(String topic, Property<T> property)
+   public <T> void bindBidirectionalInternal(String topic, Property<T> property, boolean pushValue)
    {
       MessageBidirectionalBinding<T> bind = new MessageBidirectionalBinding<>(property, messageContent -> submitMessageInternal(topic, messageContent));
       property.addListener(bind);
       internalMessager.registerTopicListener(topic, bind);
+      if (pushValue)
+         internalMessager.submitMessage(topic, property.getValue());
    }
 
    public <T> void bindBidirectionalModule(String topic, Property<T> property)

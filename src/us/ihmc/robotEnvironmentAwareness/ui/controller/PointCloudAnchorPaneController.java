@@ -117,6 +117,9 @@ public class PointCloudAnchorPaneController extends REABasicUIController
 
    private void computeScanMesh()
    {
+      if (!enable.get())
+         return;
+
       LidarScanMessage message = newMessageToRender.getAndSet(null);
 
       uiMessager.submitStateRequestToModule(REAModuleAPI.RequestLidarScan);

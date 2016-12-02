@@ -12,8 +12,8 @@ import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.graphics3DDescription.MeshDataGenerator;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 
 /**
  * Created by adrien on 11/20/16.
@@ -33,17 +33,17 @@ public class ScanMeshBuilder implements Runnable
 
    private boolean hasClearedScanGraphics = false;
 
-   private final REAMessager reaMessager;
+   private final REAUIMessager uiMessager;
 
-   public ScanMeshBuilder(REAMessager reaMessager)
+   public ScanMeshBuilder(REAUIMessager uiMessager)
    {
-      this.reaMessager = reaMessager;
+      this.uiMessager = uiMessager;
       // over network
-      lidarScanToRender = reaMessager.createInput(REAModuleAPI.LidarScanState);
+      lidarScanToRender = uiMessager.createInput(REAModuleAPI.LidarScanState);
 
       // local
-      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
-      showInputScan = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowInputScan, true);
+      enable = uiMessager.createInput(REAModuleAPI.OcTreeEnable, false);
+      showInputScan = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsShowInputScan, true);
 
       TextureColorPalette1D scanColorPalette = new TextureColorPalette1D();
       scanColorPalette.setHueBased(1.0, 1.0);
@@ -61,7 +61,7 @@ public class ScanMeshBuilder implements Runnable
       multiColorMeshBuilder.clear();
 
       LidarScanMessage lidarScan = lidarScanToRender.getAndSet(null);
-      reaMessager.submitStateRequest(REAModuleAPI.RequestLidarScan);
+      uiMessager.submitStateRequestToModule(REAModuleAPI.RequestLidarScan);
 
       if (lidarScan == null)
          return;

@@ -17,8 +17,8 @@ import us.ihmc.graphics3DDescription.MeshDataHolder;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
@@ -63,23 +63,23 @@ public class OcTreeMeshBuilder implements Runnable
 
    private final AtomicReference<Pair<Mesh, Material>> meshAndMaterialToRender = new AtomicReference<>(null);
 
-   private final REAMessager reaMessager;
+   private final REAUIMessager uiMessager;
 
-   public OcTreeMeshBuilder(REAMessager reaMessager)
+   public OcTreeMeshBuilder(REAUIMessager uiMessager)
    {
-      this.reaMessager = reaMessager;
-      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
+      this.uiMessager = uiMessager;
+      enable = uiMessager.createInput(REAModuleAPI.OcTreeEnable, false);
 
-      clear = reaMessager.createInput(REAModuleAPI.OcTreeClear, false);
+      clear = uiMessager.createInput(REAModuleAPI.OcTreeClear, false);
 
-      treeDepthForDisplay = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsDepth);
-      coloringType = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsColoringMode, ColoringType.DEFAULT);
+      treeDepthForDisplay = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsDepth);
+      coloringType = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsColoringMode, ColoringType.DEFAULT);
 
-      showOcTreeNodes = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, false);
-      showEstimatedSurfaces = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, false);
-      hidePlanarRegionNodes = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, false);
+      showOcTreeNodes = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, false);
+      showEstimatedSurfaces = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, false);
+      hidePlanarRegionNodes = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, false);
 
-      ocTreeState = reaMessager.createInput(REAModuleAPI.OcTreeState);
+      ocTreeState = uiMessager.createInput(REAModuleAPI.OcTreeState);
 
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);
@@ -99,7 +99,7 @@ public class OcTreeMeshBuilder implements Runnable
       if (!enable.get())
          return;
 
-      reaMessager.submitStateRequest(REAModuleAPI.RequestOctree);
+      uiMessager.submitStateRequestToModule(REAModuleAPI.RequestOctree);
 
       meshBuilder.clear();
 

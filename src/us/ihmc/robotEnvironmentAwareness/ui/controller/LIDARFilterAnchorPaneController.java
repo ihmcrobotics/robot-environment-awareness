@@ -51,20 +51,19 @@ public class LIDARFilterAnchorPaneController extends REABasicUIController
    {
       setupControls();
 
-      sendMessageOnPropertyChange(enableBoundingBoxButton, REAModuleAPI.OcTreeBoundingBoxEnable);
-      sendMessageOnPropertyChange(showBoundingBoxButton, REAModuleAPI.OcTreeGraphicsBoundingBoxShow);
-      sendMessageOnPropertyChange(lidarMinRange, REAModuleAPI.OcTreeLIDARMinRange);
-      sendMessageOnPropertyChange(lidarMaxRange, REAModuleAPI.OcTreeLIDARMaxRange);
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeBoundingBoxEnable, enableBoundingBoxButton.selectedProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeLIDARMinRange, lidarMinRange.valueProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeLIDARMaxRange, lidarMaxRange.valueProperty());
 
-      InvalidationListener sendBoundingBoxListener = observable -> send(REAModuleAPI.OcTreeBoundingBoxParameters, createBoundingBox());
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, showBoundingBoxButton.selectedProperty());
+
+      InvalidationListener sendBoundingBoxListener = observable -> uiMessager.submitMessageToModule(REAModuleAPI.OcTreeBoundingBoxParameters, createBoundingBox());
       boundingBoxMinXSpinner.valueProperty().addListener(sendBoundingBoxListener);
       boundingBoxMaxXSpinner.valueProperty().addListener(sendBoundingBoxListener);
       boundingBoxMinYSpinner.valueProperty().addListener(sendBoundingBoxListener);
       boundingBoxMaxYSpinner.valueProperty().addListener(sendBoundingBoxListener);
       boundingBoxMinZSpinner.valueProperty().addListener(sendBoundingBoxListener);
       boundingBoxMaxZSpinner.valueProperty().addListener(sendBoundingBoxListener);
-      registerListener(sendBoundingBoxListener);
-      fireAllListeners();
 
       load();
    }

@@ -12,8 +12,8 @@ import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.scene.transform.Affine;
 import us.ihmc.javaFXToolkit.JavaFXTools;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.BoxMessage;
 
 public class BoundingBoxMeshBuilder implements Runnable
@@ -28,15 +28,15 @@ public class BoundingBoxMeshBuilder implements Runnable
    private final AtomicReference<BoxMessage> boundingBoxState;
    private final AtomicReference<Box> boundingBoxToRender = new AtomicReference<>(null);
 
-   private final REAMessager reaMessager;
+   private final REAUIMessager uiMessager;
 
-   public BoundingBoxMeshBuilder(REAMessager reaMessager)
+   public BoundingBoxMeshBuilder(REAUIMessager uiMessager)
    {
-      this.reaMessager = reaMessager;
-      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
-      showOcTreeBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, false);
+      this.uiMessager = uiMessager;
+      enable = uiMessager.createInput(REAModuleAPI.OcTreeEnable, false);
+      showOcTreeBoundingBox = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, false);
 
-      boundingBoxState = reaMessager.createInput(REAModuleAPI.BoundingBoxState);
+      boundingBoxState = uiMessager.createInput(REAModuleAPI.BoundingBoxState);
    }
 
    @Override
@@ -47,7 +47,7 @@ public class BoundingBoxMeshBuilder implements Runnable
       if (!enable.get() || showOcTreeBoundingBox.get())
          return;
 
-      reaMessager.submitStateRequest(REAModuleAPI.RequestBoundingBox);
+      uiMessager.submitStateRequestToModule(REAModuleAPI.RequestBoundingBox);
 
       if (newMessage == null)
          return;

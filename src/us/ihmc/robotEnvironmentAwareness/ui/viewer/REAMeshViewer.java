@@ -12,7 +12,7 @@ import javafx.scene.shape.Box;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BoundingBoxMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BufferOctreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
@@ -43,14 +43,14 @@ public class REAMeshViewer
    private final BoundingBoxMeshBuilder boundingBoxMeshBuilder;
    private final PlanarRegionsMeshBuilder planarRegionsMeshBuilder;
 
-   public REAMeshViewer(REAMessager reaMessager)
+   public REAMeshViewer(REAUIMessager uiMessager)
    {
       // TEST Communication over network
-      scanMeshBuilder = new ScanMeshBuilder(reaMessager);
-      bufferOctreeMeshBuilder = new BufferOctreeMeshBuilder(reaMessager);
-      ocTreeMeshBuilder = new OcTreeMeshBuilder(reaMessager);
-      boundingBoxMeshBuilder = new BoundingBoxMeshBuilder(reaMessager);
-      planarRegionsMeshBuilder = new PlanarRegionsMeshBuilder(reaMessager);
+      scanMeshBuilder = new ScanMeshBuilder(uiMessager);
+      bufferOctreeMeshBuilder = new BufferOctreeMeshBuilder(uiMessager);
+      ocTreeMeshBuilder = new OcTreeMeshBuilder(uiMessager);
+      boundingBoxMeshBuilder = new BoundingBoxMeshBuilder(uiMessager);
+      planarRegionsMeshBuilder = new PlanarRegionsMeshBuilder(uiMessager);
 
       root.getChildren().addAll(occupiedLeafsMeshView, bufferLeafsMeshView, scanInputMeshView, planarRegionMeshView);
       root.setMouseTransparent(true);

@@ -12,11 +12,12 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 
 public abstract class REABasicUIController
 {
-   private REAMessager reaMessager;
+   protected REAUIMessager uiMessager;
    private FilePropertyHelper filePropertyHelper;
    private final Set<InvalidationListener> invalidationListeners = new HashSet<>();
 
@@ -89,49 +90,49 @@ public abstract class REABasicUIController
    }
 
 
-   public void attachREAMessager(REAMessager reaMessager)
+   public void attachREAMessager(REAUIMessager uiMessager)
    {
-      this.reaMessager = reaMessager;
+      this.uiMessager = uiMessager;
    }
 
-   protected <T> AtomicReference<T> createREAInput(String topic)
-   {
-      return reaMessager.createInput(topic);
-   }
-
-   protected void sendMessageOnPropertyChange(ToggleButton toggleButton, String topic)
-   {
-      sendMessageOnPropertyChange(toggleButton.selectedProperty(), topic);
-   }
-
-   protected <T> void sendMessageOnPropertyChange(ComboBox<T> comboBox, String topic)
-   {
-      sendMessageOnPropertyChange(comboBox.valueProperty(), topic);
-   }
-
-   protected void sendMessageOnPropertyChange(Slider slider, String topic)
-   {
-      sendMessageOnPropertyChange(slider.valueProperty(), topic);
-   }
-
-   protected <T> void sendMessageOnPropertyChange(Property<T> property, String topic)
-   {
-      invalidationListeners.add(ListenerTools.sendMessageOnPropertyChange(property, reaMessager, topic));
-   }
-
-   protected void registerListener(InvalidationListener listener)
-   {
-      invalidationListeners.add(listener);
-   }
-
-   protected void fireAllListeners()
-   {
-      for (InvalidationListener invalidationListener : invalidationListeners)
-         invalidationListener.invalidated(null);
-   }
-
-   protected void send(String topic, Object messageContent)
-   {
-      reaMessager.submitMessage(topic, messageContent);
-   }
+//   protected <T> AtomicReference<T> createREAInput(String topic)
+//   {
+//      return uiMessager.createInput(topic);
+//   }
+//
+//   protected void sendMessageOnPropertyChange(ToggleButton toggleButton, String topic)
+//   {
+//      sendMessageOnPropertyChange(toggleButton.selectedProperty(), topic);
+//   }
+//
+//   protected <T> void sendMessageOnPropertyChange(ComboBox<T> comboBox, String topic)
+//   {
+//      sendMessageOnPropertyChange(comboBox.valueProperty(), topic);
+//   }
+//
+//   protected void sendMessageOnPropertyChange(Slider slider, String topic)
+//   {
+//      sendMessageOnPropertyChange(slider.valueProperty(), topic);
+//   }
+//
+//   protected <T> void sendMessageOnPropertyChange(Property<T> property, String topic)
+//   {
+//      invalidationListeners.add(ListenerTools.sendMessageOnPropertyChange(property, uiMessager, topic));
+//   }
+//
+//   protected void registerListener(InvalidationListener listener)
+//   {
+//      invalidationListeners.add(listener);
+//   }
+//
+//   protected void fireAllListeners()
+//   {
+//      for (InvalidationListener invalidationListener : invalidationListeners)
+//         invalidationListener.invalidated(null);
+//   }
+//
+//   protected void send(String topic, Object messageContent)
+//   {
+//      uiMessager.submitMessage(topic, messageContent);
+//   }
 }

@@ -40,15 +40,14 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
    {
       setupControls();
 
-      sendMessageOnPropertyChange(enableSegmentationButton, REAModuleAPI.OcTreePlanarRegionSegmentationEnable);
-      InvalidationListener sendParametersListener = observer -> send(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, createParameters());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreePlanarRegionSegmentationEnable, enableSegmentationButton.selectedProperty());
+
+      InvalidationListener sendParametersListener = observer -> uiMessager.submitMessageToModule(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, createParameters());
       searchRadiusSlider.valueProperty().addListener(sendParametersListener);
       maxDistanceFromPlaneSlider.valueProperty().addListener(sendParametersListener);
       maxAngleFromPlaneSlider.valueProperty().addListener(sendParametersListener);
       minNormalQualitySlider.valueProperty().addListener(sendParametersListener);
       minRegionSizeSlider.valueProperty().addListener(sendParametersListener);
-      registerListener(sendParametersListener);
-      fireAllListeners();
 
       load();
    }
@@ -79,7 +78,7 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
    @FXML
    public void clear()
    {
-      send(REAModuleAPI.OcTreePlanarRegionSegmentationClear, true);
+      uiMessager.submitMessageToModule(REAModuleAPI.OcTreePlanarRegionSegmentationClear, true);
    }
 
    private PlanarRegionSegmentationParameters createParameters()

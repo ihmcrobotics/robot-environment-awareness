@@ -10,8 +10,8 @@ import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTree;
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTreeNode;
@@ -34,15 +34,15 @@ public class BufferOctreeMeshBuilder implements Runnable
    private final AtomicReference<Pair<Mesh, Material>> meshAndMaterialToRender = new AtomicReference<>(null);
 
    private boolean hasClearedBufferGraphics = false;
-   private final REAMessager reaMessager;
+   private final REAUIMessager uiMessager;
 
-   public BufferOctreeMeshBuilder(REAMessager reaMessager)
+   public BufferOctreeMeshBuilder(REAUIMessager uiMessager)
    {
-      this.reaMessager = reaMessager;
+      this.uiMessager = uiMessager;
       // local
-      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
-      showBuffer = reaMessager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer, true);
-      bufferState = reaMessager.createInput(REAModuleAPI.BufferState);
+      enable = uiMessager.createInput(REAModuleAPI.OcTreeEnable, false);
+      showBuffer = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer, true);
+      bufferState = uiMessager.createInput(REAModuleAPI.BufferState);
    }
 
    @Override
@@ -60,7 +60,7 @@ public class BufferOctreeMeshBuilder implements Runnable
          return;
       }
 
-      reaMessager.submitStateRequest(REAModuleAPI.RequestBuffer);
+      uiMessager.submitStateRequestToModule(REAModuleAPI.RequestBuffer);
 
       bufferMeshBuilder.clear();
 

@@ -12,6 +12,7 @@ import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
+import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.LIDARFilterAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.NormalEstimationAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.OcTreeBasicsAnchorPaneController;
@@ -29,7 +30,7 @@ public class LIDARBasedEnvironmentAwarenessUI
    private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
    private final BorderPane mainPane;
 
-   private final REAMessager reaMessager;
+   private final REAUIMessager uiMessager;
    private final REAMeshViewer reaMeshViewer;
    private final LidarFrameViewer lidarFrameViewer;
 
@@ -48,7 +49,7 @@ public class LIDARBasedEnvironmentAwarenessUI
 
    private final Stage primaryStage;
 
-   private LIDARBasedEnvironmentAwarenessUI(REAMessager reaMessager, Stage primaryStage) throws IOException
+   private LIDARBasedEnvironmentAwarenessUI(REAUIMessager uiMessager, Stage primaryStage) throws IOException
    {
       this.primaryStage = primaryStage;
       FXMLLoader loader = new FXMLLoader();
@@ -57,11 +58,11 @@ public class LIDARBasedEnvironmentAwarenessUI
       mainPane = loader.load();
 
       // Client
-      this.reaMessager = reaMessager;
+      this.uiMessager = uiMessager;
 
-      lidarFrameViewer = new LidarFrameViewer(reaMessager);
+      lidarFrameViewer = new LidarFrameViewer(uiMessager);
       lidarFrameViewer.start();
-      reaMeshViewer = new REAMeshViewer(reaMessager);
+      reaMeshViewer = new REAMeshViewer(uiMessager);
       reaMeshViewer.start();
 
       mainPane.setCenter(scene3D);
@@ -74,28 +75,28 @@ public class LIDARBasedEnvironmentAwarenessUI
       File configurationFile = new File(CONFIGURATION_FILE_NAME);
 
       pointCloudAnchorPaneController.setConfigurationFile(configurationFile);
-      pointCloudAnchorPaneController.attachREAMessager(reaMessager);
+      pointCloudAnchorPaneController.attachREAMessager(uiMessager);
       pointCloudAnchorPaneController.bindControls();
       pointCloudAnchorPaneController.start();
 
       ocTreeBasicsAnchorPaneController.setConfigurationFile(configurationFile);
-      ocTreeBasicsAnchorPaneController.attachREAMessager(reaMessager);
+      ocTreeBasicsAnchorPaneController.attachREAMessager(uiMessager);
       ocTreeBasicsAnchorPaneController.bindControls();
 
       lidarFilterAnchorPaneController.setConfigurationFile(configurationFile);
-      lidarFilterAnchorPaneController.attachREAMessager(reaMessager);
+      lidarFilterAnchorPaneController.attachREAMessager(uiMessager);
       lidarFilterAnchorPaneController.bindControls();
 
       normalEstimationAnchorPaneController.setConfigurationFile(configurationFile);
-      normalEstimationAnchorPaneController.attachREAMessager(reaMessager);
+      normalEstimationAnchorPaneController.attachREAMessager(uiMessager);
       normalEstimationAnchorPaneController.bindControls();
 
       regionSegmentationAnchorPaneController.setConfigurationFile(configurationFile);
-      regionSegmentationAnchorPaneController.attachREAMessager(reaMessager);
+      regionSegmentationAnchorPaneController.attachREAMessager(uiMessager);
       regionSegmentationAnchorPaneController.bindControls();
 
       polygonizerAnchorPaneController.setConfigurationFile(configurationFile);
-      polygonizerAnchorPaneController.attachREAMessager(reaMessager);
+      polygonizerAnchorPaneController.attachREAMessager(uiMessager);
       polygonizerAnchorPaneController.bindControls();
 
       primaryStage.setTitle(getClass().getSimpleName());
@@ -114,7 +115,7 @@ public class LIDARBasedEnvironmentAwarenessUI
    {
       try
       {
-         reaMessager.closeMessager();
+         uiMessager.closeMessager();
 
          scene3D.stop();
          pointCloudAnchorPaneController.stop();
@@ -129,14 +130,16 @@ public class LIDARBasedEnvironmentAwarenessUI
 
    public static LIDARBasedEnvironmentAwarenessUI creatIntraprocessUI(Stage primaryStage) throws IOException
    {
-      REAMessager uiMessager = REAMessagerOverNetwork.createIntraprocess(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAMessager moduleMessager = REAMessagerOverNetwork.createIntraprocess(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAUIMessager uiMessager = new REAUIMessager(moduleMessager);
       uiMessager.startMessager();
       return new LIDARBasedEnvironmentAwarenessUI(uiMessager, primaryStage);
    }
 
    public static LIDARBasedEnvironmentAwarenessUI creatRemoteUI(Stage primaryStage) throws IOException
    {
-      REAMessager uiMessager = REAMessagerOverNetwork.createTCPClient("localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAMessager moduleMessager = REAMessagerOverNetwork.createTCPClient("localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAUIMessager uiMessager = new REAUIMessager(moduleMessager);
       uiMessager.startMessager();
       return new LIDARBasedEnvironmentAwarenessUI(uiMessager, primaryStage);
    }

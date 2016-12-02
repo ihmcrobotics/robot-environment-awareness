@@ -10,8 +10,8 @@ import us.ihmc.communication.packets.PlanarRegionMessageConverter;
 import us.ihmc.communication.packets.PlanarRegionsListMessage;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
 import us.ihmc.robotics.geometry.PlanarRegion;
 import us.ihmc.robotics.geometry.PlanarRegionsList;
@@ -28,15 +28,15 @@ public class PlanarRegionsMeshBuilder implements Runnable
 
    private final AtomicReference<Pair<Mesh, Material>> meshAndMaterialToRender = new AtomicReference<>(null);
 
-   private final REAMessager reaMessager;
+   private final REAUIMessager reaMessager;
 
-   public PlanarRegionsMeshBuilder(REAMessager reaMessager)
+   public PlanarRegionsMeshBuilder(REAUIMessager uiMessager)
    {
-      this.reaMessager = reaMessager;
-      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
-      clear = reaMessager.createInput(REAModuleAPI.OcTreeClear, false);
+      this.reaMessager = uiMessager;
+      enable = uiMessager.createInput(REAModuleAPI.OcTreeEnable, false);
+      clear = uiMessager.createInput(REAModuleAPI.OcTreeClear, false);
 
-      planarRegionsListMessage = reaMessager.createInput(REAModuleAPI.PlanarRegionsState);
+      planarRegionsListMessage = uiMessager.createInput(REAModuleAPI.PlanarRegionsState);
 
       TextureColorPalette2D regionColorPalette1D = new TextureColorPalette2D();
       regionColorPalette1D.setHueBrightnessBased(0.9);
@@ -57,7 +57,7 @@ public class PlanarRegionsMeshBuilder implements Runnable
       if (!enable.get())
          return;
 
-      reaMessager.submitStateRequest(REAModuleAPI.RequestPlanarRegions);
+      reaMessager.submitStateRequestToModule(REAModuleAPI.RequestPlanarRegions);
 
       if (newMessage == null)
          return;

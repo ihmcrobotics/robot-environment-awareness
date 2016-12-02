@@ -12,8 +12,8 @@ import javafx.scene.transform.Affine;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 
 public class LidarFrameViewer extends AnimationTimer
 {
@@ -23,16 +23,16 @@ public class LidarFrameViewer extends AnimationTimer
    private final AtomicReference<Affine> lastAffine = new AtomicReference<>();
 
    private final Group root = new Group();
-   private final REAMessager reaMessager;
+   private final REAUIMessager uiMessager;
 
-   public LidarFrameViewer(REAMessager reaMessager)
+   public LidarFrameViewer(REAUIMessager uiMessager)
    {
-      this.reaMessager = reaMessager;
+      this.uiMessager = uiMessager;
       lidarCoordinateSystem = new JavaFXCoordinateSystem(0.1);
       lidarCoordinateSystem.getTransforms().add(lidarPose);
       root.getChildren().add(lidarCoordinateSystem);
 
-      reaMessager.registerTopicListener(REAModuleAPI.LidarScanState, this::handleMessage);
+      uiMessager.registerTopicListener(REAModuleAPI.LidarScanState, this::handleMessage);
    }
 
    @Override
@@ -41,7 +41,7 @@ public class LidarFrameViewer extends AnimationTimer
       Affine affine = lastAffine.getAndSet(null);
       if (affine != null)
          lidarPose.setToTransform(affine);
-      reaMessager.submitStateRequest(REAModuleAPI.RequestLidarScan);
+      uiMessager.submitStateRequestToModule(REAModuleAPI.RequestLidarScan);
    }
 
    private void handleMessage(LidarScanMessage lidarScanMessage)

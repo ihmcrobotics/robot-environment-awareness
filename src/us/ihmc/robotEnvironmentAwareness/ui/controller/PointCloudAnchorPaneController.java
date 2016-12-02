@@ -73,7 +73,7 @@ public class PointCloudAnchorPaneController extends REABasicUIController
 
    public void bindControls()
    {
-      newMessageToRender = createREAInput(REAModuleAPI.LidarScanState);
+      newMessageToRender = uiMessager.createInput(REAModuleAPI.LidarScanState);
 
       enableButton.selectedProperty().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> enable.set(newValue));
       Platform.runLater(() -> enableButton.setSelected(enable.get()));
@@ -119,7 +119,7 @@ public class PointCloudAnchorPaneController extends REABasicUIController
    {
       LidarScanMessage message = newMessageToRender.getAndSet(null);
 
-      send(REAModuleAPI.RequestLidarScan, true);
+      uiMessager.submitStateRequestToModule(REAModuleAPI.RequestLidarScan);
 
       if (message == null)
          return;

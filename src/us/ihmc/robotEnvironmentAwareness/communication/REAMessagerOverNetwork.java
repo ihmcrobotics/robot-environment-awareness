@@ -52,7 +52,13 @@ public class REAMessagerOverNetwork implements REAMessager
       if (DEBUG)
          PrintTools.info("Packet received from network with message name: " + message.getTopic());
 
-      processMessageLocally(message);
+      List<AtomicReference<Object>> inputVariablesForTopic = inputVariablesMap.get(message.getTopic());
+      if (inputVariablesForTopic != null)
+         inputVariablesForTopic.forEach(variable -> variable.set(message.getMessageContent()));
+
+      List<REATopicListener<Object>> topicListeners = topicListenersMap.get(message.getTopic());
+      if (topicListeners != null)
+         topicListeners.forEach(listener -> listener.receivedMessageForTopic(message.getMessageContent()));
    }
 
    @Override
@@ -72,20 +78,6 @@ public class REAMessagerOverNetwork implements REAMessager
 
       // Variable update over network
       packetCommunicator.send(message);
-
-      processMessageLocally(message);
-
-   }
-
-   private void processMessageLocally(REAMessage message)
-   {
-      List<AtomicReference<Object>> inputVariablesForTopic = inputVariablesMap.get(message.getTopic());
-      if (inputVariablesForTopic != null)
-         inputVariablesForTopic.forEach(variable -> variable.set(message.getMessageContent()));
-
-      List<REATopicListener<Object>> topicListeners = topicListenersMap.get(message.getTopic());
-      if (topicListeners != null)
-         topicListeners.forEach(listener -> listener.receivedMessageForTopic(message.getMessageContent()));
    }
 
    @Override

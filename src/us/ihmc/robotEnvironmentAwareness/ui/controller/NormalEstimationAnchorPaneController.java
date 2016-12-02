@@ -40,14 +40,13 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
    {
       setupControls();
 
-      sendMessageOnPropertyChange(enableButton, REAModuleAPI.OcTreeNormalEstimationEnable);
-      InvalidationListener sendParametersListener = observable -> send(REAModuleAPI.OcTreeNormalEstimationParameters, createNormalEstimationParameters());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeNormalEstimationEnable, enableButton.selectedProperty());
+
+      InvalidationListener sendParametersListener = observable -> uiMessager.submitMessageToModule(REAModuleAPI.OcTreeNormalEstimationParameters, createNormalEstimationParameters());
       searchRadiusSlider.valueProperty().addListener(sendParametersListener);
       maxDistanceFromPlaneSlider.valueProperty().addListener(sendParametersListener);
       minConsensusRatioSlider.valueProperty().addListener(sendParametersListener);
       maxAverageDeviationRatioSlider.valueProperty().addListener(sendParametersListener);
-      registerListener(sendParametersListener);
-      fireAllListeners();
       load();
    }
 
@@ -75,7 +74,7 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
    @FXML
    public void resetNormals()
    {
-      send(REAModuleAPI.OcTreeNormalEstimationClear, true);
+      uiMessager.broadcastMessage(REAModuleAPI.OcTreeNormalEstimationClear, true);
    }
 
    private NormalEstimationParameters createNormalEstimationParameters()

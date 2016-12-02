@@ -1,7 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.ui.controller;
 
 import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.fxml.FXML;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory;
@@ -81,18 +80,12 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
    {
       setupControls();
 
-      sendMessageOnPropertyChange(enablePolygonizerButton, REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
-      sendMessageOnPropertyChange(enableIntersectionCalculatorButton, REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
-      sendMessageOnPropertyChange(hideRegionNodes, REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes);
-      InvalidationListener sendPolygonizerParametersListener = new InvalidationListener()
-      {
-         @Override
-         public void invalidated(Observable observable)
-         {
-            send(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, createPolygonizerParameters());
-         }
-      };
-      InvalidationListener sendIntersectionParametersListener = observable -> send(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters, createIntersectionEstimationParameters());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable, enablePolygonizerButton.selectedProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable, enableIntersectionCalculatorButton.selectedProperty());
+
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, hideRegionNodes.selectedProperty());
+      InvalidationListener sendPolygonizerParametersListener = observable -> uiMessager.submitMessageToModule(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, createPolygonizerParameters());
+      InvalidationListener sendIntersectionParametersListener = observable -> uiMessager.submitMessageToModule(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters, createIntersectionEstimationParameters());
 
       concaveHullThresholdSpinner.valueProperty().addListener(sendPolygonizerParametersListener);
       minRegionSizePolygonizerSpinner.valueProperty().addListener(sendPolygonizerParametersListener);
@@ -100,16 +93,12 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
       minEdgeLengthSpinner.valueProperty().addListener(sendPolygonizerParametersListener);
       depthThresholdSpinner.valueProperty().addListener(sendPolygonizerParametersListener);
       shallowAngleThresholdSpinner.valueProperty().addListener(sendPolygonizerParametersListener);
-      registerListener(sendPolygonizerParametersListener);
 
       maxDistanceToRegionSpinner.valueProperty().addListener(sendIntersectionParametersListener);
       minRegionSizeIntersectionSpinner.valueProperty().addListener(sendIntersectionParametersListener);
       minIntersectionLengthSpinner.valueProperty().addListener(sendIntersectionParametersListener);
       minRegionAngleDifferenceSpinner.valueProperty().addListener(sendIntersectionParametersListener);
       addIntersectionsToRegionsButton.selectedProperty().addListener(sendIntersectionParametersListener);
-      registerListener(sendIntersectionParametersListener);
-
-      fireAllListeners();
 
       load();
    }

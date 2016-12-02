@@ -26,7 +26,6 @@ public class ScanMeshBuilder implements Runnable
 
    private final AtomicReference<LidarScanMessage> lidarScanToRender;
 
-   private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> showInputScan;
 
    private final AtomicReference<Pair<Mesh, Material>> meshAndMaterialToRender = new AtomicReference<>(null);
@@ -38,12 +37,8 @@ public class ScanMeshBuilder implements Runnable
    public ScanMeshBuilder(REAUIMessager uiMessager)
    {
       this.uiMessager = uiMessager;
-      // over network
       lidarScanToRender = uiMessager.createInput(REAModuleAPI.LidarScanState);
-
-      // local
-      enable = uiMessager.createInput(REAModuleAPI.OcTreeEnable, false);
-      showInputScan = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsShowInputScan, true);
+      showInputScan = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsShowInputScan, false);
 
       TextureColorPalette1D scanColorPalette = new TextureColorPalette1D();
       scanColorPalette.setHueBased(1.0, 1.0);
@@ -53,7 +48,7 @@ public class ScanMeshBuilder implements Runnable
    @Override
    public void run()
    {
-      if (!enable.get() || !showInputScan.get())
+      if (!showInputScan.get())
       {
          clearScanGraphicsIfNeeded();
          return;

@@ -24,7 +24,7 @@ public interface REAMessager
       return createInput(topic, null);
    }
 
-   <T> void registerListener(String topic, REAMessageListener<T> listener);
+   <T> void registerTopicListener(String topic, REATopicListener<T> listener);
 
    void startMessager() throws IOException;
 

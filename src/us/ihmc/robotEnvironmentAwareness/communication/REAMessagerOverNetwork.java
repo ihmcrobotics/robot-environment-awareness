@@ -16,7 +16,7 @@ public class REAMessagerOverNetwork implements REAMessager
    private static final boolean DEBUG = false;
 
    private final ConcurrentHashMap<String, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
-   private final ConcurrentHashMap<String, List<REAMessageListener<Object>>> listeners = new ConcurrentHashMap<>();
+   private final ConcurrentHashMap<String, List<REATopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
 
    private final PacketCommunicator packetCommunicator;
 
@@ -83,9 +83,9 @@ public class REAMessagerOverNetwork implements REAMessager
       if (inputVariablesForTopic != null)
          inputVariablesForTopic.forEach(variable -> variable.set(message.getMessageContent()));
 
-      List<REAMessageListener<Object>> topicListeners = listeners.get(message.getTopic());
+      List<REATopicListener<Object>> topicListeners = topicListenersMap.get(message.getTopic());
       if (topicListeners != null)
-         topicListeners.forEach(listener -> listener.receivedREAMessage(message.getMessageContent()));
+         topicListeners.forEach(listener -> listener.receivedMessageForTopic(message.getMessageContent()));
    }
 
    @Override
@@ -106,15 +106,15 @@ public class REAMessagerOverNetwork implements REAMessager
 
    @Override
    @SuppressWarnings("unchecked")
-   public <T> void registerListener(String topic, REAMessageListener<T> listener)
+   public <T> void registerTopicListener(String topic, REATopicListener<T> listener)
    {
-      List<REAMessageListener<Object>> topicListeners = listeners.get(topic);
+      List<REATopicListener<Object>> topicListeners = topicListenersMap.get(topic);
       if (topicListeners == null)
       {
          topicListeners = new ArrayList<>();
-         listeners.put(topic, topicListeners);
+         topicListenersMap.put(topic, topicListeners);
       }
-      topicListeners.add((REAMessageListener<Object>) listener);
+      topicListeners.add((REATopicListener<Object>) listener);
    }
 
    @Override

@@ -32,7 +32,7 @@ public class LidarFrameViewer extends AnimationTimer
       lidarCoordinateSystem.getTransforms().add(lidarPose);
       root.getChildren().add(lidarCoordinateSystem);
 
-      reaMessager.registerListener(REAModuleAPI.LidarScanState, this::handleMessage);
+      reaMessager.registerTopicListener(REAModuleAPI.LidarScanState, this::handleMessage);
    }
 
    @Override

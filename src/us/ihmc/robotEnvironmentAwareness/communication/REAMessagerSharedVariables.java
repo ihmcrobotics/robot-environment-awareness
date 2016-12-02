@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class REAMessagerSharedVariables implements REAMessager
 {
    private final ConcurrentHashMap<String, List<AtomicReference<Object>>> boundVariables = new ConcurrentHashMap<>();
-   private final ConcurrentHashMap<String, List<REAMessageListener<Object>>> listeners = new ConcurrentHashMap<>();
+   private final ConcurrentHashMap<String, List<REATopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
 
    public REAMessagerSharedVariables()
    {
@@ -22,9 +22,9 @@ public class REAMessagerSharedVariables implements REAMessager
       if (boundVariablesForTopic != null)
          boundVariablesForTopic.forEach(variable -> variable.set(message.getMessageContent()));
 
-      List<REAMessageListener<Object>> topicListeners = listeners.get(message.getTopic());
+      List<REATopicListener<Object>> topicListeners = topicListenersMap.get(message.getTopic());
       if (topicListeners != null)
-         topicListeners.forEach(listener -> listener.receivedREAMessage(message.getMessageContent()));
+         topicListeners.forEach(listener -> listener.receivedMessageForTopic(message.getMessageContent()));
    }
 
    @Override
@@ -45,15 +45,15 @@ public class REAMessagerSharedVariables implements REAMessager
 
    @Override
    @SuppressWarnings("unchecked")
-   public <T> void registerListener(String topic, REAMessageListener<T> listener)
+   public <T> void registerTopicListener(String topic, REATopicListener<T> listener)
    {
-      List<REAMessageListener<Object>> topicListeners = listeners.get(topic);
+      List<REATopicListener<Object>> topicListeners = topicListenersMap.get(topic);
       if (topicListeners == null)
       {
          topicListeners = new ArrayList<>();
-         listeners.put(topic, topicListeners);
+         topicListenersMap.put(topic, topicListeners);
       }
-      topicListeners.add((REAMessageListener<Object>) listener);
+      topicListeners.add((REATopicListener<Object>) listener);
    }
 
    @Override

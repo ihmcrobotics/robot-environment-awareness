@@ -6,12 +6,14 @@ import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.LIDARFilterAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.NormalEstimationAnchorPaneController;
@@ -48,6 +50,8 @@ public class LIDARBasedEnvironmentAwarenessUI
    private PolygonizerAnchorPaneController polygonizerAnchorPaneController;
 
    private final Stage primaryStage;
+
+   private final UIConnectionHandler uiConnectionHandler;
 
    private LIDARBasedEnvironmentAwarenessUI(REAUIMessager uiMessager, Stage primaryStage) throws IOException
    {
@@ -99,14 +103,24 @@ public class LIDARBasedEnvironmentAwarenessUI
       polygonizerAnchorPaneController.attachREAMessager(uiMessager);
       polygonizerAnchorPaneController.bindControls();
 
+      uiConnectionHandler = new UIConnectionHandler(primaryStage, uiMessager);
+      uiConnectionHandler.start();
+      uiMessager.startMessager();
+
       primaryStage.setTitle(getClass().getSimpleName());
       primaryStage.setMaximized(true);
       Scene mainScene = new Scene(mainPane, 600, 400);
+
+      mainScene.setOnKeyPressed(event -> {
+         if (event.getCode() == KeyCode.F5)
+            uiMessager.submitStateRequestToModule(REAModuleAPI.RequestEntireModuleState);
+      });
+
       primaryStage.setScene(mainScene);
       primaryStage.setOnCloseRequest(event -> stop());
    }
 
-   public void show()
+   public void show() throws IOException
    {
       primaryStage.show();
    }
@@ -115,6 +129,7 @@ public class LIDARBasedEnvironmentAwarenessUI
    {
       try
       {
+         uiConnectionHandler.stop();
          uiMessager.closeMessager();
 
          scene3D.stop();
@@ -132,7 +147,6 @@ public class LIDARBasedEnvironmentAwarenessUI
    {
       REAMessager moduleMessager = REAMessagerOverNetwork.createIntraprocess(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
       REAUIMessager uiMessager = new REAUIMessager(moduleMessager);
-      uiMessager.startMessager();
       return new LIDARBasedEnvironmentAwarenessUI(uiMessager, primaryStage);
    }
 
@@ -140,7 +154,6 @@ public class LIDARBasedEnvironmentAwarenessUI
    {
       REAMessager moduleMessager = REAMessagerOverNetwork.createTCPClient("localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
       REAUIMessager uiMessager = new REAUIMessager(moduleMessager);
-      uiMessager.startMessager();
       return new LIDARBasedEnvironmentAwarenessUI(uiMessager, primaryStage);
    }
 }

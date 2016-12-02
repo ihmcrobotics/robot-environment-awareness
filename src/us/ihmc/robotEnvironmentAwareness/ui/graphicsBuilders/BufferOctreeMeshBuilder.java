@@ -27,7 +27,6 @@ public class BufferOctreeMeshBuilder implements Runnable
    private final JavaFXMeshBuilder bufferMeshBuilder = new JavaFXMeshBuilder();
    private final Material bufferMaterial = new PhongMaterial(DEFAULT_BUFFER_COLOR);
 
-   private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> showBuffer;
    private final AtomicReference<NormalOcTreeMessage> bufferState;
 
@@ -39,9 +38,7 @@ public class BufferOctreeMeshBuilder implements Runnable
    public BufferOctreeMeshBuilder(REAUIMessager uiMessager)
    {
       this.uiMessager = uiMessager;
-      // local
-      enable = uiMessager.createInput(REAModuleAPI.OcTreeEnable, false);
-      showBuffer = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer, true);
+      showBuffer = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer, false);
       bufferState = uiMessager.createInput(REAModuleAPI.BufferState);
    }
 
@@ -50,7 +47,7 @@ public class BufferOctreeMeshBuilder implements Runnable
    {
       NormalOcTreeMessage newBufferState = bufferState.getAndSet(null);
 
-      if (!enable.get() || !showBuffer.get())
+      if (!showBuffer.get())
       {
          if (hasClearedBufferGraphics)
             return;

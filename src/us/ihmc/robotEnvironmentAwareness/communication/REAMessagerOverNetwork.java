@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.communication.net.NetClassList;
+import us.ihmc.communication.net.NetStateListener;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.tools.io.printing.PrintTools;
@@ -66,7 +67,7 @@ public class REAMessagerOverNetwork implements REAMessager
    {
       if (!packetCommunicator.isConnected())
       {
-         PrintTools.warn(this, "This messager is closed.");
+         PrintTools.warn(this, "This messager is closed, message's topic: " + message.getTopic());
          return;
       }
 
@@ -121,5 +122,11 @@ public class REAMessagerOverNetwork implements REAMessager
       inputVariablesMap.clear();
       packetCommunicator.closeConnection();
       packetCommunicator.close();
+   }
+
+   @Override
+   public void registerConnectionStateListener(NetStateListener listener)
+   {
+      packetCommunicator.attachStateListener(listener);
    }
 }

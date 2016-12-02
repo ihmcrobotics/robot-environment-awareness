@@ -3,6 +3,8 @@ package us.ihmc.robotEnvironmentAwareness.communication;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import us.ihmc.communication.net.NetStateListener;
+
 public interface REAMessager
 {
    default void submitStateRequest(String requestTopic)
@@ -29,4 +31,6 @@ public interface REAMessager
    void startMessager() throws IOException;
 
    void closeMessager();
+
+   void registerConnectionStateListener(NetStateListener listener);
 }

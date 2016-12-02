@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
+import us.ihmc.communication.net.NetStateListener;
 
 public class REAUIMessager
 {
@@ -123,5 +124,10 @@ public class REAUIMessager
    {
       internalMessager.closeMessager();
       reaMessagerToModule.closeMessager();
+   }
+
+   public void registerModuleConnectionStateListener(NetStateListener listener)
+   {
+      reaMessagerToModule.registerConnectionStateListener(listener);
    }
 }

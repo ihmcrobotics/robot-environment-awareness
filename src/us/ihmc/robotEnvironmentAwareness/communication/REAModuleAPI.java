@@ -65,6 +65,7 @@ public class REAModuleAPI
    public static final String PlanarRegionsState = Output + PlanarRegions + "State";
    public static final String BoundingBoxState = Output + BoundingBox + "State";
 
+   public static final String RequestEntireModuleState = Input + "RequestModuleState";
    public static final String RequestLidarScan = Input + LIDAR + Scan + "Request";
    public static final String RequestOctree = Input + OcTree + "Request";
    public static final String RequestBuffer = Input + OcTree + Buffer + "Request";

@@ -29,7 +29,7 @@ public class MessageBidirectionalBinding<T> implements REATopicListener<T>, Chan
    @Override
    public void receivedMessageForTopic(T messageContent)
    {
-      changedOnMessageReception.set(!messageContent.equals(boundProperty.getValue()));
+      changedOnMessageReception.set(!boundProperty.getValue().equals(messageContent));
       boundProperty.setValue(messageContent);
    }
 

@@ -32,16 +32,25 @@ public class REAOcTreeBuffer
 
    private final REAModuleStateReporter moduleStateReporter;
 
+   private final REAMessager reaMessager;
+
    public REAOcTreeBuffer(double octreeResolution, REAMessager reaMessager, REAModuleStateReporter moduleStateReporter, PacketCommunicator packetCommunicator)
    {
       this.octreeResolution = octreeResolution;
+      this.reaMessager = reaMessager;
       this.moduleStateReporter = moduleStateReporter;
       this.packetCommunicator = packetCommunicator;
 
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
       bufferSize = reaMessager.createInput(REAModuleAPI.OcTreeBufferSize, 10000.0);
 
+      reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, (messageContent) -> sendCurrentState());
       packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
+   }
+
+   private void sendCurrentState()
+   {
+      reaMessager.submitMessage(REAModuleAPI.OcTreeBufferSize, bufferSize.get());
    }
 
    public Runnable createBufferThread()

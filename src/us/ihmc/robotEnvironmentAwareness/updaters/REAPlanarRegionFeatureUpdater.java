@@ -40,10 +40,12 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private final AtomicReference<PlanarRegionSegmentationParameters> planarRegionSegmentationParameters;
    private final AtomicReference<IntersectionEstimationParameters> intersectionEstimationParameters;
    private final AtomicReference<PolygonizerParameters> polygonizerParameters;
+   private final REAMessager reaMessager;
 
    public REAPlanarRegionFeatureUpdater(NormalOcTree octree, REAMessager reaMessager)
    {
       this.octree = octree;
+      this.reaMessager = reaMessager;
 
       isOcTreeEnabled = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
       enableSegmentation = reaMessager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationEnable, false);
@@ -53,6 +55,15 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       planarRegionSegmentationParameters = reaMessager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, new PlanarRegionSegmentationParameters());
       intersectionEstimationParameters = reaMessager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters, new IntersectionEstimationParameters());
       polygonizerParameters = reaMessager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, new PolygonizerParameters());
+
+      reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, (messageContent) -> sendCurrentState());
+   }
+
+   private void sendCurrentState()
+   {
+      reaMessager.submitMessage(REAModuleAPI.OcTreePlanarRegionSegmentationEnable, enableSegmentation.get());
+      reaMessager.submitMessage(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable, enablePolygonizer.get());
+      reaMessager.submitMessage(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable, enableIntersectionCalulator.get());
    }
 
    public void update()

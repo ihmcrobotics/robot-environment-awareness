@@ -32,11 +32,13 @@ public class REAOcTreeUpdater
 
    private final AtomicReference<Boolean> useBoundingBox;
    private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
+   private final REAMessager reaMessager;
 
    public REAOcTreeUpdater(NormalOcTree octree, REAOcTreeBuffer buffer, REAMessager reaMessager, PacketCommunicator packetCommunicator)
    {
       this.referenceOctree = octree;
       reaOcTreeBuffer = buffer;
+      this.reaMessager = reaMessager;
       referenceOctree.enableParallelComputationForNormals(true);
       referenceOctree.enableParallelInsertionOfMisses(true);
 
@@ -49,9 +51,20 @@ public class REAOcTreeUpdater
       atomicBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters);
       normalEstimationParameters = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters);
 
+      reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, messageContent -> sendCurrentState());
+
       packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
 
       referenceOctree.setCustomRayMissProbabilityUpdater(new AdaptiveRayMissProbabilityUpdater());
+   }
+
+   private void sendCurrentState()
+   {
+      reaMessager.submitMessage(REAModuleAPI.OcTreeEnable, enable.get());
+      reaMessager.submitMessage(REAModuleAPI.OcTreeNormalEstimationEnable, enableNormalEstimation.get());
+      reaMessager.submitMessage(REAModuleAPI.OcTreeLIDARMinRange, minRange.get());
+      reaMessager.submitMessage(REAModuleAPI.OcTreeLIDARMaxRange, maxRange.get());
+      reaMessager.submitMessage(REAModuleAPI.OcTreeBoundingBoxEnable, useBoundingBox.get());
    }
 
    public void update()

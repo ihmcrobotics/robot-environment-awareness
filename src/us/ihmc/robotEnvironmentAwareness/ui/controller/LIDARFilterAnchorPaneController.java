@@ -5,7 +5,6 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
-import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.ui.properties.BoundingBoxParametersProperty;
 
@@ -67,50 +66,12 @@ public class LIDARFilterAnchorPaneController extends REABasicUIController
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeBoundingBoxParameters, boundingBoxParametersProperty);
 
       uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, showBoundingBoxButton.selectedProperty(), true);
-
-      load();
    }
 
    @FXML
    public void save()
    {
-      saveProperty(REAModuleAPI.OcTreeBoundingBoxEnable, enableBoundingBoxButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, showBoundingBoxButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeLIDARMinRange, lidarMinRange.getValue());
-      saveProperty(REAModuleAPI.OcTreeLIDARMaxRange, lidarMaxRange.getValue());
-      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters, createBoundingBox().toString());
-   }
-
-   public void load()
-   {
-      loadPropertyAndUpdateUIControl(enableBoundingBoxButton, REAModuleAPI.OcTreeBoundingBoxEnable);
-      loadPropertyAndUpdateUIControl(showBoundingBoxButton, REAModuleAPI.OcTreeGraphicsBoundingBoxShow);
-      loadPropertyAndUpdateUIControl(lidarMinRange, REAModuleAPI.OcTreeLIDARMinRange);
-      loadPropertyAndUpdateUIControl(lidarMaxRange, REAModuleAPI.OcTreeLIDARMaxRange);
-      String boundingBoxAsString = loadProperty(REAModuleAPI.OcTreeBoundingBoxParameters);
-      if (boundingBoxAsString != null)
-      {
-         OcTreeSimpleBoundingBox boundingBox = OcTreeSimpleBoundingBox.parse(boundingBoxAsString);
-         updateBoundingBoxSpinners(boundingBox);
-      }
-   }
-
-   private void updateBoundingBoxSpinners(OcTreeSimpleBoundingBox boundingBox)
-   {
-      boundingBoxMinXSpinner.getValueFactory().setValue(boundingBox.getMinX());
-      boundingBoxMinYSpinner.getValueFactory().setValue(boundingBox.getMinY());
-      boundingBoxMinZSpinner.getValueFactory().setValue(boundingBox.getMinZ());
-      boundingBoxMaxXSpinner.getValueFactory().setValue(boundingBox.getMaxX());
-      boundingBoxMaxYSpinner.getValueFactory().setValue(boundingBox.getMaxY());
-      boundingBoxMaxZSpinner.getValueFactory().setValue(boundingBox.getMaxZ());
-   }
-
-   private OcTreeSimpleBoundingBox createBoundingBox()
-   {
-      OcTreeSimpleBoundingBox boundingBox = new OcTreeSimpleBoundingBox();
-      boundingBox.setMinCoordinate(boundingBoxMinXSpinner.getValue(), boundingBoxMinYSpinner.getValue(), boundingBoxMinZSpinner.getValue());
-      boundingBox.setMaxCoordinate(boundingBoxMaxXSpinner.getValue(), boundingBoxMaxYSpinner.getValue(), boundingBoxMaxZSpinner.getValue());
-      return boundingBox;
+      uiMessager.submitStateRequestToModule(REAModuleAPI.SaveMainUpdaterConfiguration);
    }
 
    private DoubleSpinnerValueFactory createBoundingBoxValueFactory(double initialValue)

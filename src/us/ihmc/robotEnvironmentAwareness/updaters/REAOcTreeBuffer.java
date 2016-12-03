@@ -10,6 +10,7 @@ import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 
 public class REAOcTreeBuffer
 {
@@ -51,6 +52,21 @@ public class REAOcTreeBuffer
    private void sendCurrentState()
    {
       reaMessager.submitMessage(REAModuleAPI.OcTreeBufferSize, bufferSize.get());
+   }
+
+   public void loadConfiguration(FilePropertyHelper filePropertyHelper)
+   {
+      Boolean enableFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeEnable);
+      if (enableFile != null)
+         enable.set(enableFile);
+      Double bufferSizeFile = filePropertyHelper.loadDoubleProperty(REAModuleAPI.OcTreeBufferSize);
+      if (bufferSizeFile != null)
+         bufferSize.set(bufferSizeFile);
+   }
+
+   public void saveConfiguration(FilePropertyHelper filePropertyHelper)
+   {
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeBufferSize, bufferSize.get());
    }
 
    public Runnable createBufferThread()

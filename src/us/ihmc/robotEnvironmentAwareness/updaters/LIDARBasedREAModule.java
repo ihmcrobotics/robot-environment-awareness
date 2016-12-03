@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -20,6 +21,7 @@ import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetCl
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 import us.ihmc.tools.io.printing.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;
 
@@ -55,9 +57,11 @@ public class LIDARBasedREAModule
    private ScheduledFuture<?> scheduled;
    private final REAMessager reaMessager;
 
-   private LIDARBasedREAModule(REAMessager reaMessager) throws IOException
+   private LIDARBasedREAModule(REAMessager reaMessager, File configurationFile) throws IOException
    {
       this.reaMessager = reaMessager;
+
+
       packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
       packetCommunicator.connect();
 
@@ -67,11 +71,24 @@ public class LIDARBasedREAModule
 
       bufferUpdater = new REAOcTreeBuffer(mainOctree.getResolution(), reaMessager, moduleStateReporter, packetCommunicator);
       mainUpdater = new REAOcTreeUpdater(mainOctree, bufferUpdater, reaMessager, packetCommunicator);
-
       planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(mainOctree, reaMessager);
+
+      FilePropertyHelper filePropertyHelper = new FilePropertyHelper(configurationFile);
+      loadConfigurationFile(filePropertyHelper);
+
+      reaMessager.registerTopicListener(REAModuleAPI.SaveBufferConfiguration, (content) -> bufferUpdater.saveConfiguration(filePropertyHelper));
+      reaMessager.registerTopicListener(REAModuleAPI.SaveMainUpdaterConfiguration, (content) -> mainUpdater.saveConfiguration(filePropertyHelper));
+      reaMessager.registerTopicListener(REAModuleAPI.SaveRegionUpdaterConfiguration, (content) -> planarRegionFeatureUpdater.saveConfiguration(filePropertyHelper));
 
       planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater, packetCommunicator);
       clearOcTree = reaMessager.createInput(REAModuleAPI.OcTreeClear, false);
+   }
+
+   private void loadConfigurationFile(FilePropertyHelper filePropertyHelper)
+   {
+      bufferUpdater.loadConfiguration(filePropertyHelper);
+      mainUpdater.loadConfiguration(filePropertyHelper);
+      planarRegionFeatureUpdater.loadConfiguration(filePropertyHelper);
    }
 
    private final AtomicDouble lastCompleteUpdate = new AtomicDouble(Double.NaN);
@@ -166,17 +183,17 @@ public class LIDARBasedREAModule
       }
    }
 
-   public static LIDARBasedREAModule createRemoteModule() throws IOException
+   public static LIDARBasedREAModule createRemoteModule(String configurationFilePath) throws IOException
    {
       REAMessager server = REAMessagerOverNetwork.createTCPServer(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
       server.startMessager();
-      return new LIDARBasedREAModule(server);
+      return new LIDARBasedREAModule(server, new File(configurationFilePath));
    }
 
-   public static LIDARBasedREAModule createIntraprocessModule() throws IOException
+   public static LIDARBasedREAModule createIntraprocessModule(String configurationFilePath) throws IOException
    {
       REAMessager messager = REAMessagerOverNetwork.createIntraprocess(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
       messager.startMessager();
-      return new LIDARBasedREAModule(messager);
+      return new LIDARBasedREAModule(messager, new File(configurationFilePath));
    }
 }

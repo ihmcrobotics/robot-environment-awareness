@@ -5,7 +5,6 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.javaFXToolkit.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.properties.PlanarRegionSegmentationParametersProperty;
 
 public class RegionSegmentationAnchorPaneController extends REABasicUIController
@@ -50,47 +49,17 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
       planarRegionSegmentationParametersProperty.bindBidirectionalMinNormalQuality(minNormalQualitySlider.valueProperty());
       planarRegionSegmentationParametersProperty.bindBidirectionalMinRegionSize(minRegionSizeSlider.valueProperty());
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, planarRegionSegmentationParametersProperty);
-
-      load();
    }
 
    @FXML
    public void save()
    {
-      saveProperty(REAModuleAPI.OcTreePlanarRegionSegmentationEnable, enableSegmentationButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, createParameters().toString());
-   }
-
-   public void load()
-   {
-      loadPropertyAndUpdateUIControl(enableSegmentationButton, REAModuleAPI.OcTreePlanarRegionSegmentationEnable);
-
-      String parametersAsString = loadProperty(REAModuleAPI.OcTreePlanarRegionSegmentationParameters);
-      if (parametersAsString != null)
-      {
-         PlanarRegionSegmentationParameters parameters = PlanarRegionSegmentationParameters.parse(parametersAsString);
-         searchRadiusSlider.setValue(parameters.getSearchRadius());
-         maxDistanceFromPlaneSlider.setValue(parameters.getMaxDistanceFromPlane());
-         maxAngleFromPlaneSlider.setValue(parameters.getMaxAngleFromPlane());
-         minNormalQualitySlider.setValue(parameters.getMinNormalQuality());
-         minRegionSizeSlider.setValue(parameters.getMinRegionSize());
-      }
+      uiMessager.submitStateRequestToModule(REAModuleAPI.SaveRegionUpdaterConfiguration);
    }
 
    @FXML
    public void clear()
    {
       uiMessager.submitMessageToModule(REAModuleAPI.OcTreePlanarRegionSegmentationClear, true);
-   }
-
-   private PlanarRegionSegmentationParameters createParameters()
-   {
-      PlanarRegionSegmentationParameters parameters = new PlanarRegionSegmentationParameters();
-      parameters.setSearchRadius(searchRadiusSlider.getValue());
-      parameters.setMaxDistanceFromPlane(maxDistanceFromPlaneSlider.getValue());
-      parameters.setMaxAngleFromPlane(maxAngleFromPlaneSlider.getValue());
-      parameters.setMinNormalQuality(minNormalQualitySlider.getValue());
-      parameters.setMinRegionSize((int) minRegionSizeSlider.getValue());
-      return parameters;
    }
 }

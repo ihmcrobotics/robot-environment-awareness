@@ -1,5 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.communication.packets;
 
+import java.util.Scanner;
+
 import javax.vecmath.Point3d;
 
 import us.ihmc.communication.packets.Packet;
@@ -119,5 +121,27 @@ public class BoundingBoxParametersMessage extends Packet<BoundingBoxParametersMe
       if (Float.compare(maxZ, other.maxZ) != 0)
          return false;
       return true;
+   }
+
+   @Override
+   public String toString()
+   {
+      return "min: (" + minX + ", " + minY + ", " + minZ + "), max: (" + maxX + ", " + maxY + ", " + maxZ + ")";
+   }
+
+   public static BoundingBoxParametersMessage parse(String boundingBoxAsString)
+   {
+      boundingBoxAsString = boundingBoxAsString.replace("(", "").replace(")", " ").replace(",", "");
+      Scanner scanner = new Scanner(boundingBoxAsString);
+      scanner.next();
+      float minX = scanner.nextFloat();
+      float minY = scanner.nextFloat();
+      float minZ = scanner.nextFloat();
+      scanner.next();
+      float maxX = scanner.nextFloat();
+      float maxY = scanner.nextFloat();
+      float maxZ = scanner.nextFloat();
+      scanner.close();
+      return new BoundingBoxParametersMessage(minX, minY, minZ, maxX, maxY, maxZ);
    }
 }

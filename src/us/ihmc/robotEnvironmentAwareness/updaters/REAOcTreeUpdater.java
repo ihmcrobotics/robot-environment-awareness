@@ -12,6 +12,7 @@ import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.BoundingBoxParametersMessage;
+import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 import us.ihmc.robotics.geometry.transformables.Pose;
 
 public class REAOcTreeUpdater
@@ -69,6 +70,43 @@ public class REAOcTreeUpdater
 
       reaMessager.submitMessage(REAModuleAPI.OcTreeBoundingBoxParameters, atomicBoundingBoxParameters.get());
       reaMessager.submitMessage(REAModuleAPI.OcTreeNormalEstimationParameters, normalEstimationParameters.get());
+   }
+
+   public void loadConfiguration(FilePropertyHelper filePropertyHelper)
+   {
+      Boolean enableFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeEnable);
+      if (enableFile != null)
+         enable.set(enableFile);
+      Boolean enableNormalEstimationFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeNormalEstimationEnable);
+      if (enableNormalEstimationFile != null)
+         enableNormalEstimation.set(enableNormalEstimationFile);
+      String normalEstimationParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.OcTreeNormalEstimationParameters);
+      if (normalEstimationParametersFile != null)
+         normalEstimationParameters.set(NormalEstimationParameters.parse(normalEstimationParametersFile));
+      Boolean useBoundingBoxFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeBoundingBoxEnable);
+      if (useBoundingBoxFile != null)
+         useBoundingBox.set(useBoundingBoxFile);
+      String boundingBoxParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.OcTreeBoundingBoxParameters);
+      if (boundingBoxParametersFile != null)
+         atomicBoundingBoxParameters.set(BoundingBoxParametersMessage.parse(boundingBoxParametersFile));
+      Double minRangeFile = filePropertyHelper.loadDoubleProperty(REAModuleAPI.OcTreeLIDARMinRange);
+      if (minRangeFile != null)
+         minRange.set(minRangeFile);
+      Double maxRangeFile = filePropertyHelper.loadDoubleProperty(REAModuleAPI.OcTreeLIDARMaxRange);
+      if (maxRangeFile != null)
+         maxRange.set(maxRangeFile);
+   }
+
+   public void saveConfiguration(FilePropertyHelper filePropertyHelper)
+   {
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeEnable, enable.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeNormalEstimationEnable, enableNormalEstimation.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeBoundingBoxEnable, useBoundingBox.get());
+
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeNormalEstimationParameters, normalEstimationParameters.get().toString());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters, atomicBoundingBoxParameters.get().toString());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeLIDARMinRange, minRange.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeLIDARMaxRange, maxRange.get());
    }
 
    public void update()

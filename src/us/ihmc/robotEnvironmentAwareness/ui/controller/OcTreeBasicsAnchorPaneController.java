@@ -65,8 +65,6 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsColoringMode, coloringTypeComboBox.valueProperty(), true);
       uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowBuffer, showBufferButton.selectedProperty(), true);
       uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowInputScan, showInputScanButton.selectedProperty(), true);
-
-      load();
    }
 
    @FXML
@@ -75,28 +73,10 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       uiMessager.broadcastMessage(REAModuleAPI.OcTreeClear, true);
    }
 
-   public void load()
-   {
-      loadPropertyAndUpdateUIControl(enableButton, REAModuleAPI.OcTreeEnable);
-      loadPropertyAndUpdateUIControl(depthSlider, REAModuleAPI.OcTreeGraphicsDepth);
-      loadPropertyAndUpdateUIControl(showOcTreeNodesButton, REAModuleAPI.OcTreeGraphicsShowOcTreeNodes);
-      loadPropertyAndUpdateUIControl(showEstimatedSurfacesButton, REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces);
-      loadPropertyAndUpdateUIControl(coloringTypeComboBox, REAModuleAPI.OcTreeGraphicsColoringMode);
-      loadPropertyAndUpdateUIControl(showBufferButton, REAModuleAPI.OcTreeGraphicsShowBuffer);
-      loadPropertyAndUpdateUIControl(bufferSizeSlider, REAModuleAPI.OcTreeBufferSize);
-      loadPropertyAndUpdateUIControl(showInputScanButton, REAModuleAPI.OcTreeGraphicsShowInputScan);
-   }
-
    @FXML
    public void save()
    {
-      saveProperty(REAModuleAPI.OcTreeEnable, enableButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeGraphicsDepth, depthIntegerProperty.intValue());
-      saveProperty(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, showOcTreeNodesButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, showEstimatedSurfacesButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeGraphicsColoringMode, coloringTypeComboBox.getValue().toString());
-      saveProperty(REAModuleAPI.OcTreeGraphicsShowBuffer, showBufferButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeBufferSize, bufferSizeSlider.getValue());
-      saveProperty(REAModuleAPI.OcTreeGraphicsShowInputScan, showInputScanButton.isSelected());
+      uiMessager.submitStateRequestToModule(REAModuleAPI.SaveMainUpdaterConfiguration);
+      uiMessager.submitStateRequestToModule(REAModuleAPI.SaveBufferConfiguration);
    }
 }

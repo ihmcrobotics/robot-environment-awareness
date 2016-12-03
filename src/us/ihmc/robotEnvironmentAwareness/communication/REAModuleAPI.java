@@ -71,4 +71,8 @@ public class REAModuleAPI
    public static final String RequestBuffer = Input + OcTree + Buffer + "Request";
    public static final String RequestPlanarRegions = Output + PlanarRegions + "Request";
    public static final String RequestBoundingBox = Input + BoundingBox + "Request";
+
+   public static final String SaveMainUpdaterConfiguration = Input + "SaveMainUpdaterConfiguration";
+   public static final String SaveBufferConfiguration = Input + "SaveBufferConfiguration";
+   public static final String SaveRegionUpdaterConfiguration = Input + "SaveRegionUpdaterConfiguration";
 }

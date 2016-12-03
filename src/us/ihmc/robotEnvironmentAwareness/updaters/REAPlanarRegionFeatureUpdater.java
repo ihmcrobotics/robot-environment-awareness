@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegionCalculator;
@@ -68,6 +69,45 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       reaMessager.submitMessage(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, planarRegionSegmentationParameters.get());
       reaMessager.submitMessage(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters, intersectionEstimationParameters.get());
       reaMessager.submitMessage(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, polygonizerParameters.get());
+   }
+
+   public void loadConfiguration(FilePropertyHelper filePropertyHelper)
+   {
+      Boolean enableFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeEnable);
+      if (enableFile != null)
+         isOcTreeEnabled.set(enableFile);
+      Boolean enableSegmentationFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreePlanarRegionSegmentationEnable);
+      if (enableSegmentationFile != null)
+         enableSegmentation.set(enableSegmentationFile);
+      Boolean enablePolygonizerFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
+      if (enablePolygonizerFile != null)
+         enablePolygonizer.set(enablePolygonizerFile);
+      Boolean enableIntersectionCalulatorFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
+      if (enableIntersectionCalulatorFile != null)
+         enableIntersectionCalulator.set(enableIntersectionCalulatorFile);
+
+      String planarRegionSegmentationParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.OcTreePlanarRegionSegmentationParameters);
+      if (planarRegionSegmentationParametersFile != null)
+         planarRegionSegmentationParameters.set(PlanarRegionSegmentationParameters.parse(planarRegionSegmentationParametersFile));
+
+      String polygonizerParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters);
+      if (polygonizerParametersFile != null)
+         polygonizerParameters.set(PolygonizerParameters.parse(polygonizerParametersFile));
+
+      String intersectionEstimationParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters);
+      if (intersectionEstimationParametersFile != null)
+         intersectionEstimationParameters.set(IntersectionEstimationParameters.parse(intersectionEstimationParametersFile));
+   }
+
+   public void saveConfiguration(FilePropertyHelper filePropertyHelper)
+   {
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreePlanarRegionSegmentationEnable, enableSegmentation.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable, enablePolygonizer.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable, enableIntersectionCalulator.get());
+
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, planarRegionSegmentationParameters.get().toString());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, polygonizerParameters.get().toString());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters, intersectionEstimationParameters.get().toString());
    }
 
    public void update()

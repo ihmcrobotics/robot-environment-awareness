@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
 import us.ihmc.communication.net.NetStateListener;
+import us.ihmc.robotEnvironmentAwareness.communication.MessageBidirectionalBinding.PropertyToMessageTypeConverter;
 
 public class REAUIMessager
 {
@@ -72,25 +73,38 @@ public class REAUIMessager
       reaMessagerToModule.registerTopicListener(topic, listener);
    }
 
-   public <T> void bindBidirectionalInternal(String topic, Property<T> property, boolean pushValue)
+   public <M, P> void bindBidirectionalInternal(String topic, Property<P> property, PropertyToMessageTypeConverter<M, P> converterToMessageType)
    {
-      MessageBidirectionalBinding<T> bind = new MessageBidirectionalBinding<>(property, messageContent -> submitMessageInternal(topic, messageContent));
+      MessageBidirectionalBinding<M, P> bind = new MessageBidirectionalBinding<>(messageContent -> submitMessageInternal(topic, messageContent), property, converterToMessageType);
       property.addListener(bind);
       internalMessager.registerTopicListener(topic, bind);
-      if (pushValue)
-         internalMessager.submitMessage(topic, property.getValue());
+   }
+
+   public <T> void bindBidirectionalInternal(String topic, Property<T> property)
+   {
+      MessageBidirectionalBinding<T, T> bind = MessageBidirectionalBinding.createSingleTypedBinding(messageContent -> submitMessageInternal(topic, messageContent), property);
+      property.addListener(bind);
+      internalMessager.registerTopicListener(topic, bind);
    }
 
    public <T> void bindBidirectionalModule(String topic, Property<T> property)
    {
-      MessageBidirectionalBinding<T> bind = new MessageBidirectionalBinding<>(property, messageContent -> submitMessageToModule(topic, messageContent));
+      MessageBidirectionalBinding<T, T> bind = MessageBidirectionalBinding.createSingleTypedBinding(messageContent -> submitMessageToModule(topic, messageContent), property);
       property.addListener(bind);
+      reaMessagerToModule.registerTopicListener(topic, bind);
+   }
+
+   public <M, P> void bindBidirectionalGlobal(String topic, Property<P> property, PropertyToMessageTypeConverter<M, P> converterToMessageType)
+   {
+      MessageBidirectionalBinding<M, P> bind = new MessageBidirectionalBinding<>(messageContent -> broadcastMessage(topic, messageContent), property, converterToMessageType);
+      property.addListener(bind);
+      internalMessager.registerTopicListener(topic, bind);
       reaMessagerToModule.registerTopicListener(topic, bind);
    }
 
    public <T> void bindBidirectionalGlobal(String topic, Property<T> property)
    {
-      MessageBidirectionalBinding<T> bind = new MessageBidirectionalBinding<>(property, messageContent -> broadcastMessage(topic, messageContent));
+      MessageBidirectionalBinding<T, T> bind = MessageBidirectionalBinding.createSingleTypedBinding(messageContent -> broadcastMessage(topic, messageContent), property);
       property.addListener(bind);
       internalMessager.registerTopicListener(topic, bind);
       reaMessagerToModule.registerTopicListener(topic, bind);

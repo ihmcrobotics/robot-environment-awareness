@@ -200,7 +200,7 @@ public abstract class ParametersProperty<T> extends SimpleObjectProperty<T>
       @Override
       public default Number getNumber(T parameters)
       {
-         return new Integer(get(parameters) ? 0 : 1);
+         return getBooleanAsNumber(get(parameters));
       }
    }
 
@@ -279,7 +279,7 @@ public abstract class ParametersProperty<T> extends SimpleObjectProperty<T>
          if (observable == booleanProperty)
          {
             T newParameters = getValueCopy(getValue());
-            field.setNumber(newParameters, booleanProperty.getValue() ? 1.0 : 0.0);
+            field.setNumber(newParameters, getBooleanAsNumber(booleanProperty.getValue()));
             set(newParameters);
          }
          else
@@ -287,6 +287,11 @@ public abstract class ParametersProperty<T> extends SimpleObjectProperty<T>
             booleanProperty.setValue(getNumberAsBoolean(field.getNumber(getValue())));
          }
       }
+   }
+
+   private static Number getBooleanAsNumber(Boolean bool)
+   {
+      return bool ? 1 : 0;
    }
 
    private static boolean getNumberAsBoolean(Number number)

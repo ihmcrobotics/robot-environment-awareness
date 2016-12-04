@@ -3,11 +3,9 @@ package us.ihmc.robotEnvironmentAwareness.communication.packets;
 import org.apache.commons.math3.util.Precision;
 
 import us.ihmc.communication.packets.Packet;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 
 public class NormalOcTreeNodeMessage extends Packet<NormalOcTreeNodeMessage>
 {
-   public int regionId = OcTreeNodePlanarRegion.NO_REGION_ID;
    public float size = Float.NaN;
    public int depth = 0;
    public int key0 = -1;
@@ -45,8 +43,6 @@ public class NormalOcTreeNodeMessage extends Packet<NormalOcTreeNodeMessage>
    @Override
    public boolean epsilonEquals(NormalOcTreeNodeMessage other, double epsilon)
    {
-      if (regionId != other.regionId)
-         return false;
       if (!Precision.equals(size, other.size, epsilon))
          return false;
       if (depth != other.depth)

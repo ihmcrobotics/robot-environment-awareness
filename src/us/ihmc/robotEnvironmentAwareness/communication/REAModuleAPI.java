@@ -63,6 +63,7 @@ public class REAModuleAPI
    public static final String OcTreeState = Output + OcTree + "State";
    public static final String BufferState = Output + OcTree + Buffer + "State";
    public static final String PlanarRegionsState = Output + PlanarRegions + "State";
+   public static final String PlanarRegionsNodeKeysState = Output + PlanarRegions + "NodeKeysState";
    public static final String BoundingBoxState = Output + BoundingBox + "State";
 
    public static final String RequestEntireModuleState = Input + "RequestModuleState";
@@ -70,6 +71,7 @@ public class REAModuleAPI
    public static final String RequestOctree = Input + OcTree + "Request";
    public static final String RequestBuffer = Input + OcTree + Buffer + "Request";
    public static final String RequestPlanarRegions = Output + PlanarRegions + "Request";
+   public static final String RequestPlanarRegionsNodeKeys = Output + PlanarRegions + "NodeKeysRequest";
    public static final String RequestBoundingBox = Input + BoundingBox + "Request";
 
    public static final String SaveMainUpdaterConfiguration = Input + "SaveMainUpdaterConfiguration";

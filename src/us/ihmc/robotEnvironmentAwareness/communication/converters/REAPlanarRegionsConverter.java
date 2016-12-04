@@ -9,6 +9,9 @@ import javax.vecmath.Vector3f;
 
 import us.ihmc.communication.packets.PlanarRegionMessage;
 import us.ihmc.communication.packets.PlanarRegionsListMessage;
+import us.ihmc.jOctoMap.node.NormalOcTreeNode;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.OcTreeKeyMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionNodeKeysMessage;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
@@ -60,5 +63,33 @@ public class REAPlanarRegionsConverter
       }
 
       return new PlanarRegionsListMessage(planarRegionMessages);
+   }
+
+   public static PlanarRegionNodeKeysMessage[] createPlanarRegionNodeKeysMessages(RegionFeaturesProvider regionFeaturesProvider)
+   {
+      List<OcTreeNodePlanarRegion> ocTreePlanarRegions = regionFeaturesProvider.getOcTreePlanarRegions();
+      PlanarRegionNodeKeysMessage[] messages = new PlanarRegionNodeKeysMessage[ocTreePlanarRegions.size()];
+
+      for (int regionIndex = 0; regionIndex < ocTreePlanarRegions.size(); regionIndex++)
+      {
+         OcTreeNodePlanarRegion ocTreeNodePlanarRegion = ocTreePlanarRegions.get(regionIndex);
+         messages[regionIndex] = createPlanarRegionNodeKeysMessage(ocTreeNodePlanarRegion);
+      }
+      return messages;
+   }
+
+   private static PlanarRegionNodeKeysMessage createPlanarRegionNodeKeysMessage(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
+   {
+      int regionId = ocTreeNodePlanarRegion.getId();
+      OcTreeKeyMessage[] nodeKeys = new OcTreeKeyMessage[ocTreeNodePlanarRegion.getNumberOfNodes()];
+
+      for (int nodeIndex = 0; nodeIndex < ocTreeNodePlanarRegion.getNumberOfNodes(); nodeIndex++)
+      {
+         NormalOcTreeNode node = ocTreeNodePlanarRegion.getNode(nodeIndex);
+         OcTreeKeyMessage nodeKey = new OcTreeKeyMessage(node.getKeyCopy());
+         nodeKeys[nodeIndex] = nodeKey;
+      }
+      PlanarRegionNodeKeysMessage planarRegionNodeKeysMessage = new PlanarRegionNodeKeysMessage(regionId, nodeKeys);
+      return planarRegionNodeKeysMessage;
    }
 }

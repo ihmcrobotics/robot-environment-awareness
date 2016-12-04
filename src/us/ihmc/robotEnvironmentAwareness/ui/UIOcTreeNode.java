@@ -6,11 +6,11 @@ import javax.vecmath.Vector3d;
 import boofcv.misc.UnsupportedException;
 import us.ihmc.jOctoMap.node.baseImplementation.AbstractOccupancyOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeNodeMessage;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
+import us.ihmc.robotics.geometry.PlanarRegion;
 
 public class UIOcTreeNode extends AbstractOccupancyOcTreeNode<UIOcTreeNode>
 {
-   private final int regionId;
+   private int regionId = PlanarRegion.NO_REGION_ID;
    private final float normalX;
    private final float normalY;
    private final float normalZ;
@@ -22,18 +22,18 @@ public class UIOcTreeNode extends AbstractOccupancyOcTreeNode<UIOcTreeNode>
 
    private final long numberOfHits;
 
-   public UIOcTreeNode() // TODO TEMPORARY figure out why/where Kryo needs that for serialization
+   // Empty constructor is needed for the NodeBuilder.
+   public UIOcTreeNode()
    {
-      regionId = Integer.MIN_VALUE;
       normalX = Float.NaN;
       normalY = Float.NaN;
       normalZ = Float.NaN;
       normalAverageDeviation = Float.NaN;
-      normalConsensusSize = Integer.MIN_VALUE;
+      normalConsensusSize = 0;
       hitLocationX = Float.NaN;
       hitLocationY = Float.NaN;
       hitLocationZ = Float.NaN;
-      numberOfHits = Integer.MIN_VALUE;
+      numberOfHits = 0;
    }
 
    public UIOcTreeNode(NormalOcTreeNodeMessage normalOcTreeNodeMessage, double resolution, int treeDepth)
@@ -44,7 +44,6 @@ public class UIOcTreeNode extends AbstractOccupancyOcTreeNode<UIOcTreeNode>
       int depth = normalOcTreeNodeMessage.depth;
       setProperties(k0, k1, k2, depth, resolution, treeDepth);
 
-      regionId = normalOcTreeNodeMessage.regionId;
       normalX = normalOcTreeNodeMessage.normalX;
       normalY = normalOcTreeNodeMessage.normalY;
       normalZ = normalOcTreeNodeMessage.normalZ;
@@ -80,9 +79,57 @@ public class UIOcTreeNode extends AbstractOccupancyOcTreeNode<UIOcTreeNode>
       return !Float.isNaN(hitLocationX) && !Float.isNaN(hitLocationY) && !Float.isNaN(hitLocationZ);
    }
 
+   public void setRegionId(int regionId)
+   {
+      this.regionId = regionId;
+   }
+
+   public void setRegionIdFromChildren()
+   {
+      regionId = computeRegionIdFromChildren();
+   }
+
    public boolean isPartOfRegion()
    {
-      return regionId != OcTreeNodePlanarRegion.NO_REGION_ID;
+      return regionId != PlanarRegion.NO_REGION_ID;
+   }
+
+   public int computeRegionIdFromChildren()
+   {
+      if (!hasAtLeastOneChild())
+      {
+         return PlanarRegion.NO_REGION_ID;
+      }
+
+      int indexRegionWithHighestCount = -1;
+      int highestCount = -1;
+
+      for (int i = 0; i < 8; i++)
+      {
+         UIOcTreeNode currentChild = children[i];
+         if (currentChild != null && currentChild.isPartOfRegion())
+         {
+            int currentCount = 1;
+            
+            for (int j = 0; j < i; j++)
+            {
+               UIOcTreeNode other = children[j];
+               if (other != null && currentChild.getRegionId() == other.getRegionId())
+                  currentCount++;
+            }
+
+            if (indexRegionWithHighestCount < 0 || currentCount > highestCount)
+            {
+               indexRegionWithHighestCount = i;
+               highestCount = currentCount;
+            }
+         }
+      }
+
+      if (indexRegionWithHighestCount < 0)
+         return PlanarRegion.NO_REGION_ID;
+      else
+         return children[indexRegionWithHighestCount].regionId;
    }
 
    public void getNormal(Vector3d normalToPack)
@@ -115,17 +162,20 @@ public class UIOcTreeNode extends AbstractOccupancyOcTreeNode<UIOcTreeNode>
       return regionId;
    }
 
-   @Override protected void clear()
+   @Override
+   protected void clear()
    {
       throw new UnsupportedException();
    }
 
-   @Override public void addValue(float logOdds)
+   @Override
+   public void addValue(float logOdds)
    {
       throw new UnsupportedException();
    }
 
-   @Override public void allocateChildren()
+   @Override
+   public void allocateChildren()
    {
       throw new UnsupportedException();
    }

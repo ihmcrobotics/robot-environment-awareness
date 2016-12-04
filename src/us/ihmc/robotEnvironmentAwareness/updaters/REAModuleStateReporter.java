@@ -19,6 +19,7 @@ public class REAModuleStateReporter
    private final AtomicReference<Boolean> isOcTreeRequested;
    private final AtomicReference<Boolean> isOcTreeBoundingBoxRequested;
    private final AtomicReference<Boolean> arePlanarRegionsRequested;
+   private final AtomicReference<Boolean> arePlanarRegionsNodeKeysRequested;
 
    public REAModuleStateReporter(REAMessager reaMessager, PacketCommunicator packetCommunicator)
    {
@@ -28,6 +29,7 @@ public class REAModuleStateReporter
       isOcTreeRequested = reaMessager.createInput(REAModuleAPI.RequestOctree, false);
       isOcTreeBoundingBoxRequested = reaMessager.createInput(REAModuleAPI.RequestBoundingBox, false);
       arePlanarRegionsRequested = reaMessager.createInput(REAModuleAPI.RequestPlanarRegions, false);
+      arePlanarRegionsNodeKeysRequested = reaMessager.createInput(REAModuleAPI.RequestPlanarRegionsNodeKeys, false);
 
       packetCommunicator.attachListener(LidarScanMessage.class, this::handleLidarScanMessage);
    }
@@ -50,6 +52,8 @@ public class REAModuleStateReporter
    {
       if (arePlanarRegionsRequested.getAndSet(false))
          reaMessager.submitMessage(REAModuleAPI.PlanarRegionsState, REAPlanarRegionsConverter.createPlanarRegionsListMessage(regionFeaturesProvider));
+      if (arePlanarRegionsNodeKeysRequested.getAndSet(false))
+         reaMessager.submitMessage(REAModuleAPI.PlanarRegionsNodeKeysState, REAPlanarRegionsConverter.createPlanarRegionNodeKeysMessages(regionFeaturesProvider));
    }
 
    private void handleLidarScanMessage(LidarScanMessage message)

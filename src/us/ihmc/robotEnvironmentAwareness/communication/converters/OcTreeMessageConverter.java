@@ -1,22 +1,13 @@
 package us.ihmc.robotEnvironmentAwareness.communication.converters;
 
-import java.util.List;
-
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeNodeMessage;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 
 public class OcTreeMessageConverter
 {
-
    public static NormalOcTreeMessage convertToMessage(NormalOcTree normalOcTree)
-   {
-      return convertToMessage(normalOcTree, null);
-   }
-
-   public static NormalOcTreeMessage convertToMessage(NormalOcTree normalOcTree, List<OcTreeNodePlanarRegion> planarRegions)
    {
       NormalOcTreeMessage normalOcTreeMessage = new NormalOcTreeMessage();
 
@@ -26,18 +17,14 @@ public class OcTreeMessageConverter
       if (normalOcTree.getRoot() != null)
       {
          normalOcTreeMessage.root = new NormalOcTreeNodeMessage();
-         fullDepthCopy(normalOcTree.getRoot(), planarRegions, normalOcTreeMessage.root);
+         fullDepthCopy(normalOcTree.getRoot(), normalOcTreeMessage.root);
       }
 
       return normalOcTreeMessage;
    }
 
-   private static void fullDepthCopy(NormalOcTreeNode nodeOriginal, List<OcTreeNodePlanarRegion> planarRegions, NormalOcTreeNodeMessage nodeCopy)
+   private static void fullDepthCopy(NormalOcTreeNode nodeOriginal, NormalOcTreeNodeMessage nodeCopy)
    {
-      // FIXME extremely time consuming!
-      if (planarRegions != null)
-         planarRegions.parallelStream().filter(region -> region.contains(nodeOriginal)).findFirst().ifPresent(region -> nodeCopy.regionId = region.getId());
-
       nodeCopy.depth = nodeOriginal.getDepth();
       nodeCopy.size = (float) nodeOriginal.getSize();
 
@@ -69,7 +56,7 @@ public class OcTreeMessageConverter
 
             NormalOcTreeNodeMessage childCopy = new NormalOcTreeNodeMessage();
             nodeCopy.children[childIndex] = childCopy;
-            fullDepthCopy(childOriginal, planarRegions, childCopy);
+            fullDepthCopy(childOriginal, childCopy);
          }
       }
    }

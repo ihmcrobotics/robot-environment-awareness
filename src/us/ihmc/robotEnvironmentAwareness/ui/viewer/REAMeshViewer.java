@@ -1,6 +1,5 @@
 package us.ihmc.robotEnvironmentAwareness.ui.viewer;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -12,12 +11,13 @@ import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
+import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
+import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BoundingBoxMeshView;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BufferOctreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.PlanarRegionsMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.ScanMeshBuilder;
-import us.ihmc.tools.thread.ThreadTools;
 
 public class REAMeshViewer
 {
@@ -31,7 +31,7 @@ public class REAMeshViewer
    private final MeshView scanInputMeshView = new MeshView();
    private final MeshView planarRegionMeshView = new MeshView();
 
-   private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(4, ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
+   private ScheduledExecutorService executorService = ExecutorServiceTools.newScheduledThreadPool(4, getClass(), ExceptionHandling.CANCEL_AND_REPORT);
 
    private final AnimationTimer renderMeshAnimation;
 

@@ -46,7 +46,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       ObservableList<ColoringType> options = FXCollections.observableArrayList(ColoringType.values());
       coloringTypeComboBox.setItems(options);
       coloringTypeComboBox.setValue(options.get(0));
-      depthIntegerProperty.bind(depthSlider.valueProperty());
+      depthIntegerProperty.bindBidirectional(depthSlider.valueProperty());
       bufferSizeSlider.setLabelFormatter(StringConverterTools.thousandRounding(true));
       bufferSizeProperty.bindBidirectional(bufferSizeSlider.valueProperty());
    }

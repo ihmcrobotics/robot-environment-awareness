@@ -1,5 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.vecmath.Point3d;
@@ -14,14 +16,16 @@ import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
 import us.ihmc.graphics3DDescription.MeshDataHolder;
+import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
+import us.ihmc.jOctoMap.key.OcTreeKey;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionNodeKeysMessage;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTree;
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTreeNode;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
@@ -60,6 +64,7 @@ public class OcTreeMeshBuilder implements Runnable
    private final IntersectionPlaneBoxCalculator intersectionPlaneBoxCalculator = new IntersectionPlaneBoxCalculator();
 
    private final AtomicReference<NormalOcTreeMessage> ocTreeState;
+   private final AtomicReference<PlanarRegionNodeKeysMessage[]> planarRegionNodeKeysState;
 
    private final AtomicReference<Pair<Mesh, Material>> meshAndMaterialToRender = new AtomicReference<>(null);
 
@@ -80,6 +85,7 @@ public class OcTreeMeshBuilder implements Runnable
       hidePlanarRegionNodes = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, false);
 
       ocTreeState = uiMessager.createInput(REAModuleAPI.OcTreeState);
+      planarRegionNodeKeysState = uiMessager.createInput(REAModuleAPI.PlanarRegionsNodeKeysState);
 
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);
@@ -100,14 +106,17 @@ public class OcTreeMeshBuilder implements Runnable
          return;
 
       uiMessager.submitStateRequestToModule(REAModuleAPI.RequestOctree);
+      uiMessager.submitStateRequestToModule(REAModuleAPI.RequestPlanarRegionsNodeKeys);
 
       meshBuilder.clear();
 
       NormalOcTreeMessage newMessage = ocTreeState.get();
+      Map<OcTreeKey, Integer> nodeKeyToRegionIdMap = createNodeKeyToRegionIdMap(planarRegionNodeKeysState.getAndSet(null));
 
-      if (newMessage == null)
+      if (newMessage == null || nodeKeyToRegionIdMap == null)
          return;
-      UIOcTree octree = new UIOcTree(ocTreeState.getAndSet(null));
+
+      UIOcTree octree = new UIOcTree(ocTreeState.getAndSet(null), nodeKeyToRegionIdMap);
 
       addCellsToMeshBuilders(meshBuilder, octree);
 
@@ -122,13 +131,20 @@ public class OcTreeMeshBuilder implements Runnable
          return;
 
       // FIXME use treeDepthForDisplay
-      for (UIOcTreeNode node : octree)
+      Iterable<UIOcTreeNode> iterable;
+
+      if (treeDepthForDisplay.get() != null)
+         iterable = OcTreeIteratorFactory.createLeafIteratable(octree.getRoot(), treeDepthForDisplay.get());
+      else
+         iterable = octree;
+
+      for (UIOcTreeNode node : iterable)
       {
          // FIXME
          if (hidePlanarRegionNodes.get())
             continue;
 
-         Color color = getNodeColor(node, node.getRegionId());
+         Color color = getNodeColor(node);
          double size = node.getSize();
 
          if (node.isNormalSet() && showEstimatedSurfaces.get())
@@ -142,13 +158,13 @@ public class OcTreeMeshBuilder implements Runnable
       }
    }
 
-   private Color getNodeColor(UIOcTreeNode node, int regionId)
+   private Color getNodeColor(UIOcTreeNode node)
    {
       switch (coloringType.get())
       {
       case REGION:
-         if (regionId != OcTreeNodePlanarRegion.NO_REGION_ID)
-            return getRegionColor(regionId);
+         if (node.isPartOfRegion())
+            return getRegionColor(node.getRegionId());
          else
             return DEFAULT_COLOR;
       case HAS_CENTER:
@@ -239,6 +255,29 @@ public class OcTreeMeshBuilder implements Runnable
       }
 
       return new MeshDataHolder(vertices, texCoords, triangleIndices, normals);
+   }
+
+   private Map<OcTreeKey, Integer> createNodeKeyToRegionIdMap(PlanarRegionNodeKeysMessage[] planarRegionNodeKeysMessages)
+   {
+      if (planarRegionNodeKeysMessages == null)
+         return null;
+
+      Map<OcTreeKey, Integer> nodeKeyToRegionIdMap = new HashMap<>();
+
+      for (PlanarRegionNodeKeysMessage planarRegionNodeKeysMessage : planarRegionNodeKeysMessages)
+         registerNodeKeysIntoMap(nodeKeyToRegionIdMap, planarRegionNodeKeysMessage);
+
+      return nodeKeyToRegionIdMap;
+   }
+
+   private void registerNodeKeysIntoMap(Map<OcTreeKey, Integer> nodeKeyToRegionIdMap, PlanarRegionNodeKeysMessage planarRegionNodeKeysMessage)
+   {
+      for (int i = 0; i < planarRegionNodeKeysMessage.getNumberOfNodes(); i++)
+      {
+         OcTreeKey nodeKey = new OcTreeKey();
+         planarRegionNodeKeysMessage.getNodeKey(i, nodeKey);
+         nodeKeyToRegionIdMap.put(nodeKey, planarRegionNodeKeysMessage.getRegionId());
+      }
    }
 
    public boolean hasNewMeshAndMaterial()

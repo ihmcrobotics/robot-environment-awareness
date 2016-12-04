@@ -23,6 +23,7 @@ import us.ihmc.jOctoMap.rules.interfaces.IteratorSelectionRule;
 import us.ihmc.jOctoMap.tools.OcTreeNearestNeighborTools;
 import us.ihmc.jOctoMap.tools.OcTreeNearestNeighborTools.NeighborActionRule;
 import us.ihmc.robotEnvironmentAwareness.exception.PlanarRegionSegmentationException;
+import us.ihmc.robotics.geometry.PlanarRegion;
 
 public class OcTreeNodePlanarRegionCalculator
 {
@@ -197,7 +198,9 @@ public class OcTreeNodePlanarRegionCalculator
          if (node.getNormalAverageDeviation() > minNormalQuality)
             continue;
 
-         int regionId = random.nextInt(Integer.MAX_VALUE);
+         int regionId = PlanarRegion.NO_REGION_ID;
+         while (regionId == PlanarRegion.NO_REGION_ID)
+            regionId = random.nextInt(Integer.MAX_VALUE);
          OcTreeNodePlanarRegion region = createNewOcTreeNodePlanarRegion(root, node, regionId, boundingBox, parameters);
 
          if (region.getNumberOfNodes() > parameters.getMinRegionSize())

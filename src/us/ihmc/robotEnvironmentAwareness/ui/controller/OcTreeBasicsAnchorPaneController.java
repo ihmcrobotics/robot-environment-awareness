@@ -1,7 +1,5 @@
 package us.ihmc.robotEnvironmentAwareness.ui.controller;
 
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -10,6 +8,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.javaFXToolkit.StringConverterTools;
+import us.ihmc.robotEnvironmentAwareness.communication.MessageBidirectionalBinding.PropertyToMessageTypeConverter;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder.ColoringType;
 
@@ -34,8 +33,20 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    @FXML
    private ToggleButton showInputScanButton;
 
-   private final IntegerProperty depthIntegerProperty = new SimpleIntegerProperty(this, "depthInteger");
-   private final IntegerProperty bufferSizeProperty = new SimpleIntegerProperty(this, "bufferSize");
+   private final PropertyToMessageTypeConverter<Integer, Number> numberToIntegerConverter = new PropertyToMessageTypeConverter<Integer, Number>()
+   {
+      @Override
+      public Integer convert(Number propertyValue)
+      {
+         return propertyValue.intValue();
+      }
+
+      @Override
+      public Number interpret(Integer newValue)
+      {
+         return new Double(newValue.doubleValue());
+      }
+   };
 
    public OcTreeBasicsAnchorPaneController()
    {
@@ -45,10 +56,8 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    {
       ObservableList<ColoringType> options = FXCollections.observableArrayList(ColoringType.values());
       coloringTypeComboBox.setItems(options);
-      coloringTypeComboBox.setValue(options.get(0));
-      depthIntegerProperty.bindBidirectional(depthSlider.valueProperty());
+      coloringTypeComboBox.setValue(options.get(ColoringType.REGION.ordinal()));
       bufferSizeSlider.setLabelFormatter(StringConverterTools.thousandRounding(true));
-      bufferSizeProperty.bindBidirectional(bufferSizeSlider.valueProperty());
    }
 
    @Override
@@ -57,14 +66,14 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       setupControls();
 
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeEnable, enableButton.selectedProperty());
-      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeBufferSize, bufferSizeProperty);
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeBufferSize, bufferSizeSlider.valueProperty(), numberToIntegerConverter);
 
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsDepth, depthIntegerProperty, true);
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, showOcTreeNodesButton.selectedProperty(), true);
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, showEstimatedSurfacesButton.selectedProperty(), true);
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsColoringMode, coloringTypeComboBox.valueProperty(), true);
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowBuffer, showBufferButton.selectedProperty(), true);
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowInputScan, showInputScanButton.selectedProperty(), true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsDepth, depthSlider.valueProperty(), numberToIntegerConverter);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, showOcTreeNodesButton.selectedProperty());
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, showEstimatedSurfacesButton.selectedProperty());
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsColoringMode, coloringTypeComboBox.valueProperty());
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowBuffer, showBufferButton.selectedProperty());
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowInputScan, showInputScanButton.selectedProperty());
    }
 
    @FXML

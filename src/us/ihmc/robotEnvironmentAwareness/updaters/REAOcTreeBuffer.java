@@ -20,7 +20,7 @@ public class REAOcTreeBuffer
    private final AtomicReference<ScanCollection> newFullScanReference = new AtomicReference<>(null);
 
    private final AtomicReference<Boolean> enable;
-   private final AtomicReference<Double> bufferSize;
+   private final AtomicReference<Integer> bufferSize;
 
    private final AtomicBoolean clearBuffer = new AtomicBoolean(false);
    private final AtomicBoolean isBufferFull = new AtomicBoolean(false);
@@ -43,7 +43,7 @@ public class REAOcTreeBuffer
       this.packetCommunicator = packetCommunicator;
 
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
-      bufferSize = reaMessager.createInput(REAModuleAPI.OcTreeBufferSize, 10000.0);
+      bufferSize = reaMessager.createInput(REAModuleAPI.OcTreeBufferSize, 10000);
 
       reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, (messageContent) -> sendCurrentState());
       packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
@@ -59,7 +59,7 @@ public class REAOcTreeBuffer
       Boolean enableFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeEnable);
       if (enableFile != null)
          enable.set(enableFile);
-      Double bufferSizeFile = filePropertyHelper.loadDoubleProperty(REAModuleAPI.OcTreeBufferSize);
+      Integer bufferSizeFile = filePropertyHelper.loadIntegerProperty(REAModuleAPI.OcTreeBufferSize);
       if (bufferSizeFile != null)
          bufferSize.set(bufferSizeFile);
    }

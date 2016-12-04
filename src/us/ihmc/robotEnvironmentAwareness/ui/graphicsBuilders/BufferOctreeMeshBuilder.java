@@ -21,7 +21,7 @@ import us.ihmc.robotEnvironmentAwareness.ui.UIOcTreeNode;
  */
 public class BufferOctreeMeshBuilder implements Runnable
 {
-   private static final Color DEFAULT_BUFFER_COLOR = Color.RED;
+   private static final Color DEFAULT_BUFFER_COLOR = Color.DARKRED;
    private static final double NODE_SCALE = 0.5;
 
    private final JavaFXMeshBuilder bufferMeshBuilder = new JavaFXMeshBuilder();

@@ -65,13 +65,20 @@ public class LIDARFilterAnchorPaneController extends REABasicUIController
       boundingBoxParametersProperty.binBidirectionalMaxZ(boundingBoxMaxZSpinner.getValueFactory().valueProperty());
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeBoundingBoxParameters, boundingBoxParametersProperty);
 
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, showBoundingBoxButton.selectedProperty(), true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, showBoundingBoxButton.selectedProperty());
+      load();
    }
 
    @FXML
    public void save()
    {
       uiMessager.submitStateRequestToModule(REAModuleAPI.SaveMainUpdaterConfiguration);
+      saveUIControlProperty(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, showBoundingBoxButton);
+   }
+
+   public void load()
+   {
+      loadUIControlProperty(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, showBoundingBoxButton);
    }
 
    private DoubleSpinnerValueFactory createBoundingBoxValueFactory(double initialValue)

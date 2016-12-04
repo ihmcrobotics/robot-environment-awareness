@@ -1,0 +1,10 @@
+#
+#Sun Dec 04 16:35:08 CST 2016
+Input/OcTree/Graphics/BoundingBox/Show=false
+Input/OcTree/Graphics/Buffer/Show=false
+Input/OcTree/Graphics/ColoringMode=REGION
+Input/OcTree/Graphics/Depth=15
+Input/OcTree/Graphics/HidePlanarRegionNodes=false
+Input/OcTree/Graphics/ShowEstimatedSurfaces=true
+Input/OcTree/Graphics/ShowOcTreeNodes=true
+Input/OcTree/Graphics/ShowPlanarRegions=false

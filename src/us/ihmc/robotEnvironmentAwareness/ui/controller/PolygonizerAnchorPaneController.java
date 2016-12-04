@@ -83,8 +83,6 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
    {
       setupControls();
 
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, hideRegionNodes.selectedProperty(), true);
-
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable, enablePolygonizerButton.selectedProperty());
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable, enableIntersectionCalculatorButton.selectedProperty());
 
@@ -102,12 +100,21 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
       intersectionEstimationParametersProperty.bindBidirectionalMinRegionAngleDifference(minRegionAngleDifferenceSpinner.getValueFactory().valueProperty());
       intersectionEstimationParametersProperty.bindBidirectionalAddIntersectionsToRegions(addIntersectionsToRegionsButton.selectedProperty());
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters, intersectionEstimationParametersProperty);
+      
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, hideRegionNodes.selectedProperty());
+      load();
    }
 
    @FXML
    public void save()
    {
       uiMessager.submitStateRequestToModule(REAModuleAPI.SaveRegionUpdaterConfiguration);
+      saveUIControlProperty(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, hideRegionNodes);
+   }
+
+   public void load()
+   {
+      loadUIControlProperty(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, hideRegionNodes);
    }
 
    private DoubleSpinnerValueFactory createLengthValueFactory(double min, double max, double initialValue, double amountToStepBy)

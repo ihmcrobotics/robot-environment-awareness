@@ -27,7 +27,7 @@ import us.ihmc.robotEnvironmentAwareness.ui.viewer.REAMeshViewer;
 
 public class LIDARBasedEnvironmentAwarenessUI
 {
-   private static final String CONFIGURATION_FILE_NAME = "./Configurations/defaultREAConfiguration.txt";
+   private static final String UI_CONFIGURATION_FILE_NAME = "./Configurations/defaultREAUIConfiguration.txt";
 
    private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
    private final BorderPane mainPane;
@@ -63,12 +63,14 @@ public class LIDARBasedEnvironmentAwarenessUI
 
       // Client
       this.uiMessager = uiMessager;
-      initializeControllers(uiMessager);
+      uiMessager.startMessager();
 
       lidarFrameViewer = new LidarFrameViewer(uiMessager);
       lidarFrameViewer.start();
       reaMeshViewer = new REAMeshViewer(uiMessager);
       reaMeshViewer.start();
+
+      initializeControllers(uiMessager);
 
       mainPane.setCenter(scene3D);
 
@@ -86,16 +88,21 @@ public class LIDARBasedEnvironmentAwarenessUI
 
       mainScene.setOnKeyPressed(event -> {
          if (event.getCode() == KeyCode.F5)
-            uiMessager.submitStateRequestToModule(REAModuleAPI.RequestEntireModuleState);
+            refreshModuleState();
       });
 
       primaryStage.setScene(mainScene);
       primaryStage.setOnCloseRequest(event -> stop());
    }
 
+   private void refreshModuleState()
+   {
+      uiMessager.submitStateRequestToModule(REAModuleAPI.RequestEntireModuleState);
+   }
+
    private void initializeControllers(REAUIMessager uiMessager)
    {
-      File configurationFile = new File(CONFIGURATION_FILE_NAME);
+      File configurationFile = new File(UI_CONFIGURATION_FILE_NAME);
 
       pointCloudAnchorPaneController.setConfigurationFile(configurationFile);
       pointCloudAnchorPaneController.attachREAMessager(uiMessager);
@@ -125,6 +132,7 @@ public class LIDARBasedEnvironmentAwarenessUI
 
    public void show() throws IOException
    {
+      refreshModuleState();
       primaryStage.show();
    }
 

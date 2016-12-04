@@ -20,46 +20,46 @@ public abstract class REABasicUIController
    {
    }
 
+   public void attachREAMessager(REAUIMessager uiMessager)
+   {
+      this.uiMessager = uiMessager;
+   }
+
    public void setConfigurationFile(File configurationFile)
    {
       filePropertyHelper = new FilePropertyHelper(configurationFile);
    }
 
-   protected void saveProperty(String propertyName, double propertyValue)
+   protected void saveUIControlProperty(String propertyName, ToggleButton toggleButton)
    {
-      filePropertyHelper.saveProperty(propertyName, propertyValue);
+      filePropertyHelper.saveProperty(propertyName, toggleButton.isSelected());
    }
 
-   protected void saveProperty(String propertyName, int propertyValue)
+   protected void saveUIControlProperty(String propertyName, ComboBox<?> comboBox)
    {
-      filePropertyHelper.saveProperty(propertyName, propertyValue);
+      filePropertyHelper.saveProperty(propertyName, comboBox.getValue().toString());
    }
 
-   protected void saveProperty(String propertyName, boolean propertyValue)
+   protected void saveUIControlProperty(String propertyName, Slider slider)
    {
-      filePropertyHelper.saveProperty(propertyName, propertyValue);
+      filePropertyHelper.saveProperty(propertyName, slider.getValue());
    }
 
-   protected void saveProperty(String propertyName, String propertyValue)
-   {
-      filePropertyHelper.saveProperty(propertyName, propertyValue);
-   }
-
-   protected void loadPropertyAndUpdateUIControl(ToggleButton toggleButton, String propertyName)
+   protected void loadUIControlProperty(String propertyName, ToggleButton toggleButton)
    {
       Boolean loadedProperty = filePropertyHelper.loadBooleanProperty(propertyName);
       if (loadedProperty != null)
          toggleButton.setSelected(loadedProperty);
    }
 
-   protected void loadPropertyAndUpdateUIControl(Slider slider, String propertyName)
+   protected void loadUIControlProperty(String propertyName, Slider slider)
    {
       Double loadedProperty = filePropertyHelper.loadDoubleProperty(propertyName);
       if (loadedProperty != null)
          slider.setValue(loadedProperty);
    }
 
-   protected void loadPropertyAndUpdateUIControl(Spinner<Double> spinner, String propertyName)
+   protected void loadUIControlProperty(String propertyName, Spinner<Double> spinner)
    {
       Double loadedProperty = filePropertyHelper.loadDoubleProperty(propertyName);
       if (loadedProperty != null)
@@ -67,24 +67,13 @@ public abstract class REABasicUIController
    }
 
    @SuppressWarnings("unchecked")
-   protected <T extends Enum<T>> void loadPropertyAndUpdateUIControl(ComboBox<T> comboBox, String propertyName)
+   protected <T extends Enum<T>> void loadUIControlProperty(String propertyName, ComboBox<T> comboBox)
    {
-      String loadedProperty = loadProperty(propertyName);
+      String loadedProperty = filePropertyHelper.loadProperty(propertyName);
       if (loadedProperty != null)
       {
          T valueOf = (T) Enum.valueOf(comboBox.getItems().get(0).getClass(), loadedProperty);
          comboBox.setValue(valueOf);
       }
-   }
-
-   protected String loadProperty(String propertyName)
-   {
-      return filePropertyHelper.loadProperty(propertyName);
-   }
-
-
-   public void attachREAMessager(REAUIMessager uiMessager)
-   {
-      this.uiMessager = uiMessager;
    }
 }

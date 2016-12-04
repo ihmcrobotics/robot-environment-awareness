@@ -1,6 +1,5 @@
 package us.ihmc.robotEnvironmentAwareness.ui.controller;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +28,8 @@ import us.ihmc.graphics3DDescription.MeshDataGenerator;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorAdaptivePalette;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
+import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
 import us.ihmc.tools.thread.ThreadTools;
 
 public class PointCloudAnchorPaneController extends REABasicUIController
@@ -44,7 +45,7 @@ public class PointCloudAnchorPaneController extends REABasicUIController
 
    private final Group root = new Group();
 
-   private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(ThreadTools.getNamedThreadFactory("PointCloudViewer"));
+   private ScheduledExecutorService executorService = ExecutorServiceTools.newSingleThreadScheduledExecutor(ThreadTools.getNamedThreadFactory("PointCloudViewer"), ExceptionHandling.CANCEL_AND_REPORT);
    private ScheduledFuture<?> scheduled;
 
    private final AtomicBoolean clear = new AtomicBoolean(false);

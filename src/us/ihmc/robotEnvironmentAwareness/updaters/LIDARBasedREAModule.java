@@ -64,8 +64,6 @@ public class LIDARBasedREAModule
       packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
       packetCommunicator.connect();
 
-      timeReporter.enableTimeReport(true);
-
       moduleStateReporter = new REAModuleStateReporter(reaMessager, packetCommunicator);
 
       bufferUpdater = new REAOcTreeBuffer(mainOctree.getResolution(), reaMessager, moduleStateReporter, packetCommunicator);

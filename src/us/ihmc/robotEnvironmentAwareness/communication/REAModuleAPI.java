@@ -28,7 +28,6 @@ public class REAModuleAPI
    public static final String OcTreeNormalEstimationParameters = Input + OcTree + NormalEstimation + "Parameters";
    public static final String OcTreeBufferSize = Input + OcTree + Buffer + "Size";
 
-   public static final String OcTreeGraphicsBoundingBoxEnable = Input + OcTree + Graphics + BoundingBox + "Enable";
    public static final String OcTreeGraphicsDepth = Input + OcTree + Graphics + "Depth";
    public static final String OcTreeGraphicsColoringMode = Input + OcTree + Graphics + "ColoringMode";
    public static final String OcTreeGraphicsShowOcTreeNodes = Input + OcTree + Graphics + "ShowOcTreeNodes";
@@ -46,18 +45,6 @@ public class REAModuleAPI
    public static final String OcTreePlanarRegionFeaturesIntersectionEnable = Input + OcTree + PlanarRegionFeatures + Intersection + "Enable";
    public static final String OcTreePlanarRegionFeaturesIntersectionParameters = Input + OcTree + PlanarRegionFeatures + Intersection + "Parameters";
    public static final String OcTreePlanarRegionFeaturesPolygonizerParameters = Input + OcTree + PlanarRegionFeatures + Polygonizer + "Parameters";
-
-   public static final String OcTreeHasCleared = Output + OcTree + "HasCleared";
-
-   public static final String OcTreeGraphicsOccupiedMesh = Output + OcTree + Graphics + "OccupiedMesh";
-   public static final String OcTreeGraphicsBufferMesh = Output + OcTree + Graphics + Buffer + "Mesh";
-   public static final String OcTreeGraphicsInputScanMesh = Output + OcTree + Graphics + "InputScan";
-   public static final String OcTreeGraphicsPlanarPolygonMesh = Output + OcTree + Graphics + "PlanarPolygonMesh";
-   public static final String OcTreeGraphicsBoundingBoxMesh = Output + OcTree + Graphics + BoundingBox + "Mesh";
-
-   public static final String BufferOctreeNodeSize = Output + OcTree + Graphics + "BufferOctreeNodeSize";
-
-   public static final String ScanPointsCollection = Output + OcTree + Graphics + "ScanPointsCollection";
 
    public static final String LidarScanState = Output + LIDAR + Scan + "State";
    public static final String OcTreeState = Output + OcTree + "State";

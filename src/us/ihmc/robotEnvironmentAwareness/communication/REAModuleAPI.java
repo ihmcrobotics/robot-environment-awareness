@@ -88,7 +88,9 @@ public class REAModuleAPI
    public static final Topic<Boolean> UIPlanarRegionHideNodes = Root.child(UI).child(PlanarRegions).child(Node).topic(Hide);
    public static final Topic<Boolean> UIOcTreeBoundingBoxShow = Root.child(UI).child(OcTree).child(BoundingBox).topic(Show);
    public static final Topic<Boolean> UIOcTreeShowBuffer = Root.child(UI).child(OcTree).child(Buffer).topic(Show);
-   public static final Topic<Boolean> UILidarShow = Root.child(UI).child(Lidar).topic(Show);
+   public static final Topic<Boolean> UILidarScanShow = Root.child(UI).child(Lidar).topic(Show);
+   public static final Topic<Boolean> UILidarScanClear = Root.child(UI).child(Lidar).topic(Clear);
+   public static final Topic<Integer> UILidarScanSize = Root.child(UI).child(Lidar).topic(Size);
 
    public static final Topic<LidarScanMessage> LidarScanState = ModuleCategory.child(Lidar).topic(Data);
    public static final Topic<NormalOcTreeMessage> OcTreeState = OcTreeCategory.topic(Data);

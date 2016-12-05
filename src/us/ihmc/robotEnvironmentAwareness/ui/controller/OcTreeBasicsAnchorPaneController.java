@@ -74,7 +74,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       uiMessager.bindBidirectionalInternal(REAModuleAPI.UINormalEstimationShow, showEstimatedSurfacesButton.selectedProperty(), true);
       uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeColoringMode, coloringTypeComboBox.valueProperty(), true);
       uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeShowBuffer, showBufferButton.selectedProperty(), true);
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.UILidarShow, showInputScanButton.selectedProperty(), true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UILidarScanShow, showInputScanButton.selectedProperty(), true);
    }
 
    @FXML
@@ -94,7 +94,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       saveUIControlProperty(REAModuleAPI.UINormalEstimationShow, showEstimatedSurfacesButton);
       saveUIControlProperty(REAModuleAPI.UIOcTreeColoringMode, coloringTypeComboBox);
       saveUIControlProperty(REAModuleAPI.UIOcTreeShowBuffer, showBufferButton);
-      saveUIControlProperty(REAModuleAPI.UILidarShow, showInputScanButton);
+      saveUIControlProperty(REAModuleAPI.UILidarScanShow, showInputScanButton);
    }
 
    public void load()
@@ -104,6 +104,6 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       loadUIControlProperty(REAModuleAPI.UINormalEstimationShow, showEstimatedSurfacesButton);
       loadUIControlProperty(REAModuleAPI.UIOcTreeColoringMode, coloringTypeComboBox);
       loadUIControlProperty(REAModuleAPI.UIOcTreeShowBuffer, showBufferButton);
-      loadUIControlProperty(REAModuleAPI.UILidarShow, showInputScanButton);
+      loadUIControlProperty(REAModuleAPI.UILidarScanShow, showInputScanButton);
    }
 }

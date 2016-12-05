@@ -22,7 +22,7 @@ import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BufferOctreeMeshBui
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.PlanarRegionsIntersectionsMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.PlanarRegionsMeshBuilder;
-import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.ScanMeshBuilder;
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.LidarScanViewer;
 
 public class REAMeshViewer
 {
@@ -34,7 +34,6 @@ public class REAMeshViewer
    private final List<ScheduledFuture<?>> meshBuilderScheduledFutures = new ArrayList<>();
    private final MeshView ocTreeMeshView = new MeshView();
    private final MeshView bufferOcTreeMeshView = new MeshView();
-   private final MeshView scanMeshView = new MeshView();
    private final MeshView planarRegionMeshView = new MeshView();
    private final MeshView intersectionsMeshView = new MeshView();
 
@@ -42,7 +41,7 @@ public class REAMeshViewer
 
    private final AnimationTimer renderMeshAnimation;
 
-   private final ScanMeshBuilder scanMeshBuilder;
+   private final LidarScanViewer lidarScanViewer;
    private final BufferOctreeMeshBuilder bufferOctreeMeshBuilder;
    private final OcTreeMeshBuilder ocTreeMeshBuilder;
    private final PlanarRegionsMeshBuilder planarRegionsMeshBuilder;
@@ -52,14 +51,14 @@ public class REAMeshViewer
    public REAMeshViewer(REAUIMessager uiMessager)
    {
       // TEST Communication over network
-      scanMeshBuilder = new ScanMeshBuilder(uiMessager);
+      lidarScanViewer = new LidarScanViewer(uiMessager);
       bufferOctreeMeshBuilder = new BufferOctreeMeshBuilder(uiMessager);
       ocTreeMeshBuilder = new OcTreeMeshBuilder(uiMessager);
       planarRegionsMeshBuilder = new PlanarRegionsMeshBuilder(uiMessager);
       intersectionsMeshBuilder = new PlanarRegionsIntersectionsMeshBuilder(uiMessager);
       boundingBoxMeshView = new BoundingBoxMeshView(uiMessager);
 
-      root.getChildren().addAll(scanMeshView, bufferOcTreeMeshView, ocTreeMeshView, planarRegionMeshView, intersectionsMeshView, boundingBoxMeshView);
+      root.getChildren().addAll(lidarScanViewer.getRoot(), bufferOcTreeMeshView, ocTreeMeshView, planarRegionMeshView, intersectionsMeshView, boundingBoxMeshView);
       root.setMouseTransparent(true);
 
       renderMeshAnimation = new AnimationTimer()
@@ -67,8 +66,7 @@ public class REAMeshViewer
          @Override
          public void handle(long now)
          {
-            if (scanMeshBuilder.hasNewMeshAndMaterial())
-               updateMeshView(scanMeshView, scanMeshBuilder.pollMeshAndMaterial());
+            lidarScanViewer.render();
 
             if (bufferOctreeMeshBuilder.hasNewMeshAndMaterial())
                updateMeshView(bufferOcTreeMeshView, bufferOctreeMeshBuilder.pollMeshAndMaterial());
@@ -105,7 +103,7 @@ public class REAMeshViewer
       if (!meshBuilderScheduledFutures.isEmpty())
          return;
       renderMeshAnimation.start();
-      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(scanMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(lidarScanViewer, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
       meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(bufferOctreeMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
       meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(ocTreeMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
       meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(planarRegionsMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));

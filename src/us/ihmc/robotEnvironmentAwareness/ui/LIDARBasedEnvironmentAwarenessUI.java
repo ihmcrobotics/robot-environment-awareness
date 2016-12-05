@@ -156,14 +156,14 @@ public class LIDARBasedEnvironmentAwarenessUI
 
    public static LIDARBasedEnvironmentAwarenessUI creatIntraprocessUI(Stage primaryStage) throws IOException
    {
-      REAMessager moduleMessager = REAMessagerOverNetwork.createIntraprocess(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAMessager moduleMessager = REAMessagerOverNetwork.createIntraprocess(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
       REAUIMessager uiMessager = new REAUIMessager(moduleMessager);
       return new LIDARBasedEnvironmentAwarenessUI(uiMessager, primaryStage);
    }
 
    public static LIDARBasedEnvironmentAwarenessUI creatRemoteUI(Stage primaryStage) throws IOException
    {
-      REAMessager moduleMessager = REAMessagerOverNetwork.createTCPClient("localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAMessager moduleMessager = REAMessagerOverNetwork.createTCPClient(REAModuleAPI.API, "localhost", NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
       REAUIMessager uiMessager = new REAUIMessager(moduleMessager);
       return new LIDARBasedEnvironmentAwarenessUI(uiMessager, primaryStage);
    }

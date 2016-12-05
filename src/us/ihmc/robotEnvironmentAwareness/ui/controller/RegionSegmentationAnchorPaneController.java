@@ -41,14 +41,14 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
    {
       setupControls();
 
-      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreePlanarRegionSegmentationEnable, enableSegmentationButton.selectedProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.PlanarRegionsSegmentationEnable, enableSegmentationButton.selectedProperty());
 
       planarRegionSegmentationParametersProperty.bindBidirectionalSearchRadius(searchRadiusSlider.valueProperty());
       planarRegionSegmentationParametersProperty.bindBidirectionalMaxDistanceFromPlane(maxDistanceFromPlaneSlider.valueProperty());
       planarRegionSegmentationParametersProperty.bindBidirectionalMaxAngleFromPlane(maxAngleFromPlaneSlider.valueProperty());
       planarRegionSegmentationParametersProperty.bindBidirectionalMinNormalQuality(minNormalQualitySlider.valueProperty());
       planarRegionSegmentationParametersProperty.bindBidirectionalMinRegionSize(minRegionSizeSlider.valueProperty());
-      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, planarRegionSegmentationParametersProperty);
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.PlanarRegionsSegmentationParameters, planarRegionSegmentationParametersProperty);
    }
 
    @FXML
@@ -60,6 +60,6 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
    @FXML
    public void clear()
    {
-      uiMessager.submitMessageToModule(REAModuleAPI.OcTreePlanarRegionSegmentationClear, true);
+      uiMessager.submitMessageToModule(REAModuleAPI.PlanarRegionsSegmentationClear, true);
    }
 }

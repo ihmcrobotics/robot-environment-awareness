@@ -38,7 +38,7 @@ public class ScanMeshBuilder implements Runnable
    {
       this.uiMessager = uiMessager;
       lidarScanToRender = uiMessager.createInput(REAModuleAPI.LidarScanState);
-      showInputScan = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsShowInputScan, false);
+      showInputScan = uiMessager.createInput(REAModuleAPI.UILidarShow, false);
 
       TextureColorPalette1D scanColorPalette = new TextureColorPalette1D();
       scanColorPalette.setHueBased(1.0, 1.0);

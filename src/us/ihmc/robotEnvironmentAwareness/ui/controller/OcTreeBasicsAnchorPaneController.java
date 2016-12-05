@@ -68,12 +68,12 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeEnable, enableButton.selectedProperty());
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeBufferSize, bufferSizeSlider.valueProperty(), numberToIntegerConverter);
 
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsDepth, depthSlider.valueProperty(), numberToIntegerConverter);
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, showOcTreeNodesButton.selectedProperty());
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, showEstimatedSurfacesButton.selectedProperty());
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsColoringMode, coloringTypeComboBox.valueProperty());
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowBuffer, showBufferButton.selectedProperty());
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.OcTreeGraphicsShowInputScan, showInputScanButton.selectedProperty());
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeDepth, depthSlider.valueProperty(), numberToIntegerConverter);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeShow, showOcTreeNodesButton.selectedProperty());
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UINormalEstimationShow, showEstimatedSurfacesButton.selectedProperty());
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeColoringMode, coloringTypeComboBox.valueProperty());
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeShowBuffer, showBufferButton.selectedProperty());
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UILidarShow, showInputScanButton.selectedProperty());
       load();
    }
 
@@ -89,21 +89,21 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       uiMessager.submitStateRequestToModule(REAModuleAPI.SaveMainUpdaterConfiguration);
       uiMessager.submitStateRequestToModule(REAModuleAPI.SaveBufferConfiguration);
 
-      saveUIControlProperty(REAModuleAPI.OcTreeGraphicsDepth, depthSlider);
-      saveUIControlProperty(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, showOcTreeNodesButton);
-      saveUIControlProperty(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, showEstimatedSurfacesButton);
-      saveUIControlProperty(REAModuleAPI.OcTreeGraphicsColoringMode, coloringTypeComboBox);
-      saveUIControlProperty(REAModuleAPI.OcTreeGraphicsShowBuffer, showBufferButton);
-      saveUIControlProperty(REAModuleAPI.OcTreeGraphicsShowInputScan, showInputScanButton);
+      saveUIControlProperty(REAModuleAPI.UIOcTreeDepth, depthSlider);
+      saveUIControlProperty(REAModuleAPI.UIOcTreeShow, showOcTreeNodesButton);
+      saveUIControlProperty(REAModuleAPI.UINormalEstimationShow, showEstimatedSurfacesButton);
+      saveUIControlProperty(REAModuleAPI.UIOcTreeColoringMode, coloringTypeComboBox);
+      saveUIControlProperty(REAModuleAPI.UIOcTreeShowBuffer, showBufferButton);
+      saveUIControlProperty(REAModuleAPI.UILidarShow, showInputScanButton);
    }
 
    public void load()
    {
-      loadUIControlProperty(REAModuleAPI.OcTreeGraphicsDepth, depthSlider);
-      loadUIControlProperty(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, showOcTreeNodesButton);
-      loadUIControlProperty(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, showEstimatedSurfacesButton);
-      loadUIControlProperty(REAModuleAPI.OcTreeGraphicsColoringMode, coloringTypeComboBox);
-      loadUIControlProperty(REAModuleAPI.OcTreeGraphicsShowBuffer, showBufferButton);
-      loadUIControlProperty(REAModuleAPI.OcTreeGraphicsShowInputScan, showInputScanButton);
+      loadUIControlProperty(REAModuleAPI.UIOcTreeDepth, depthSlider);
+      loadUIControlProperty(REAModuleAPI.UIOcTreeShow, showOcTreeNodesButton);
+      loadUIControlProperty(REAModuleAPI.UINormalEstimationShow, showEstimatedSurfacesButton);
+      loadUIControlProperty(REAModuleAPI.UIOcTreeColoringMode, coloringTypeComboBox);
+      loadUIControlProperty(REAModuleAPI.UIOcTreeShowBuffer, showBufferButton);
+      loadUIControlProperty(REAModuleAPI.UILidarShow, showInputScanButton);
    }
 }

@@ -41,14 +41,14 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
    {
       setupControls();
 
-      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeNormalEstimationEnable, enableButton.selectedProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.NormalEstimationEnable, enableButton.selectedProperty());
 
       normalEstimationParametersProperty.bindBidirectionalSearchRadius(searchRadiusSlider.valueProperty());
       normalEstimationParametersProperty.bindBidirectionalMaxDistanceFromPlane(maxDistanceFromPlaneSlider.valueProperty());
       normalEstimationParametersProperty.bindBidirectionalMinConsensusRatio(minConsensusRatioSlider.valueProperty());
       normalEstimationParametersProperty.bindBidirectionalMaxAverageDeviationRatio(maxAverageDeviationRatioSlider.valueProperty());
 
-      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeNormalEstimationParameters, normalEstimationParametersProperty);
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.NormalEstimationParameters, normalEstimationParametersProperty);
    }
 
    @FXML
@@ -60,6 +60,6 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
    @FXML
    public void resetNormals()
    {
-      uiMessager.broadcastMessage(REAModuleAPI.OcTreeNormalEstimationClear, true);
+      uiMessager.broadcastMessage(REAModuleAPI.NormalEstimationClear, true);
    }
 }

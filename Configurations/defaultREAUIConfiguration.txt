@@ -1,10 +1,10 @@
 #
-#Sun Dec 04 16:35:08 CST 2016
-Input/OcTree/Graphics/BoundingBox/Show=false
-Input/OcTree/Graphics/Buffer/Show=false
-Input/OcTree/Graphics/ColoringMode=REGION
-Input/OcTree/Graphics/Depth=15
-Input/OcTree/Graphics/HidePlanarRegionNodes=false
-Input/OcTree/Graphics/ShowEstimatedSurfaces=true
-Input/OcTree/Graphics/ShowOcTreeNodes=true
-Input/OcTree/Graphics/ShowPlanarRegions=false
+#Sun Dec 04 21:35:50 CST 2016
+REA/UserInterface/Lidar/Show=false
+REA/UserInterface/NormalEstimation/Show=true
+REA/UserInterface/OcTree/BoundingBox/Show=false
+REA/UserInterface/OcTree/Buffer/Show=false
+REA/UserInterface/OcTree/Color=REGION
+REA/UserInterface/OcTree/Depth=15.0
+REA/UserInterface/OcTree/Show=true
+REA/UserInterface/PlanarRegions/Node/Hide=false

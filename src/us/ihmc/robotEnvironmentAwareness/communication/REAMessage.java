@@ -1,25 +1,27 @@
 package us.ihmc.robotEnvironmentAwareness.communication;
 
 import us.ihmc.communication.packets.Packet;
+import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.APIElementId;
+import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.Topic;
 
-public final class REAMessage extends Packet<REAMessage>
+public final class REAMessage<T> extends Packet<REAMessage<T>>
 {
-   public String topic;
+   public APIElementId topicId;
    public Object messageContent;
 
    public REAMessage()
    {
    }
 
-   public REAMessage(String topic, Object messageContent)
+   public REAMessage(Topic<T> topic, T messageContent)
    {
-      this.topic = topic;
+      this.topicId = topic.getUniqueId();
       this.messageContent = messageContent;
    }
 
-   public String getTopic()
+   public APIElementId getTopicId()
    {
-      return topic;
+      return topicId;
    }
 
    public Object getMessageContent()
@@ -28,8 +30,8 @@ public final class REAMessage extends Packet<REAMessage>
    }
 
    @Override
-   public boolean epsilonEquals(REAMessage other, double epsilon)
+   public boolean epsilonEquals(REAMessage<T> other, double epsilon)
    {
-      return topic.equals(other.topic) && messageContent.equals(other.messageContent);
+      return topicId.equals(other.topicId) && messageContent.equals(other.messageContent);
    }
 }

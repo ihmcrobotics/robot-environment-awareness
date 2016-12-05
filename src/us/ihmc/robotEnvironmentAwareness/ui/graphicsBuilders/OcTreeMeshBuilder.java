@@ -77,15 +77,15 @@ public class OcTreeMeshBuilder implements Runnable
 
       clear = uiMessager.createInput(REAModuleAPI.OcTreeClear, false);
 
-      treeDepthForDisplay = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsDepth);
-      coloringType = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsColoringMode, ColoringType.DEFAULT);
+      treeDepthForDisplay = uiMessager.createInput(REAModuleAPI.UIOcTreeDepth);
+      coloringType = uiMessager.createInput(REAModuleAPI.UIOcTreeColoringMode, ColoringType.DEFAULT);
 
-      showOcTreeNodes = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, false);
-      showEstimatedSurfaces = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, false);
-      hidePlanarRegionNodes = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, false);
+      showOcTreeNodes = uiMessager.createInput(REAModuleAPI.UIOcTreeShow, false);
+      showEstimatedSurfaces = uiMessager.createInput(REAModuleAPI.UINormalEstimationShow, false);
+      hidePlanarRegionNodes = uiMessager.createInput(REAModuleAPI.UIPlanarRegionHideNodes, false);
 
       ocTreeState = uiMessager.createInput(REAModuleAPI.OcTreeState);
-      planarRegionNodeKeysState = uiMessager.createInput(REAModuleAPI.PlanarRegionsNodeKeysState);
+      planarRegionNodeKeysState = uiMessager.createInput(REAModuleAPI.PlanarRegionsNodeState);
 
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);

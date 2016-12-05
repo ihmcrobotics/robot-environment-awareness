@@ -44,14 +44,14 @@ public class REAOcTreeUpdater
       referenceOctree.enableParallelInsertionOfMisses(true);
 
       enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
-      enableNormalEstimation = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationEnable, false);
-      clearNormals = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationClear, false);
-      minRange = reaMessager.createInput(REAModuleAPI.OcTreeLIDARMinRange, 0.2);
-      maxRange = reaMessager.createInput(REAModuleAPI.OcTreeLIDARMaxRange, 5.0);
+      enableNormalEstimation = reaMessager.createInput(REAModuleAPI.NormalEstimationEnable, false);
+      clearNormals = reaMessager.createInput(REAModuleAPI.NormalEstimationClear, false);
+      minRange = reaMessager.createInput(REAModuleAPI.LidarMinRange, 0.2);
+      maxRange = reaMessager.createInput(REAModuleAPI.LidarMaxRange, 5.0);
       useBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable, true);
       atomicBoundingBoxParameters = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters, new BoundingBoxParametersMessage(0.0f, -2.0f, -3.0f, 5.0f, 2.0f, 0.5f));
-      normalEstimationParameters = reaMessager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters, new NormalEstimationParameters());
-      reaMessager.registerTopicListener(REAModuleAPI.OcTreeNormalEstimationParameters, (NormalEstimationParameters params) -> System.out.println(params));
+      normalEstimationParameters = reaMessager.createInput(REAModuleAPI.NormalEstimationParameters, new NormalEstimationParameters());
+      reaMessager.registerTopicListener(REAModuleAPI.NormalEstimationParameters, (NormalEstimationParameters params) -> System.out.println(params));
 
       reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, messageContent -> sendCurrentState());
 
@@ -63,50 +63,50 @@ public class REAOcTreeUpdater
    private void sendCurrentState()
    {
       reaMessager.submitMessage(REAModuleAPI.OcTreeEnable, enable.get());
-      reaMessager.submitMessage(REAModuleAPI.OcTreeNormalEstimationEnable, enableNormalEstimation.get());
-      reaMessager.submitMessage(REAModuleAPI.OcTreeLIDARMinRange, minRange.get());
-      reaMessager.submitMessage(REAModuleAPI.OcTreeLIDARMaxRange, maxRange.get());
+      reaMessager.submitMessage(REAModuleAPI.NormalEstimationEnable, enableNormalEstimation.get());
+      reaMessager.submitMessage(REAModuleAPI.LidarMinRange, minRange.get());
+      reaMessager.submitMessage(REAModuleAPI.LidarMaxRange, maxRange.get());
       reaMessager.submitMessage(REAModuleAPI.OcTreeBoundingBoxEnable, useBoundingBox.get());
 
       reaMessager.submitMessage(REAModuleAPI.OcTreeBoundingBoxParameters, atomicBoundingBoxParameters.get());
-      reaMessager.submitMessage(REAModuleAPI.OcTreeNormalEstimationParameters, normalEstimationParameters.get());
+      reaMessager.submitMessage(REAModuleAPI.NormalEstimationParameters, normalEstimationParameters.get());
    }
 
    public void loadConfiguration(FilePropertyHelper filePropertyHelper)
    {
-      Boolean enableFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeEnable);
+      Boolean enableFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeEnable.getName());
       if (enableFile != null)
          enable.set(enableFile);
-      Boolean enableNormalEstimationFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeNormalEstimationEnable);
+      Boolean enableNormalEstimationFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.NormalEstimationEnable.getName());
       if (enableNormalEstimationFile != null)
          enableNormalEstimation.set(enableNormalEstimationFile);
-      String normalEstimationParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.OcTreeNormalEstimationParameters);
+      String normalEstimationParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.NormalEstimationParameters.getName());
       if (normalEstimationParametersFile != null)
          normalEstimationParameters.set(NormalEstimationParameters.parse(normalEstimationParametersFile));
-      Boolean useBoundingBoxFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeBoundingBoxEnable);
+      Boolean useBoundingBoxFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeBoundingBoxEnable.getName());
       if (useBoundingBoxFile != null)
          useBoundingBox.set(useBoundingBoxFile);
-      String boundingBoxParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.OcTreeBoundingBoxParameters);
+      String boundingBoxParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.OcTreeBoundingBoxParameters.getName());
       if (boundingBoxParametersFile != null)
          atomicBoundingBoxParameters.set(BoundingBoxParametersMessage.parse(boundingBoxParametersFile));
-      Double minRangeFile = filePropertyHelper.loadDoubleProperty(REAModuleAPI.OcTreeLIDARMinRange);
+      Double minRangeFile = filePropertyHelper.loadDoubleProperty(REAModuleAPI.LidarMinRange.getName());
       if (minRangeFile != null)
          minRange.set(minRangeFile);
-      Double maxRangeFile = filePropertyHelper.loadDoubleProperty(REAModuleAPI.OcTreeLIDARMaxRange);
+      Double maxRangeFile = filePropertyHelper.loadDoubleProperty(REAModuleAPI.LidarMaxRange.getName());
       if (maxRangeFile != null)
          maxRange.set(maxRangeFile);
    }
 
    public void saveConfiguration(FilePropertyHelper filePropertyHelper)
    {
-      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeEnable, enable.get());
-      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeNormalEstimationEnable, enableNormalEstimation.get());
-      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeBoundingBoxEnable, useBoundingBox.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeEnable.getName(), enable.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.NormalEstimationEnable.getName(), enableNormalEstimation.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeBoundingBoxEnable.getName(), useBoundingBox.get());
 
-      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeNormalEstimationParameters, normalEstimationParameters.get().toString());
-      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters, atomicBoundingBoxParameters.get().toString());
-      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeLIDARMinRange, minRange.get());
-      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeLIDARMaxRange, maxRange.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.NormalEstimationParameters.getName(), normalEstimationParameters.get().toString());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters.getName(), atomicBoundingBoxParameters.get().toString());
+      filePropertyHelper.saveProperty(REAModuleAPI.LidarMinRange.getName(), minRange.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.LidarMaxRange.getName(), maxRange.get());
    }
 
    public void update()

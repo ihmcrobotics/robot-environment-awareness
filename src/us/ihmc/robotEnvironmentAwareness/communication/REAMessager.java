@@ -4,33 +4,37 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.communication.net.NetStateListener;
+import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.API;
+import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.Topic;
 
 public interface REAMessager
 {
-   default void submitStateRequest(String requestTopic)
+   default void submitStateRequest(Topic<Boolean> requestTopic)
    {
       submitMessage(requestTopic, true);
    }
 
-   default void submitMessage(String topic, Object messageContent)
+   default <T> void submitMessage(Topic<T> topic, T messageContent)
    {
-      submitMessage(new REAMessage(topic, messageContent));
+      submitMessage(new REAMessage<T>(topic, messageContent));
    }
 
-   void submitMessage(REAMessage message);
+   <T> void submitMessage(REAMessage<T> message);
 
-   <T> AtomicReference<T> createInput(String topic, T defaultValue);
+   <T> AtomicReference<T> createInput(Topic<T> topic, T defaultValue);
 
-   default <T> AtomicReference<T> createInput(String topic)
+   default <T> AtomicReference<T> createInput(Topic<T> topic)
    {
       return createInput(topic, null);
    }
 
-   <T> void registerTopicListener(String topic, REATopicListener<T> listener);
+   <T> void registerTopicListener(Topic<T> topic, REATopicListener<T> listener);
 
    void startMessager() throws IOException;
 
    void closeMessager();
 
    void registerConnectionStateListener(NetStateListener listener);
+
+   API getMessagerAPI();
 }

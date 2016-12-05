@@ -37,7 +37,7 @@ public class REAModuleStateReporter
    public void reportBufferOcTreeState(NormalOcTree bufferOcTree)
    {
       if (isBufferOcTreeRequested.getAndSet(false))
-         reaMessager.submitMessage(REAModuleAPI.BufferState, OcTreeMessageConverter.convertToMessage(bufferOcTree));
+         reaMessager.submitMessage(REAModuleAPI.OcTreeBufferState, OcTreeMessageConverter.convertToMessage(bufferOcTree));
    }
 
    public void reportOcTreeState(NormalOcTree ocTree)
@@ -45,7 +45,7 @@ public class REAModuleStateReporter
       if (isOcTreeRequested.getAndSet(false))
          reaMessager.submitMessage(REAModuleAPI.OcTreeState, OcTreeMessageConverter.convertToMessage(ocTree));
       if (isOcTreeBoundingBoxRequested.get())
-         reaMessager.submitMessage(REAModuleAPI.BoundingBoxState, BoundingBoxMessageConverter.convertToMessage(ocTree.getBoundingBox()));
+         reaMessager.submitMessage(REAModuleAPI.OcTreeBoundingBoxState, BoundingBoxMessageConverter.convertToMessage(ocTree.getBoundingBox()));
    }
 
    public void reportPlanarRegionsState(RegionFeaturesProvider regionFeaturesProvider)
@@ -53,7 +53,7 @@ public class REAModuleStateReporter
       if (arePlanarRegionsRequested.getAndSet(false))
          reaMessager.submitMessage(REAModuleAPI.PlanarRegionsState, REAPlanarRegionsConverter.createPlanarRegionsListMessage(regionFeaturesProvider));
       if (arePlanarRegionsNodeKeysRequested.getAndSet(false))
-         reaMessager.submitMessage(REAModuleAPI.PlanarRegionsNodeKeysState, REAPlanarRegionsConverter.createPlanarRegionNodeKeysMessages(regionFeaturesProvider));
+         reaMessager.submitMessage(REAModuleAPI.PlanarRegionsNodeState, REAPlanarRegionsConverter.createPlanarRegionNodeKeysMessages(regionFeaturesProvider));
    }
 
    private void handleLidarScanMessage(LidarScanMessage message)

@@ -10,72 +10,84 @@ import us.ihmc.communication.net.NetClassList;
 import us.ihmc.communication.net.NetStateListener;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
+import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.API;
+import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.Topic;
 import us.ihmc.tools.io.printing.PrintTools;
 
 public class REAMessagerOverNetwork implements REAMessager
 {
    private static final boolean DEBUG = false;
 
-   private final ConcurrentHashMap<String, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
-   private final ConcurrentHashMap<String, List<REATopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
+   private final API messagerAPI;
+
+   private final ConcurrentHashMap<Topic<?>, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
+   private final ConcurrentHashMap<Topic<?>, List<REATopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
 
    private final PacketCommunicator packetCommunicator;
 
-   public static REAMessager createTCPServer(NetworkPorts port, NetClassList netClassList)
+   public static REAMessager createTCPServer(API messagerAPI, NetworkPorts port, NetClassList netClassList)
    {
       PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(port, netClassList);
-      return new REAMessagerOverNetwork(packetCommunicator);
+      return new REAMessagerOverNetwork(messagerAPI, packetCommunicator);
    }
 
-   public static REAMessager createTCPClient(String host, NetworkPorts port, NetClassList netClassList)
+   public static REAMessager createTCPClient(API messagerAPI, String host, NetworkPorts port, NetClassList netClassList)
    {
       PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(host, port, netClassList);
-      return new REAMessagerOverNetwork(packetCommunicator);
+      return new REAMessagerOverNetwork(messagerAPI, packetCommunicator);
    }
 
-   public static REAMessager createIntraprocess(NetworkPorts port, NetClassList netClassList)
+   public static REAMessager createIntraprocess(API messagerAPI, NetworkPorts port, NetClassList netClassList)
    {
       PacketCommunicator packetCommunicator = PacketCommunicator.createIntraprocessPacketCommunicator(port, netClassList);
-      return new REAMessagerOverNetwork(packetCommunicator);
+      return new REAMessagerOverNetwork(messagerAPI, packetCommunicator);
    }
 
-   private REAMessagerOverNetwork(PacketCommunicator packetCommunicator)
+   private REAMessagerOverNetwork(API messagerAPI, PacketCommunicator packetCommunicator)
    {
+      this.messagerAPI = messagerAPI;
       this.packetCommunicator = packetCommunicator;
       this.packetCommunicator.attachListener(REAMessage.class, this::receiveREAMessage);
    }
 
-   private void receiveREAMessage(REAMessage message)
+   private <T> void receiveREAMessage(REAMessage<T> message)
    {
       if (message == null)
          return;
 
-      if (DEBUG)
-         PrintTools.info("Packet received from network with message name: " + message.getTopic());
+      if (!messagerAPI.containsTopic(message.getTopicId()))
+         throw new RuntimeException("The message is not part of this messager's API.");
 
-      List<AtomicReference<Object>> inputVariablesForTopic = inputVariablesMap.get(message.getTopic());
+      Topic<T> messageTopic = messagerAPI.findTopic(message.getTopicId());
+
+      if (DEBUG)
+         PrintTools.info("Packet received from network with message name: " + messageTopic.getSimpleName());
+
+      List<AtomicReference<Object>> inputVariablesForTopic = inputVariablesMap.get(messageTopic);
       if (inputVariablesForTopic != null)
          inputVariablesForTopic.forEach(variable -> variable.set(message.getMessageContent()));
 
-      List<REATopicListener<Object>> topicListeners = topicListenersMap.get(message.getTopic());
+      List<REATopicListener<Object>> topicListeners = topicListenersMap.get(messageTopic);
       if (topicListeners != null)
          topicListeners.forEach(listener -> listener.receivedMessageForTopic(message.getMessageContent()));
    }
 
    @Override
-   public void submitMessage(REAMessage message)
+   public <T> void submitMessage(REAMessage<T> message)
    {
+      if (!messagerAPI.containsTopic(message.getTopicId()))
+         throw new RuntimeException("The message is not part of this messager's API.");
+
+      Topic<?> messageTopic = messagerAPI.findTopic(message.getTopicId());
+
       if (!packetCommunicator.isConnected())
       {
-         PrintTools.warn(this, "This messager is closed, message's topic: " + message.getTopic());
+         PrintTools.warn(this, "This messager is closed, message's topic: " + messageTopic.getSimpleName());
          return;
       }
 
-      if (message.getTopic() == null)
-         throw new IllegalArgumentException("Topic is null");
-
       if (DEBUG)
-         PrintTools.info("Submit message for topic: " + message.getTopic());
+         PrintTools.info("Submit message for topic: " + messageTopic.getSimpleName());
 
       // Variable update over network
       packetCommunicator.send(message);
@@ -83,7 +95,7 @@ public class REAMessagerOverNetwork implements REAMessager
 
    @Override
    @SuppressWarnings("unchecked")
-   public <T> AtomicReference<T> createInput(String topic, T defaultValue)
+   public <T> AtomicReference<T> createInput(Topic<T> topic, T defaultValue)
    {
       AtomicReference<T> boundVariable = new AtomicReference<>(defaultValue);
 
@@ -99,7 +111,7 @@ public class REAMessagerOverNetwork implements REAMessager
 
    @Override
    @SuppressWarnings("unchecked")
-   public <T> void registerTopicListener(String topic, REATopicListener<T> listener)
+   public <T> void registerTopicListener(Topic<T> topic, REATopicListener<T> listener)
    {
       List<REATopicListener<Object>> topicListeners = topicListenersMap.get(topic);
       if (topicListeners == null)
@@ -128,5 +140,11 @@ public class REAMessagerOverNetwork implements REAMessager
    public void registerConnectionStateListener(NetStateListener listener)
    {
       packetCommunicator.attachStateListener(listener);
+   }
+
+   @Override
+   public API getMessagerAPI()
+   {
+      return messagerAPI;
    }
 }

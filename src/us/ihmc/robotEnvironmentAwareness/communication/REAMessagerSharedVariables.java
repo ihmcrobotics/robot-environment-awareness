@@ -8,40 +8,50 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.communication.net.NetStateListener;
+import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.API;
+import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.Topic;
 import us.ihmc.tools.io.printing.PrintTools;
 
 public class REAMessagerSharedVariables implements REAMessager
 {
+   private final API messagerAPI;
+
    private final AtomicBoolean isConnected = new AtomicBoolean(false);
-   private final ConcurrentHashMap<String, List<AtomicReference<Object>>> boundVariables = new ConcurrentHashMap<>();
-   private final ConcurrentHashMap<String, List<REATopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
+   private final ConcurrentHashMap<Topic<?>, List<AtomicReference<Object>>> boundVariables = new ConcurrentHashMap<>();
+   private final ConcurrentHashMap<Topic<?>, List<REATopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
    private final List<NetStateListener> connectionStateListeners = new ArrayList<>();
 
-   public REAMessagerSharedVariables()
+   public REAMessagerSharedVariables(API messagerAPI)
    {
+      this.messagerAPI = messagerAPI;
    }
 
    @Override
-   public void submitMessage(REAMessage message)
+   public <T> void submitMessage(REAMessage<T> message)
    {
+      if (!messagerAPI.containsTopic(message.getTopicId()))
+         throw new RuntimeException("The message is not part of this messager's API.");
+
+      Topic<?> messageTopic = messagerAPI.findTopic(message.getTopicId());
+
       if (!isConnected.get())
       {
-         PrintTools.warn(this, "This messager is closed, message's topic: " + message.getTopic());
+         PrintTools.warn(this, "This messager is closed, message's topic: " + messageTopic.getSimpleName());
          return;
       }
 
-      List<AtomicReference<Object>> boundVariablesForTopic = boundVariables.get(message.getTopic());
+      List<AtomicReference<Object>> boundVariablesForTopic = boundVariables.get(messageTopic);
       if (boundVariablesForTopic != null)
          boundVariablesForTopic.forEach(variable -> variable.set(message.getMessageContent()));
 
-      List<REATopicListener<Object>> topicListeners = topicListenersMap.get(message.getTopic());
+      List<REATopicListener<Object>> topicListeners = topicListenersMap.get(messageTopic);
       if (topicListeners != null)
          topicListeners.forEach(listener -> listener.receivedMessageForTopic(message.getMessageContent()));
    }
 
    @Override
    @SuppressWarnings("unchecked")
-   public <T> AtomicReference<T> createInput(String topic, T defaultValue)
+   public <T> AtomicReference<T> createInput(Topic<T> topic, T defaultValue)
    {
       AtomicReference<T> boundVariable = new AtomicReference<>(defaultValue);
 
@@ -57,7 +67,7 @@ public class REAMessagerSharedVariables implements REAMessager
 
    @Override
    @SuppressWarnings("unchecked")
-   public <T> void registerTopicListener(String topic, REATopicListener<T> listener)
+   public <T> void registerTopicListener(Topic<T> topic, REATopicListener<T> listener)
    {
       List<REATopicListener<Object>> topicListeners = topicListenersMap.get(topic);
       if (topicListeners == null)
@@ -87,5 +97,11 @@ public class REAMessagerSharedVariables implements REAMessager
    public void registerConnectionStateListener(NetStateListener listener)
    {
       connectionStateListeners.add(listener);
+   }
+
+   @Override
+   public API getMessagerAPI()
+   {
+      return messagerAPI;
    }
 }

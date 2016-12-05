@@ -56,17 +56,17 @@ public class REAOcTreeBuffer
 
    public void loadConfiguration(FilePropertyHelper filePropertyHelper)
    {
-      Boolean enableFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeEnable);
+      Boolean enableFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeEnable.getName());
       if (enableFile != null)
          enable.set(enableFile);
-      Integer bufferSizeFile = filePropertyHelper.loadIntegerProperty(REAModuleAPI.OcTreeBufferSize);
+      Integer bufferSizeFile = filePropertyHelper.loadIntegerProperty(REAModuleAPI.OcTreeBufferSize.getName());
       if (bufferSizeFile != null)
          bufferSize.set(bufferSizeFile);
    }
 
    public void saveConfiguration(FilePropertyHelper filePropertyHelper)
    {
-      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeBufferSize, bufferSize.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeBufferSize.getName(), bufferSize.get());
    }
 
    public Runnable createBufferThread()

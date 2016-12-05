@@ -6,6 +6,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.ToggleButton;
+import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.Topic;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 
@@ -30,46 +31,46 @@ public abstract class REABasicUIController
       filePropertyHelper = new FilePropertyHelper(configurationFile);
    }
 
-   protected void saveUIControlProperty(String propertyName, ToggleButton toggleButton)
+   protected void saveUIControlProperty(Topic<Boolean> topic, ToggleButton toggleButton)
    {
-      filePropertyHelper.saveProperty(propertyName, toggleButton.isSelected());
+      filePropertyHelper.saveProperty(topic.getName(), toggleButton.isSelected());
    }
 
-   protected void saveUIControlProperty(String propertyName, ComboBox<?> comboBox)
+   protected <T> void saveUIControlProperty(Topic<T> topic, ComboBox<T> comboBox)
    {
-      filePropertyHelper.saveProperty(propertyName, comboBox.getValue().toString());
+      filePropertyHelper.saveProperty(topic.getName(), comboBox.getValue().toString());
    }
 
-   protected void saveUIControlProperty(String propertyName, Slider slider)
+   protected void saveUIControlProperty(Topic<? extends Number> topic, Slider slider)
    {
-      filePropertyHelper.saveProperty(propertyName, slider.getValue());
+      filePropertyHelper.saveProperty(topic.getName(), slider.getValue());
    }
 
-   protected void loadUIControlProperty(String propertyName, ToggleButton toggleButton)
+   protected void loadUIControlProperty(Topic<Boolean> topic, ToggleButton toggleButton)
    {
-      Boolean loadedProperty = filePropertyHelper.loadBooleanProperty(propertyName);
+      Boolean loadedProperty = filePropertyHelper.loadBooleanProperty(topic.getName());
       if (loadedProperty != null)
          toggleButton.setSelected(loadedProperty);
    }
 
-   protected void loadUIControlProperty(String propertyName, Slider slider)
+   protected void loadUIControlProperty(Topic<? extends Number> topic, Slider slider)
    {
-      Double loadedProperty = filePropertyHelper.loadDoubleProperty(propertyName);
+      Double loadedProperty = filePropertyHelper.loadDoubleProperty(topic.getName());
       if (loadedProperty != null)
          slider.setValue(loadedProperty);
    }
 
-   protected void loadUIControlProperty(String propertyName, Spinner<Double> spinner)
+   protected void loadUIControlProperty(Topic<Double> topic, Spinner<Double> spinner)
    {
-      Double loadedProperty = filePropertyHelper.loadDoubleProperty(propertyName);
+      Double loadedProperty = filePropertyHelper.loadDoubleProperty(topic.getName());
       if (loadedProperty != null)
          spinner.getValueFactory().setValue(loadedProperty);
    }
 
    @SuppressWarnings("unchecked")
-   protected <T extends Enum<T>> void loadUIControlProperty(String propertyName, ComboBox<T> comboBox)
+   protected <T extends Enum<T>> void loadUIControlProperty(Topic<T> topic, ComboBox<T> comboBox)
    {
-      String loadedProperty = filePropertyHelper.loadProperty(propertyName);
+      String loadedProperty = filePropertyHelper.loadProperty(topic.getName());
       if (loadedProperty != null)
       {
          T valueOf = (T) Enum.valueOf(comboBox.getItems().get(0).getClass(), loadedProperty);

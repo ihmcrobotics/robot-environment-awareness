@@ -182,14 +182,14 @@ public class LIDARBasedREAModule
 
    public static LIDARBasedREAModule createRemoteModule(String configurationFilePath) throws IOException
    {
-      REAMessager server = REAMessagerOverNetwork.createTCPServer(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAMessager server = REAMessagerOverNetwork.createTCPServer(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
       server.startMessager();
       return new LIDARBasedREAModule(server, new File(configurationFilePath));
    }
 
    public static LIDARBasedREAModule createIntraprocessModule(String configurationFilePath) throws IOException
    {
-      REAMessager messager = REAMessagerOverNetwork.createIntraprocess(NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAMessager messager = REAMessagerOverNetwork.createIntraprocess(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
       messager.startMessager();
       return new LIDARBasedREAModule(messager, new File(configurationFilePath));
    }

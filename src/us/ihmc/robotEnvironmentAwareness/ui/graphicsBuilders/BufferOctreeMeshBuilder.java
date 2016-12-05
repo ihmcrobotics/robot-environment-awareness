@@ -38,8 +38,8 @@ public class BufferOctreeMeshBuilder implements Runnable
    public BufferOctreeMeshBuilder(REAUIMessager uiMessager)
    {
       this.uiMessager = uiMessager;
-      showBuffer = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsShowBuffer, false);
-      bufferState = uiMessager.createInput(REAModuleAPI.BufferState);
+      showBuffer = uiMessager.createInput(REAModuleAPI.UIOcTreeShowBuffer, false);
+      bufferState = uiMessager.createInput(REAModuleAPI.OcTreeBufferState);
    }
 
    @Override

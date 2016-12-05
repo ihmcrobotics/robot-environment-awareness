@@ -33,8 +33,8 @@ public class BoundingBoxMeshView extends MeshView implements Runnable
    public BoundingBoxMeshView(REAUIMessager uiMessager)
    {
       this.uiMessager = uiMessager;
-      showOcTreeBoundingBox = uiMessager.createInput(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, false);
-      boundingBoxState = uiMessager.createInput(REAModuleAPI.BoundingBoxState);
+      showOcTreeBoundingBox = uiMessager.createInput(REAModuleAPI.UIOcTreeBoundingBoxShow, false);
+      boundingBoxState = uiMessager.createInput(REAModuleAPI.OcTreeBoundingBoxState);
       setMaterial(material);
    }
 

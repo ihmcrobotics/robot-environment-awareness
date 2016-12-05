@@ -94,6 +94,12 @@ public class APIFactory
       {
          return root;
       }
+
+      @Override
+      public String toString()
+      {
+         return "API of " + root.getName();
+      }
    }
 
    public class CategoryTheme
@@ -131,6 +137,12 @@ public class APIFactory
       {
          return id == other.id && other.name.equals(other.name);
       }
+
+      @Override
+      public String toString()
+      {
+         return getName() + ", id = " + id;
+      }
    }
 
    public class TopicTheme
@@ -167,6 +179,12 @@ public class APIFactory
       public boolean equals(TopicTheme other)
       {
          return id == other.id && other.name.equals(other.name);
+      }
+
+      @Override
+      public String toString()
+      {
+         return getName() + ", id = " + id;
       }
    }
 
@@ -296,14 +314,14 @@ public class APIFactory
          return theme.getId();
       }
 
-      public int[] getUniqueId()
+      public APIElementId getUniqueId()
       {
          int idLength = getDepth() + 1;
          int[] uniqueId = new int[idLength];
          uniqueId[idLength - 1] = theme.getId();
          if (parent != null)
             parent.fillChildUniqueId(uniqueId);
-         return uniqueId;
+         return new APIElementId(uniqueId);
       }
 
       public String getName()
@@ -333,6 +351,12 @@ public class APIFactory
          if (!theme.equals(other.theme))
             return false;
          return parent == null ? other.parent == null : parent.equals(other.parent);
+      }
+
+      @Override
+      public String toString()
+      {
+         return getName() + ", id = " + getUniqueId();
       }
    }
 
@@ -390,6 +414,12 @@ public class APIFactory
             return false;
          return category.equals(other.category);
       }
+
+      @Override
+      public String toString()
+      {
+         return getName() + ", id = " + getUniqueId();
+      }
    }
 
    public static class APIElementId
@@ -427,6 +457,12 @@ public class APIFactory
       public boolean equals(APIElementId other)
       {
          return Arrays.equals(id, other.id);
+      }
+
+      @Override
+      public String toString()
+      {
+         return Arrays.toString(id);
       }
    }
 

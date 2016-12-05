@@ -73,7 +73,6 @@ public class PlanarRegionIntersectionCalculator
             }
          }
       }
-      System.out.println("Number of intersections: " + intersections.size());
    }
 
    public void clear()

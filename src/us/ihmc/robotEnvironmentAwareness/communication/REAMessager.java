@@ -36,6 +36,8 @@ public interface REAMessager
 
    boolean isMessagerOpen();
 
+   void notifyConnectionStateListeners();
+
    void registerConnectionStateListener(NetStateListener listener);
 
    API getMessagerAPI();

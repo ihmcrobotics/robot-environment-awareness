@@ -22,6 +22,7 @@ public class REAMessagerOverNetwork implements REAMessager
 
    private final ConcurrentHashMap<Topic<?>, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
    private final ConcurrentHashMap<Topic<?>, List<REATopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
+   private final List<NetStateListener> connectionStateListeners = new ArrayList<>();
 
    private final PacketCommunicator packetCommunicator;
 
@@ -146,6 +147,16 @@ public class REAMessagerOverNetwork implements REAMessager
    public void registerConnectionStateListener(NetStateListener listener)
    {
       packetCommunicator.attachStateListener(listener);
+      connectionStateListeners.add(listener);
+   }
+
+   @Override
+   public void notifyConnectionStateListeners()
+   {
+      if (isMessagerOpen())
+         connectionStateListeners.forEach(NetStateListener::connected);
+      else
+         connectionStateListeners.forEach(NetStateListener::disconnected);
    }
 
    @Override

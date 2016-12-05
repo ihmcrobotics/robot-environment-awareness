@@ -106,6 +106,15 @@ public class REAMessagerSharedVariables implements REAMessager
    }
 
    @Override
+   public void notifyConnectionStateListeners()
+   {
+      if (isMessagerOpen())
+         connectionStateListeners.forEach(NetStateListener::connected);
+      else
+         connectionStateListeners.forEach(NetStateListener::disconnected);
+   }
+
+   @Override
    public API getMessagerAPI()
    {
       return messagerAPI;

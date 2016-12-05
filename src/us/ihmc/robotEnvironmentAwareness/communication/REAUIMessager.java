@@ -168,4 +168,10 @@ public class REAUIMessager
    {
       reaMessagerToModule.registerConnectionStateListener(listener);
    }
+
+
+   public void notifyModuleConnectionStateListeners()
+   {
+      reaMessagerToModule.notifyConnectionStateListeners();
+   }
 }

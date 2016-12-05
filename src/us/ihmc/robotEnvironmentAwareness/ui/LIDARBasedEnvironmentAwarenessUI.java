@@ -72,12 +72,13 @@ public class LIDARBasedEnvironmentAwarenessUI
 
       mainPane.setCenter(scene3D);
 
-      scene3D.attachChild(pointCloudAnchorPaneController.getRoot());
       scene3D.attachChild(reaMeshViewer.getRoot());
       scene3D.attachChild(lidarFrameViewer.getRoot());
 
       uiConnectionHandler = new UIConnectionHandler(primaryStage, uiMessager);
       uiConnectionHandler.start();
+
+      uiMessager.notifyModuleConnectionStateListeners();
 
       primaryStage.setTitle(getClass().getSimpleName());
       primaryStage.setMaximized(true);
@@ -140,7 +141,6 @@ public class LIDARBasedEnvironmentAwarenessUI
          uiMessager.closeMessager();
 
          scene3D.stop();
-         pointCloudAnchorPaneController.stop();
          reaMeshViewer.stop();
          lidarFrameViewer.stop();
       }

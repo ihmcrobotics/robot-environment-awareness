@@ -51,7 +51,6 @@ public class REAOcTreeUpdater
       useBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable, true);
       atomicBoundingBoxParameters = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters, new BoundingBoxParametersMessage(0.0f, -2.0f, -3.0f, 5.0f, 2.0f, 0.5f));
       normalEstimationParameters = reaMessager.createInput(REAModuleAPI.NormalEstimationParameters, new NormalEstimationParameters());
-      reaMessager.registerTopicListener(REAModuleAPI.NormalEstimationParameters, (NormalEstimationParameters params) -> System.out.println(params));
 
       reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, messageContent -> sendCurrentState());
 

@@ -137,6 +137,12 @@ public class REAMessagerOverNetwork implements REAMessager
    }
 
    @Override
+   public boolean isMessagerOpen()
+   {
+      return packetCommunicator.isConnected();
+   }
+
+   @Override
    public void registerConnectionStateListener(NetStateListener listener)
    {
       packetCommunicator.attachStateListener(listener);

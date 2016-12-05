@@ -154,6 +154,16 @@ public class REAUIMessager
       reaMessagerToModule.closeMessager();
    }
 
+   public boolean isInternalMessagerOpen()
+   {
+      return internalMessager.isMessagerOpen();
+   }
+
+   public boolean isMessagerToModuleOpen()
+   {
+      return reaMessagerToModule.isMessagerOpen();
+   }
+
    public void registerModuleConnectionStateListener(NetStateListener listener)
    {
       reaMessagerToModule.registerConnectionStateListener(listener);

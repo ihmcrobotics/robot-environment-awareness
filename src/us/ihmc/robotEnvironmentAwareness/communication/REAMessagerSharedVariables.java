@@ -94,6 +94,12 @@ public class REAMessagerSharedVariables implements REAMessager
    }
 
    @Override
+   public boolean isMessagerOpen()
+   {
+      return isConnected.get();
+   }
+
+   @Override
    public void registerConnectionStateListener(NetStateListener listener)
    {
       connectionStateListeners.add(listener);

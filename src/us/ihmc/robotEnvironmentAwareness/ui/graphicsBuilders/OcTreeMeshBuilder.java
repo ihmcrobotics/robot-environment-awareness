@@ -99,6 +99,7 @@ public class OcTreeMeshBuilder implements Runnable
    {
       if (clear.getAndSet(false))
       {
+         meshAndMaterialToRender.set(new Pair<>(null, null));
          return;
       }
 

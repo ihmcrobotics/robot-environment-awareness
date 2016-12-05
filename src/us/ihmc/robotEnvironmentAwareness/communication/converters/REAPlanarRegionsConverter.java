@@ -10,6 +10,7 @@ import javax.vecmath.Vector3f;
 import us.ihmc.communication.packets.PlanarRegionMessage;
 import us.ihmc.communication.packets.PlanarRegionsListMessage;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OcTreeKeyMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionNodeKeysMessage;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
@@ -91,5 +92,16 @@ public class REAPlanarRegionsConverter
       }
       PlanarRegionNodeKeysMessage planarRegionNodeKeysMessage = new PlanarRegionNodeKeysMessage(regionId, nodeKeys);
       return planarRegionNodeKeysMessage;
+   }
+
+   public static LineSegment3dMessage[] createLineSegment3dMessages(RegionFeaturesProvider regionFeaturesProvider)
+   {
+      LineSegment3dMessage[] messages = new LineSegment3dMessage[regionFeaturesProvider.getNumberOfPlaneIntersections()];
+
+      for (int i = 0; i < regionFeaturesProvider.getNumberOfPlaneIntersections(); i++)
+      {
+         messages[i] = new LineSegment3dMessage(regionFeaturesProvider.getIntersection(i));
+      }
+      return messages;
    }
 }

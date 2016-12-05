@@ -16,6 +16,7 @@ import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHan
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BoundingBoxMeshView;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.BufferOctreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.PlanarRegionsIntersectionsMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.PlanarRegionsMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.ScanMeshBuilder;
 
@@ -26,12 +27,13 @@ public class REAMeshViewer
 
    private final Group root = new Group();
 
-   private final MeshView occupiedLeafsMeshView = new MeshView();
-   private final MeshView bufferLeafsMeshView = new MeshView();
-   private final MeshView scanInputMeshView = new MeshView();
+   private final MeshView ocTreeMeshView = new MeshView();
+   private final MeshView bufferOcTreeMeshView = new MeshView();
+   private final MeshView scanMeshView = new MeshView();
    private final MeshView planarRegionMeshView = new MeshView();
+   private final MeshView intersectionsMeshView = new MeshView();
 
-   private ScheduledExecutorService executorService = ExecutorServiceTools.newScheduledThreadPool(4, getClass(), ExceptionHandling.CANCEL_AND_REPORT);
+   private ScheduledExecutorService executorService = ExecutorServiceTools.newScheduledThreadPool(2, getClass(), ExceptionHandling.CANCEL_AND_REPORT);
 
    private final AnimationTimer renderMeshAnimation;
 
@@ -39,6 +41,7 @@ public class REAMeshViewer
    private final BufferOctreeMeshBuilder bufferOctreeMeshBuilder;
    private final OcTreeMeshBuilder ocTreeMeshBuilder;
    private final PlanarRegionsMeshBuilder planarRegionsMeshBuilder;
+   private final PlanarRegionsIntersectionsMeshBuilder intersectionsMeshBuilder;
    private final BoundingBoxMeshView boundingBoxMeshView;
 
    public REAMeshViewer(REAUIMessager uiMessager)
@@ -47,10 +50,11 @@ public class REAMeshViewer
       scanMeshBuilder = new ScanMeshBuilder(uiMessager);
       bufferOctreeMeshBuilder = new BufferOctreeMeshBuilder(uiMessager);
       ocTreeMeshBuilder = new OcTreeMeshBuilder(uiMessager);
-      boundingBoxMeshView = new BoundingBoxMeshView(uiMessager);
       planarRegionsMeshBuilder = new PlanarRegionsMeshBuilder(uiMessager);
+      intersectionsMeshBuilder = new PlanarRegionsIntersectionsMeshBuilder(uiMessager);
+      boundingBoxMeshView = new BoundingBoxMeshView(uiMessager);
 
-      root.getChildren().addAll(occupiedLeafsMeshView, bufferLeafsMeshView, scanInputMeshView, planarRegionMeshView, boundingBoxMeshView);
+      root.getChildren().addAll(scanMeshView, bufferOcTreeMeshView, ocTreeMeshView, planarRegionMeshView, intersectionsMeshView, boundingBoxMeshView);
       root.setMouseTransparent(true);
 
       renderMeshAnimation = new AnimationTimer()
@@ -58,25 +62,20 @@ public class REAMeshViewer
          @Override
          public void handle(long now)
          {
-            if (ocTreeMeshBuilder.hasNewMeshAndMaterial())
-            {
-               updateMeshView(occupiedLeafsMeshView, ocTreeMeshBuilder.pollMeshAndMaterial());
-            }
+            if (scanMeshBuilder.hasNewMeshAndMaterial())
+               updateMeshView(scanMeshView, scanMeshBuilder.pollMeshAndMaterial());
 
             if (bufferOctreeMeshBuilder.hasNewMeshAndMaterial())
-            {
-               updateMeshView(bufferLeafsMeshView, bufferOctreeMeshBuilder.pollMeshAndMaterial());
-            }
+               updateMeshView(bufferOcTreeMeshView, bufferOctreeMeshBuilder.pollMeshAndMaterial());
 
-            if (scanMeshBuilder.hasNewMeshAndMaterial())
-            {
-               updateMeshView(scanInputMeshView, scanMeshBuilder.pollMeshAndMaterial());
-            }
+            if (ocTreeMeshBuilder.hasNewMeshAndMaterial())
+               updateMeshView(ocTreeMeshView, ocTreeMeshBuilder.pollMeshAndMaterial());
 
             if (planarRegionsMeshBuilder.hasNewMeshAndMaterial())
-            {
                updateMeshView(planarRegionMeshView, planarRegionsMeshBuilder.pollMeshAndMaterial());
-            }
+
+            if (intersectionsMeshBuilder.hasNewMeshAndMaterial())
+               updateMeshView(intersectionsMeshView, intersectionsMeshBuilder.pollMeshAndMaterial());
          }
       };
    }
@@ -87,8 +86,9 @@ public class REAMeshViewer
       executorService.scheduleAtFixedRate(scanMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
       executorService.scheduleAtFixedRate(bufferOctreeMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
       executorService.scheduleAtFixedRate(ocTreeMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
-      executorService.scheduleAtFixedRate(boundingBoxMeshView, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
       executorService.scheduleAtFixedRate(planarRegionsMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
+      executorService.scheduleAtFixedRate(intersectionsMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
+      executorService.scheduleAtFixedRate(boundingBoxMeshView, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
    }
 
    public void stop()

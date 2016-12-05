@@ -11,6 +11,7 @@ import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.TopicTheme;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.TypedTopicTheme;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.BoundingBoxParametersMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.BoxMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionNodeKeysMessage;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
@@ -94,6 +95,7 @@ public class REAModuleAPI
    public static final Topic<NormalOcTreeMessage> OcTreeBufferState = OcTreeCategory.child(Buffer).topic(Data);
    public static final Topic<PlanarRegionsListMessage> PlanarRegionsState = PlanarRegionsCategory.topic(Data);
    public static final Topic<PlanarRegionNodeKeysMessage[]> PlanarRegionsNodeState = PlanarRegionsCategory.child(Node).topic(Data);
+   public static final Topic<LineSegment3dMessage[]> PlanarRegionsIntersectionState = PlanarRegionsCategory.child(Intersection).topic(Data);
    public static final Topic<BoxMessage> OcTreeBoundingBoxState = OcTreeCategory.child(BoundingBox).topic(Data);
 
    public static final Topic<Boolean> RequestEntireModuleState = ModuleCategory.child(Request).topic(Data);
@@ -101,6 +103,7 @@ public class REAModuleAPI
    public static final Topic<Boolean> RequestOctree = OcTreeCategory.child(Request).topic(Data);
    public static final Topic<Boolean> RequestBuffer = OcTreeCategory.child(Buffer).child(Request).topic(Data);
    public static final Topic<Boolean> RequestPlanarRegions = PlanarRegionsCategory.child(Request).topic(Data);
+   public static final Topic<Boolean> RequestPlanarRegionsIntersections = PlanarRegionsCategory.child(Intersection).child(Request).topic(Data);
    public static final Topic<Boolean> RequestPlanarRegionsNodeKeys = PlanarRegionsCategory.child(Request).child(Node).topic(Data);
    public static final Topic<Boolean> RequestBoundingBox = OcTreeCategory.child(BoundingBox).child(Request).topic(Data);
 

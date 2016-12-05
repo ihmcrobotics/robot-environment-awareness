@@ -61,7 +61,7 @@ public class REAMessagerOverNetwork implements REAMessager
       Topic<T> messageTopic = messagerAPI.findTopic(message.getTopicId());
 
       if (DEBUG)
-         PrintTools.info("Packet received from network with message name: " + messageTopic.getSimpleName());
+         PrintTools.info("Packet received from network with message name: " + messageTopic.getName());
 
       List<AtomicReference<Object>> inputVariablesForTopic = inputVariablesMap.get(messageTopic);
       if (inputVariablesForTopic != null)
@@ -82,12 +82,12 @@ public class REAMessagerOverNetwork implements REAMessager
 
       if (!packetCommunicator.isConnected())
       {
-         PrintTools.warn(this, "This messager is closed, message's topic: " + messageTopic.getSimpleName());
+         PrintTools.warn(this, "This messager is closed, message's topic: " + messageTopic.getName());
          return;
       }
 
       if (DEBUG)
-         PrintTools.info("Submit message for topic: " + messageTopic.getSimpleName());
+         PrintTools.info("Submit message for topic: " + messageTopic.getName());
 
       // Variable update over network
       packetCommunicator.send(message);

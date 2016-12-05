@@ -22,25 +22,25 @@ public class PlanarRegionsMeshBuilder implements Runnable
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> clear;
 
-   private final JavaFXMultiColorMeshBuilder polygonsMeshBuilder;
+   private final JavaFXMultiColorMeshBuilder meshBuilder;
 
    private final AtomicReference<PlanarRegionsListMessage> planarRegionsListMessage;
 
    private final AtomicReference<Pair<Mesh, Material>> meshAndMaterialToRender = new AtomicReference<>(null);
 
-   private final REAUIMessager reaMessager;
+   private final REAUIMessager uiMessager;
 
    public PlanarRegionsMeshBuilder(REAUIMessager uiMessager)
    {
-      this.reaMessager = uiMessager;
+      this.uiMessager = uiMessager;
       enable = uiMessager.createInput(REAModuleAPI.OcTreeEnable, false);
       clear = uiMessager.createInput(REAModuleAPI.OcTreeClear, false);
 
       planarRegionsListMessage = uiMessager.createInput(REAModuleAPI.PlanarRegionsState);
 
-      TextureColorPalette2D regionColorPalette1D = new TextureColorPalette2D();
-      regionColorPalette1D.setHueBrightnessBased(0.9);
-      polygonsMeshBuilder = new JavaFXMultiColorMeshBuilder(regionColorPalette1D);
+      TextureColorPalette2D colorPalette = new TextureColorPalette2D();
+      colorPalette.setHueBrightnessBased(0.9);
+      meshBuilder = new JavaFXMultiColorMeshBuilder(colorPalette);
    }
 
    @Override
@@ -57,7 +57,7 @@ public class PlanarRegionsMeshBuilder implements Runnable
       if (!enable.get())
          return;
 
-      reaMessager.submitStateRequestToModule(REAModuleAPI.RequestPlanarRegions);
+      uiMessager.submitStateRequestToModule(REAModuleAPI.RequestPlanarRegions);
 
       if (newMessage == null)
          return;
@@ -68,7 +68,7 @@ public class PlanarRegionsMeshBuilder implements Runnable
 
    private Pair<Mesh, Material> generateMeshAndMaterial(PlanarRegionsListMessage newMessage)
    {
-      polygonsMeshBuilder.clear();
+      meshBuilder.clear();
 
       double lineWidth = 0.01;
       RigidBodyTransform transformToWorld = new RigidBodyTransform();
@@ -82,19 +82,19 @@ public class PlanarRegionsMeshBuilder implements Runnable
          Color regionColor = getRegionColor(regionId);
          planarRegion.getTransformToWorld(transformToWorld);
 
-         polygonsMeshBuilder.addMultiLine(transformToWorld, planarRegion.getConcaveHull(), lineWidth, regionColor, true);
+         meshBuilder.addMultiLine(transformToWorld, planarRegion.getConcaveHull(), lineWidth, regionColor, true);
 
 
          for (int i = 0; i < planarRegion.getNumberOfConvexPolygons(); i++)
          {
             ConvexPolygon2d convexPolygon2d = planarRegion.getConvexPolygon(i);
             regionColor = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) i / (double) planarRegion.getNumberOfConvexPolygons()));
-            polygonsMeshBuilder.addPolygon(transformToWorld, convexPolygon2d, regionColor);
+            meshBuilder.addPolygon(transformToWorld, convexPolygon2d, regionColor);
          }
       }
 
-      Material material = polygonsMeshBuilder.generateMaterial();
-      Mesh mesh = polygonsMeshBuilder.generateMesh();
+      Material material = meshBuilder.generateMaterial();
+      Mesh mesh = meshBuilder.generateMesh();
 
       return new Pair<>(mesh, material);
    }

@@ -2,6 +2,7 @@ package us.ihmc.robotEnvironmentAwareness.ui;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Window;
@@ -64,10 +65,14 @@ public class UIConnectionHandler
       if (!enable.get())
          return;
 
+      Platform.runLater(this::createWarning);
+   }
+
+   private void createWarning()
+   {
       Alert connectionLostAlert = new Alert(AlertType.WARNING);
       connectionLostAlert.setHeaderText("Lost connection");
       connectionLostAlert.initOwner(mainWindow);
-
       connectionLostAlert.showAndWait();
    }
 }

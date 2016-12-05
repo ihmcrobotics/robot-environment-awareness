@@ -82,8 +82,8 @@ public class LIDARFilterAnchorPaneController extends REABasicUIController
       boundingBoxParametersProperty.binBidirectionalMaxZ(boundingBoxMaxZSpinner.getValueFactory().valueProperty());
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeBoundingBoxParameters, boundingBoxParametersProperty);
 
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeBoundingBoxShow, showBoundingBoxButton.selectedProperty());
       load();
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeBoundingBoxShow, showBoundingBoxButton.selectedProperty(), true);
    }
 
    @FXML

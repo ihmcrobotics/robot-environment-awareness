@@ -101,8 +101,8 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
       intersectionEstimationParametersProperty.bindBidirectionalAddIntersectionsToRegions(addIntersectionsToRegionsButton.selectedProperty());
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.PlanarRegionsIntersectionParameters, intersectionEstimationParametersProperty);
       
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIPlanarRegionHideNodes, hideRegionNodes.selectedProperty());
       load();
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIPlanarRegionHideNodes, hideRegionNodes.selectedProperty(), true);
    }
 
    @FXML

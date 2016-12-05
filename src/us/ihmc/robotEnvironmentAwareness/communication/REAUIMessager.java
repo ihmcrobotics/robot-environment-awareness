@@ -75,20 +75,24 @@ public class REAUIMessager
       reaMessagerToModule.registerTopicListener(topic, listener);
    }
 
-   public <M, P> void bindBidirectionalInternal(Topic<M> topic, Property<P> property, PropertyToMessageTypeConverter<M, P> converterToMessageType)
+   public <M, P> void bindBidirectionalInternal(Topic<M> topic, Property<P> property, PropertyToMessageTypeConverter<M, P> converterToMessageType, boolean pushValue)
    {
       MessageBidirectionalBinding<M, P> bind = new MessageBidirectionalBinding<>(messageContent -> submitMessageInternal(topic, messageContent), property,
             converterToMessageType);
       property.addListener(bind);
       internalMessager.registerTopicListener(topic, bind);
+      if (pushValue)
+         internalMessager.submitMessage(topic, converterToMessageType.convert(property.getValue()));
    }
 
-   public <T> void bindBidirectionalInternal(Topic<T> topic, Property<T> property)
+   public <T> void bindBidirectionalInternal(Topic<T> topic, Property<T> property, boolean pushValue)
    {
       MessageBidirectionalBinding<T, T> bind = MessageBidirectionalBinding
             .createSingleTypedBinding(messageContent -> submitMessageInternal(topic, messageContent), property);
       property.addListener(bind);
       internalMessager.registerTopicListener(topic, bind);
+      if (pushValue)
+         internalMessager.submitMessage(topic, property.getValue());
    }
 
    public <T> void bindBidirectionalModule(Topic<T> topic, Property<T> property)

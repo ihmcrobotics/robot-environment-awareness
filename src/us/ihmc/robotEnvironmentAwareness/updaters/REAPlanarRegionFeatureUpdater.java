@@ -117,7 +117,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
       intersectionCalculator.clear();
 
-      if (clearSegmentation.get())
+      if (clearSegmentation.getAndSet(false))
       {
          planarRegionCalculator.clear();
          return;

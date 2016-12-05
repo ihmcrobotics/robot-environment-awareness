@@ -136,7 +136,7 @@ public class REAOcTreeUpdater
       if (bufferOctree != null)
          referenceOctree.insertNormalOcTree(sensorOrigin, bufferOctree);
 
-      if (clearNormals.get())
+      if (clearNormals.getAndSet(false))
       {
          referenceOctree.clearNormals();
          return;

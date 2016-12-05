@@ -1,6 +1,9 @@
 package us.ihmc.robotEnvironmentAwareness.ui.viewer;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javafx.animation.AnimationTimer;
@@ -10,6 +13,7 @@ import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
+import us.ihmc.communication.net.NetStateListener;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
@@ -27,6 +31,7 @@ public class REAMeshViewer
 
    private final Group root = new Group();
 
+   private final List<ScheduledFuture<?>> meshBuilderScheduledFutures = new ArrayList<>();
    private final MeshView ocTreeMeshView = new MeshView();
    private final MeshView bufferOcTreeMeshView = new MeshView();
    private final MeshView scanMeshView = new MeshView();
@@ -78,26 +83,53 @@ public class REAMeshViewer
                updateMeshView(intersectionsMeshView, intersectionsMeshBuilder.pollMeshAndMaterial());
          }
       };
+
+      uiMessager.registerModuleConnectionStateListener(new NetStateListener()
+      {
+         @Override
+         public void disconnected()
+         {
+            sleep();
+         }
+         
+         @Override
+         public void connected()
+         {
+            start();
+         }
+      });
    }
 
    public void start()
    {
+      if (!meshBuilderScheduledFutures.isEmpty())
+         return;
       renderMeshAnimation.start();
-      executorService.scheduleAtFixedRate(scanMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
-      executorService.scheduleAtFixedRate(bufferOctreeMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
-      executorService.scheduleAtFixedRate(ocTreeMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
-      executorService.scheduleAtFixedRate(planarRegionsMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
-      executorService.scheduleAtFixedRate(intersectionsMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
-      executorService.scheduleAtFixedRate(boundingBoxMeshView, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS);
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(scanMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(bufferOctreeMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(ocTreeMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(planarRegionsMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(intersectionsMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(boundingBoxMeshView, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+   }
+
+   public void sleep()
+   {
+      if (meshBuilderScheduledFutures.isEmpty())
+         return;
+      renderMeshAnimation.stop();
+      for (ScheduledFuture<?> scheduledFuture : meshBuilderScheduledFutures)
+         scheduledFuture.cancel(true);
+      meshBuilderScheduledFutures.clear();
    }
 
    public void stop()
    {
-      renderMeshAnimation.stop();
+      sleep();
 
       if (executorService != null)
       {
-         executorService.shutdown();
+         executorService.shutdownNow();
          executorService = null;
       }
    }

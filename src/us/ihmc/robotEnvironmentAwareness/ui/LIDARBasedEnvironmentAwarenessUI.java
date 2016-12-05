@@ -66,9 +66,7 @@ public class LIDARBasedEnvironmentAwarenessUI
       uiMessager.startMessager();
 
       lidarFrameViewer = new LidarFrameViewer(uiMessager);
-      lidarFrameViewer.start();
       reaMeshViewer = new REAMeshViewer(uiMessager);
-      reaMeshViewer.start();
 
       initializeControllers(uiMessager);
 
@@ -106,7 +104,6 @@ public class LIDARBasedEnvironmentAwarenessUI
       pointCloudAnchorPaneController.setConfigurationFile(configurationFile);
       pointCloudAnchorPaneController.attachREAMessager(uiMessager);
       pointCloudAnchorPaneController.bindControls();
-      pointCloudAnchorPaneController.start();
 
       ocTreeBasicsAnchorPaneController.setConfigurationFile(configurationFile);
       ocTreeBasicsAnchorPaneController.attachREAMessager(uiMessager);

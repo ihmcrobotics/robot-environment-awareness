@@ -23,6 +23,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.MeshView;
+import us.ihmc.communication.net.NetStateListener;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.graphics3DDescription.MeshDataGenerator;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
@@ -79,6 +80,21 @@ public class PointCloudAnchorPaneController extends REABasicUIController
       enableButton.selectedProperty().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> enable.set(newValue));
       Platform.runLater(() -> enableButton.setSelected(enable.get()));
       scanHistorySizeSlider.valueProperty().addListener(this::updateNumberOfScans);
+
+      uiMessager.registerModuleConnectionStateListener(new NetStateListener()
+      {
+         @Override
+         public void disconnected()
+         {
+            sleep();
+         }
+         
+         @Override
+         public void connected()
+         {
+            start();
+         }
+      });
    }
 
    private void updateNumberOfScans(Observable observable)
@@ -158,6 +174,17 @@ public class PointCloudAnchorPaneController extends REABasicUIController
 
       if (scheduled == null)
          scheduled = executorService.scheduleAtFixedRate(this::computeScanMesh, 0, 10, TimeUnit.MILLISECONDS);
+   }
+
+   public void sleep()
+   {
+      pointCloudAnimation.stop();
+
+      if (scheduled != null)
+      {
+         scheduled.cancel(true);
+         scheduled = null;
+      }
    }
 
    public void stop()

@@ -9,6 +9,7 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.transform.Affine;
+import us.ihmc.communication.net.NetStateListener;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
@@ -33,6 +34,20 @@ public class LidarFrameViewer extends AnimationTimer
       root.getChildren().add(lidarCoordinateSystem);
 
       uiMessager.registerTopicListener(REAModuleAPI.LidarScanState, this::handleMessage);
+      uiMessager.registerModuleConnectionStateListener(new NetStateListener()
+      {
+         @Override
+         public void disconnected()
+         {
+            stop();
+         }
+         
+         @Override
+         public void connected()
+         {
+            start();
+         }
+      });
    }
 
    @Override

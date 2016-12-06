@@ -1,14 +1,13 @@
 package us.ihmc.robotEnvironmentAwareness.ui.controller;
 
-import javafx.beans.InvalidationListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
-import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.MessageBidirectionalBinding.PropertyToMessageTypeConverter;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.ui.properties.BoundingBoxParametersProperty;
 
 public class LIDARFilterAnchorPaneController extends REABasicUIController
 {
@@ -28,10 +27,29 @@ public class LIDARFilterAnchorPaneController extends REABasicUIController
    private Spinner<Double> boundingBoxMinZSpinner;
    @FXML
    private Spinner<Double> boundingBoxMaxZSpinner;
+
+   private final BoundingBoxParametersProperty boundingBoxParametersProperty = new BoundingBoxParametersProperty(this, "boundingBoxParameters");
+
    @FXML
    private Slider lidarMinRange;
    @FXML
    private Slider lidarMaxRange;
+
+   private final PropertyToMessageTypeConverter<Double, Number> converter = new PropertyToMessageTypeConverter<Double, Number>()
+   {
+
+      @Override
+      public Double convert(Number propertyValue)
+      {
+         return propertyValue.doubleValue();
+      }
+
+      @Override
+      public Number interpret(Double messageContent)
+      {
+         return messageContent.doubleValue();
+      }
+   };
 
    public LIDARFilterAnchorPaneController()
    {
@@ -52,59 +70,32 @@ public class LIDARFilterAnchorPaneController extends REABasicUIController
    {
       setupControls();
 
-      sendMessageOnPropertyChange(enableBoundingBoxButton, REAModuleAPI.OcTreeBoundingBoxEnable);
-      sendMessageOnPropertyChange(showBoundingBoxButton, REAModuleAPI.OcTreeGraphicsBoundingBoxShow);
-      sendMessageOnPropertyChange(lidarMinRange, REAModuleAPI.OcTreeLIDARMinRange);
-      sendMessageOnPropertyChange(lidarMaxRange, REAModuleAPI.OcTreeLIDARMaxRange);
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeBoundingBoxEnable, enableBoundingBoxButton.selectedProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.LidarMinRange, lidarMinRange.valueProperty(), converter);
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.LidarMaxRange, lidarMaxRange.valueProperty(), converter);
 
-      InvalidationListener sendBoundingBoxListener = observable -> send(new REAMessage(REAModuleAPI.OcTreeBoundingBoxParameters, createBoundingBox()));
-      boundingBoxMinXSpinner.valueProperty().addListener(sendBoundingBoxListener);
-      boundingBoxMaxXSpinner.valueProperty().addListener(sendBoundingBoxListener);
-      boundingBoxMinYSpinner.valueProperty().addListener(sendBoundingBoxListener);
-      boundingBoxMaxYSpinner.valueProperty().addListener(sendBoundingBoxListener);
-      boundingBoxMinZSpinner.valueProperty().addListener(sendBoundingBoxListener);
-      boundingBoxMaxZSpinner.valueProperty().addListener(sendBoundingBoxListener);
-      registerListener(sendBoundingBoxListener);
-      fireAllListeners();
+      boundingBoxParametersProperty.binBidirectionalMinX(boundingBoxMinXSpinner.getValueFactory().valueProperty());
+      boundingBoxParametersProperty.binBidirectionalMinY(boundingBoxMinYSpinner.getValueFactory().valueProperty());
+      boundingBoxParametersProperty.binBidirectionalMinZ(boundingBoxMinZSpinner.getValueFactory().valueProperty());
+      boundingBoxParametersProperty.binBidirectionalMaxX(boundingBoxMaxXSpinner.getValueFactory().valueProperty());
+      boundingBoxParametersProperty.binBidirectionalMaxY(boundingBoxMaxYSpinner.getValueFactory().valueProperty());
+      boundingBoxParametersProperty.binBidirectionalMaxZ(boundingBoxMaxZSpinner.getValueFactory().valueProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeBoundingBoxParameters, boundingBoxParametersProperty);
 
       load();
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeBoundingBoxShow, showBoundingBoxButton.selectedProperty(), true);
    }
 
    @FXML
    public void save()
    {
-      saveProperty(REAModuleAPI.OcTreeBoundingBoxEnable, enableBoundingBoxButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeGraphicsBoundingBoxShow, showBoundingBoxButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeLIDARMinRange, lidarMinRange.getValue());
-      saveProperty(REAModuleAPI.OcTreeLIDARMaxRange, lidarMaxRange.getValue());
-      saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters, createBoundingBox().toString());
+      uiMessager.submitStateRequestToModule(REAModuleAPI.SaveMainUpdaterConfiguration);
+      saveUIControlProperty(REAModuleAPI.UIOcTreeBoundingBoxShow, showBoundingBoxButton);
    }
 
    public void load()
    {
-      loadPropertyAndUpdateUIControl(enableBoundingBoxButton, REAModuleAPI.OcTreeBoundingBoxEnable);
-      loadPropertyAndUpdateUIControl(showBoundingBoxButton, REAModuleAPI.OcTreeGraphicsBoundingBoxShow);
-      loadPropertyAndUpdateUIControl(lidarMinRange, REAModuleAPI.OcTreeLIDARMinRange);
-      loadPropertyAndUpdateUIControl(lidarMaxRange, REAModuleAPI.OcTreeLIDARMaxRange);
-      String boundingBoxAsString = loadProperty(REAModuleAPI.OcTreeBoundingBoxParameters);
-      if (boundingBoxAsString != null)
-      {
-         OcTreeSimpleBoundingBox boundingBox = OcTreeSimpleBoundingBox.parse(boundingBoxAsString);
-         boundingBoxMinXSpinner.getValueFactory().setValue(boundingBox.getMinX());
-         boundingBoxMinYSpinner.getValueFactory().setValue(boundingBox.getMinY());
-         boundingBoxMinZSpinner.getValueFactory().setValue(boundingBox.getMinZ());
-         boundingBoxMaxXSpinner.getValueFactory().setValue(boundingBox.getMaxX());
-         boundingBoxMaxYSpinner.getValueFactory().setValue(boundingBox.getMaxY());
-         boundingBoxMaxZSpinner.getValueFactory().setValue(boundingBox.getMaxZ());
-      }
-   }
-
-   private OcTreeSimpleBoundingBox createBoundingBox()
-   {
-      OcTreeSimpleBoundingBox boundingBox = new OcTreeSimpleBoundingBox();
-      boundingBox.setMinCoordinate(boundingBoxMinXSpinner.getValue(), boundingBoxMinYSpinner.getValue(), boundingBoxMinZSpinner.getValue());
-      boundingBox.setMaxCoordinate(boundingBoxMaxXSpinner.getValue(), boundingBoxMaxYSpinner.getValue(), boundingBoxMaxZSpinner.getValue());
-      return boundingBox;
+      loadUIControlProperty(REAModuleAPI.UIOcTreeBoundingBoxShow, showBoundingBoxButton);
    }
 
    private DoubleSpinnerValueFactory createBoundingBoxValueFactory(double initialValue)

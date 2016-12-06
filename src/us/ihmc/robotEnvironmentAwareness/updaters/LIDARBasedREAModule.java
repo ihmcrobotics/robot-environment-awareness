@@ -1,206 +1,172 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
-import java.util.concurrent.Executors;
+import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.commons.lang3.time.StopWatch;
-
 import com.google.common.util.concurrent.AtomicDouble;
 
+import us.ihmc.communication.configuration.NetworkParameterKeys;
+import us.ihmc.communication.configuration.NetworkParameters;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
+import us.ihmc.communication.util.NetworkPorts;
+import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.tools.JOctoMapTools;
+import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
+import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
+import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
 import us.ihmc.tools.io.printing.PrintTools;
-import us.ihmc.tools.thread.ThreadTools;
 
 public class LIDARBasedREAModule
 {
-   private static final boolean REPORT_TIME = false;
+   private static final String ocTreeTimeReport = "OcTree update took: ";
+   private static final String reportOcTreeStateTimeReport = "Reporting OcTree state took: ";
+   private static final String planarRegionsTimeReport = "OcTreePlanarRegion update took: ";
+   private static final String reportPlanarRegionsStateTimeReport = "Reporting Planar Regions state took: ";
+
+   private final TimeReporter timeReporter = new TimeReporter(this);
+
    private static final int THREAD_PERIOD_MILLISECONDS = 200;
    private static final int BUFFER_THREAD_PERIOD_MILLISECONDS = 10;
-   private static final double OCTREE_COMPLETE_UPDATE_PERIOD = 0.5; // in seconds
-   private static final double GRAPHICS_REFRESH_PERIOD = 2.0; // in seconds
    private static final double OCTREE_RESOLUTION = 0.02;
    protected static final boolean DEBUG = true;
 
-   private final StopWatch stopWatch = REPORT_TIME ? new StopWatch() : null;
-   private final NormalOcTree octree = new NormalOcTree(OCTREE_RESOLUTION);
+   private final String networkManagerHost = NetworkParameters.getHost(NetworkParameterKeys.networkManager);
+   private final PacketCommunicator packetCommunicator;
 
-   private final REAOcTreeUpdater updater;
+   private final NormalOcTree mainOctree = new NormalOcTree(OCTREE_RESOLUTION);
+
+   private final REAOcTreeBuffer bufferUpdater;
+   private final REAOcTreeUpdater mainUpdater;
    private final REAPlanarRegionFeatureUpdater planarRegionFeatureUpdater;
-   private final REAOcTreeGraphicsBuilder graphicsBuilder;
+
+   private final REAModuleStateReporter moduleStateReporter;
    private final REAPlanarRegionNetworkProvider planarRegionNetworkProvider;
 
    private final AtomicReference<Boolean> clearOcTree;
 
-   private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(3, ThreadTools.getNamedThreadFactory(getClass().getSimpleName()));
+   private ScheduledExecutorService executorService = ExecutorServiceTools.newScheduledThreadPool(3, getClass(), ExceptionHandling.CATCH_AND_REPORT);
    private ScheduledFuture<?> scheduled;
+   private final REAMessager reaMessager;
 
-   public LIDARBasedREAModule(REAMessageManager uiOutputManager, REAMessager uiInputMessager)
+   private LIDARBasedREAModule(REAMessager reaMessager, File configurationFile) throws IOException
    {
-      updater = new REAOcTreeUpdater(octree, uiOutputManager, uiInputMessager);
-      planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(octree, uiOutputManager, uiInputMessager);
-      graphicsBuilder = new REAOcTreeGraphicsBuilder(octree, planarRegionFeatureUpdater, uiOutputManager, uiInputMessager);
-      planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater);
-      clearOcTree = uiOutputManager.createInput(REAModuleAPI.OcTreeClear, false);
+      this.reaMessager = reaMessager;
+
+      packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
+      packetCommunicator.connect();
+
+      moduleStateReporter = new REAModuleStateReporter(reaMessager, packetCommunicator);
+
+      bufferUpdater = new REAOcTreeBuffer(mainOctree.getResolution(), reaMessager, moduleStateReporter, packetCommunicator);
+      mainUpdater = new REAOcTreeUpdater(mainOctree, bufferUpdater, reaMessager, packetCommunicator);
+      planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(mainOctree, reaMessager);
+
+      FilePropertyHelper filePropertyHelper = new FilePropertyHelper(configurationFile);
+      loadConfigurationFile(filePropertyHelper);
+
+      reaMessager.registerTopicListener(REAModuleAPI.SaveBufferConfiguration, (content) -> bufferUpdater.saveConfiguration(filePropertyHelper));
+      reaMessager.registerTopicListener(REAModuleAPI.SaveMainUpdaterConfiguration, (content) -> mainUpdater.saveConfiguration(filePropertyHelper));
+      reaMessager.registerTopicListener(REAModuleAPI.SaveRegionUpdaterConfiguration, (content) -> planarRegionFeatureUpdater.saveConfiguration(filePropertyHelper));
+
+      planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater, packetCommunicator);
+      clearOcTree = reaMessager.createInput(REAModuleAPI.OcTreeClear, false);
    }
 
-   public void attachListeners(PacketCommunicator packetCommunicator)
+   private void loadConfigurationFile(FilePropertyHelper filePropertyHelper)
    {
-      updater.attachListeners(packetCommunicator);
-      planarRegionNetworkProvider.attachPacketCommunicator(packetCommunicator);
+      bufferUpdater.loadConfiguration(filePropertyHelper);
+      mainUpdater.loadConfiguration(filePropertyHelper);
+      planarRegionFeatureUpdater.loadConfiguration(filePropertyHelper);
    }
 
-   public void clear()
-   {
-      clearOcTree.set(true);
-   }
+   private final AtomicDouble lastCompleteUpdate = new AtomicDouble(Double.NaN);
 
-   private Runnable createUpdater()
+   private void mainUpdate()
    {
-      Runnable runnable = new Runnable()
+      if (isThreadInterrupted())
+         return;
+
+      double currentTime = JOctoMapTools.nanoSecondsToSeconds(System.nanoTime());
+
+      boolean ocTreeUpdateSuccess = true;
+
+      try
       {
-         private final AtomicDouble lastCompleteUpdate = new AtomicDouble(Double.NaN);
-         private final AtomicDouble lastGraphicsUpdate = new AtomicDouble(Double.NaN);
-
-         @Override
-         public void run()
+         if (clearOcTree.getAndSet(false))
          {
+            bufferUpdater.clearBuffer();
+            mainUpdater.clearOcTree();
+            planarRegionFeatureUpdater.clearOcTree();
+         }
+         else
+         {
+            timeReporter.run(mainUpdater::update, ocTreeTimeReport);
+            timeReporter.run(() -> moduleStateReporter.reportOcTreeState(mainOctree), reportOcTreeStateTimeReport);
+
             if (isThreadInterrupted())
                return;
 
-            double currentTime = JOctoMapTools.nanoSecondsToSeconds(System.nanoTime());
+            timeReporter.run(planarRegionFeatureUpdater::update, planarRegionsTimeReport);
+            timeReporter.run(() -> moduleStateReporter.reportPlanarRegionsState(planarRegionFeatureUpdater), reportPlanarRegionsStateTimeReport);
 
-            boolean performCompleteOcTreeUpdate = (Double.isNaN(lastCompleteUpdate.get()) || currentTime - lastCompleteUpdate.get() >= OCTREE_COMPLETE_UPDATE_PERIOD);
-            boolean performGraphicsUpdate = (Double.isNaN(lastGraphicsUpdate.get()) || currentTime - lastGraphicsUpdate.get() >= GRAPHICS_REFRESH_PERIOD);
-
-            try
-            {
-               if (clearOcTree.getAndSet(false))
-               {
-                  updater.clearBuffer();
-                  updater.clearOcTree();
-                  planarRegionFeatureUpdater.clearOcTree();
-               }
-               else
-               {
-                  performCompleteOcTreeUpdate &= callOcTreeUpdater(performCompleteOcTreeUpdate);
-
-                  if (isThreadInterrupted())
-                     return;
-
-                  if (performCompleteOcTreeUpdate)
-                     callPlanarRegionFeatureUpdater();
-               }
-
-               if (isThreadInterrupted())
-                  return;
-
-               if (performGraphicsUpdate)
-                  callGraphicsBuilder();
-
-               planarRegionNetworkProvider.update(performCompleteOcTreeUpdate);
-
-               if (planarRegionNetworkProvider.pollClearRequest())
-                  clear();
-            }
-            catch (Exception e)
-            {
-               if (DEBUG)
-               {
-                  e.printStackTrace();
-               }
-               else
-               {
-                  PrintTools.error(LIDARBasedREAModule.class, e.getClass().getSimpleName());
-               }
-            }
-
-            currentTime = JOctoMapTools.nanoSecondsToSeconds(System.nanoTime());
-            if (performCompleteOcTreeUpdate)
-               lastCompleteUpdate.set(currentTime);
-            if (performGraphicsUpdate)
-               lastGraphicsUpdate.set(currentTime);
+            planarRegionNetworkProvider.update(ocTreeUpdateSuccess);
          }
 
-         private boolean callOcTreeUpdater(boolean performCompleteUpdate)
+         if (isThreadInterrupted())
+            return;
+
+         if (planarRegionNetworkProvider.pollClearRequest())
+            clearOcTree.set(true);
+      }
+      catch (Exception e)
+      {
+         if (DEBUG)
          {
-            if (REPORT_TIME)
-            {
-               if (performCompleteUpdate)
-               {
-                  stopWatch.reset();
-                  stopWatch.start();
-               }
-            }
-
-            boolean updatedProperly = updater.update(performCompleteUpdate);
-
-            if (REPORT_TIME)
-            {
-               if (performCompleteUpdate && updatedProperly)
-                  System.out.println("OcTree update took: " + JOctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
-            }
-
-            return performCompleteUpdate && updatedProperly;
+            e.printStackTrace();
          }
-
-         private void callPlanarRegionFeatureUpdater()
+         else
          {
-            if (REPORT_TIME)
-            {
-               stopWatch.reset();
-               stopWatch.start();
-            }
-
-            planarRegionFeatureUpdater.update();
-
-            if (REPORT_TIME)
-            {
-               System.out.println("OcTreePlanarRegion update took: " + JOctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
-            }
+            PrintTools.error(LIDARBasedREAModule.class, e.getClass().getSimpleName());
          }
+      }
 
-         private void callGraphicsBuilder()
-         {
-            if (REPORT_TIME)
-            {
-               stopWatch.reset();
-               stopWatch.start();
-            }
+      currentTime = JOctoMapTools.nanoSecondsToSeconds(System.nanoTime());
 
-            Runnable futureTask = graphicsBuilder.update();
-            if (futureTask != null)
-               executorService.execute(futureTask);
-
-            if (REPORT_TIME)
-            {
-               System.out.println("OcTreeGraphics update took: " + JOctoMapTools.nanoSecondsToSeconds(stopWatch.getNanoTime()));
-            }
-         }
-
-         private boolean isThreadInterrupted()
-         {
-            return Thread.interrupted() || scheduled == null || scheduled.isCancelled();
-         }
-      };
-      return runnable;
+      if (ocTreeUpdateSuccess)
+         lastCompleteUpdate.set(currentTime);
    }
 
-   public void start()
+   private boolean isThreadInterrupted()
+   {
+      return Thread.interrupted() || scheduled == null || scheduled.isCancelled();
+   }
+
+   public void start() throws IOException
    {
       if (scheduled == null)
       {
-         scheduled = executorService.scheduleAtFixedRate(createUpdater(), 0, THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
-         executorService.scheduleAtFixedRate(updater.createBufferThread(), 0, BUFFER_THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
+         scheduled = executorService.scheduleAtFixedRate(this::mainUpdate, 0, THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
+         executorService.scheduleAtFixedRate(bufferUpdater.createBufferThread(), 0, BUFFER_THREAD_PERIOD_MILLISECONDS, TimeUnit.MILLISECONDS);
       }
    }
 
    public void stop()
    {
+      PrintTools.info("REA Module is going down.");
+      packetCommunicator.closeConnection();
+      packetCommunicator.close();
+
+      reaMessager.closeMessager();
+
       if (scheduled != null)
       {
          scheduled.cancel(true);
@@ -209,8 +175,22 @@ public class LIDARBasedREAModule
 
       if (executorService != null)
       {
-         executorService.shutdown();
+         executorService.shutdownNow();
          executorService = null;
       }
+   }
+
+   public static LIDARBasedREAModule createRemoteModule(String configurationFilePath) throws IOException
+   {
+      REAMessager server = REAMessagerOverNetwork.createTCPServer(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      server.startMessager();
+      return new LIDARBasedREAModule(server, new File(configurationFilePath));
+   }
+
+   public static LIDARBasedREAModule createIntraprocessModule(String configurationFilePath) throws IOException
+   {
+      REAMessager messager = REAMessagerOverNetwork.createIntraprocess(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      messager.startMessager();
+      return new LIDARBasedREAModule(messager, new File(configurationFilePath));
    }
 }

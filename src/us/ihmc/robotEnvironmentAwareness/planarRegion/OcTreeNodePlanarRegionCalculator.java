@@ -23,15 +23,20 @@ import us.ihmc.jOctoMap.rules.interfaces.IteratorSelectionRule;
 import us.ihmc.jOctoMap.tools.OcTreeNearestNeighborTools;
 import us.ihmc.jOctoMap.tools.OcTreeNearestNeighborTools.NeighborActionRule;
 import us.ihmc.robotEnvironmentAwareness.exception.PlanarRegionSegmentationException;
+import us.ihmc.robotics.geometry.PlanarRegion;
 
 public class OcTreeNodePlanarRegionCalculator
 {
+   private final Random random = new Random(234324L);
+
    private final Set<NormalOcTreeNode> allRegionNodes = new HashSet<>();
    private List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions = new ArrayList<>();
    private final List<NormalOcTreeNode> nodesWithoutRegion = new ArrayList<>();
-   private final Random random = new Random(234324L);
 
-   public void compute(NormalOcTreeNode root, OcTreeBoundingBoxInterface boundingBox, PlanarRegionSegmentationParameters parameters)
+   private PlanarRegionSegmentationParameters parameters;
+   private OcTreeBoundingBoxInterface boundingBox;
+
+   public void compute(NormalOcTreeNode root)
    {
       allRegionNodes.clear();
 
@@ -193,7 +198,9 @@ public class OcTreeNodePlanarRegionCalculator
          if (node.getNormalAverageDeviation() > minNormalQuality)
             continue;
 
-         int regionId = random.nextInt(Integer.MAX_VALUE);
+         int regionId = PlanarRegion.NO_REGION_ID;
+         while (regionId == PlanarRegion.NO_REGION_ID)
+            regionId = random.nextInt(Integer.MAX_VALUE);
          OcTreeNodePlanarRegion region = createNewOcTreeNodePlanarRegion(root, node, regionId, boundingBox, parameters);
 
          if (region.getNumberOfNodes() > parameters.getMinRegionSize())
@@ -299,5 +306,15 @@ public class OcTreeNodePlanarRegionCalculator
 
       double absoluteDot = ocTreeNodePlanarRegion.absoluteDotWithNodeNormal(node);
       return absoluteDot > dotThreshold;
+   }
+
+   public void setParameters(PlanarRegionSegmentationParameters parameters)
+   {
+      this.parameters = parameters;
+   }
+
+   public void setBoundingBox(OcTreeBoundingBoxInterface boundingBox)
+   {
+      this.boundingBox = boundingBox;
    }
 }

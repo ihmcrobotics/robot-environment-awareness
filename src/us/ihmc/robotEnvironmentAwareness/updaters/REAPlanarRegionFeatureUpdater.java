@@ -4,11 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.commons.lang3.time.StopWatch;
-
-import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxInterface;
-import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegionCalculator;
@@ -19,18 +18,18 @@ import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionPolygonizer;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
 import us.ihmc.robotics.geometry.LineSegment3d;
-import us.ihmc.robotics.time.TimeTools;
 
 public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 {
-   private static final boolean REPORT_TIME = true;
-   private final StopWatch stopWatch = REPORT_TIME ? new StopWatch() : null;
+   private static final String segmentationTimeReport = "Segmentation took: ";
+   private static final String intersectionsTimeReport = "Processing intersections took: ";
 
+   private TimeReporter timeReporter = new TimeReporter(this);
    private final NormalOcTree octree;
 
    private final OcTreeNodePlanarRegionCalculator planarRegionCalculator = new OcTreeNodePlanarRegionCalculator();
    private final PlanarRegionIntersectionCalculator intersectionCalculator = new PlanarRegionIntersectionCalculator();
-   
+
    private Map<OcTreeNodePlanarRegion, PlanarRegionConcaveHull> concaveHulls = null;
    private Map<OcTreeNodePlanarRegion, PlanarRegionConvexPolygons> convexPolygons = null;
 
@@ -42,40 +41,105 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private final AtomicReference<PlanarRegionSegmentationParameters> planarRegionSegmentationParameters;
    private final AtomicReference<IntersectionEstimationParameters> intersectionEstimationParameters;
    private final AtomicReference<PolygonizerParameters> polygonizerParameters;
+   private final REAMessager reaMessager;
 
-   public REAPlanarRegionFeatureUpdater(NormalOcTree octree, REAMessageManager inputManager, REAMessager outputMessager)
+   public REAPlanarRegionFeatureUpdater(NormalOcTree octree, REAMessager reaMessager)
    {
       this.octree = octree;
+      this.reaMessager = reaMessager;
 
-      isOcTreeEnabled = inputManager.createInput(REAModuleAPI.OcTreeEnable);
-      enableSegmentation = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationEnable);
-      clearSegmentation = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationClear);
-      enablePolygonizer = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
-      enableIntersectionCalulator = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
-      planarRegionSegmentationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionSegmentationParameters, new PlanarRegionSegmentationParameters());
-      intersectionEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters);
-      polygonizerParameters = inputManager.createInput(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, new PolygonizerParameters());
+      isOcTreeEnabled = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
+      enableSegmentation = reaMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationEnable, false);
+      clearSegmentation = reaMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationClear, false);
+      enablePolygonizer = reaMessager.createInput(REAModuleAPI.PlanarRegionsPolygonizerEnable, false);
+      enableIntersectionCalulator = reaMessager.createInput(REAModuleAPI.PlanarRegionsIntersectionEnable, false);
+      planarRegionSegmentationParameters = reaMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationParameters, new PlanarRegionSegmentationParameters());
+      intersectionEstimationParameters = reaMessager.createInput(REAModuleAPI.PlanarRegionsIntersectionParameters, new IntersectionEstimationParameters());
+      polygonizerParameters = reaMessager.createInput(REAModuleAPI.PlanarRegionsPolygonizerParameters, new PolygonizerParameters());
+
+      reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, (messageContent) -> sendCurrentState());
+   }
+
+   private void sendCurrentState()
+   {
+      reaMessager.submitMessage(REAModuleAPI.PlanarRegionsSegmentationEnable, enableSegmentation.get());
+      reaMessager.submitMessage(REAModuleAPI.PlanarRegionsPolygonizerEnable, enablePolygonizer.get());
+      reaMessager.submitMessage(REAModuleAPI.PlanarRegionsIntersectionEnable, enableIntersectionCalulator.get());
+
+      reaMessager.submitMessage(REAModuleAPI.PlanarRegionsSegmentationParameters, planarRegionSegmentationParameters.get());
+      reaMessager.submitMessage(REAModuleAPI.PlanarRegionsIntersectionParameters, intersectionEstimationParameters.get());
+      reaMessager.submitMessage(REAModuleAPI.PlanarRegionsPolygonizerParameters, polygonizerParameters.get());
+   }
+
+   public void loadConfiguration(FilePropertyHelper filePropertyHelper)
+   {
+      Boolean enableFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeEnable.getName());
+      if (enableFile != null)
+         isOcTreeEnabled.set(enableFile);
+      Boolean enableSegmentationFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.PlanarRegionsSegmentationEnable.getName());
+      if (enableSegmentationFile != null)
+         enableSegmentation.set(enableSegmentationFile);
+      Boolean enablePolygonizerFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.PlanarRegionsPolygonizerEnable.getName());
+      if (enablePolygonizerFile != null)
+         enablePolygonizer.set(enablePolygonizerFile);
+      Boolean enableIntersectionCalulatorFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.PlanarRegionsIntersectionEnable.getName());
+      if (enableIntersectionCalulatorFile != null)
+         enableIntersectionCalulator.set(enableIntersectionCalulatorFile);
+
+      String planarRegionSegmentationParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.PlanarRegionsSegmentationParameters.getName());
+      if (planarRegionSegmentationParametersFile != null)
+         planarRegionSegmentationParameters.set(PlanarRegionSegmentationParameters.parse(planarRegionSegmentationParametersFile));
+
+      String polygonizerParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.PlanarRegionsPolygonizerParameters.getName());
+      if (polygonizerParametersFile != null)
+         polygonizerParameters.set(PolygonizerParameters.parse(polygonizerParametersFile));
+
+      String intersectionEstimationParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.PlanarRegionsIntersectionParameters.getName());
+      if (intersectionEstimationParametersFile != null)
+         intersectionEstimationParameters.set(IntersectionEstimationParameters.parse(intersectionEstimationParametersFile));
+   }
+
+   public void saveConfiguration(FilePropertyHelper filePropertyHelper)
+   {
+      filePropertyHelper.saveProperty(REAModuleAPI.PlanarRegionsSegmentationEnable.getName(), enableSegmentation.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.PlanarRegionsPolygonizerEnable.getName(), enablePolygonizer.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.PlanarRegionsIntersectionEnable.getName(), enableIntersectionCalulator.get());
+
+      filePropertyHelper.saveProperty(REAModuleAPI.PlanarRegionsSegmentationParameters.getName(), planarRegionSegmentationParameters.get().toString());
+      filePropertyHelper.saveProperty(REAModuleAPI.PlanarRegionsPolygonizerParameters.getName(), polygonizerParameters.get().toString());
+      filePropertyHelper.saveProperty(REAModuleAPI.PlanarRegionsIntersectionParameters.getName(), intersectionEstimationParameters.get().toString());
    }
 
    public void update()
    {
+      if (!isOcTreeEnabled.get())
+         return;
+
       intersectionCalculator.clear();
 
-      if (shouldClearSegmentation())
+      if (clearSegmentation.getAndSet(false))
       {
          planarRegionCalculator.clear();
          return;
       }
 
-      if (!isSegmentationEnabled())
+      if (!enableSegmentation.get())
       {
          planarRegionCalculator.removeDeadNodes();
          return;
       }
 
-      updateSegmentation();
-      updatePolygons();
-      updateIntersections();
+      planarRegionCalculator.setBoundingBox(octree.getBoundingBox());
+      planarRegionCalculator.setParameters(planarRegionSegmentationParameters.get());
+      intersectionCalculator.setParameters(intersectionEstimationParameters.get());
+
+      timeReporter.run(() -> planarRegionCalculator.compute(octree.getRoot()), segmentationTimeReport);
+
+      if (enablePolygonizer.get())
+         timeReporter.run(this::updatePolygons, segmentationTimeReport);
+
+      if (enableIntersectionCalulator.get())
+         timeReporter.run(() -> intersectionCalculator.compute(planarRegionCalculator.getOcTreeNodePlanarRegions()), intersectionsTimeReport);
    }
 
    public void clearOcTree()
@@ -84,70 +148,13 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       planarRegionCalculator.clear();
    }
 
-   private void updateSegmentation()
-   {
-      if (REPORT_TIME)
-      {
-         stopWatch.reset();
-         stopWatch.start();
-      }
-
-      NormalOcTreeNode root = octree.getRoot();
-      OcTreeBoundingBoxInterface boundingBox = octree.getBoundingBox();
-      PlanarRegionSegmentationParameters parameters = planarRegionSegmentationParameters.get();
-      planarRegionCalculator.compute(root, boundingBox, parameters);
-
-      if (REPORT_TIME)
-      {
-         stopWatch.stop();
-         System.out.println("Segmentation took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()));
-      }
-   }
-
-   private void updateIntersections()
-   {
-      if (!isIntersectionCalulatorEnabled())
-         return;
-
-      if (REPORT_TIME)
-      {
-         stopWatch.reset();
-         stopWatch.start();
-      }
-
-      if (intersectionEstimationParameters.get() != null)
-         intersectionCalculator.setParameters(intersectionEstimationParameters.getAndSet(null));
-      intersectionCalculator.compute(planarRegionCalculator.getOcTreeNodePlanarRegions());
-
-      if (REPORT_TIME)
-      {
-         stopWatch.stop();
-         System.out.println("Processing intersections took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()));
-      }
-   }
-
    private void updatePolygons()
    {
-      if (!isPolygonizerEnabled())
-         return;
-
-      if (REPORT_TIME)
-      {
-         stopWatch.reset();
-         stopWatch.start();
-      }
-
       PolygonizerParameters parameters = polygonizerParameters.get();
       List<OcTreeNodePlanarRegion> planarRegions = planarRegionCalculator.getOcTreeNodePlanarRegions();
 
       concaveHulls = PlanarRegionPolygonizer.computeConcaveHulls(planarRegions, parameters);
       convexPolygons = PlanarRegionPolygonizer.computeConvexDecomposition(concaveHulls, parameters);
-
-      if (REPORT_TIME)
-      {
-         stopWatch.stop();
-         System.out.println("Processing polygons took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()));
-      }
    }
 
    @Override
@@ -184,39 +191,5 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    public LineSegment3d getIntersection(int index)
    {
       return intersectionCalculator.getIntersection(index);
-   }
-
-   private boolean isSegmentationEnabled()
-   {
-      if (!isOcTreeEnabled())
-         return false;
-      else
-         return enableSegmentation.get() == null ? false : enableSegmentation.get();
-   }
-
-   private boolean isPolygonizerEnabled()
-   {
-      if (!isOcTreeEnabled())
-         return false;
-      else
-         return enablePolygonizer.get() == null ? false : enablePolygonizer.get();
-   }
-
-   private boolean isIntersectionCalulatorEnabled()
-   {
-      if (!isOcTreeEnabled())
-         return false;
-      else
-         return enableIntersectionCalulator.get() == null ? false : enableIntersectionCalulator.get();
-   }
-
-   public boolean isOcTreeEnabled()
-   {
-      return isOcTreeEnabled.get() == null ? false : isOcTreeEnabled.get();
-   }
-
-   public boolean shouldClearSegmentation()
-   {
-      return clearSegmentation.get() == null ? false : clearSegmentation.getAndSet(null);
    }
 }

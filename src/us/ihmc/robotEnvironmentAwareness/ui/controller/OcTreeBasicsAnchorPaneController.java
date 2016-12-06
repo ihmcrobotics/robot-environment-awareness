@@ -1,7 +1,5 @@
 package us.ihmc.robotEnvironmentAwareness.ui.controller;
 
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -10,9 +8,9 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.javaFXToolkit.StringConverterTools;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAOcTreeGraphicsBuilder.ColoringType;
+import us.ihmc.robotEnvironmentAwareness.communication.MessageBidirectionalBinding.PropertyToMessageTypeConverter;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder.ColoringType;
 
 public class OcTreeBasicsAnchorPaneController extends REABasicUIController
 {
@@ -35,7 +33,20 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    @FXML
    private ToggleButton showInputScanButton;
 
-   private final IntegerProperty depthIntegerProperty = new SimpleIntegerProperty(this, "depthInteger");
+   private final PropertyToMessageTypeConverter<Integer, Number> numberToIntegerConverter = new PropertyToMessageTypeConverter<Integer, Number>()
+   {
+      @Override
+      public Integer convert(Number propertyValue)
+      {
+         return propertyValue.intValue();
+      }
+
+      @Override
+      public Number interpret(Integer newValue)
+      {
+         return new Double(newValue.doubleValue());
+      }
+   };
 
    public OcTreeBasicsAnchorPaneController()
    {
@@ -45,8 +56,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    {
       ObservableList<ColoringType> options = FXCollections.observableArrayList(ColoringType.values());
       coloringTypeComboBox.setItems(options);
-      coloringTypeComboBox.setValue(options.get(0));
-      depthIntegerProperty.bind(depthSlider.valueProperty());
+      coloringTypeComboBox.setValue(options.get(ColoringType.REGION.ordinal()));
       bufferSizeSlider.setLabelFormatter(StringConverterTools.thousandRounding(true));
    }
 
@@ -55,47 +65,45 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    {
       setupControls();
 
-      sendMessageOnPropertyChange(enableButton, REAModuleAPI.OcTreeEnable);
-      sendMessageOnPropertyChange(depthIntegerProperty, REAModuleAPI.OcTreeGraphicsDepth);
-      sendMessageOnPropertyChange(showOcTreeNodesButton, REAModuleAPI.OcTreeGraphicsShowOcTreeNodes);
-      sendMessageOnPropertyChange(showEstimatedSurfacesButton, REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces);
-      sendMessageOnPropertyChange(coloringTypeComboBox.valueProperty(), REAModuleAPI.OcTreeGraphicsColoringMode);
-      sendMessageOnPropertyChange(showBufferButton, REAModuleAPI.OcTreeGraphicsShowBuffer);
-      sendMessageOnPropertyChange(bufferSizeSlider, REAModuleAPI.OcTreeBufferSize);
-      sendMessageOnPropertyChange(showInputScanButton, REAModuleAPI.OcTreeGraphicsShowInputScan);
-      fireAllListeners();
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeEnable, enableButton.selectedProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.OcTreeBufferSize, bufferSizeSlider.valueProperty(), numberToIntegerConverter);
 
       load();
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeDepth, depthSlider.valueProperty(), numberToIntegerConverter, true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeShow, showOcTreeNodesButton.selectedProperty(), true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UINormalEstimationShow, showEstimatedSurfacesButton.selectedProperty(), true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeColoringMode, coloringTypeComboBox.valueProperty(), true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeShowBuffer, showBufferButton.selectedProperty(), true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UILidarScanShow, showInputScanButton.selectedProperty(), true);
    }
 
    @FXML
    public void clear()
    {
-      send(new REAMessage(REAModuleAPI.OcTreeClear, true));
-   }
-
-   public void load()
-   {
-      loadPropertyAndUpdateUIControl(enableButton, REAModuleAPI.OcTreeEnable);
-      loadPropertyAndUpdateUIControl(depthSlider, REAModuleAPI.OcTreeGraphicsDepth);
-      loadPropertyAndUpdateUIControl(showOcTreeNodesButton, REAModuleAPI.OcTreeGraphicsShowOcTreeNodes);
-      loadPropertyAndUpdateUIControl(showEstimatedSurfacesButton, REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces);
-      loadPropertyAndUpdateUIControl(coloringTypeComboBox, REAModuleAPI.OcTreeGraphicsColoringMode);
-      loadPropertyAndUpdateUIControl(showBufferButton, REAModuleAPI.OcTreeGraphicsShowBuffer);
-      loadPropertyAndUpdateUIControl(bufferSizeSlider, REAModuleAPI.OcTreeBufferSize);
-      loadPropertyAndUpdateUIControl(showInputScanButton, REAModuleAPI.OcTreeGraphicsShowInputScan);
+      uiMessager.broadcastMessage(REAModuleAPI.OcTreeClear, true);
    }
 
    @FXML
    public void save()
    {
-      saveProperty(REAModuleAPI.OcTreeEnable, enableButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeGraphicsDepth, depthIntegerProperty.intValue());
-      saveProperty(REAModuleAPI.OcTreeGraphicsShowOcTreeNodes, showOcTreeNodesButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeGraphicsShowEstimatedSurfaces, showEstimatedSurfacesButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeGraphicsColoringMode, coloringTypeComboBox.getValue().toString());
-      saveProperty(REAModuleAPI.OcTreeGraphicsShowBuffer, showBufferButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeBufferSize, bufferSizeSlider.getValue());
-      saveProperty(REAModuleAPI.OcTreeGraphicsShowInputScan, showInputScanButton.isSelected());
+      uiMessager.submitStateRequestToModule(REAModuleAPI.SaveMainUpdaterConfiguration);
+      uiMessager.submitStateRequestToModule(REAModuleAPI.SaveBufferConfiguration);
+
+      saveUIControlProperty(REAModuleAPI.UIOcTreeDepth, depthSlider);
+      saveUIControlProperty(REAModuleAPI.UIOcTreeShow, showOcTreeNodesButton);
+      saveUIControlProperty(REAModuleAPI.UINormalEstimationShow, showEstimatedSurfacesButton);
+      saveUIControlProperty(REAModuleAPI.UIOcTreeColoringMode, coloringTypeComboBox);
+      saveUIControlProperty(REAModuleAPI.UIOcTreeShowBuffer, showBufferButton);
+      saveUIControlProperty(REAModuleAPI.UILidarScanShow, showInputScanButton);
+   }
+
+   public void load()
+   {
+      loadUIControlProperty(REAModuleAPI.UIOcTreeDepth, depthSlider);
+      loadUIControlProperty(REAModuleAPI.UIOcTreeShow, showOcTreeNodesButton);
+      loadUIControlProperty(REAModuleAPI.UINormalEstimationShow, showEstimatedSurfacesButton);
+      loadUIControlProperty(REAModuleAPI.UIOcTreeColoringMode, coloringTypeComboBox);
+      loadUIControlProperty(REAModuleAPI.UIOcTreeShowBuffer, showBufferButton);
+      loadUIControlProperty(REAModuleAPI.UILidarScanShow, showInputScanButton);
    }
 }

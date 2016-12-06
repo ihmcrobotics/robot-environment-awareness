@@ -3,23 +3,21 @@ package us.ihmc.robotEnvironmentAwareness.updaters;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
-
-import org.apache.commons.math3.util.Precision;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
-import us.ihmc.jOctoMap.boundingBox.OcTreeSimpleBoundingBox;
-import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
-import us.ihmc.jOctoMap.ocTree.NormalOcTree.RayMissProbabilityUpdater;
-import us.ihmc.jOctoMap.occupancy.OccupancyParameters;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.BoundingBoxParametersMessage;
+import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 import us.ihmc.robotics.geometry.transformables.Pose;
 
 public class REAOcTreeUpdater
 {
+   private final REAMessager reaMessager;
    private final NormalOcTree referenceOctree;
    private final REAOcTreeBuffer reaOcTreeBuffer;
 
@@ -35,68 +33,85 @@ public class REAOcTreeUpdater
    private final AtomicReference<NormalEstimationParameters> normalEstimationParameters;
 
    private final AtomicReference<Boolean> useBoundingBox;
-   private final AtomicReference<OcTreeSimpleBoundingBox> atomicBoundingBox;
+   private final AtomicReference<BoundingBoxParametersMessage> atomicBoundingBoxParameters;
 
-   public REAOcTreeUpdater(NormalOcTree octree, REAMessageManager inputManager, REAMessager outputMessager)
+   public REAOcTreeUpdater(NormalOcTree octree, REAOcTreeBuffer buffer, REAMessager reaMessager, PacketCommunicator packetCommunicator)
    {
       this.referenceOctree = octree;
+      reaOcTreeBuffer = buffer;
+      this.reaMessager = reaMessager;
       referenceOctree.enableParallelComputationForNormals(true);
       referenceOctree.enableParallelInsertionOfMisses(true);
 
-      reaOcTreeBuffer = new REAOcTreeBuffer(inputManager, outputMessager, octree.getResolution());
+      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
+      enableNormalEstimation = reaMessager.createInput(REAModuleAPI.NormalEstimationEnable, false);
+      clearNormals = reaMessager.createInput(REAModuleAPI.NormalEstimationClear, false);
+      minRange = reaMessager.createInput(REAModuleAPI.LidarMinRange, 0.2);
+      maxRange = reaMessager.createInput(REAModuleAPI.LidarMaxRange, 5.0);
+      useBoundingBox = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable, true);
+      atomicBoundingBoxParameters = reaMessager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters, new BoundingBoxParametersMessage(0.0f, -2.0f, -3.0f, 5.0f, 2.0f, 0.5f));
+      normalEstimationParameters = reaMessager.createInput(REAModuleAPI.NormalEstimationParameters, new NormalEstimationParameters());
 
-      enable = inputManager.createInput(REAModuleAPI.OcTreeEnable);
-      enableNormalEstimation = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationEnable);
-      clearNormals = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationClear);
-      minRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMinRange);
-      maxRange = inputManager.createInput(REAModuleAPI.OcTreeLIDARMaxRange);
-      useBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxEnable);
-      atomicBoundingBox = inputManager.createInput(REAModuleAPI.OcTreeBoundingBoxParameters);
-      normalEstimationParameters = inputManager.createInput(REAModuleAPI.OcTreeNormalEstimationParameters);
+      reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, messageContent -> sendCurrentState());
 
-      RayMissProbabilityUpdater rayMissProbabilityUpdater = new RayMissProbabilityUpdater()
-      {
-         @Override
-         public double computeRayMissProbability(Point3d rayOrigin, Point3d rayEnd, Vector3d rayDirection, NormalOcTreeNode node,
-               OccupancyParameters parameters)
-         {
-            Point3d hitLocation = new Point3d();
-            node.getHitLocation(hitLocation);
+      packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
 
-            if (hitLocation.distanceSquared(rayEnd) < 0.06 * 0.06)
-            {
-               return 0.47;
-            }
-            else if (node.getNormalConsensusSize() > 10 && node.isNormalSet())
-            {
-               Point3d nodeHitLocation = new Point3d();
-               Vector3d nodeNormal = new Vector3d();
-               node.getHitLocation(nodeHitLocation);
-               node.getNormal(nodeNormal);
-
-               if (Precision.equals(Math.abs(nodeNormal.angle(rayDirection)) - Math.PI / 2.0, 0.0, Math.toRadians(30.0)))// && distanceFromPointToLine(nodeHitLocation, rayOrigin, rayEnd) > 0.01)
-                  return 0.45;
-               else
-                  return parameters.getMissProbability();
-            }
-            else
-            {
-               return parameters.getMissProbability();
-            }
-         }
-      };
-      referenceOctree.setCustomRayMissProbabilityUpdater(rayMissProbabilityUpdater);
+      referenceOctree.setCustomRayMissProbabilityUpdater(new AdaptiveRayMissProbabilityUpdater());
    }
 
-   public Runnable createBufferThread()
+   private void sendCurrentState()
    {
-      return reaOcTreeBuffer.createBufferThread();
+      reaMessager.submitMessage(REAModuleAPI.OcTreeEnable, enable.get());
+      reaMessager.submitMessage(REAModuleAPI.NormalEstimationEnable, enableNormalEstimation.get());
+      reaMessager.submitMessage(REAModuleAPI.LidarMinRange, minRange.get());
+      reaMessager.submitMessage(REAModuleAPI.LidarMaxRange, maxRange.get());
+      reaMessager.submitMessage(REAModuleAPI.OcTreeBoundingBoxEnable, useBoundingBox.get());
+
+      reaMessager.submitMessage(REAModuleAPI.OcTreeBoundingBoxParameters, atomicBoundingBoxParameters.get());
+      reaMessager.submitMessage(REAModuleAPI.NormalEstimationParameters, normalEstimationParameters.get());
    }
 
-   public boolean update(boolean performCompleteUpdate)
+   public void loadConfiguration(FilePropertyHelper filePropertyHelper)
    {
-      if (!isEnabled())
-         return false;
+      Boolean enableFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeEnable.getName());
+      if (enableFile != null)
+         enable.set(enableFile);
+      Boolean enableNormalEstimationFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.NormalEstimationEnable.getName());
+      if (enableNormalEstimationFile != null)
+         enableNormalEstimation.set(enableNormalEstimationFile);
+      String normalEstimationParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.NormalEstimationParameters.getName());
+      if (normalEstimationParametersFile != null)
+         normalEstimationParameters.set(NormalEstimationParameters.parse(normalEstimationParametersFile));
+      Boolean useBoundingBoxFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeBoundingBoxEnable.getName());
+      if (useBoundingBoxFile != null)
+         useBoundingBox.set(useBoundingBoxFile);
+      String boundingBoxParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.OcTreeBoundingBoxParameters.getName());
+      if (boundingBoxParametersFile != null)
+         atomicBoundingBoxParameters.set(BoundingBoxParametersMessage.parse(boundingBoxParametersFile));
+      Double minRangeFile = filePropertyHelper.loadDoubleProperty(REAModuleAPI.LidarMinRange.getName());
+      if (minRangeFile != null)
+         minRange.set(minRangeFile);
+      Double maxRangeFile = filePropertyHelper.loadDoubleProperty(REAModuleAPI.LidarMaxRange.getName());
+      if (maxRangeFile != null)
+         maxRange.set(maxRangeFile);
+   }
+
+   public void saveConfiguration(FilePropertyHelper filePropertyHelper)
+   {
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeEnable.getName(), enable.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.NormalEstimationEnable.getName(), enableNormalEstimation.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeBoundingBoxEnable.getName(), useBoundingBox.get());
+
+      filePropertyHelper.saveProperty(REAModuleAPI.NormalEstimationParameters.getName(), normalEstimationParameters.get().toString());
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeBoundingBoxParameters.getName(), atomicBoundingBoxParameters.get().toString());
+      filePropertyHelper.saveProperty(REAModuleAPI.LidarMinRange.getName(), minRange.get());
+      filePropertyHelper.saveProperty(REAModuleAPI.LidarMaxRange.getName(), maxRange.get());
+   }
+
+   public void update()
+   {
+      if (!enable.get())
+         return;
 
       handleBoundingBox();
 
@@ -105,11 +120,10 @@ public class REAOcTreeUpdater
          referenceOctree.setBoundsInsertRange(minRange.get(), maxRange.get());
       }
 
-      if (normalEstimationParameters.get() != null)
-         referenceOctree.setNormalEstimationParameters(normalEstimationParameters.getAndSet(null));
+      referenceOctree.setNormalEstimationParameters(normalEstimationParameters.get());
 
       if (latestLidarPoseReference.get() == null)
-         return false;
+         return;
 
       Point3d sensorOrigin = latestLidarPoseReference.get().getPoint();
 
@@ -122,24 +136,16 @@ public class REAOcTreeUpdater
       if (bufferOctree != null)
          referenceOctree.insertNormalOcTree(sensorOrigin, bufferOctree);
 
-      if (shouldClearNormals())
+      if (clearNormals.getAndSet(false))
       {
          referenceOctree.clearNormals();
-         return false;
+         return;
       }
 
-      if (bufferOctree == null || !isNormalEstimationEnabled())
-         return false;
+      if (bufferOctree == null || !enableNormalEstimation.get())
+         return;
 
-      if (performCompleteUpdate)
-         referenceOctree.updateNormals();
-
-      return true;
-   }
-
-   public void clearBuffer()
-   {
-      reaOcTreeBuffer.clearBuffer();
+      referenceOctree.updateNormals();
    }
 
    public void clearOcTree()
@@ -149,51 +155,31 @@ public class REAOcTreeUpdater
 
    private void handleBoundingBox()
    {
-      if (isUsingBoundingBox() && atomicBoundingBox.get() != null && latestLidarPoseReference.get() != null)
-      {
-         OcTreeBoundingBoxWithCenterAndYaw newBoundingBox = new OcTreeBoundingBoxWithCenterAndYaw();
-         newBoundingBox.setLocalBoundingBox(atomicBoundingBox.get());
-         Pose lidarPose = latestLidarPoseReference.get();
-         newBoundingBox.setOffset(lidarPose.getPoint());
-         newBoundingBox.setYawFromQuaternion(lidarPose.getOrientation());
-         newBoundingBox.update(referenceOctree.getResolution(), referenceOctree.getTreeDepth());
-         referenceOctree.setBoundingBox(newBoundingBox);
-      }
-      else
+      if (!useBoundingBox.get())
       {
          referenceOctree.disableBoundingBox();
+         return;
       }
-   }
 
-   public void attachListeners(PacketCommunicator packetCommunicator)
-   {
-      packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
-      reaOcTreeBuffer.attachPacketCommunicator(packetCommunicator);
+      OcTreeBoundingBoxWithCenterAndYaw boundingBox = new OcTreeBoundingBoxWithCenterAndYaw();
+
+      Point3d min = atomicBoundingBoxParameters.get().getMin();
+      Point3d max = atomicBoundingBoxParameters.get().getMax();
+      boundingBox.setLocalMinMaxCoordinates(min, max);
+
+      if (latestLidarPoseReference.get() != null)
+      {
+         Pose lidarPose = latestLidarPoseReference.get();
+         boundingBox.setOffset(lidarPose.getPoint());
+         boundingBox.setYawFromQuaternion(lidarPose.getOrientation());
+      }
+
+      boundingBox.update(referenceOctree.getResolution(), referenceOctree.getTreeDepth());
+      referenceOctree.setBoundingBox(boundingBox);
    }
 
    private void handlePacket(LidarScanMessage lidarScanMessage)
    {
-      if (lidarScanMessage != null)
-         latestLidarPoseReference.set(new Pose(lidarScanMessage.lidarPosition, lidarScanMessage.lidarOrientation));
-   }
-
-   private boolean isEnabled()
-   {
-      return enable.get() == null ? false : enable.get();
-   }
-
-   private boolean isNormalEstimationEnabled()
-   {
-      return enableNormalEstimation.get() == null ? false : enableNormalEstimation.get();
-   }
-
-   private boolean shouldClearNormals()
-   {
-      return clearNormals.get() == null ? false : clearNormals.getAndSet(null);
-   }
-
-   private boolean isUsingBoundingBox()
-   {
-      return useBoundingBox.get() == null ? false : useBoundingBox.get();
+      latestLidarPoseReference.set(new Pose(lidarScanMessage.lidarPosition, lidarScanMessage.lidarOrientation));
    }
 }

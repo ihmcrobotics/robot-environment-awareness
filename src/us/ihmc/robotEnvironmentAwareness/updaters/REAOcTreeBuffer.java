@@ -8,6 +8,9 @@ import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.communication.packets.RequestLidarScanMessage;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.pointCloud.ScanCollection;
+import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 
 public class REAOcTreeBuffer
 {
@@ -17,25 +20,53 @@ public class REAOcTreeBuffer
    private final AtomicReference<ScanCollection> newFullScanReference = new AtomicReference<>(null);
 
    private final AtomicReference<Boolean> enable;
-   private final AtomicReference<Double> bufferSize;
+   private final AtomicReference<Integer> bufferSize;
 
    private final AtomicBoolean clearBuffer = new AtomicBoolean(false);
    private final AtomicBoolean isBufferFull = new AtomicBoolean(false);
    private final AtomicBoolean isBufferRequested = new AtomicBoolean(false);
    private final AtomicReference<NormalOcTree> newBuffer = new AtomicReference<>(null);
    
-   private final REAOcTreeBufferGraphicsBuilder graphicsBuilder;
-
    private final double octreeResolution;
 
-   private PacketCommunicator packetCommunicator;
+   private final PacketCommunicator packetCommunicator;
 
-   public REAOcTreeBuffer(REAMessageManager inputManager, REAMessager outputMessager, double octreeResolution)
+   private final REAModuleStateReporter moduleStateReporter;
+
+   private final REAMessager reaMessager;
+
+   public REAOcTreeBuffer(double octreeResolution, REAMessager reaMessager, REAModuleStateReporter moduleStateReporter, PacketCommunicator packetCommunicator)
    {
       this.octreeResolution = octreeResolution;
-      enable = inputManager.createInput(REAModuleAPI.OcTreeEnable, false);
-      bufferSize = inputManager.createInput(REAModuleAPI.OcTreeBufferSize, 10000.0);
-      graphicsBuilder = new REAOcTreeBufferGraphicsBuilder(inputManager, outputMessager);
+      this.reaMessager = reaMessager;
+      this.moduleStateReporter = moduleStateReporter;
+      this.packetCommunicator = packetCommunicator;
+
+      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
+      bufferSize = reaMessager.createInput(REAModuleAPI.OcTreeBufferSize, 10000);
+
+      reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, (messageContent) -> sendCurrentState());
+      packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
+   }
+
+   private void sendCurrentState()
+   {
+      reaMessager.submitMessage(REAModuleAPI.OcTreeBufferSize, bufferSize.get());
+   }
+
+   public void loadConfiguration(FilePropertyHelper filePropertyHelper)
+   {
+      Boolean enableFile = filePropertyHelper.loadBooleanProperty(REAModuleAPI.OcTreeEnable.getName());
+      if (enableFile != null)
+         enable.set(enableFile);
+      Integer bufferSizeFile = filePropertyHelper.loadIntegerProperty(REAModuleAPI.OcTreeBufferSize.getName());
+      if (bufferSizeFile != null)
+         bufferSize.set(bufferSizeFile);
+   }
+
+   public void saveConfiguration(FilePropertyHelper filePropertyHelper)
+   {
+      filePropertyHelper.saveProperty(REAModuleAPI.OcTreeBufferSize.getName(), bufferSize.get());
    }
 
    public Runnable createBufferThread()
@@ -47,8 +78,7 @@ public class REAOcTreeBuffer
          @Override
          public void run()
          {
-            if (packetCommunicator != null)
-               packetCommunicator.send(new RequestLidarScanMessage());
+            packetCommunicator.send(new RequestLidarScanMessage());
 
             updateScanCollection();
             ScanCollection newScan = newFullScanReference.getAndSet(null);
@@ -76,7 +106,7 @@ public class REAOcTreeBuffer
                isBufferRequested.set(false);
             }
 
-            graphicsBuilder.update(bufferOctree, newScan);
+            moduleStateReporter.reportBufferOcTreeState(bufferOctree);
          }
       };
    }
@@ -112,12 +142,6 @@ public class REAOcTreeBuffer
       newFullScanReference.set(scanCollection);
       scanCollection.setSubSampleSize(NUMBER_OF_SAMPLES);
       scanCollection.addScan(lidarScanMessage.scan, lidarScanMessage.lidarPosition);
-   }
-
-   public void attachPacketCommunicator(PacketCommunicator packetCommunicator)
-   {
-      this.packetCommunicator = packetCommunicator;
-      packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
    }
 
    private void handlePacket(LidarScanMessage packet)

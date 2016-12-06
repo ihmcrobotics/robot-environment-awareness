@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -66,7 +67,10 @@ public abstract class SimpleConcaveHullFactory
       MultiPoint multiPoint = createMultiPoint(pointCloud2d);
       Set<QuadEdge> borderEdges = computeBorderEdges(multiPoint, edgeLengthThreshold, maxNumberOfIterations);
       Geometry concaveHullGeometry = computeConcaveHullGeometry(borderEdges);
-      return convertGeometryToPoint2dList(concaveHullGeometry);
+      if (concaveHullGeometry == null)
+         return new ArrayList<>();
+      else
+         return convertGeometryToPoint2dList(concaveHullGeometry);
    }
 
    public static List<Point3d> createConcaveHullAsPoint3dList(List<Point2d> pointCloud2d, double edgeLengthThreshold, double zConstant)
@@ -108,7 +112,16 @@ public abstract class SimpleConcaveHullFactory
       // merge
       LineMerger lineMerger = new LineMerger();
       lineMerger.add(edges);
-      LineString merge = (LineString) lineMerger.getMergedLineStrings().iterator().next();
+      LineString merge;
+      try
+      {
+         merge = (LineString) lineMerger.getMergedLineStrings().iterator().next();
+      }
+      catch (NoSuchElementException e)
+      {
+         // FIXME Not sure yet why would that happen, needs to be debugged and fixed
+         return null;
+      }
 
       if (merge.isRing())
       {

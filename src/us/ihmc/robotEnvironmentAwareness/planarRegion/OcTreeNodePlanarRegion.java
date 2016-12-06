@@ -17,13 +17,12 @@ import javax.vecmath.Vector3d;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.geometry.PointMean;
 import us.ihmc.robotEnvironmentAwareness.geometry.VectorMean;
+import us.ihmc.robotics.geometry.PlanarRegion;
 import us.ihmc.robotics.linearAlgebra.PrincipalComponentAnalysis3D;
 
 public class OcTreeNodePlanarRegion implements Iterable<NormalOcTreeNode>
 {
-   public static final int NO_REGION_ID = Integer.MIN_VALUE;
-
-   private int id = NO_REGION_ID;
+   private int id = PlanarRegion.NO_REGION_ID;
 
    private final PrincipalComponentAnalysis3D pca = new PrincipalComponentAnalysis3D();
    private final VectorMean normal = new VectorMean();

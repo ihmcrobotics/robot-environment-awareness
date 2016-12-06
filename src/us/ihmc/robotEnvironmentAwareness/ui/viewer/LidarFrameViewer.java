@@ -9,60 +9,57 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.transform.Affine;
-import us.ihmc.communication.net.PacketConsumer;
+import us.ihmc.communication.net.NetStateListener;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.shapes.JavaFXCoordinateSystem;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 
-public class LidarFrameViewer
+public class LidarFrameViewer extends AnimationTimer
 {
    private final JavaFXCoordinateSystem lidarCoordinateSystem;
    private final Affine lidarPose = new Affine();
 
    private final AtomicReference<Affine> lastAffine = new AtomicReference<>();
-   private final AnimationTimer lidarUpdater;
 
    private final Group root = new Group();
+   private final REAUIMessager uiMessager;
 
-   public LidarFrameViewer()
+   public LidarFrameViewer(REAUIMessager uiMessager)
    {
+      this.uiMessager = uiMessager;
       lidarCoordinateSystem = new JavaFXCoordinateSystem(0.1);
       lidarCoordinateSystem.getTransforms().add(lidarPose);
       root.getChildren().add(lidarCoordinateSystem);
 
-      lidarUpdater = new AnimationTimer()
+      uiMessager.registerTopicListener(REAModuleAPI.LidarScanState, this::handleMessage);
+      uiMessager.registerModuleConnectionStateListener(new NetStateListener()
       {
          @Override
-         public void handle(long now)
+         public void disconnected()
          {
-            updateLidarPose();
+            stop();
          }
-      };
+         
+         @Override
+         public void connected()
+         {
+            start();
+         }
+      });
    }
 
-   public void start()
-   {
-      lidarUpdater.start();
-   }
-
-   public void stop()
-   {
-      lidarUpdater.stop();
-   }
-
-   private void updateLidarPose()
+   @Override
+   public void handle(long now)
    {
       Affine affine = lastAffine.getAndSet(null);
       if (affine != null)
          lidarPose.setToTransform(affine);
+      uiMessager.submitStateRequestToModule(REAModuleAPI.RequestLidarScan);
    }
 
-   public PacketConsumer<LidarScanMessage> createLidarScanMessageConsumer()
-   {
-      return this::handlePacket;
-   }
-
-   private void handlePacket(LidarScanMessage lidarScanMessage)
+   private void handleMessage(LidarScanMessage lidarScanMessage)
    {
       if (lidarScanMessage == null)
          return;

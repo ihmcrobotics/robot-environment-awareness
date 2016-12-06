@@ -1,17 +1,14 @@
 package us.ihmc.robotEnvironmentAwareness.ui.controller;
 
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.fxml.FXML;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.javaFXToolkit.StringConverterTools;
-import us.ihmc.robotEnvironmentAwareness.communication.REAMessage;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
-import us.ihmc.robotEnvironmentAwareness.updaters.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.ui.properties.IntersectionEstimationParametersProperty;
+import us.ihmc.robotEnvironmentAwareness.ui.properties.PolygonizerParametersProperty;
 
 public class PolygonizerAnchorPaneController extends REABasicUIController
 {
@@ -36,6 +33,8 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
    @FXML
    private Spinner<Double> depthThresholdSpinner;
 
+   private final PolygonizerParametersProperty polygonizerParametersProperty = new PolygonizerParametersProperty(this, "polygonizerParameters");
+
    // Intersection calculator parameters
    @FXML
    private Spinner<Double> maxDistanceToRegionSpinner;
@@ -47,6 +46,8 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
    private Spinner<Double> minRegionAngleDifferenceSpinner;
    @FXML
    private ToggleButton addIntersectionsToRegionsButton;
+
+   private final IntersectionEstimationParametersProperty intersectionEstimationParametersProperty = new IntersectionEstimationParametersProperty(this, "intersectionEstimationParameters");
 
    public PolygonizerAnchorPaneController()
    {
@@ -82,100 +83,38 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
    {
       setupControls();
 
-      sendMessageOnPropertyChange(enablePolygonizerButton, REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
-      sendMessageOnPropertyChange(enableIntersectionCalculatorButton, REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
-      sendMessageOnPropertyChange(hideRegionNodes, REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes);
-      InvalidationListener sendPolygonizerParametersListener = new InvalidationListener()
-      {
-         @Override
-         public void invalidated(Observable observable)
-         {
-            send(new REAMessage(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, createPolygonizerParameters()));
-         }
-      };
-      InvalidationListener sendIntersectionParametersListener = observable -> send(new REAMessage(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters, createIntersectionEstimationParameters()));
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.PlanarRegionsPolygonizerEnable, enablePolygonizerButton.selectedProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.PlanarRegionsIntersectionEnable, enableIntersectionCalculatorButton.selectedProperty());
 
-      concaveHullThresholdSpinner.valueProperty().addListener(sendPolygonizerParametersListener);
-      minRegionSizePolygonizerSpinner.valueProperty().addListener(sendPolygonizerParametersListener);
-      peakAngleThresholdSpinner.valueProperty().addListener(sendPolygonizerParametersListener);
-      minEdgeLengthSpinner.valueProperty().addListener(sendPolygonizerParametersListener);
-      depthThresholdSpinner.valueProperty().addListener(sendPolygonizerParametersListener);
-      shallowAngleThresholdSpinner.valueProperty().addListener(sendPolygonizerParametersListener);
-      registerListener(sendPolygonizerParametersListener);
+      polygonizerParametersProperty.bindBidirectionalConcaveHullThreshold(concaveHullThresholdSpinner.getValueFactory().valueProperty());
+      polygonizerParametersProperty.bindBidirectionalMinNumberOfNodes(minRegionSizePolygonizerSpinner.getValueFactory().valueProperty());
+      polygonizerParametersProperty.bindBidirectionalPeakAngleThreshold(peakAngleThresholdSpinner.getValueFactory().valueProperty());
+      polygonizerParametersProperty.bindBidirectionalShallowAngleThreshold(shallowAngleThresholdSpinner.getValueFactory().valueProperty());
+      polygonizerParametersProperty.bindBidirectionalMinNumberOfNodes(minEdgeLengthSpinner.getValueFactory().valueProperty());
+      polygonizerParametersProperty.bindBidirectionalDepthThreshold(depthThresholdSpinner.getValueFactory().valueProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.PlanarRegionsPolygonizerParameters, polygonizerParametersProperty);
 
-      maxDistanceToRegionSpinner.valueProperty().addListener(sendIntersectionParametersListener);
-      minRegionSizeIntersectionSpinner.valueProperty().addListener(sendIntersectionParametersListener);
-      minIntersectionLengthSpinner.valueProperty().addListener(sendIntersectionParametersListener);
-      minRegionAngleDifferenceSpinner.valueProperty().addListener(sendIntersectionParametersListener);
-      addIntersectionsToRegionsButton.selectedProperty().addListener(sendIntersectionParametersListener);
-      registerListener(sendIntersectionParametersListener);
-
-      fireAllListeners();
-
+      intersectionEstimationParametersProperty.bindBidirectionalMaxDistanceToRegion(maxDistanceToRegionSpinner.getValueFactory().valueProperty());
+      intersectionEstimationParametersProperty.bindBidirectionalMinRegionSize(minRegionSizeIntersectionSpinner.getValueFactory().valueProperty());
+      intersectionEstimationParametersProperty.bindBidirectionalMinIntersectionLength(minIntersectionLengthSpinner.getValueFactory().valueProperty());
+      intersectionEstimationParametersProperty.bindBidirectionalMinRegionAngleDifference(minRegionAngleDifferenceSpinner.getValueFactory().valueProperty());
+      intersectionEstimationParametersProperty.bindBidirectionalAddIntersectionsToRegions(addIntersectionsToRegionsButton.selectedProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.PlanarRegionsIntersectionParameters, intersectionEstimationParametersProperty);
+      
       load();
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIPlanarRegionHideNodes, hideRegionNodes.selectedProperty(), true);
    }
 
    @FXML
    public void save()
    {
-      saveProperty(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable, enablePolygonizerButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable, enableIntersectionCalculatorButton.isSelected());
-      saveProperty(REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes, hideRegionNodes.isSelected());
-      saveProperty(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters, createPolygonizerParameters().toString());
-      saveProperty(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters, createIntersectionEstimationParameters().toString());
+      uiMessager.submitStateRequestToModule(REAModuleAPI.SaveRegionUpdaterConfiguration);
+      saveUIControlProperty(REAModuleAPI.UIPlanarRegionHideNodes, hideRegionNodes);
    }
 
-   private void load()
+   public void load()
    {
-      loadPropertyAndUpdateUIControl(enablePolygonizerButton, REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerEnable);
-      loadPropertyAndUpdateUIControl(enableIntersectionCalculatorButton, REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionEnable);
-      loadPropertyAndUpdateUIControl(hideRegionNodes, REAModuleAPI.OcTreeGraphicsHidePlanarRegionNodes);
-
-      String parametersAsString = loadProperty(REAModuleAPI.OcTreePlanarRegionFeaturesPolygonizerParameters);
-      if (parametersAsString != null)
-      {
-         PolygonizerParameters parameters = PolygonizerParameters.parse(parametersAsString);
-         concaveHullThresholdSpinner.getValueFactory().setValue(parameters.getConcaveHullThreshold());
-         minRegionSizePolygonizerSpinner.getValueFactory().setValue(parameters.getMinNumberOfNodes());
-         shallowAngleThresholdSpinner.getValueFactory().setValue(parameters.getShallowAngleThreshold());
-         peakAngleThresholdSpinner.getValueFactory().setValue(parameters.getPeakAngleThreshold());
-         minEdgeLengthSpinner.getValueFactory().setValue(parameters.getLengthThreshold());
-         depthThresholdSpinner.getValueFactory().setValue(parameters.getDepthThreshold());
-      }
-
-      parametersAsString = loadProperty(REAModuleAPI.OcTreePlanarRegionFeaturesIntersectionParameters);
-      if (parametersAsString != null)
-      {
-         IntersectionEstimationParameters parameters = IntersectionEstimationParameters.parse(parametersAsString);
-         maxDistanceToRegionSpinner.getValueFactory().setValue(parameters.getMaxDistanceToRegion());
-         minRegionSizeIntersectionSpinner.getValueFactory().setValue(parameters.getMinRegionSize());
-         minIntersectionLengthSpinner.getValueFactory().setValue(parameters.getMinIntersectionLength());
-         minRegionAngleDifferenceSpinner.getValueFactory().setValue(parameters.getMinRegionAngleDifference());
-         addIntersectionsToRegionsButton.setSelected(parameters.isAddIntersectionsToRegions());
-      }
-   }
-
-   private PolygonizerParameters createPolygonizerParameters()
-   {
-      PolygonizerParameters parameters = new PolygonizerParameters();
-      parameters.setConcaveHullThreshold(concaveHullThresholdSpinner.getValue());
-      parameters.setMinNumberOfNodes(minRegionSizePolygonizerSpinner.getValue());
-      parameters.setShallowAngleThreshold(shallowAngleThresholdSpinner.getValue());
-      parameters.setPeakAngleThreshold(peakAngleThresholdSpinner.getValue());
-      parameters.setLengthThreshold(minEdgeLengthSpinner.getValue());
-      parameters.setDepthThreshold(depthThresholdSpinner.getValue());
-      return parameters;
-   }
-
-   private IntersectionEstimationParameters createIntersectionEstimationParameters()
-   {
-      IntersectionEstimationParameters parameters = new IntersectionEstimationParameters();
-      parameters.setMaxDistanceToRegion(maxDistanceToRegionSpinner.getValue());
-      parameters.setMinRegionSize(minRegionSizeIntersectionSpinner.getValue());
-      parameters.setMinIntersectionLength(minIntersectionLengthSpinner.getValue());
-      parameters.setMinRegionAngleDifference(minRegionAngleDifferenceSpinner.getValue());
-      parameters.setAddIntersectionsToRegions(addIntersectionsToRegionsButton.isSelected());
-      return parameters;
+      loadUIControlProperty(REAModuleAPI.UIPlanarRegionHideNodes, hideRegionNodes);
    }
 
    private DoubleSpinnerValueFactory createLengthValueFactory(double min, double max, double initialValue, double amountToStepBy)
@@ -184,7 +123,7 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
       doubleSpinnerValueFactory.setConverter(StringConverterTools.metersToRoundedCentimeters());
       return doubleSpinnerValueFactory;
    }
-   
+
    private DoubleSpinnerValueFactory createAngleValueFactory(double min, double max, double initialValue, double amountToStepBy)
    {
       DoubleSpinnerValueFactory doubleSpinnerValueFactory = new DoubleSpinnerValueFactory(min, max, initialValue, amountToStepBy);

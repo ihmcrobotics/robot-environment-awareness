@@ -16,7 +16,7 @@ buildscript {
   dependencies {
     classpath "us.ihmc.gradle:licenseChecker:1.1.1"
     classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.4"
-    classpath "gradle.plugin.us.ihmc.gradle:ihmc-build:0.0.17"
+    classpath "gradle.plugin.us.ihmc.gradle:ihmc-build:0.0.18"
   }
 }
 

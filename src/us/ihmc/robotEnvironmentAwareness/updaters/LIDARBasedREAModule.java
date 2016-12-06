@@ -40,7 +40,7 @@ public class LIDARBasedREAModule
    protected static final boolean DEBUG = true;
 
    private final String networkManagerHost = NetworkParameters.getHost(NetworkParameterKeys.networkManager);
-   private final PacketCommunicator packetCommunicator;
+   private final PacketCommunicator publicPacketCommunicator;
 
    private final NormalOcTree mainOctree = new NormalOcTree(OCTREE_RESOLUTION);
 
@@ -49,7 +49,7 @@ public class LIDARBasedREAModule
    private final REAPlanarRegionFeatureUpdater planarRegionFeatureUpdater;
 
    private final REAModuleStateReporter moduleStateReporter;
-   private final REAPlanarRegionNetworkProvider planarRegionNetworkProvider;
+   private final REAPlanarRegionPublicNetworkProvider planarRegionNetworkProvider;
 
    private final AtomicReference<Boolean> clearOcTree;
 
@@ -61,13 +61,13 @@ public class LIDARBasedREAModule
    {
       this.reaMessager = reaMessager;
 
-      packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
-      packetCommunicator.connect();
+      publicPacketCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, REACommunicationKryoNetClassLists.getPublicNetClassList());
+      publicPacketCommunicator.connect();
 
-      moduleStateReporter = new REAModuleStateReporter(reaMessager, packetCommunicator);
+      moduleStateReporter = new REAModuleStateReporter(reaMessager, publicPacketCommunicator);
 
-      bufferUpdater = new REAOcTreeBuffer(mainOctree.getResolution(), reaMessager, moduleStateReporter, packetCommunicator);
-      mainUpdater = new REAOcTreeUpdater(mainOctree, bufferUpdater, reaMessager, packetCommunicator);
+      bufferUpdater = new REAOcTreeBuffer(mainOctree.getResolution(), reaMessager, moduleStateReporter, publicPacketCommunicator);
+      mainUpdater = new REAOcTreeUpdater(mainOctree, bufferUpdater, reaMessager, publicPacketCommunicator);
       planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(mainOctree, reaMessager);
 
       FilePropertyHelper filePropertyHelper = new FilePropertyHelper(configurationFile);
@@ -77,7 +77,7 @@ public class LIDARBasedREAModule
       reaMessager.registerTopicListener(REAModuleAPI.SaveMainUpdaterConfiguration, (content) -> mainUpdater.saveConfiguration(filePropertyHelper));
       reaMessager.registerTopicListener(REAModuleAPI.SaveRegionUpdaterConfiguration, (content) -> planarRegionFeatureUpdater.saveConfiguration(filePropertyHelper));
 
-      planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater, packetCommunicator);
+      planarRegionNetworkProvider = new REAPlanarRegionPublicNetworkProvider(planarRegionFeatureUpdater, publicPacketCommunicator);
       clearOcTree = reaMessager.createInput(REAModuleAPI.OcTreeClear, false);
    }
 
@@ -162,8 +162,8 @@ public class LIDARBasedREAModule
    public void stop()
    {
       PrintTools.info("REA Module is going down.");
-      packetCommunicator.closeConnection();
-      packetCommunicator.close();
+      publicPacketCommunicator.closeConnection();
+      publicPacketCommunicator.close();
 
       reaMessager.closeMessager();
 

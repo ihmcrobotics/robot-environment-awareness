@@ -35,7 +35,7 @@ public class REAOcTreeUpdater
    private final AtomicReference<Boolean> useBoundingBox;
    private final AtomicReference<BoundingBoxParametersMessage> atomicBoundingBoxParameters;
 
-   public REAOcTreeUpdater(NormalOcTree octree, REAOcTreeBuffer buffer, REAMessager reaMessager, PacketCommunicator packetCommunicator)
+   public REAOcTreeUpdater(NormalOcTree octree, REAOcTreeBuffer buffer, REAMessager reaMessager, PacketCommunicator publicPacketCommunicator)
    {
       this.referenceOctree = octree;
       reaOcTreeBuffer = buffer;
@@ -54,7 +54,7 @@ public class REAOcTreeUpdater
 
       reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, messageContent -> sendCurrentState());
 
-      packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
+      publicPacketCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
 
       referenceOctree.setCustomRayMissProbabilityUpdater(new AdaptiveRayMissProbabilityUpdater());
    }

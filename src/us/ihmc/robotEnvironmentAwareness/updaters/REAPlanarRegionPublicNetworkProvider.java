@@ -11,19 +11,19 @@ import us.ihmc.communication.packets.PlanarRegionsListMessage;
 import us.ihmc.communication.packets.RequestPlanarRegionsListMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.converters.REAPlanarRegionsConverter;
 
-public class REAPlanarRegionNetworkProvider
+public class REAPlanarRegionPublicNetworkProvider
 {
    private final Set<PacketDestination> listenersForContinuousUpdate = new HashSet<>();
    private final Set<PacketDestination> listenersForSingleUpdate = new HashSet<>();
    private final AtomicBoolean hasReceivedClearRequest = new AtomicBoolean(false);
-   private final PacketCommunicator packetCommunicator;
+   private final PacketCommunicator publicPacketCommunicator;
    private final RegionFeaturesProvider regionFeaturesProvider;
 
-   public REAPlanarRegionNetworkProvider(RegionFeaturesProvider regionFeaturesProvider, PacketCommunicator packetCommunicator)
+   public REAPlanarRegionPublicNetworkProvider(RegionFeaturesProvider regionFeaturesProvider, PacketCommunicator publicPacketCommunicator)
    {
       this.regionFeaturesProvider = regionFeaturesProvider;
-      this.packetCommunicator = packetCommunicator;
-      packetCommunicator.attachListener(RequestPlanarRegionsListMessage.class, this::handlePacket);
+      this.publicPacketCommunicator = publicPacketCommunicator;
+      publicPacketCommunicator.attachListener(RequestPlanarRegionsListMessage.class, this::handlePacket);
    }
    
    public void update(boolean planarRegionsHaveBeenUpdated)
@@ -42,7 +42,7 @@ public class REAPlanarRegionNetworkProvider
          {
             PlanarRegionsListMessage planarRegionsListMessage = REAPlanarRegionsConverter.createPlanarRegionsListMessage(regionFeaturesProvider);
             planarRegionsListMessage.setDestination(packetDestination);
-            packetCommunicator.send(planarRegionsListMessage);
+            publicPacketCommunicator.send(planarRegionsListMessage);
          }
       }
 
@@ -50,7 +50,7 @@ public class REAPlanarRegionNetworkProvider
       {
          PlanarRegionsListMessage planarRegionsListMessage = REAPlanarRegionsConverter.createPlanarRegionsListMessage(regionFeaturesProvider);
          planarRegionsListMessage.setDestination(packetDestination);
-         packetCommunicator.send(planarRegionsListMessage);
+         publicPacketCommunicator.send(planarRegionsListMessage);
       }
 
       listenersForSingleUpdate.clear();

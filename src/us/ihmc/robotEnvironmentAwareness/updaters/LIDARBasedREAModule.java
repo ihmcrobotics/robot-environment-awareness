@@ -13,10 +13,9 @@ import us.ihmc.communication.configuration.NetworkParameterKeys;
 import us.ihmc.communication.configuration.NetworkParameters;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
-import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.tools.JOctoMapTools;
-import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
+import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassLists;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
@@ -40,7 +39,7 @@ public class LIDARBasedREAModule
    protected static final boolean DEBUG = true;
 
    private final String networkManagerHost = NetworkParameters.getHost(NetworkParameterKeys.networkManager);
-   private final PacketCommunicator packetCommunicator;
+   private final PacketCommunicator publicPacketCommunicator;
 
    private final NormalOcTree mainOctree = new NormalOcTree(OCTREE_RESOLUTION);
 
@@ -49,7 +48,7 @@ public class LIDARBasedREAModule
    private final REAPlanarRegionFeatureUpdater planarRegionFeatureUpdater;
 
    private final REAModuleStateReporter moduleStateReporter;
-   private final REAPlanarRegionNetworkProvider planarRegionNetworkProvider;
+   private final REAPlanarRegionPublicNetworkProvider planarRegionNetworkProvider;
 
    private final AtomicReference<Boolean> clearOcTree;
 
@@ -61,13 +60,13 @@ public class LIDARBasedREAModule
    {
       this.reaMessager = reaMessager;
 
-      packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
-      packetCommunicator.connect();
+      publicPacketCommunicator = PacketCommunicator.createTCPPacketCommunicatorClient(networkManagerHost, NetworkPorts.REA_MODULE_PORT, REACommunicationKryoNetClassLists.getPublicNetClassList());
+      publicPacketCommunicator.connect();
 
-      moduleStateReporter = new REAModuleStateReporter(reaMessager, packetCommunicator);
+      moduleStateReporter = new REAModuleStateReporter(reaMessager, publicPacketCommunicator);
 
-      bufferUpdater = new REAOcTreeBuffer(mainOctree.getResolution(), reaMessager, moduleStateReporter, packetCommunicator);
-      mainUpdater = new REAOcTreeUpdater(mainOctree, bufferUpdater, reaMessager, packetCommunicator);
+      bufferUpdater = new REAOcTreeBuffer(mainOctree.getResolution(), reaMessager, moduleStateReporter, publicPacketCommunicator);
+      mainUpdater = new REAOcTreeUpdater(mainOctree, bufferUpdater, reaMessager, publicPacketCommunicator);
       planarRegionFeatureUpdater = new REAPlanarRegionFeatureUpdater(mainOctree, reaMessager);
 
       FilePropertyHelper filePropertyHelper = new FilePropertyHelper(configurationFile);
@@ -77,7 +76,7 @@ public class LIDARBasedREAModule
       reaMessager.registerTopicListener(REAModuleAPI.SaveMainUpdaterConfiguration, (content) -> mainUpdater.saveConfiguration(filePropertyHelper));
       reaMessager.registerTopicListener(REAModuleAPI.SaveRegionUpdaterConfiguration, (content) -> planarRegionFeatureUpdater.saveConfiguration(filePropertyHelper));
 
-      planarRegionNetworkProvider = new REAPlanarRegionNetworkProvider(planarRegionFeatureUpdater, packetCommunicator);
+      planarRegionNetworkProvider = new REAPlanarRegionPublicNetworkProvider(planarRegionFeatureUpdater, publicPacketCommunicator);
       clearOcTree = reaMessager.createInput(REAModuleAPI.OcTreeClear, false);
    }
 
@@ -162,8 +161,8 @@ public class LIDARBasedREAModule
    public void stop()
    {
       PrintTools.info("REA Module is going down.");
-      packetCommunicator.closeConnection();
-      packetCommunicator.close();
+      publicPacketCommunicator.closeConnection();
+      publicPacketCommunicator.close();
 
       reaMessager.closeMessager();
 
@@ -182,14 +181,14 @@ public class LIDARBasedREAModule
 
    public static LIDARBasedREAModule createRemoteModule(String configurationFilePath) throws IOException
    {
-      REAMessager server = REAMessagerOverNetwork.createTCPServer(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAMessager server = REAMessagerOverNetwork.createTCPServer(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, REACommunicationKryoNetClassLists.getPrivateNetClassList());
       server.startMessager();
       return new LIDARBasedREAModule(server, new File(configurationFilePath));
    }
 
    public static LIDARBasedREAModule createIntraprocessModule(String configurationFilePath) throws IOException
    {
-      REAMessager messager = REAMessagerOverNetwork.createIntraprocess(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAMessager messager = REAMessagerOverNetwork.createIntraprocess(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, REACommunicationKryoNetClassLists.getPrivateNetClassList());
       messager.startMessager();
       return new LIDARBasedREAModule(messager, new File(configurationFilePath));
    }

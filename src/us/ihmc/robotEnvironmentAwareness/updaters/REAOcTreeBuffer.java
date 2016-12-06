@@ -29,24 +29,24 @@ public class REAOcTreeBuffer
    
    private final double octreeResolution;
 
-   private final PacketCommunicator packetCommunicator;
+   private final PacketCommunicator publicPacketCommunicator;
 
    private final REAModuleStateReporter moduleStateReporter;
 
    private final REAMessager reaMessager;
 
-   public REAOcTreeBuffer(double octreeResolution, REAMessager reaMessager, REAModuleStateReporter moduleStateReporter, PacketCommunicator packetCommunicator)
+   public REAOcTreeBuffer(double octreeResolution, REAMessager reaMessager, REAModuleStateReporter moduleStateReporter, PacketCommunicator publicPacketCommunicator)
    {
       this.octreeResolution = octreeResolution;
       this.reaMessager = reaMessager;
       this.moduleStateReporter = moduleStateReporter;
-      this.packetCommunicator = packetCommunicator;
+      this.publicPacketCommunicator = publicPacketCommunicator;
 
-      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
+      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, true);
       bufferSize = reaMessager.createInput(REAModuleAPI.OcTreeBufferSize, 10000);
 
       reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, (messageContent) -> sendCurrentState());
-      packetCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
+      publicPacketCommunicator.attachListener(LidarScanMessage.class, this::handlePacket);
    }
 
    private void sendCurrentState()
@@ -78,7 +78,7 @@ public class REAOcTreeBuffer
          @Override
          public void run()
          {
-            packetCommunicator.send(new RequestLidarScanMessage());
+            publicPacketCommunicator.send(new RequestLidarScanMessage());
 
             updateScanCollection();
             ScanCollection newScan = newFullScanReference.getAndSet(null);

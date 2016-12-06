@@ -22,7 +22,7 @@ public class REAModuleStateReporter
    private final AtomicReference<Boolean> arePlanarRegionsNodeKeysRequested;
    private final AtomicReference<Boolean> arePlanarRegionsIntersectionsRequested;
 
-   public REAModuleStateReporter(REAMessager reaMessager, PacketCommunicator packetCommunicator)
+   public REAModuleStateReporter(REAMessager reaMessager, PacketCommunicator publicPacketCommunicator)
    {
       this.reaMessager = reaMessager;
       isLidarScanRequested = reaMessager.createInput(REAModuleAPI.RequestLidarScan, false);
@@ -33,7 +33,7 @@ public class REAModuleStateReporter
       arePlanarRegionsNodeKeysRequested = reaMessager.createInput(REAModuleAPI.RequestPlanarRegionsNodeKeys, false);
       arePlanarRegionsIntersectionsRequested = reaMessager.createInput(REAModuleAPI.RequestPlanarRegionsIntersections, false);
 
-      packetCommunicator.attachListener(LidarScanMessage.class, this::handleLidarScanMessage);
+      publicPacketCommunicator.attachListener(LidarScanMessage.class, this::handleLidarScanMessage);
    }
 
    public void reportBufferOcTreeState(NormalOcTree bufferOcTree)

@@ -1,18 +1,31 @@
 buildscript {
   repositories {
+    mavenCentral();
+    jcenter();
+
+    maven {
+       url "http://artifactory.ihmc.us/artifactory/releases/"
+    }
+    maven {
+       url "http://artifactory.ihmc.us/artifactory/thirdparty/"
+    }
     maven {
       url "https://plugins.gradle.org/m2/"
     }
   }
   dependencies {
+    classpath "us.ihmc.gradle:licenseChecker:1.1.1"
+    classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.4"
     classpath "gradle.plugin.us.ihmc.gradle:ihmc-build:0.0.17"
   }
 }
 
+apply plugin: "maven-publish"
+apply plugin: "com.jfrog.artifactory"
 apply plugin: "us.ihmc.gradle.ihmc-build"
 
 sourceCompatibility = 1.8
-version = '1.0'
+version = '0.0'
 
 project.sourceSets {
     main {
@@ -38,32 +51,42 @@ project.sourceSets {
 
 repositories ihmc.ihmcDefaultArtifactProxies()
 
-repositories {
-    mavenLocal()
-    jcenter()
-    mavenCentral()
-    maven {
-        url "https://bengal.ihmc.us/nexus/content/repositories/thirdparty/"
-    }
-    maven {
-         url "http://artifactory.ihmc.us/artifactory/releases/"
-    }
+artifactory {
+   contextUrl = artifactoryURL   //The base Artifactory URL if not overridden by the publisher/resolver
+   publish {
+      //A closure defining publishing information
+      repository {
+         repoKey = "releases"   //The Artifactory repository key to publish to
+         username = artifactoryUsername   //The publisher user name
+         password = artifactoryPassword   //The publisher password
+      }
+      defaults {
+         //List of Gradle Publications (names or objects) from which to collect the list of artifacts to be deployed to Artifactory.
+         publications("mavenJava")
+         publishBuildInfo = false  //Publish build-info to Artifactory (true by default)
+         publishArtifacts = true   //Publish artifacts to Artifactory (true by default)
+         publishPom = true         //Publish generated POM files to Artifactory (true by default).
+         publishIvy = false        //Publish generated Ivy descriptor files to Artifactory (true by default).
+      }
+   }
+   resolve {
+      repository {
+         repoKey = "libs-releases"        //The Artifactory (preferably virtual) repository key to resolve from
+         username = artifactoryUsername   //The publisher user name
+         password = artifactoryPassword   //The publisher password
+         maven = true                     //Resolve Maven-style artifacts and descriptors (true by default)
+      }
+   }
+   // Redefine basic properties of the build info object
+   clientConfig.setIncludeEnvVars(true)
+   clientConfig.info.setBuildName("${project.name}")
+   clientConfig.info.setBuildNumber("$version")
+   clientConfig.timeout = 600 // Artifactory connection timeout (in seconds). The default timeout is 300 seconds.
+}
 
-dependencies {
-
-    compile group: 'com.vividsolutions', name: 'jts', version: '1.13'
-    compile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-	compile group: 'us.ihmc', name: 'JOctoMap', version: '1.4.0'
-
-    compile ihmc.getProjectDependency(":Graphics3DAdapter")
-    compile ihmc.getProjectDependency(":SimulationConstructionSet")
-    compile ihmc.getProjectDependency(":IHMCCommunication")
-    compile ihmc.getProjectDependency(":IHMCROSTools")
-    compile ihmc.getProjectDependency(":IHMCRoboticsToolkit")
-    compile ihmc.getProjectDependency(":IHMCJavaFXToolkit")
-
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    testCompile ihmc.getProjectDependency(":IHMCUnitTesting")
+task sourceJar(type: Jar, dependsOn: classes) {
+   classifier = 'sources'
+   from sourceSets.main.allJava
 }
 
 jar {
@@ -80,4 +103,92 @@ jar {
                 "Bundle-Vendor": "IHMC")
     }
 }
+
+publishing {
+   publications {
+      mavenJava(MavenPublication) {
+         groupId "us.ihmc"
+
+         String projectShortName = "${project.name}";
+         projectShortName = projectShortName.split("_")[0];
+         artifactId projectShortName
+         version "$version"
+
+         from components.java
+		 
+		 pom.withXml {
+             asNode().children().last() + {
+                 resolveStrategy = Closure.DELEGATE_FIRST
+                 name project.name
+                 description 'Robot Environment Awareness is a library meant to provide interpretation to point cloud data such as identifying planar regions that can be used to planify footsteps for a bipedal robot.'
+                 url 'https://stash.ihmc.us/users/sbertrand/repos/RobotEnvironmentAwareness'
+                 licenses {
+                     license {
+                         name 'The Apache Software License, Version 2.0'
+                         url 'http://www.apache.org/license/LICENSE-2.0.txt'
+                         distribution 'repo'
+                     }
+                 }
+                 developers {
+                     developer {
+                         id 'sbertrand'
+                         name 'Sylvain Bertrand'
+                         email 'sbertrand@ihmc.us'
+                     }
+                 }
+             }
+         }
+
+			artifact sourceJar {
+				classifier "sources"
+		}
+      }
+   }
+   repositories {
+      maven {
+         url artifactoryURL
+      }
+   }
+}
+
+afterEvaluate {
+   artifactoryPublish {
+      dependsOn publishToMavenLocal
+      dependsOn sourceJar
+      skip = false //Skip build info analysis and publishing (false by default)
+      contextUrl = artifactoryURL
+      publications("mavenJava")
+      clientConfig.publisher.repoKey = "releases"
+      clientConfig.publisher.username = artifactoryUsername
+      clientConfig.publisher.password = artifactoryPassword
+   }
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+    mavenCentral()
+    maven {
+        url "https://bengal.ihmc.us/nexus/content/repositories/thirdparty/"
+    }
+    maven {
+         url "http://artifactory.ihmc.us/artifactory/releases/"
+    }
+}
+
+dependencies {
+
+    compile group: 'com.vividsolutions', name: 'jts', version: '1.13'
+    compile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+	compile group: 'us.ihmc', name: 'JOctoMap', version: '1.4.0'
+
+    compile ihmc.getProjectDependency(":Graphics3DAdapter")
+    compile ihmc.getProjectDependency(":SimulationConstructionSet")
+    compile ihmc.getProjectDependency(":IHMCCommunication")
+    compile ihmc.getProjectDependency(":IHMCROSTools")
+    compile ihmc.getProjectDependency(":IHMCRoboticsToolkit")
+    compile ihmc.getProjectDependency(":IHMCJavaFXToolkit")
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile ihmc.getProjectDependency(":IHMCUnitTesting")
 }

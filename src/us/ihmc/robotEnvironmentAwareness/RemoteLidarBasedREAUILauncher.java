@@ -1,13 +1,14 @@
 package us.ihmc.robotEnvironmentAwareness;
 
+import java.util.Map;
+
 import javafx.application.Application;
 import javafx.stage.Stage;
 import us.ihmc.robotEnvironmentAwareness.ui.LIDARBasedEnvironmentAwarenessUI;
+import us.ihmc.tools.io.printing.PrintTools;
 
 public class RemoteLidarBasedREAUILauncher extends Application
 {
-   private static final String HOST = "localhost";
-
    public RemoteLidarBasedREAUILauncher()
    {
    }
@@ -15,12 +16,21 @@ public class RemoteLidarBasedREAUILauncher extends Application
    @Override
    public void start(Stage primaryStage) throws Exception
    {
-      LIDARBasedEnvironmentAwarenessUI remoteUI = LIDARBasedEnvironmentAwarenessUI.creatRemoteUI(primaryStage, HOST);
+      Parameters parameters = getParameters();
+      Map<String, String> namedParameters = parameters.getNamed();
+      String host = namedParameters.getOrDefault("host", "localhost");
+      PrintTools.info("Creating REA UI with the module address: " + host);
+
+      if (!parameters.getRaw().isEmpty())
+         PrintTools.info("Received the program arguments: " + parameters.getRaw());
+
+      LIDARBasedEnvironmentAwarenessUI remoteUI = LIDARBasedEnvironmentAwarenessUI.creatRemoteUI(primaryStage, host);
       remoteUI.show();
    }
 
    public static void main(String[] args)
    {
+      PrintTools.info("To change the address of the module, enter its IP address as a program argument. For instance: " + "--host=127.0.0.1");
       launch(args);
    }
 }

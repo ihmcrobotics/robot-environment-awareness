@@ -48,10 +48,10 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       this.octree = octree;
       this.reaMessager = reaMessager;
 
-      isOcTreeEnabled = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
-      enableSegmentation = reaMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationEnable, false);
+      isOcTreeEnabled = reaMessager.createInput(REAModuleAPI.OcTreeEnable, true);
+      enableSegmentation = reaMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationEnable, true);
       clearSegmentation = reaMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationClear, false);
-      enablePolygonizer = reaMessager.createInput(REAModuleAPI.PlanarRegionsPolygonizerEnable, false);
+      enablePolygonizer = reaMessager.createInput(REAModuleAPI.PlanarRegionsPolygonizerEnable, true);
       enableIntersectionCalulator = reaMessager.createInput(REAModuleAPI.PlanarRegionsIntersectionEnable, false);
       planarRegionSegmentationParameters = reaMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationParameters, new PlanarRegionSegmentationParameters());
       intersectionEstimationParameters = reaMessager.createInput(REAModuleAPI.PlanarRegionsIntersectionParameters, new IntersectionEstimationParameters());

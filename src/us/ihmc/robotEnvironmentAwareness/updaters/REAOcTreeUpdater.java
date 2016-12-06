@@ -43,8 +43,8 @@ public class REAOcTreeUpdater
       referenceOctree.enableParallelComputationForNormals(true);
       referenceOctree.enableParallelInsertionOfMisses(true);
 
-      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
-      enableNormalEstimation = reaMessager.createInput(REAModuleAPI.NormalEstimationEnable, false);
+      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, true);
+      enableNormalEstimation = reaMessager.createInput(REAModuleAPI.NormalEstimationEnable, true);
       clearNormals = reaMessager.createInput(REAModuleAPI.NormalEstimationClear, false);
       minRange = reaMessager.createInput(REAModuleAPI.LidarMinRange, 0.2);
       maxRange = reaMessager.createInput(REAModuleAPI.LidarMaxRange, 5.0);

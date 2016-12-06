@@ -42,7 +42,7 @@ public class REAOcTreeBuffer
       this.moduleStateReporter = moduleStateReporter;
       this.publicPacketCommunicator = publicPacketCommunicator;
 
-      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, false);
+      enable = reaMessager.createInput(REAModuleAPI.OcTreeEnable, true);
       bufferSize = reaMessager.createInput(REAModuleAPI.OcTreeBufferSize, 10000);
 
       reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, (messageContent) -> sendCurrentState());

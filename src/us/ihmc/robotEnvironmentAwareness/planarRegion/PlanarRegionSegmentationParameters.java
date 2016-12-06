@@ -8,7 +8,7 @@ public class PlanarRegionSegmentationParameters
    public static final double DEFAULT_MAX_DISTANCE_FROM_PLANE = 0.05;
    public static final double DEFAULT_MAX_ANGLE_FROM_PLANE = Math.toRadians(10.0);
    public static final double DEFAULT_MIN_NORMAL_QUALITY = 0.005;
-   public static final int DEFAULT_MIN_REGION_SIZE = 10;
+   public static final int DEFAULT_MIN_REGION_SIZE = 50;
 
    private double searchRadius;
    private double maxDistanceFromPlane;

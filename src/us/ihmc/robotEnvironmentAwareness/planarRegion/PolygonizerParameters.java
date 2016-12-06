@@ -40,10 +40,10 @@ public class PolygonizerParameters
 
    public void setDefaultParameters()
    {
-      concaveHullThreshold = 0.2;
+      concaveHullThreshold = 0.15;
       minNumberOfNodes = 10;
       shallowAngleThreshold = Math.toRadians(1.0);
-      peakAngleThreshold = Math.toRadians(120.0);
+      peakAngleThreshold = Math.toRadians(170.0);
       lengthThreshold = 0.05;
       depthThreshold = 0.10;
    }

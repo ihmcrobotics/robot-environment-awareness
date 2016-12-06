@@ -15,6 +15,7 @@ import us.ihmc.communication.packets.Packet;
 import us.ihmc.communication.packets.PacketDestination;
 import us.ihmc.communication.packets.PlanarRegionMessage;
 import us.ihmc.communication.packets.PlanarRegionsListMessage;
+import us.ihmc.communication.packets.RequestLidarScanMessage;
 import us.ihmc.communication.packets.RequestPlanarRegionsListMessage;
 import us.ihmc.communication.packets.RequestPlanarRegionsListMessage.RequestType;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
@@ -84,13 +85,16 @@ public class REACommunicationKryoNetClassLists
       publicNetClassList.registerPacketClass(LidarScanMessage.class);
       publicNetClassList.registerPacketClass(PlanarRegionsListMessage.class);
       publicNetClassList.registerPacketClass(RequestPlanarRegionsListMessage.class);
+      publicNetClassList.registerPacketClass(RequestLidarScanMessage.class);
 
       publicNetClassList.registerPacketField(PacketDestination.class);
 
+      publicNetClassList.registerPacketField(float[].class);
       publicNetClassList.registerPacketField(ArrayList.class);
       publicNetClassList.registerPacketField(Point3f.class);
       publicNetClassList.registerPacketField(Point2f.class);
       publicNetClassList.registerPacketField(Vector3f.class);
+      publicNetClassList.registerPacketField(Quat4f.class);
       publicNetClassList.registerPacketField(Point2f[].class);
       publicNetClassList.registerPacketField(RequestType.class);
 

@@ -16,9 +16,10 @@ buildscript {
   dependencies {
     classpath "us.ihmc.gradle:licenseChecker:1.1.1"
     classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.4"
-    classpath "gradle.plugin.us.ihmc.gradle:ihmc-build:0.0.18"
+    classpath group: 'gradle.plugin.us.ihmc.gradle', name: 'ihmc-build', version: '0.0.18'
   }
 }
+
 
 apply plugin: "maven-publish"
 apply plugin: "com.jfrog.artifactory"
@@ -30,7 +31,7 @@ version = '0.0'
 project.sourceSets {
     main {
         java {
-            srcDirs = ['src', 'visualizers']
+            srcDirs = ['src']
         }
 
         resources {
@@ -40,7 +41,7 @@ project.sourceSets {
 
     test {
         java {
-            srcDirs = ['test']
+            srcDirs = ['test', 'visualizers']
         }
 
         resources {
@@ -52,6 +53,7 @@ project.sourceSets {
 repositories ihmc.ihmcDefaultArtifactProxies()
 
 artifactory {
+
    contextUrl = artifactoryURL   //The base Artifactory URL if not overridden by the publisher/resolver
    publish {
       //A closure defining publishing information
@@ -70,6 +72,7 @@ artifactory {
       }
    }
    resolve {
+      contextUrl = artifactoryURL   //The base Artifactory URL if not overridden by the publisher/resolver
       repository {
          repoKey = "libs-releases"        //The Artifactory (preferably virtual) repository key to resolve from
          username = artifactoryUsername   //The publisher user name
@@ -121,7 +124,7 @@ publishing {
                  resolveStrategy = Closure.DELEGATE_FIRST
                  name project.name
                  description 'Robot Environment Awareness is a library meant to provide interpretation to point cloud data such as identifying planar regions that can be used to planify footsteps for a bipedal robot.'
-                 url 'https://stash.ihmc.us/users/sbertrand/repos/RobotEnvironmentAwareness'
+                 url 'https://stash.ihmc.us/users/sbertrand/repos/robotenvironmentawareness'
                  licenses {
                      license {
                          name 'The Apache Software License, Version 2.0'
@@ -139,8 +142,8 @@ publishing {
              }
          }
 
-			artifact sourceJar {
-				classifier "sources"
+		artifact sourceJar {
+			classifier "sources"
 		}
       }
    }
@@ -151,25 +154,39 @@ publishing {
    }
 }
 
-afterEvaluate {
-   artifactoryPublish {
-      dependsOn publishToMavenLocal
-      dependsOn sourceJar
-      skip = false //Skip build info analysis and publishing (false by default)
-      contextUrl = artifactoryURL
-      publications("mavenJava")
-      clientConfig.publisher.repoKey = "releases"
-      clientConfig.publisher.username = artifactoryUsername
-      clientConfig.publisher.password = artifactoryPassword
+// Call from the root project as follow: 'gradle :RobotEnvironmentAwareness:artifactoryPublish'
+// The build.gradle of the root project must apply the com.jfrog.artifactory plugin like it is applied here.
+artifactoryPublish {
+   dependsOn publishToMavenLocal
+   dependsOn sourceJar
+   
+   dependencies {
+   
+       runtime group: 'com.vividsolutions', name: 'jts', version: '1.13'
+       runtime group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+       runtime group: 'us.ihmc', name: 'JOctoMap', version: '1.4.0'
+       // TODO These needs to be references to snapshots of artifacts.
+       // runtime ihmc.getProjectDependency(":Graphics3DAdapter")
+       // runtime ihmc.getProjectDependency(":SimulationConstructionSet")
+       // runtime ihmc.getProjectDependency(":IHMCCommunication")
+       // runtime ihmc.getProjectDependency(":IHMCROSTools")
+       // runtime ihmc.getProjectDependency(":IHMCRoboticsToolkit")
+       // runtime ihmc.getProjectDependency(":IHMCJavaFXToolkit")
    }
+   skip = false //Skip build info analysis and publishing (false by default)
+   contextUrl = artifactoryURL
+   publications("mavenJava")
+   clientConfig.publisher.repoKey = "releases"
+   clientConfig.publisher.username = artifactoryUsername
+   clientConfig.publisher.password = artifactoryPassword
 }
 
 repositories {
-    mavenLocal()
-    jcenter()
-    mavenCentral()
+   mavenLocal()
+   jcenter()
+   mavenCentral()
     maven {
-        url "https://bengal.ihmc.us/nexus/content/repositories/thirdparty/"
+         url "http://artifactory.ihmc.us/artifactory/thirdparty/"
     }
     maven {
          url "http://artifactory.ihmc.us/artifactory/releases/"

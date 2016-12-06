@@ -10,7 +10,6 @@ import javax.vecmath.Quat4d;
 import geometry_msgs.Point;
 import geometry_msgs.Quaternion;
 import scan_to_cloud.PointCloud2WithSource;
-import us.ihmc.atlas.sensors.PointCloudWithSourcePoseTester;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.communication.util.NetworkPorts;
@@ -28,13 +27,11 @@ public class MultisensePointCloud2WithSourceReceiver extends AbstractRosTopicSub
    {
       super(PointCloud2WithSource._TYPE);
       URI masterURI = new URI("http://10.6.192.14:11311");
-      RosMainNode rosMainNode = new RosMainNode(masterURI, "scanToCLoudJavaTester", true);
-      new PointCloudWithSourcePoseTester(rosMainNode);
+      RosMainNode rosMainNode = new RosMainNode(masterURI, "LidarScanPublisher", true);
       rosMainNode.attachSubscriber("/singleScanAsCloudWithSource", this);
       rosMainNode.execute();
 
       packetCommunicator.connect();
-
    }
 
    @Override
@@ -42,9 +39,9 @@ public class MultisensePointCloud2WithSourceReceiver extends AbstractRosTopicSub
    {
       UnpackedPointCloud pointCloudData = RosPointCloudSubscriber.unpackPointsAndIntensities(cloudHolder.getCloud());
       Point3d[] points = pointCloudData.getPoints();
-      
+
       Point translation = cloudHolder.getTranslation();
-      Point3d lidarPosition = new Point3d(translation.getX(), translation.getY(),translation.getZ());
+      Point3d lidarPosition = new Point3d(translation.getX(), translation.getY(), translation.getZ());
       Quaternion orientation = cloudHolder.getOrientation();
       Quat4d lidarQuaternion = new Quat4d(orientation.getX(), orientation.getY(), orientation.getZ(), orientation.getW());
 

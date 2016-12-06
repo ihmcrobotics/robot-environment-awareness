@@ -9,7 +9,7 @@ import us.ihmc.graphics3DAdapter.Graphics3DAdapter;
 import us.ihmc.graphics3DDescription.Graphics3DObject;
 import us.ihmc.graphics3DDescription.structure.Graphics3DNode;
 import us.ihmc.graphics3DDescription.yoGraphics.YoGraphicsListRegistry;
-import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
+import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassLists;
 import us.ihmc.robotics.dataStructures.listener.VariableChangedListener;
 import us.ihmc.robotics.dataStructures.variable.EnumYoVariable;
 import us.ihmc.robotics.dataStructures.variable.YoVariable;
@@ -42,7 +42,7 @@ public class LidarFastSimulation
 
       Graphics3DAdapter graphics3dAdapter = scs.getGraphics3dAdapter();
       YoGraphicsListRegistry yoGraphicsListRegistry = new YoGraphicsListRegistry();
-      PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
+      PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.REA_MODULE_PORT, REACommunicationKryoNetClassLists.getPublicNetClassList());
       packetCommunicator.connect();
 
       SimpleLidarRobotController controller = new SimpleLidarRobotController(robot, controlDT, packetCommunicator, graphics3dAdapter, yoGraphicsListRegistry);

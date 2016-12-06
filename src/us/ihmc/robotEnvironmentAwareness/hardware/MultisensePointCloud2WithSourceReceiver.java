@@ -14,7 +14,7 @@ import us.ihmc.atlas.sensors.PointCloudWithSourcePoseTester;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.communication.util.NetworkPorts;
-import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
+import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassLists;
 import us.ihmc.utilities.ros.RosMainNode;
 import us.ihmc.utilities.ros.subscriber.AbstractRosTopicSubscriber;
 import us.ihmc.utilities.ros.subscriber.RosPointCloudSubscriber;
@@ -22,7 +22,7 @@ import us.ihmc.utilities.ros.subscriber.RosPointCloudSubscriber.UnpackedPointClo
 
 public class MultisensePointCloud2WithSourceReceiver extends AbstractRosTopicSubscriber<PointCloud2WithSource>
 {
-   PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.REA_MODULE_PORT, new IHMCCommunicationKryoNetClassList());
+   PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.REA_MODULE_PORT, REACommunicationKryoNetClassLists.getPublicNetClassList());
 
    public MultisensePointCloud2WithSourceReceiver() throws URISyntaxException, IOException
    {

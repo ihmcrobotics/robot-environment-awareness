@@ -13,10 +13,9 @@ import us.ihmc.communication.configuration.NetworkParameterKeys;
 import us.ihmc.communication.configuration.NetworkParameters;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
-import us.ihmc.humanoidRobotics.kryo.IHMCCommunicationKryoNetClassList;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.jOctoMap.tools.JOctoMapTools;
-import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassList;
+import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassLists;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
@@ -182,14 +181,14 @@ public class LIDARBasedREAModule
 
    public static LIDARBasedREAModule createRemoteModule(String configurationFilePath) throws IOException
    {
-      REAMessager server = REAMessagerOverNetwork.createTCPServer(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAMessager server = REAMessagerOverNetwork.createTCPServer(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, REACommunicationKryoNetClassLists.getPrivateNetClassList());
       server.startMessager();
       return new LIDARBasedREAModule(server, new File(configurationFilePath));
    }
 
    public static LIDARBasedREAModule createIntraprocessModule(String configurationFilePath) throws IOException
    {
-      REAMessager messager = REAMessagerOverNetwork.createIntraprocess(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, new REACommunicationKryoNetClassList());
+      REAMessager messager = REAMessagerOverNetwork.createIntraprocess(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, REACommunicationKryoNetClassLists.getPrivateNetClassList());
       messager.startMessager();
       return new LIDARBasedREAModule(messager, new File(configurationFilePath));
    }

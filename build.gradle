@@ -158,25 +158,20 @@ publishing {
    }
 }
 
+// Set of dependencies to get published along with REA
+dependencies {
+    runtime group: 'com.vividsolutions', name: 'jts', version: '1.13'
+    runtime group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+    runtime group: 'us.ihmc', name: 'JOctoMap', version: '1.5.0'
+}
+
+// Not doing afterEvaluate for now, as we want to keep part of the dependencies out of the publishing.
 // Call from the root project as follow: 'gradle :RobotEnvironmentAwareness:artifactoryPublish'
 // The build.gradle of the root project must apply the com.jfrog.artifactory plugin like it is applied here.
 artifactoryPublish {
    dependsOn publishToMavenLocal
    dependsOn sourceJar
    
-   dependencies {
-   
-       runtime group: 'com.vividsolutions', name: 'jts', version: '1.13'
-       runtime group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-       runtime group: 'us.ihmc', name: 'JOctoMap', version: '1.4.0'
-       // TODO These needs to be references to snapshots of artifacts.
-       // runtime ihmc.getProjectDependency(":Graphics3DAdapter")
-       // runtime ihmc.getProjectDependency(":SimulationConstructionSet")
-       // runtime ihmc.getProjectDependency(":IHMCCommunication")
-       // runtime ihmc.getProjectDependency(":IHMCROSTools")
-       // runtime ihmc.getProjectDependency(":IHMCRoboticsToolkit")
-       // runtime ihmc.getProjectDependency(":IHMCJavaFXToolkit")
-   }
    skip = false //Skip build info analysis and publishing (false by default)
    contextUrl = artifactoryURLString
    publications("mavenJava")
@@ -197,12 +192,9 @@ repositories {
     }
 }
 
+// Added that set of dependencies after artifactoryPublish so they don't get published (otherwise it's all broken).
 dependencies {
-
-    compile group: 'com.vividsolutions', name: 'jts', version: '1.13'
-    compile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-	compile group: 'us.ihmc', name: 'JOctoMap', version: '1.4.0'
-
+    // TODO These needs to be references to snapshots of artifacts.
     compile ihmc.getProjectDependency(":Graphics3DAdapter")
     compile ihmc.getProjectDependency(":SimulationConstructionSet")
     compile ihmc.getProjectDependency(":IHMCCommunication")

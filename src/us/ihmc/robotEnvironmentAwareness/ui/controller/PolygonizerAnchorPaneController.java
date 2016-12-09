@@ -106,6 +106,12 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
    }
 
    @FXML
+   public void clear()
+   {
+      uiMessager.broadcastMessage(REAModuleAPI.PlanarRegionsPolygonizerClear, true);
+   }
+
+   @FXML
    public void save()
    {
       uiMessager.submitStateRequestToModule(REAModuleAPI.SaveRegionUpdaterConfiguration);

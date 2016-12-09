@@ -21,6 +21,7 @@ public class PlanarRegionsMeshBuilder implements Runnable
 {
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> clear;
+   private final AtomicReference<Boolean> clearOcTree;
 
    private final JavaFXMultiColorMeshBuilder meshBuilder;
 
@@ -34,7 +35,8 @@ public class PlanarRegionsMeshBuilder implements Runnable
    {
       this.uiMessager = uiMessager;
       enable = uiMessager.createInput(REAModuleAPI.OcTreeEnable, false);
-      clear = uiMessager.createInput(REAModuleAPI.OcTreeClear, false);
+      clear = uiMessager.createInput(REAModuleAPI.PlanarRegionsPolygonizerClear, false);
+      clearOcTree = uiMessager.createInput(REAModuleAPI.OcTreeClear, false);
 
       planarRegionsListMessage = uiMessager.createInput(REAModuleAPI.PlanarRegionsState);
 
@@ -48,7 +50,8 @@ public class PlanarRegionsMeshBuilder implements Runnable
    {
       PlanarRegionsListMessage newMessage = planarRegionsListMessage.get();
 
-      if (clear.getAndSet(false))
+      // Reset both clears by using only one pipe
+      if (clearOcTree.getAndSet(false) | clear.getAndSet(false))
       {
          meshAndMaterialToRender.set(new Pair<>(null, null));
          return;

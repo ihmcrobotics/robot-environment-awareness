@@ -26,8 +26,9 @@ import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.LidarScanViewer;
 
 public class REAMeshViewer
 {
-   private static final int LOW_RATE_UPDATE_PERIOD = 2000;
-   private static final int HIGH_RATE_UPDATE_PERIOD = 10;
+   private static final int SLOW_PACE_UPDATE_PERIOD = 2000;
+   private static final int MEDIUM_PACE_UPDATE_PERIOD = 100;
+   private static final int HIGH_PACE_UPDATE_PERIOD = 10;
 
    private final Group root = new Group();
 
@@ -103,12 +104,12 @@ public class REAMeshViewer
       if (!meshBuilderScheduledFutures.isEmpty())
          return;
       renderMeshAnimation.start();
-      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(lidarScanViewer, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
-      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(bufferOctreeMeshBuilder, 0, HIGH_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
-      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(ocTreeMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
-      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(planarRegionsMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
-      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(intersectionsMeshBuilder, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
-      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(boundingBoxMeshView, 0, LOW_RATE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(lidarScanViewer, 0, HIGH_PACE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(bufferOctreeMeshBuilder, 0, HIGH_PACE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(ocTreeMeshBuilder, 0, SLOW_PACE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(planarRegionsMeshBuilder, 0, MEDIUM_PACE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(intersectionsMeshBuilder, 0, MEDIUM_PACE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
+      meshBuilderScheduledFutures.add(executorService.scheduleAtFixedRate(boundingBoxMeshView, 0, MEDIUM_PACE_UPDATE_PERIOD, TimeUnit.MILLISECONDS));
    }
 
    public void sleep()

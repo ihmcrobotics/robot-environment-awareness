@@ -18,6 +18,7 @@ import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationPara
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder.ColoringType;
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder.DisplayType;
 
 public class REAModuleAPI
 {
@@ -52,6 +53,7 @@ public class REAModuleAPI
    private static final TopicTheme Max = apiFactory.createTopicTheme("Max");
    private static final TopicTheme Data = apiFactory.createTopicTheme("Data");
    private static final TopicTheme Color = apiFactory.createTopicTheme("Color");
+   private static final TopicTheme Display = apiFactory.createTopicTheme("Display");
 
    private static final Category Root = apiFactory.getRootCategory(apiFactory.createCategoryTheme("REA"));
 
@@ -77,14 +79,14 @@ public class REAModuleAPI
    public static final Topic<Boolean> PlanarRegionsSegmentationClear = PlanarRegionsCategory.child(Segmentation).topic(Clear);
    public static final Topic<PlanarRegionSegmentationParameters> PlanarRegionsSegmentationParameters = PlanarRegionsCategory.child(Segmentation).topic(Parameters);
    public static final Topic<Boolean> PlanarRegionsPolygonizerEnable = PlanarRegionsCategory.child(Polygonizer).topic(Enable);
+   public static final Topic<Boolean> PlanarRegionsPolygonizerClear = PlanarRegionsCategory.child(Polygonizer).topic(Clear);
    public static final Topic<PolygonizerParameters> PlanarRegionsPolygonizerParameters = PlanarRegionsCategory.child(Polygonizer).topic(Parameters);
    public static final Topic<Boolean> PlanarRegionsIntersectionEnable = PlanarRegionsCategory.child(Intersection).topic(Enable);
    public static final Topic<IntersectionEstimationParameters> PlanarRegionsIntersectionParameters = PlanarRegionsCategory.child(Intersection).topic(Parameters);
 
-   public static final Topic<Boolean> UIOcTreeShow = Root.child(UI).child(OcTree).topic(Show);
    public static final Topic<Integer> UIOcTreeDepth = Root.child(UI).child(OcTree).topic(Depth);
    public static final Topic<ColoringType> UIOcTreeColoringMode = Root.child(UI).child(OcTree).topic(Color);
-   public static final Topic<Boolean> UINormalEstimationShow = Root.child(UI).child(NormalEstimation).topic(Show);
+   public static final Topic<DisplayType> UIOcTreeDisplayType = Root.child(UI).child(OcTree).topic(Display);
    public static final Topic<Boolean> UIPlanarRegionHideNodes = Root.child(UI).child(PlanarRegions).child(Node).topic(Hide);
    public static final Topic<Boolean> UIOcTreeBoundingBoxShow = Root.child(UI).child(OcTree).child(BoundingBox).topic(Show);
    public static final Topic<Boolean> UIOcTreeShowBuffer = Root.child(UI).child(OcTree).child(Buffer).topic(Show);

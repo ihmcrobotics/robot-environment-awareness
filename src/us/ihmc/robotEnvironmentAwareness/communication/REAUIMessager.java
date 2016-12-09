@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import us.ihmc.communication.net.NetStateListener;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.Topic;
@@ -29,6 +30,18 @@ public class REAUIMessager
    {
       AtomicReference<T> input = internalMessager.createInput(topic, defaultValue);
       reaMessagerToModule.registerTopicListener(topic, input::set);
+      return input;
+   }
+
+   public <T> Property<T> createPropertyInput(Topic<T> topic)
+   {
+      return createPropertyInput(topic, null);
+   }
+
+   public <T> Property<T> createPropertyInput(Topic<T> topic, T defaultValue)
+   {
+      SimpleObjectProperty<T> input = new SimpleObjectProperty<T>(this, topic.getName(), defaultValue);
+      bindPropertyToTopic(topic, input);
       return input;
    }
 

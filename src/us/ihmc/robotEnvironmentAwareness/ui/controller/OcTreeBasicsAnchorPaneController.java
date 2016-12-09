@@ -11,6 +11,7 @@ import us.ihmc.javaFXToolkit.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.communication.MessageBidirectionalBinding.PropertyToMessageTypeConverter;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder.ColoringType;
+import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder.DisplayType;
 
 public class OcTreeBasicsAnchorPaneController extends REABasicUIController
 {
@@ -21,9 +22,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    @FXML
    private Slider depthSlider;
    @FXML
-   private ToggleButton showOcTreeNodesButton;
-   @FXML
-   private ToggleButton showEstimatedSurfacesButton;
+   private ComboBox<DisplayType> displayTypeComboBox;
    @FXML
    private ComboBox<ColoringType> coloringTypeComboBox;
    @FXML
@@ -54,9 +53,12 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
 
    public void setupControls()
    {
-      ObservableList<ColoringType> options = FXCollections.observableArrayList(ColoringType.values());
-      coloringTypeComboBox.setItems(options);
-      coloringTypeComboBox.setValue(options.get(ColoringType.REGION.ordinal()));
+      ObservableList<DisplayType> displayTypeOptions = FXCollections.observableArrayList(DisplayType.values());
+      displayTypeComboBox.setItems(displayTypeOptions);
+      displayTypeComboBox.setValue(DisplayType.PLANE);
+      ObservableList<ColoringType> coloringTypeOptions = FXCollections.observableArrayList(ColoringType.values());
+      coloringTypeComboBox.setItems(coloringTypeOptions);
+      coloringTypeComboBox.setValue(ColoringType.REGION);
       bufferSizeSlider.setLabelFormatter(StringConverterTools.thousandRounding(true));
    }
 
@@ -70,8 +72,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
 
       load();
       uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeDepth, depthSlider.valueProperty(), numberToIntegerConverter, true);
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeShow, showOcTreeNodesButton.selectedProperty(), true);
-      uiMessager.bindBidirectionalInternal(REAModuleAPI.UINormalEstimationShow, showEstimatedSurfacesButton.selectedProperty(), true);
+      uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeDisplayType, displayTypeComboBox.valueProperty(), true);
       uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeColoringMode, coloringTypeComboBox.valueProperty(), true);
       uiMessager.bindBidirectionalInternal(REAModuleAPI.UIOcTreeShowBuffer, showBufferButton.selectedProperty(), true);
       uiMessager.bindBidirectionalInternal(REAModuleAPI.UILidarScanShow, showInputScanButton.selectedProperty(), true);
@@ -90,8 +91,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
       uiMessager.submitStateRequestToModule(REAModuleAPI.SaveBufferConfiguration);
 
       saveUIControlProperty(REAModuleAPI.UIOcTreeDepth, depthSlider);
-      saveUIControlProperty(REAModuleAPI.UIOcTreeShow, showOcTreeNodesButton);
-      saveUIControlProperty(REAModuleAPI.UINormalEstimationShow, showEstimatedSurfacesButton);
+      saveUIControlProperty(REAModuleAPI.UIOcTreeDisplayType, displayTypeComboBox);
       saveUIControlProperty(REAModuleAPI.UIOcTreeColoringMode, coloringTypeComboBox);
       saveUIControlProperty(REAModuleAPI.UIOcTreeShowBuffer, showBufferButton);
       saveUIControlProperty(REAModuleAPI.UILidarScanShow, showInputScanButton);
@@ -100,8 +100,7 @@ public class OcTreeBasicsAnchorPaneController extends REABasicUIController
    public void load()
    {
       loadUIControlProperty(REAModuleAPI.UIOcTreeDepth, depthSlider);
-      loadUIControlProperty(REAModuleAPI.UIOcTreeShow, showOcTreeNodesButton);
-      loadUIControlProperty(REAModuleAPI.UINormalEstimationShow, showEstimatedSurfacesButton);
+      loadUIControlProperty(REAModuleAPI.UIOcTreeDisplayType, displayTypeComboBox);
       loadUIControlProperty(REAModuleAPI.UIOcTreeColoringMode, coloringTypeComboBox);
       loadUIControlProperty(REAModuleAPI.UIOcTreeShowBuffer, showBufferButton);
       loadUIControlProperty(REAModuleAPI.UILidarScanShow, showInputScanButton);

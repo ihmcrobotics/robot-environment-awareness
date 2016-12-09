@@ -78,7 +78,7 @@ artifactory {
    resolve {
       contextUrl = artifactoryURLString   //The base Artifactory URL if not overridden by the publisher/resolver
       repository {
-         repoKey = "libs-releases"        //The Artifactory (preferably virtual) repository key to resolve from
+         repoKey = "releases"        //The Artifactory (preferably virtual) repository key to resolve from
          username = artifactoryUsernameString   //The publisher user name
          password = artifactoryPasswordString   //The publisher password
          maven = true                     //Resolve Maven-style artifacts and descriptors (true by default)

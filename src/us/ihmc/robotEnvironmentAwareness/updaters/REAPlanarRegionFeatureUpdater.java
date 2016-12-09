@@ -37,6 +37,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private final AtomicReference<Boolean> enableSegmentation;
    private final AtomicReference<Boolean> clearSegmentation;
    private final AtomicReference<Boolean> enablePolygonizer;
+   private final AtomicReference<Boolean> clearPolygonizer;
    private final AtomicReference<Boolean> enableIntersectionCalulator;
    private final AtomicReference<PlanarRegionSegmentationParameters> planarRegionSegmentationParameters;
    private final AtomicReference<IntersectionEstimationParameters> intersectionEstimationParameters;
@@ -52,6 +53,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       enableSegmentation = reaMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationEnable, true);
       clearSegmentation = reaMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationClear, false);
       enablePolygonizer = reaMessager.createInput(REAModuleAPI.PlanarRegionsPolygonizerEnable, true);
+      clearPolygonizer = reaMessager.createInput(REAModuleAPI.PlanarRegionsPolygonizerClear, false);
       enableIntersectionCalulator = reaMessager.createInput(REAModuleAPI.PlanarRegionsIntersectionEnable, false);
       planarRegionSegmentationParameters = reaMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationParameters, new PlanarRegionSegmentationParameters());
       intersectionEstimationParameters = reaMessager.createInput(REAModuleAPI.PlanarRegionsIntersectionParameters, new IntersectionEstimationParameters());
@@ -135,8 +137,15 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
       timeReporter.run(() -> planarRegionCalculator.compute(octree.getRoot()), segmentationTimeReport);
 
-      if (enablePolygonizer.get())
+      if (clearPolygonizer.getAndSet(false))
+      {
+         concaveHulls = null;
+         convexPolygons = null;
+      }
+      else if (enablePolygonizer.get())
+      {
          timeReporter.run(this::updatePolygons, segmentationTimeReport);
+      }
 
       if (enableIntersectionCalulator.get())
          timeReporter.run(() -> intersectionCalculator.compute(planarRegionCalculator.getOcTreeNodePlanarRegions()), intersectionsTimeReport);

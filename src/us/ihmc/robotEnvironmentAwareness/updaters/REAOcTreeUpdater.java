@@ -1,5 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.vecmath.Point3d;
@@ -7,8 +9,11 @@ import javax.vecmath.Point3d;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
+import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
+import us.ihmc.jOctoMap.pointCloud.PointCloud;
+import us.ihmc.jOctoMap.pointCloud.Scan;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.BoundingBoxParametersMessage;
@@ -134,7 +139,13 @@ public class REAOcTreeUpdater
       NormalOcTree bufferOctree = reaOcTreeBuffer.pollNewBuffer();
 
       if (bufferOctree != null)
-         referenceOctree.insertNormalOcTree(sensorOrigin, bufferOctree);
+      {
+         PointCloud pointCloud = new PointCloud();
+         bufferOctree.forEach(node -> pointCloud.add(node.getHitLocationX(), node.getHitLocationY(), node.getHitLocationZ()));
+         Scan scan = new Scan(sensorOrigin, pointCloud);
+         Set<NormalOcTreeNode> updatedNodes = new HashSet<>();
+         referenceOctree.insertScan(scan, updatedNodes, null);
+      }
 
       if (clearNormals.getAndSet(false))
       {

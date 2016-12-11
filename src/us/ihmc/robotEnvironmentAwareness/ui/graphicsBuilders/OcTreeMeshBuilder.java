@@ -231,7 +231,7 @@ public class OcTreeMeshBuilder implements Runnable
       }
    }
 
-   private Color getRegionColor(int regionId)
+   public static Color getRegionColor(int regionId)
    {
       java.awt.Color awtColor = new java.awt.Color(regionId);
       return Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());

@@ -24,7 +24,10 @@ public class PlanarRegionSegmentationDataImporter
       DirectoryChooser directoryChooser = new DirectoryChooser();
       directoryChooser.setInitialDirectory(new File("Data"));
       File result = directoryChooser.showDialog(ownerWindow);
-      return new PlanarRegionSegmentationDataImporter(result);
+      if (result == null)
+         return null;
+      else
+         return new PlanarRegionSegmentationDataImporter(result);
    }
 
    public PlanarRegionSegmentationDataImporter(File dataFolder)

@@ -229,7 +229,7 @@ public class ConcaveHullTools
 
          if (GeometryTools.isPointOnLeftSideOfLine(startCandidate, firstBridgeVertex, secondBridgeVertex))
          { // startIndexCandidate is a potential firstBridgeIndex.
-            boolean isBridgeCoveringPocket = false;
+            boolean isBridgeCoveringPocket = true;
 
             // Make sure that the new bridge would go over all the pocket vertices
             for (int i = next(startIndexCandidate, concaveHullVertices); i != secondBridgeIndex

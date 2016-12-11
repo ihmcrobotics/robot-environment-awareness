@@ -22,7 +22,7 @@ import us.ihmc.robotEnvironmentAwareness.ui.controller.OcTreeBasicsAnchorPaneCon
 import us.ihmc.robotEnvironmentAwareness.ui.controller.PointCloudAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.PolygonizerAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.RegionSegmentationAnchorPaneController;
-import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmetnationDataExporter;
+import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataExporter;
 import us.ihmc.robotEnvironmentAwareness.ui.scene3D.RobotEnvironmentAwareness3DScene;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.LidarFrameViewer;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.REAMeshViewer;
@@ -71,7 +71,7 @@ public class LIDARBasedEnvironmentAwarenessUI
 
       lidarFrameViewer = new LidarFrameViewer(uiMessager);
       reaMeshViewer = new REAMeshViewer(uiMessager);
-      new PlanarRegionSegmetnationDataExporter(uiMessager); // No need to anything with it beside instantiating it.
+      new PlanarRegionSegmentationDataExporter(uiMessager); // No need to anything with it beside instantiating it.
 
       initializeControllers(uiMessager);
 

@@ -22,14 +22,14 @@ import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegme
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
 
-public class PlanarRegionSegmetnationDataExporter
+public class PlanarRegionSegmentationDataExporter
 {
    private final Executor executor = ExecutorServiceTools.newSingleThreadScheduledExecutor(getClass(), ExceptionHandling.CANCEL_AND_REPORT);
 
    private final AtomicReference<PlanarRegionSegmentationMessage[]> planarRegionSegmentationState;
    private final AtomicReference<String> dataDirectoryPath;
 
-   public PlanarRegionSegmetnationDataExporter(REAUIMessager uiMessager)
+   public PlanarRegionSegmentationDataExporter(REAUIMessager uiMessager)
    {
       planarRegionSegmentationState = uiMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationState);
       dataDirectoryPath = uiMessager.createInput(REAModuleAPI.UIDataExporterDirectory, new File("Data/").getAbsolutePath());

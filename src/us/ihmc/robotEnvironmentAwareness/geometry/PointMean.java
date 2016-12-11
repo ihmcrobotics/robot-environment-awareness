@@ -2,6 +2,7 @@ package us.ihmc.robotEnvironmentAwareness.geometry;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Tuple3d;
+import javax.vecmath.Tuple3f;
 
 public class PointMean extends Point3d
 {
@@ -19,6 +20,16 @@ public class PointMean extends Point3d
    }
 
    public void update(Tuple3d tuple, int updateSize)
+   {
+      update(tuple.getX(), tuple.getY(), tuple.getZ(), updateSize);
+   }
+
+   public void update(Tuple3f tuple)
+   {
+      update(tuple.getX(), tuple.getY(), tuple.getZ());
+   }
+
+   public void update(Tuple3f tuple, int updateSize)
    {
       update(tuple.getX(), tuple.getY(), tuple.getZ(), updateSize);
    }

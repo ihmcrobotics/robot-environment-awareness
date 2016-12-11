@@ -102,6 +102,11 @@ public class PolygonizerTools
 
    public static Point3d toPointInWorld(Point2d pointInPlane, Point3d planeOrigin, Quat4d planeOrientation)
    {
+      return toPointInWorld(pointInPlane.getX(), pointInPlane.getY(), planeOrigin, planeOrientation);
+   }
+
+   public static Point3d toPointInWorld(double xToTransform, double yToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   {
       Point3d pointInWorld = new Point3d();
 
       double qx = planeOrientation.getX();
@@ -111,8 +116,8 @@ public class PolygonizerTools
 
       // t = 2.0 * cross(q.xyz, v);
       // v' = v + q.s * t + cross(q.xyz, t);
-      double x = pointInPlane.getX();
-      double y = pointInPlane.getY();
+      double x = xToTransform;
+      double y = yToTransform;
       double z = 0.0;
 
       double crossX = 2.0 * (qy * z - qz * y);

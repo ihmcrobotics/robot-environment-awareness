@@ -88,7 +88,7 @@ public class SimpleConcaveHullFactoryVisualizer extends Application
 
       meshBuilder.clear();
 
-      List<Point3d> concaveHullVertices = SimpleConcaveHullFactory.createConcaveHullAsPoint3dList(pointCloud, 0.10, 0.0);
+      List<Point3d> concaveHullVertices = SimpleConcaveHullFactory.createConcaveHull(pointCloud, 0.10).getOrderedConcaveHullVertices(0.0);
       meshBuilder.addMultiLine(concaveHullVertices, 0.005, Color.TURQUOISE, true);
 
       MeshView meshView = new MeshView(meshBuilder.generateMesh());

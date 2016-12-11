@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
@@ -63,25 +64,25 @@ public abstract class SimpleConcaveHullFactory
       if (pointCloud2d.size() <= 3)
          return pointCloud2d;
 
+      return createConcaveHull(pointCloud2d, edgeLengthThreshold, maxNumberOfIterations).getOrderedConcaveHullVertices();
+   }
+
+   public static ConcaveHullFactoryResult createConcaveHull(List<Point2d> pointCloud2d, double edgeLengthThreshold)
+   {
+      return createConcaveHull(pointCloud2d, edgeLengthThreshold, DEFAULT_MAX_NUMBER_OF_ITERATIONS);
+   }
+
+   public static ConcaveHullFactoryResult createConcaveHull(List<Point2d> pointCloud2d, double edgeLengthThreshold, int maxNumberOfIterations)
+   {
+      if (pointCloud2d.size() <= 3)
+         return null;
 
       MultiPoint multiPoint = createMultiPoint(pointCloud2d);
-      Set<QuadEdge> borderEdges = computeBorderEdges(multiPoint, edgeLengthThreshold, maxNumberOfIterations);
-      Geometry concaveHullGeometry = computeConcaveHullGeometry(borderEdges);
-      if (concaveHullGeometry == null)
-         return new ArrayList<>();
-      else
-         return convertGeometryToPoint2dList(concaveHullGeometry);
-   }
-
-   public static List<Point3d> createConcaveHullAsPoint3dList(List<Point2d> pointCloud2d, double edgeLengthThreshold, double zConstant)
-   {
-      return createConcaveHullAsPoint3dList(pointCloud2d, edgeLengthThreshold, DEFAULT_MAX_NUMBER_OF_ITERATIONS, zConstant);
-   }
-
-   public static List<Point3d> createConcaveHullAsPoint3dList(List<Point2d> pointCloud2d, double edgeLengthThreshold, int maxNumberOfIterations, double zConstant)
-   {
-      List<Point2d> concaveHullAsPoint2dList = createConcaveHullAsPoint2dList(pointCloud2d, edgeLengthThreshold, maxNumberOfIterations);
-      return convertPoint2dListToPoint3dList(concaveHullAsPoint2dList, zConstant);
+      ConcaveHullFactoryResult result = computeBorderEdges(multiPoint, edgeLengthThreshold, maxNumberOfIterations);
+      Geometry concaveHullGeometry = computeConcaveHullGeometry(result.getBorderEdges());
+      if (concaveHullGeometry != null)
+         result.orderedConcaveHullVertices.addAll(convertGeometryToPoint2dList(concaveHullGeometry));
+      return result;
    }
 
    private static MultiPoint createMultiPoint(List<Point2d> pointCloud2d)
@@ -135,7 +136,17 @@ public abstract class SimpleConcaveHullFactory
       }
    }
 
-   private static Set<QuadEdge> computeBorderEdges(MultiPoint multiPoint, double edgeLengthThreshold, int maxNumberOfIterations)
+   /**
+    * Computes the border edges {@link QuadEdge} that will define the concave hull.
+    * This is an iterative process that starts a first guess of the concave hull, and then each iteration consists "breaking" edges that are too long according to the {@code edgeLengthThreshold}.
+    * The algorithm is based on the <a href="https://en.wikipedia.org/wiki/Delaunay_triangulation"> Delaunay triangulation </a>.
+    * @param multiPoint the point cloud from which a concave hull is to be computed.
+    * @param edgeLengthThreshold maximum edge length the concave hull can have.
+    * @param maxNumberOfIterations option to limit the maximum number of iterations of this algorithm.
+    * @return result containing the set of edges defining the resulting concave hull.
+    */
+   @SuppressWarnings("unchecked")
+   private static ConcaveHullFactoryResult computeBorderEdges(MultiPoint multiPoint, double edgeLengthThreshold, int maxNumberOfIterations)
    {
       StopWatch stopWatch = REPORT_TIME ? new StopWatch() : null;
 
@@ -161,17 +172,19 @@ public abstract class SimpleConcaveHullFactory
          stopWatch.start();
       }
 
+      ConcaveHullFactoryResult concaveHullFactoryResult = new ConcaveHullFactoryResult();
+
       // All the triangles resulting from the triangulation.
-      @SuppressWarnings("unchecked")
-      List<QuadEdgeTriangle> allTriangles = QuadEdgeTriangle.createOn(subdivision);
+      List<QuadEdgeTriangle> allTriangles = concaveHullFactoryResult.allTriangles;
+      allTriangles.addAll(QuadEdgeTriangle.createOn(subdivision));
       // Vertices of the concave hull
-      Set<Vertex> borderVertices = new HashSet<>();
+      Set<Vertex> borderVertices = concaveHullFactoryResult.borderVertices;
       // Triangles with at least one edge that belongs to the concave hull.
-      Set<QuadEdgeTriangle> borderTriangles = new HashSet<>();
+      Set<QuadEdgeTriangle> borderTriangles = concaveHullFactoryResult.borderTriangles;
       // Former border triangles. Used to figure out border edges as triangles are being filtered out.
-      Set<QuadEdgeTriangle> outerTriangles = new HashSet<>();
+      Set<QuadEdgeTriangle> outerTriangles = concaveHullFactoryResult.outerTriangles;
       // The output of this method, the edges defining the concave hull
-      Set<QuadEdge> borderEdges = new HashSet<>();
+      Set<QuadEdge> borderEdges = concaveHullFactoryResult.borderEdges;
       QuadEdgeComparator quadEdgeComparator = new QuadEdgeComparator();
       PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> sortedByLengthMap = new PriorityQueue<>(quadEdgeComparator);
 
@@ -279,7 +292,7 @@ public abstract class SimpleConcaveHullFactory
          System.out.println("Concave hull computation took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()) + " sec.");
       }
 
-      return borderEdges;
+      return concaveHullFactoryResult;
    }
 
    private static int numberOfBorderEdges(QuadEdgeTriangle triangle, Set<QuadEdge> borderEdges)
@@ -358,6 +371,64 @@ public abstract class SimpleConcaveHullFactory
             map.put(edge.sym(), length);
          }
          return length;
+      }
+   }
+
+   public static class ConcaveHullFactoryResult
+   {
+      private final List<Point2d> orderedConcaveHullVertices = new ArrayList<>();
+      private final List<QuadEdgeTriangle> allTriangles = new ArrayList<>();
+      private final Set<Vertex> borderVertices = new HashSet<>();
+      private final Set<QuadEdge> borderEdges = new HashSet<>();
+      private final Set<QuadEdgeTriangle> borderTriangles = new HashSet<>();
+      private final Set<QuadEdgeTriangle> outerTriangles = new HashSet<>();
+
+      public ConcaveHullFactoryResult()
+      {
+      }
+
+      /** @return the set of edges defining the resulting concave hull. */
+      public List<Point2d> getOrderedConcaveHullVertices()
+      {
+         return orderedConcaveHullVertices;
+      }
+
+      /** @return the set of edges defining the resulting concave hull. */
+      public List<Point3d> getOrderedConcaveHullVertices(double zConstant)
+      {
+         List<Point3d> vertices3d = orderedConcaveHullVertices.stream()
+                                                              .map(v -> new Point3d(v.getX(), v.getY(), zConstant))
+                                                              .collect(Collectors.toList());
+         return vertices3d;
+      }
+
+      /** @return all the triangles resulting from the Delaunay triangulation. */
+      public List<QuadEdgeTriangle> getAllTriangles()
+      {
+         return allTriangles;
+      }
+
+      /** @return vertices of the concave hull. */
+      public Set<Vertex> getBorderVertices()
+      {
+         return borderVertices;
+      }
+
+      public Set<QuadEdge> getBorderEdges()
+      {
+         return borderEdges;
+      }
+
+      /** @return triangles with at least one edge that belongs to the concave hull. */
+      public Set<QuadEdgeTriangle> getBorderTriangles()
+      {
+         return borderTriangles;
+      }
+
+      /** @return former border triangles. Internally used to figure out border edges as triangles are being filtered out. */
+      public Set<QuadEdgeTriangle> getOuterTriangles()
+      {
+         return outerTriangles;
       }
    }
 }

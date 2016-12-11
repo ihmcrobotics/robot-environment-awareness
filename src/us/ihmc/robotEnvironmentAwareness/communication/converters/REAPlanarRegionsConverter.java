@@ -13,6 +13,8 @@ import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OcTreeKeyMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
+import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHull;
+import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullCollection;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
@@ -28,10 +30,17 @@ public class REAPlanarRegionsConverter
       Point3f regionOrigin = new Point3f(ocTreeNodePlanarRegion.getOrigin());
       Vector3f regionNormal = new Vector3f(ocTreeNodePlanarRegion.getNormal());
 
-      Point2f[] concaveHullVertices = new Point2f[planarRegionConcaveHull.getConcaveHullVerticesInPlane().size()];
+      ConcaveHullCollection concaveHullCollection = planarRegionConcaveHull.getConcaveHullCollection();
+      // FIXME update the message so it can carry more than one conave hull
+      if (concaveHullCollection.isEmpty())
+         return null;
 
-      for (int vertexIndex = 0; vertexIndex < planarRegionConcaveHull.getConcaveHullVerticesInPlane().size(); vertexIndex++)
-         concaveHullVertices[vertexIndex] = new Point2f(planarRegionConcaveHull.getConcaveHullVerticesInPlane().get(vertexIndex));
+      ConcaveHull concaveHull = concaveHullCollection.iterator().next();
+
+      Point2f[] concaveHullVertices = new Point2f[concaveHull.getNumberOfVertices()];
+
+      for (int vertexIndex = 0; vertexIndex < concaveHull.getNumberOfVertices(); vertexIndex++)
+         concaveHullVertices[vertexIndex] = new Point2f(concaveHull.getVertex(vertexIndex));
 
       List<Point2f[]> convexPolygonsVertices = new ArrayList<>();
       List<ConvexPolygon2d> convexPolygons = planarRegionConvexPolygons.getConvexPolygonsInPlane();

@@ -61,8 +61,10 @@ public class DelaunayTriangulationVisualizer extends Application
    private static final boolean VISUALIZE_BORDER_EDGES = false;
    private static final boolean VISUALIZE_OUTER_TRIANGLES = false;
    private static final boolean VISUALIZE_PRIORITY_QUEUE = false;
-   private static final boolean VISUALIZE_CONVEX_DECOMPOSITION = true;
+   private static final boolean VISUALIZE_CONVEX_DECOMPOSITION = false;
    private static final boolean VISUALIZE_BORDER_VERTICES = false;
+   private static final boolean VISUALIZE_CONCAVE_POCKETS = true;
+
    private static final boolean FILTER_CONCAVE_HULLS = false;
 
    private final Random random = new Random(54645L);
@@ -182,7 +184,38 @@ public class DelaunayTriangulationVisualizer extends Application
          children.add(createPriorityQueueGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
       if (VISUALIZE_BORDER_VERTICES)
          children.add(createBorderVerticesGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
+      if (VISUALIZE_CONCAVE_POCKETS)
+         children.add(createConcavePocketsGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
       return regionGroup;
+   }
+
+   private Node createConcavePocketsGraphics(PlanarRegionSegmentationMessage planarRegionSegmentationMessage, ConcaveHullFactoryResult concaveHullFactoryResult)
+   {
+      JavaFXMeshBuilder meshBuilder = new JavaFXMeshBuilder();
+      ConcaveHullCollection concaveHullCollection = concaveHullFactoryResult.getConcaveHullCollection();
+
+      for (ConcaveHull concaveHull : concaveHullCollection)
+      {
+         Set<ConcaveHullPocket> pockets = concaveHull.findConcaveHullPockets(0.5 * parameters.getDepthThreshold());
+         Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
+         Quat4d planeOrientation = PolygonizerTools.getRotationBasedOnNormal(planarRegionSegmentationMessage.getNormal());
+         RigidBodyTransform transform = new RigidBodyTransform(planeOrientation, planeOrigin);
+
+         for (ConcaveHullPocket pocket : pockets)
+         {
+            List<Point2d> pocketVertices = ListWrappingIndexTools.subListInclusive(pocket.getStartBridgeIndex(), pocket.getEndBridgeIndex(),
+                  concaveHull.getConcaveHullVertices());
+            Point2d average = new Point2d();
+            average.interpolate(pocket.getStartBridgeVertex(), pocket.getEndBridgeVertex(), 0.5);
+            pocketVertices.add(0, average);
+            ConcaveHullTools.ensureClockwiseOrdering(pocketVertices);
+            meshBuilder.addPolygon(transform, pocketVertices);
+         }
+      }
+
+      MeshView meshView = new MeshView(meshBuilder.generateMesh());
+      meshView.setMaterial(new PhongMaterial(OcTreeMeshBuilder.getRegionColor(planarRegionSegmentationMessage.getRegionId())));
+      return meshView;
    }
 
    private Node createBorderEdgesGraphics(PlanarRegionSegmentationMessage planarRegionSegmentationMessage, ConcaveHullFactoryResult concaveHullFactoryResult)
@@ -244,31 +277,35 @@ public class DelaunayTriangulationVisualizer extends Application
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(16));
       Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
       Vector3d planeNormal = new Vector3d(planarRegionSegmentationMessage.getNormal());
-      List<Point2d> orderedConcaveHullVertices = concaveHullFactoryResult.getOrderedConcaveHullVertices();
+      ConcaveHullCollection concaveHullCollection = concaveHullFactoryResult.getConcaveHullCollection();
 
-      if (FILTER_CONCAVE_HULLS)
+      for (ConcaveHull concaveHull : concaveHullCollection)
       {
-         double shallowAngleThreshold = parameters.getShallowAngleThreshold();
-         double peakAngleThreshold = parameters.getPeakAngleThreshold();
-         double lengthThreshold = parameters.getLengthThreshold();
 
-         for (int i = 0; i < 5; i++)
+         if (FILTER_CONCAVE_HULLS)
          {
-            ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, orderedConcaveHullVertices);
-            ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, orderedConcaveHullVertices);
+            double shallowAngleThreshold = parameters.getShallowAngleThreshold();
+            double peakAngleThreshold = parameters.getPeakAngleThreshold();
+            double lengthThreshold = parameters.getLengthThreshold();
+
+            for (int i = 0; i < 5; i++)
+            {
+               ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, concaveHull);
+               ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, concaveHull);
+            }
          }
-      }
-      Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
+         Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
 
-      List<Point3d> concaveHullVertices = PolygonizerTools.toPointsInWorld(orderedConcaveHullVertices, planeOrigin, planeNormal);
+         List<Point3d> concaveHullVertices = concaveHull.toVerticesInWorld(planeOrigin, planeNormal);
 
-      for (int vertexIndex = 0; vertexIndex < concaveHullVertices.size(); vertexIndex++)
-      {
-         Point3d vertex = concaveHullVertices.get(vertexIndex);
-         Point3d nextVertex = ListWrappingIndexTools.getNext(vertexIndex, concaveHullVertices);
-         boolean isEdgeTooLong = vertex.distance(nextVertex) > parameters.getConcaveHullThreshold();
-         Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), isEdgeTooLong ? 0.25 : regionColor.getBrightness());
-         meshBuilder.addLine(vertex, nextVertex, 0.0015, lineColor);
+         for (int vertexIndex = 0; vertexIndex < concaveHullVertices.size(); vertexIndex++)
+         {
+            Point3d vertex = concaveHullVertices.get(vertexIndex);
+            Point3d nextVertex = ListWrappingIndexTools.getNext(vertexIndex, concaveHullVertices);
+            boolean isEdgeTooLong = vertex.distance(nextVertex) > parameters.getConcaveHullThreshold();
+            Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), isEdgeTooLong ? 0.25 : regionColor.getBrightness());
+            meshBuilder.addLine(vertex, nextVertex, 0.0015, lineColor);
+         }
       }
       MeshView meshView = new MeshView(meshBuilder.generateMesh());
       meshView.setMaterial(meshBuilder.generateMaterial());
@@ -366,12 +403,10 @@ public class DelaunayTriangulationVisualizer extends Application
    private Node createConvexDecompositionGraphics(PlanarRegionSegmentationMessage planarRegionSegmentationMessage,
          ConcaveHullFactoryResult concaveHullFactoryResult)
    {
-      List<Point2d> concaveHullVertices = concaveHullFactoryResult.getOrderedConcaveHullVertices();
+      ConcaveHullCollection concaveHullCollection = concaveHullFactoryResult.getConcaveHullCollection();
       double depthThreshold = parameters.getDepthThreshold();
       List<ConvexPolygon2d> convexPolygons = new ArrayList<>();
-      ConcaveHullTools.ensureClockwiseOrdering(concaveHullVertices);
-      ConcaveHullTools.removeSuccessiveDuplicateVertices(concaveHullVertices);
-      ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHullVertices, depthThreshold, convexPolygons);
+      ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHullCollection, depthThreshold, convexPolygons);
 
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(64));
 

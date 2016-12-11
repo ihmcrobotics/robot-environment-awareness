@@ -1,24 +1,16 @@
 package us.ihmc.robotEnvironmentAwareness.planarRegion;
 
-import java.util.List;
-
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
+import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullCollection;
 
 public class PlanarRegionConcaveHull
 {
    private final OcTreeNodePlanarRegion ocTreeNodePlanarRegion;
-   private final List<Point2d> concaveHullVerticesInPlane;
-   private final List<Point3d> concaveHullVerticesInWorld;
+   private final ConcaveHullCollection concaveHullCollection;
 
-   public PlanarRegionConcaveHull(OcTreeNodePlanarRegion planarRegion, List<Point2d> concaveHullVerticesInPlane)
+   public PlanarRegionConcaveHull(OcTreeNodePlanarRegion planarRegion, ConcaveHullCollection concaveHullCollection)
    {
       this.ocTreeNodePlanarRegion = planarRegion;
-      this.concaveHullVerticesInPlane = concaveHullVerticesInPlane;
-      Point3d planeOrigin = planarRegion.getOrigin();
-      Vector3d planeNormal = planarRegion.getNormal();
-      this.concaveHullVerticesInWorld = PolygonizerTools.toPointsInWorld(concaveHullVerticesInPlane, planeOrigin, planeNormal);
+      this.concaveHullCollection = concaveHullCollection;
    }
 
    public int getRegionId()
@@ -31,13 +23,8 @@ public class PlanarRegionConcaveHull
       return ocTreeNodePlanarRegion;
    }
 
-   public List<Point2d> getConcaveHullVerticesInPlane()
+   public ConcaveHullCollection getConcaveHullCollection()
    {
-      return concaveHullVerticesInPlane;
-   }
-
-   public List<Point3d> getConcaveHullVerticesInWorld()
-   {
-      return concaveHullVerticesInWorld;
+      return concaveHullCollection;
    }
 }

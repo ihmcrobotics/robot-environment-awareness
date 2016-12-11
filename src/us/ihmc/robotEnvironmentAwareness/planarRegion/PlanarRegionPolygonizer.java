@@ -7,9 +7,9 @@ import java.util.stream.Collectors;
 
 import javax.vecmath.Point2d;
 
+import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullCollection;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullDecomposition;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullPruningFilteringTools;
-import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools;
 import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
 
@@ -38,25 +38,22 @@ public abstract class PlanarRegionPolygonizer
       double lengthThreshold = parameters.getLengthThreshold();
 
       List<Point2d> pointsInPlane = PolygonizerTools.extractPointsInPlane(ocTreeNodePlanarRegion);
-      List<Point2d> concaveHullVerticesInPlane = SimpleConcaveHullFactory.createConcaveHullAsPoint2dList(pointsInPlane, concaveHullThreshold);
-
-      ConcaveHullTools.ensureClockwiseOrdering(concaveHullVerticesInPlane);
-      ConcaveHullTools.removeSuccessiveDuplicateVertices(concaveHullVerticesInPlane);
+      ConcaveHullCollection concaveHullCollection = SimpleConcaveHullFactory.createConcaveHullCollection(pointsInPlane, concaveHullThreshold);
 
       for (int i = 0; i < 5; i++)
       {
-         ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, concaveHullVerticesInPlane);
-         ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, concaveHullVerticesInPlane);
+         ConcaveHullPruningFilteringTools.filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, concaveHullCollection);
+         ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, concaveHullCollection);
       }
 
-      return new PlanarRegionConcaveHull(ocTreeNodePlanarRegion, concaveHullVerticesInPlane);
+      return new PlanarRegionConcaveHull(ocTreeNodePlanarRegion, concaveHullCollection);
    }
 
    private static PlanarRegionConvexPolygons createConvexPolygons(PlanarRegionConcaveHull concaveHull, PolygonizerParameters parameters)
    {
       List<ConvexPolygon2d> decomposedPolygons = new ArrayList<>();
       double depthThreshold = parameters.getDepthThreshold();
-      ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHull.getConcaveHullVerticesInPlane(), depthThreshold, decomposedPolygons);
+      ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHull.getConcaveHullCollection(), depthThreshold, decomposedPolygons);
 
       OcTreeNodePlanarRegion planarRegion = concaveHull.getOcTreeNodePlanarRegion();
       return new PlanarRegionConvexPolygons(planarRegion, decomposedPolygons);

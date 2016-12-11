@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
@@ -54,22 +53,22 @@ public abstract class SimpleConcaveHullFactory
    private static final boolean REPORT_TIME = false;
    private static final int DEFAULT_MAX_NUMBER_OF_ITERATIONS = 5000;
 
-   public static List<Point2d> createConcaveHullAsPoint2dList(List<Point2d> pointCloud2d, double edgeLengthThreshold)
+   public static ConcaveHullCollection createConcaveHullCollection(List<Point2d> pointCloud2d, double edgeLengthThreshold)
    {
-      return createConcaveHullAsPoint2dList(pointCloud2d, edgeLengthThreshold, DEFAULT_MAX_NUMBER_OF_ITERATIONS, true);
+      return createConcaveHullCollection(pointCloud2d, edgeLengthThreshold, DEFAULT_MAX_NUMBER_OF_ITERATIONS, true);
    }
 
-   public static List<Point2d> createConcaveHullAsPoint2dList(List<Point2d> pointCloud2d, double edgeLengthThreshold, boolean removeAllTrianglesWithTwoBorderEdges)
+   public static ConcaveHullCollection createConcaveHullCollection(List<Point2d> pointCloud2d, double edgeLengthThreshold, boolean removeAllTrianglesWithTwoBorderEdges)
    {
-      return createConcaveHullAsPoint2dList(pointCloud2d, edgeLengthThreshold, DEFAULT_MAX_NUMBER_OF_ITERATIONS, removeAllTrianglesWithTwoBorderEdges);
+      return createConcaveHullCollection(pointCloud2d, edgeLengthThreshold, DEFAULT_MAX_NUMBER_OF_ITERATIONS, removeAllTrianglesWithTwoBorderEdges);
    }
 
-   public static List<Point2d> createConcaveHullAsPoint2dList(List<Point2d> pointCloud2d, double edgeLengthThreshold, int maxNumberOfIterations, boolean removeAllTrianglesWithTwoBorderEdges)
+   public static ConcaveHullCollection createConcaveHullCollection(List<Point2d> pointCloud2d, double edgeLengthThreshold, int maxNumberOfIterations, boolean removeAllTrianglesWithTwoBorderEdges)
    {
       if (pointCloud2d.size() <= 3)
-         return pointCloud2d;
+         return new ConcaveHullCollection(pointCloud2d);
 
-      return createConcaveHull(pointCloud2d, edgeLengthThreshold, maxNumberOfIterations, removeAllTrianglesWithTwoBorderEdges).getOrderedConcaveHullVertices();
+      return createConcaveHull(pointCloud2d, edgeLengthThreshold, maxNumberOfIterations, removeAllTrianglesWithTwoBorderEdges).getConcaveHullCollection();
    }
 
    public static ConcaveHullFactoryResult createConcaveHull(List<Point2d> pointCloud2d, double edgeLengthThreshold)
@@ -91,7 +90,12 @@ public abstract class SimpleConcaveHullFactory
       ConcaveHullFactoryResult result = computeBorderEdges(multiPoint, edgeLengthThreshold, maxNumberOfIterations, removeAllTrianglesWithTwoBorderEdges);
       Geometry concaveHullGeometry = computeConcaveHullGeometry(result.getBorderEdges());
       if (concaveHullGeometry != null)
-         result.orderedConcaveHullVertices.addAll(convertGeometryToPoint2dList(concaveHullGeometry));
+      {
+         ConcaveHull concaveHull = convertGeometryToConcaveHull(concaveHullGeometry);
+         concaveHull.ensureClockwiseOrdering();
+         concaveHull.removeSuccessiveDuplicateVertices();
+         result.concaveHullCollection.add(concaveHull);
+      }
       return result;
    }
 
@@ -420,6 +424,11 @@ public abstract class SimpleConcaveHullFactory
       return QuadEdgeTriangle.nextIndex(QuadEdgeTriangle.nextIndex(edgeIndex));
    }
 
+   public static ConcaveHull convertGeometryToConcaveHull(Geometry geometry)
+   {
+      return new ConcaveHull(convertGeometryToPoint2dList(geometry));
+   }
+
    public static List<Point2d> convertGeometryToPoint2dList(Geometry geometry)
    {
       List<Point2d> geometryVertices = new ArrayList<>();
@@ -476,7 +485,7 @@ public abstract class SimpleConcaveHullFactory
 
    public static class ConcaveHullFactoryResult
    {
-      private final List<Point2d> orderedConcaveHullVertices = new ArrayList<>();
+      private final ConcaveHullCollection concaveHullCollection = new ConcaveHullCollection();
       private final List<QuadEdgeTriangle> allTriangles = new ArrayList<>();
       private final Set<Vertex> borderVertices = new HashSet<>();
       private final Set<QuadEdge> borderEdges = new HashSet<>();
@@ -490,18 +499,9 @@ public abstract class SimpleConcaveHullFactory
       }
 
       /** @return the set of edges defining the resulting concave hull. */
-      public List<Point2d> getOrderedConcaveHullVertices()
+      public ConcaveHullCollection getConcaveHullCollection()
       {
-         return orderedConcaveHullVertices;
-      }
-
-      /** @return the set of edges defining the resulting concave hull. */
-      public List<Point3d> getOrderedConcaveHullVertices(double zConstant)
-      {
-         List<Point3d> vertices3d = orderedConcaveHullVertices.stream()
-                                                              .map(v -> new Point3d(v.getX(), v.getY(), zConstant))
-                                                              .collect(Collectors.toList());
-         return vertices3d;
+         return concaveHullCollection;
       }
 
       /** @return all the triangles resulting from the Delaunay triangulation. */

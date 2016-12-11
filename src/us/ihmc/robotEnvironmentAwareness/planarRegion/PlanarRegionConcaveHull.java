@@ -4,9 +4,7 @@ import java.util.List;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
-import javax.vecmath.Quat4d;
-
-import us.ihmc.robotics.geometry.GeometryTools;
+import javax.vecmath.Vector3d;
 
 public class PlanarRegionConcaveHull
 {
@@ -19,9 +17,8 @@ public class PlanarRegionConcaveHull
       this.ocTreeNodePlanarRegion = planarRegion;
       this.concaveHullVerticesInPlane = concaveHullVerticesInPlane;
       Point3d planeOrigin = planarRegion.getOrigin();
-      Quat4d planeOrientation = new Quat4d();
-      planeOrientation.set(GeometryTools.getRotationBasedOnNormal(planarRegion.getNormal()));
-      this.concaveHullVerticesInWorld = PolygonizerTools.toPointsInWorld(concaveHullVerticesInPlane, planeOrigin, planeOrientation);
+      Vector3d planeNormal = planarRegion.getNormal();
+      this.concaveHullVerticesInWorld = PolygonizerTools.toPointsInWorld(concaveHullVerticesInPlane, planeOrigin, planeNormal);
    }
 
    public int getRegionId()

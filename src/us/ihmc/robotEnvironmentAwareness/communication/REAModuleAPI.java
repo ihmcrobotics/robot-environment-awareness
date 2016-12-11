@@ -39,14 +39,17 @@ public class REAModuleAPI
    private static final CategoryTheme Range = apiFactory.createCategoryTheme("Range");
    private static final CategoryTheme Node = apiFactory.createCategoryTheme("Node");
    private static final CategoryTheme Request = apiFactory.createCategoryTheme("Request");
+   private static final CategoryTheme DataExporter = apiFactory.createCategoryTheme("DataExporter");
 
    private static final TypedTopicTheme<Boolean> Enable = apiFactory.createTypedTopicTheme("Enable");
    private static final TypedTopicTheme<Boolean> Clear = apiFactory.createTypedTopicTheme("Clear");
    private static final TypedTopicTheme<Boolean> Show = apiFactory.createTypedTopicTheme("Show");
    private static final TypedTopicTheme<Boolean> Hide = apiFactory.createTypedTopicTheme("Hide");
    private static final TypedTopicTheme<Boolean> Save = apiFactory.createTypedTopicTheme("Save");
+   private static final TypedTopicTheme<Boolean> Export = apiFactory.createTypedTopicTheme("Export");
    private static final TypedTopicTheme<Integer> Size = apiFactory.createTypedTopicTheme("Size");
    private static final TypedTopicTheme<Integer> Depth = apiFactory.createTypedTopicTheme("Depth");
+   private static final TypedTopicTheme<String> Path = apiFactory.createTypedTopicTheme("Path");
 
    private static final TopicTheme Parameters = apiFactory.createTopicTheme("Parameters");
    private static final TopicTheme Min = apiFactory.createTopicTheme("Min");
@@ -88,11 +91,13 @@ public class REAModuleAPI
    public static final Topic<ColoringType> UIOcTreeColoringMode = Root.child(UI).child(OcTree).topic(Color);
    public static final Topic<DisplayType> UIOcTreeDisplayType = Root.child(UI).child(OcTree).topic(Display);
    public static final Topic<Boolean> UIPlanarRegionHideNodes = Root.child(UI).child(PlanarRegions).child(Node).topic(Hide);
+   public static final Topic<Boolean> UIPlanarRegionExportSegmentation = Root.child(UI).child(PlanarRegions).child(Segmentation).topic(Export);
    public static final Topic<Boolean> UIOcTreeBoundingBoxShow = Root.child(UI).child(OcTree).child(BoundingBox).topic(Show);
    public static final Topic<Boolean> UIOcTreeShowBuffer = Root.child(UI).child(OcTree).child(Buffer).topic(Show);
    public static final Topic<Boolean> UILidarScanShow = Root.child(UI).child(Lidar).topic(Show);
    public static final Topic<Boolean> UILidarScanClear = Root.child(UI).child(Lidar).topic(Clear);
    public static final Topic<Integer> UILidarScanSize = Root.child(UI).child(Lidar).topic(Size);
+   public static final Topic<String> UIDataExporterDirectory = Root.child(UI).child(DataExporter).topic(Path);
 
    public static final Topic<LidarScanMessage> LidarScanState = ModuleCategory.child(Lidar).topic(Data);
    public static final Topic<NormalOcTreeMessage> OcTreeState = OcTreeCategory.topic(Data);

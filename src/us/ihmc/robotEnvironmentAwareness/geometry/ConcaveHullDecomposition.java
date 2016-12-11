@@ -9,6 +9,7 @@ import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
 
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
+import us.ihmc.tools.io.printing.PrintTools;
 
 public class ConcaveHullDecomposition
 {
@@ -66,7 +67,7 @@ public class ConcaveHullDecomposition
       {
          if (concaveHullVertices.isEmpty())
          {
-            System.err.println("The concave hull is empty");
+            PrintTools.warn("The concave hull is empty");
             return;
          }
 

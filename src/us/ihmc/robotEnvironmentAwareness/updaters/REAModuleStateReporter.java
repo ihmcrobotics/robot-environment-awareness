@@ -19,7 +19,7 @@ public class REAModuleStateReporter
    private final AtomicReference<Boolean> isOcTreeRequested;
    private final AtomicReference<Boolean> isOcTreeBoundingBoxRequested;
    private final AtomicReference<Boolean> arePlanarRegionsRequested;
-   private final AtomicReference<Boolean> arePlanarRegionsNodeKeysRequested;
+   private final AtomicReference<Boolean> isPlanarRegionSegmentationRequested;
    private final AtomicReference<Boolean> arePlanarRegionsIntersectionsRequested;
 
    public REAModuleStateReporter(REAMessager reaMessager, PacketCommunicator publicPacketCommunicator)
@@ -30,7 +30,7 @@ public class REAModuleStateReporter
       isOcTreeRequested = reaMessager.createInput(REAModuleAPI.RequestOctree, false);
       isOcTreeBoundingBoxRequested = reaMessager.createInput(REAModuleAPI.RequestBoundingBox, false);
       arePlanarRegionsRequested = reaMessager.createInput(REAModuleAPI.RequestPlanarRegions, false);
-      arePlanarRegionsNodeKeysRequested = reaMessager.createInput(REAModuleAPI.RequestPlanarRegionsNodeKeys, false);
+      isPlanarRegionSegmentationRequested = reaMessager.createInput(REAModuleAPI.RequestPlanarRegionSegmentation, false);
       arePlanarRegionsIntersectionsRequested = reaMessager.createInput(REAModuleAPI.RequestPlanarRegionsIntersections, false);
 
       publicPacketCommunicator.attachListener(LidarScanMessage.class, this::handleLidarScanMessage);
@@ -54,8 +54,8 @@ public class REAModuleStateReporter
    {
       if (arePlanarRegionsRequested.getAndSet(false))
          reaMessager.submitMessage(REAModuleAPI.PlanarRegionsState, REAPlanarRegionsConverter.createPlanarRegionsListMessage(regionFeaturesProvider));
-      if (arePlanarRegionsNodeKeysRequested.getAndSet(false))
-         reaMessager.submitMessage(REAModuleAPI.PlanarRegionsNodeState, REAPlanarRegionsConverter.createPlanarRegionNodeKeysMessages(regionFeaturesProvider));
+      if (isPlanarRegionSegmentationRequested.getAndSet(false))
+         reaMessager.submitMessage(REAModuleAPI.PlanarRegionsSegmentationState, REAPlanarRegionsConverter.createPlanarRegionSegmentationMessages(regionFeaturesProvider));
       if (arePlanarRegionsIntersectionsRequested.getAndSet(false))
          reaMessager.submitMessage(REAModuleAPI.PlanarRegionsIntersectionState, REAPlanarRegionsConverter.createLineSegment3dMessages(regionFeaturesProvider));
    }

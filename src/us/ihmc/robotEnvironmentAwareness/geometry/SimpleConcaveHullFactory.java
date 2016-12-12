@@ -113,7 +113,7 @@ public abstract class SimpleConcaveHullFactory
       return result;
    }
 
-   private static MultiPoint createMultiPoint(List<Point2d> pointCloud2d)
+   public static MultiPoint createMultiPoint(List<Point2d> pointCloud2d)
    {
       Coordinate[] coordinates = new Coordinate[pointCloud2d.size()];
 
@@ -194,6 +194,11 @@ public abstract class SimpleConcaveHullFactory
          System.out.println("Triangulation took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()) + " sec.");
       }
 
+      return computeIntermediateVariables(allTriangles);
+   }
+
+   public static ConcaveHullFactoryIntermediateVariables computeIntermediateVariables(List<QuadEdgeTriangle> delaunayTriangles)
+   {
       ConcaveHullFactoryIntermediateVariables intermediateVariables = new ConcaveHullFactoryIntermediateVariables();
       // Vertices of the concave hull
       Set<Vertex> borderVertices = intermediateVariables.borderVertices;
@@ -203,12 +208,17 @@ public abstract class SimpleConcaveHullFactory
       Set<QuadEdge> borderEdges = intermediateVariables.borderEdges;
       PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = intermediateVariables.sortedByLengthQueue;
 
+      QuadEdgeTriangle firstBorderTriangle = null;
+
       // Initialize the border triangles, edges, and vertices. The triangulation provides that information.
-      for (QuadEdgeTriangle triangle : allTriangles)
+      for (QuadEdgeTriangle triangle : delaunayTriangles)
       {
          // Direct result from the triangulation
          if (triangle.isBorder())
          {
+            if (firstBorderTriangle == null)
+               firstBorderTriangle = triangle;
+
             borderTriangles.add(triangle);
             for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
             {
@@ -535,6 +545,7 @@ public abstract class SimpleConcaveHullFactory
    {
       private final Set<Vertex> borderVertices = new HashSet<>();
       private final Set<QuadEdge> borderEdges = new HashSet<>();
+      private final List<QuadEdge> orderedBorderEdges = new ArrayList<>();
       private final Set<QuadEdgeTriangle> borderTriangles = new HashSet<>();
       private final Set<QuadEdgeTriangle> outerTriangles = new HashSet<>();
       private final QuadEdgeComparator quadEdgeComparator = new QuadEdgeComparator();
@@ -553,6 +564,11 @@ public abstract class SimpleConcaveHullFactory
       public Set<QuadEdge> getBorderEdges()
       {
          return borderEdges;
+      }
+
+      public List<QuadEdge> getOrderedBorderEdges()
+      {
+         return orderedBorderEdges;
       }
 
       /** @return triangles with at least one edge that belongs to the concave hull. */

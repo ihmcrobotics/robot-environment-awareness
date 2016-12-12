@@ -44,6 +44,7 @@ import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorAdaptivePalette;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
+import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory.ConcaveHullFactoryIntermediateVariables;
 import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory.ConcaveHullFactoryResult;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerTools;
@@ -224,17 +225,20 @@ public class DelaunayTriangulationVisualizer extends Application
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(16));
       Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
       Quat4d planeOrientation = PolygonizerTools.getRotationBasedOnNormal(planarRegionSegmentationMessage.getNormal());
-      Set<QuadEdge> borderEdges = concaveHullFactoryResult.getBorderEdges();
-
       Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
 
-      for (QuadEdge edge : borderEdges)
+      for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
       {
-         Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
-         Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
-         boolean isEdgeTooLong = dest.distance(orig) > parameters.getConcaveHullThreshold();
-         Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), isEdgeTooLong ? 0.25 : regionColor.getBrightness());
-         meshBuilder.addLine(dest, orig, 0.0015, lineColor);
+         Set<QuadEdge> borderEdges = intermediateVariables.getBorderEdges();
+
+         for (QuadEdge edge : borderEdges)
+         {
+            Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
+            Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
+            boolean isEdgeTooLong = dest.distance(orig) > parameters.getConcaveHullThreshold();
+            Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), isEdgeTooLong ? 0.25 : regionColor.getBrightness());
+            meshBuilder.addLine(dest, orig, 0.0015, lineColor);
+         }
       }
       MeshView meshView = new MeshView(meshBuilder.generateMesh());
       meshView.setMaterial(meshBuilder.generateMaterial());
@@ -259,11 +263,14 @@ public class DelaunayTriangulationVisualizer extends Application
       JavaFXMeshBuilder meshBuilder = new JavaFXMeshBuilder();
       Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
       Quat4d planeOrientation = PolygonizerTools.getRotationBasedOnNormal(planarRegionSegmentationMessage.getNormal());
-      
-      for (Vertex vertex2d : concaveHullFactoryResult.getBorderVertices())
+
+      for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
       {
-         Point3d vertex3d = PolygonizerTools.toPointInWorld(vertex2d.getX(), vertex2d.getY(), planeOrigin, planeOrientation);
-         meshBuilder.addSphere(0.003, vertex3d);
+         for (Vertex vertex2d : intermediateVariables.getBorderVertices())
+         {
+            Point3d vertex3d = PolygonizerTools.toPointInWorld(vertex2d.getX(), vertex2d.getY(), planeOrigin, planeOrientation);
+            meshBuilder.addSphere(0.003, vertex3d);
+         }
       }
       MeshView meshView = new MeshView(meshBuilder.generateMesh());
       meshView.setMaterial(new PhongMaterial(OcTreeMeshBuilder.getRegionColor(planarRegionSegmentationMessage.getRegionId())));
@@ -346,17 +353,20 @@ public class DelaunayTriangulationVisualizer extends Application
       Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
       Vector3d planeNormal = new Vector3d(planarRegionSegmentationMessage.getNormal());
 
-      Set<QuadEdgeTriangle> outerTriangles = concaveHullFactoryResult.getOuterTriangles();
-
-      for (QuadEdgeTriangle triangle : outerTriangles)
+      for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
       {
-         List<Point2d> triangleVerticesLocal = Arrays.stream(triangle.getVertices()).map(v -> new Point2d(v.getX(), v.getY())).collect(Collectors.toList());
-         List<Point3d> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeNormal);
-         double hue = 360.0 * random.nextDouble();
-         double saturation = 0.8 * random.nextDouble() + 0.1;
-         double brightness = 0.9;
+         Set<QuadEdgeTriangle> outerTriangles = intermediateVariables.getOuterTriangles();
 
-         meshBuilder.addPolyon(triangleVerticesWorld, Color.hsb(hue, saturation, brightness));
+         for (QuadEdgeTriangle triangle : outerTriangles)
+         {
+            List<Point2d> triangleVerticesLocal = Arrays.stream(triangle.getVertices()).map(v -> new Point2d(v.getX(), v.getY())).collect(Collectors.toList());
+            List<Point3d> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeNormal);
+            double hue = 360.0 * random.nextDouble();
+            double saturation = 0.8 * random.nextDouble() + 0.1;
+            double brightness = 0.9;
+
+            meshBuilder.addPolyon(triangleVerticesWorld, Color.hsb(hue, saturation, brightness));
+         }
       }
 
       MeshView trianglesMeshView = new MeshView(meshBuilder.generateMesh());
@@ -374,25 +384,28 @@ public class DelaunayTriangulationVisualizer extends Application
 
       Color regionColor = OcTreeMeshBuilder.getRegionColor(planarRegionSegmentationMessage.getRegionId());
 
-      PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> queue = concaveHullFactoryResult.getSortedByLengthQueue();
-
-      for (ImmutablePair<QuadEdge, QuadEdgeTriangle> edgeAndTriangle : queue)
+      for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
       {
-         QuadEdge edge = edgeAndTriangle.getLeft();
-         Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
-         Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
-         boolean isEdgeTooLong = dest.distance(orig) > parameters.getConcaveHullThreshold();
-         Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), isEdgeTooLong ? 0.25 : regionColor.getBrightness());
-         meshBuilder.addLine(dest, orig, 0.0015, lineColor);
+         PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> queue = intermediateVariables.getSortedByLengthQueue();
 
-         QuadEdgeTriangle triangle = edgeAndTriangle.getRight();
-         List<Point2d> triangleVerticesLocal = Arrays.stream(triangle.getVertices()).map(v -> new Point2d(v.getX(), v.getY())).collect(Collectors.toList());
-         List<Point3d> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeNormal);
-         double hue = 360.0 * random.nextDouble();
-         double saturation = 0.8 * random.nextDouble() + 0.1;
-         double brightness = 0.9;
+         for (ImmutablePair<QuadEdge, QuadEdgeTriangle> edgeAndTriangle : queue)
+         {
+            QuadEdge edge = edgeAndTriangle.getLeft();
+            Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
+            Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
+            boolean isEdgeTooLong = dest.distance(orig) > parameters.getConcaveHullThreshold();
+            Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), isEdgeTooLong ? 0.25 : regionColor.getBrightness());
+            meshBuilder.addLine(dest, orig, 0.0015, lineColor);
 
-         meshBuilder.addPolyon(triangleVerticesWorld, Color.hsb(hue, saturation, brightness));
+            QuadEdgeTriangle triangle = edgeAndTriangle.getRight();
+            List<Point2d> triangleVerticesLocal = Arrays.stream(triangle.getVertices()).map(v -> new Point2d(v.getX(), v.getY())).collect(Collectors.toList());
+            List<Point3d> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeNormal);
+            double hue = 360.0 * random.nextDouble();
+            double saturation = 0.8 * random.nextDouble() + 0.1;
+            double brightness = 0.9;
+
+            meshBuilder.addPolyon(triangleVerticesWorld, Color.hsb(hue, saturation, brightness));
+         }
       }
 
       MeshView trianglesMeshView = new MeshView(meshBuilder.generateMesh());

@@ -26,6 +26,11 @@ public class ConcaveHullCollection implements Iterable<ConcaveHull>
       add(concaveHullVertices);
    }
 
+   public ConcaveHullCollection(ConcaveHullCollection other)
+   {
+      other.forEach(concaveHull -> add(new ConcaveHull(concaveHull)));
+   }
+
    public boolean add(List<Point2d> newConcaveHullVertices)
    {
       return add(new ConcaveHull(newConcaveHullVertices));
@@ -34,6 +39,11 @@ public class ConcaveHullCollection implements Iterable<ConcaveHull>
    public boolean add(ConcaveHull newConcaveHull)
    {
       return concaveHulls.add(newConcaveHull);
+   }
+
+   public boolean addAll(ConcaveHullCollection other)
+   {
+      return concaveHulls.addAll(other.concaveHulls);
    }
 
    public boolean remove(ConcaveHull newConcaveHull)

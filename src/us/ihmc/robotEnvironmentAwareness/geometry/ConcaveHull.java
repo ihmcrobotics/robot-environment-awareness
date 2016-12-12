@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +22,12 @@ public class ConcaveHull implements Iterable<Point2d>
    public ConcaveHull(List<Point2d> hullVertices)
    {
       this.hullVertices = hullVertices;
+   }
+
+   public ConcaveHull(ConcaveHull other)
+   {
+      this.hullVertices = new ArrayList<>();
+      other.forEach(hullVertices::add);
    }
 
    public void ensureCounterClockwiseOrdering()

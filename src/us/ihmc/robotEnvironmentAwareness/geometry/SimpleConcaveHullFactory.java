@@ -208,7 +208,7 @@ public abstract class SimpleConcaveHullFactory
       Set<QuadEdge> borderEdges = intermediateVariables.borderEdges;
       PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = intermediateVariables.sortedByLengthQueue;
 
-      QuadEdgeTriangle firstBorderTriangle = null;
+      QuadEdge firstBorderEdge = null;
 
       // Initialize the border triangles, edges, and vertices. The triangulation provides that information.
       for (QuadEdgeTriangle triangle : delaunayTriangles)
@@ -216,9 +216,6 @@ public abstract class SimpleConcaveHullFactory
          // Direct result from the triangulation
          if (triangle.isBorder())
          {
-            if (firstBorderTriangle == null)
-               firstBorderTriangle = triangle;
-
             borderTriangles.add(triangle);
             for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
             {
@@ -226,6 +223,9 @@ public abstract class SimpleConcaveHullFactory
                if (triangle.isBorder(edgeIndex))
                {
                   QuadEdge borderEdge = triangle.getEdge(edgeIndex);
+                  if (firstBorderEdge == null)
+                     firstBorderEdge = borderEdge.getPrimary();
+
                   borderEdges.add(borderEdge);
                   borderVertices.add(borderEdge.orig());
                   borderVertices.add(borderEdge.dest());
@@ -235,7 +235,56 @@ public abstract class SimpleConcaveHullFactory
          }
       }
 
+      List<QuadEdge> orderedBorderEdges = intermediateVariables.orderedBorderEdges;
+      orderedBorderEdges.add(firstBorderEdge);
+      Vertex startVertex = firstBorderEdge.orig();
+      Vertex currentDestVertex = firstBorderEdge.dest();
+      QuadEdge previousEdge = firstBorderEdge;
+
+      while (!currentDestVertex.equals(startVertex))
+      {
+         List<QuadEdge> incidentEdges = findEdgesIncidentOnOrigin(previousEdge.sym());
+         QuadEdge currentEdge = null;
+
+         for (QuadEdge incidentEdge : incidentEdges)
+         {
+            if (isBorderEdge(incidentEdge, borderEdges))
+            {
+               currentEdge = incidentEdge;
+               break;
+            }
+         }
+
+         orderedBorderEdges.add(currentEdge);
+         previousEdge = currentEdge;
+         currentDestVertex = currentEdge.dest();
+      }
+
       return intermediateVariables;
+   }
+
+   /**
+    * Gets all edges which are incident on the origin of the given edge.
+    * 
+    * @param startEdge
+    *          the edge to start at
+    * @return a List of edges which have their origin at the origin of the given
+    *         edge
+    */
+   public static List<QuadEdge> findEdgesIncidentOnOrigin(QuadEdge startEdge)
+   {
+      List<QuadEdge> incidentEdges = new ArrayList<>();
+
+      QuadEdge currentIncidentEdge = startEdge;
+      do
+      {
+         incidentEdges.add(currentIncidentEdge);
+         currentIncidentEdge = currentIncidentEdge.oNext();
+      }
+      while (currentIncidentEdge != startEdge);
+      incidentEdges.remove(0);
+
+      return incidentEdges;
    }
 
    /**

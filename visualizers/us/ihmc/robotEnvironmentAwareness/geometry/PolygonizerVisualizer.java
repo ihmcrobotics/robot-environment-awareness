@@ -54,7 +54,7 @@ import us.ihmc.robotics.geometry.ConvexPolygon2d;
 import us.ihmc.robotics.geometry.RigidBodyTransform;
 import us.ihmc.robotics.lists.ListWrappingIndexTools;
 
-public class DelaunayTriangulationVisualizer extends Application
+public class PolygonizerVisualizer extends Application
 {
    private static final boolean VISUALIZE_POINT_CLOUD = true;
    private static final boolean VISUALIZE_DELAUNAY_TRIANGULATION = false;
@@ -71,14 +71,14 @@ public class DelaunayTriangulationVisualizer extends Application
    private final Random random = new Random(54645L);
    private final PolygonizerParameters parameters = new PolygonizerParameters();
 
-   public DelaunayTriangulationVisualizer() throws IOException
+   public PolygonizerVisualizer() throws IOException
    {
    }
 
    @Override
    public void start(Stage primaryStage) throws Exception
    {
-      primaryStage.setTitle("OcTree Visualizer");
+      primaryStage.setTitle(getClass().getSimpleName());
 
 //      PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("Data/20161210_185643_PlanarRegionSegmentation_Atlas_CB"));
       PlanarRegionSegmentationDataImporter dataImporter = PlanarRegionSegmentationDataImporter.createImporterWithFileChooser(primaryStage);
@@ -144,14 +144,14 @@ public class DelaunayTriangulationVisualizer extends Application
       primaryStage.show();
    }
 
-   private void translateNode(Node nodeToTranslate, Tuple3d translation)
+   public static void translateNode(Node nodeToTranslate, Tuple3d translation)
    {
       nodeToTranslate.setTranslateX(nodeToTranslate.getTranslateX() + translation.getX());
       nodeToTranslate.setTranslateY(nodeToTranslate.getTranslateY() + translation.getY());
       nodeToTranslate.setTranslateZ(nodeToTranslate.getTranslateZ() + translation.getZ());
    }
 
-   private Point3d computeAverage(List<PlanarRegionSegmentationMessage> planarRegionSegmentationMessages)
+   public static Point3d computeAverage(List<PlanarRegionSegmentationMessage> planarRegionSegmentationMessages)
    {
       PointMean average = new PointMean();
 

@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,9 +65,12 @@ public class PolygonizerVisualizer extends Application
    private static final boolean VISUALIZE_PRIORITY_QUEUE = false;
    private static final boolean VISUALIZE_CONVEX_DECOMPOSITION = false;
    private static final boolean VISUALIZE_BORDER_VERTICES = false;
-   private static final boolean VISUALIZE_CONCAVE_POCKETS = true;
+   private static final boolean VISUALIZE_CONCAVE_POCKETS = false;
+   private static final boolean VISUALIZE_ORDERED_BORDER_EDGES = true;
 
    private static final boolean FILTER_CONCAVE_HULLS = false;
+
+   private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
 
    private final Random random = new Random(54645L);
    private final PolygonizerParameters parameters = new PolygonizerParameters();
@@ -80,8 +84,8 @@ public class PolygonizerVisualizer extends Application
    {
       primaryStage.setTitle(getClass().getSimpleName());
 
-//      PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("Data/20161210_185643_PlanarRegionSegmentation_Atlas_CB"));
-      PlanarRegionSegmentationDataImporter dataImporter = PlanarRegionSegmentationDataImporter.createImporterWithFileChooser(primaryStage);
+      PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("Data/20161210_185643_PlanarRegionSegmentation_Atlas_CB"));
+//      PlanarRegionSegmentationDataImporter dataImporter = PlanarRegionSegmentationDataImporter.createImporterWithFileChooser(primaryStage);
       if (dataImporter == null)
          Platform.exit();
       dataImporter.loadPlanarRegionSegmentationData();
@@ -114,6 +118,8 @@ public class PolygonizerVisualizer extends Application
             if (!event.isShiftDown())
                return;
             Node intersectedNode = event.getPickResult().getIntersectedNode();
+            if (intersectedNode == null)
+               return;
 
             Integer regionId = nodeToRegionId.get(intersectedNode);
 
@@ -167,7 +173,7 @@ public class PolygonizerVisualizer extends Application
       ObservableList<Node> children = regionGroup.getChildren();
 
       List<Point2d> pointsInPlane = PolygonizerTools.extractPointsInPlane(planarRegionSegmentationMessage);
-      ConcaveHullFactoryResult concaveHullFactoryResult = SimpleConcaveHullFactory.createConcaveHull(pointsInPlane, parameters.getConcaveHullThreshold());
+      ConcaveHullFactoryResult concaveHullFactoryResult = SimpleConcaveHullFactory.createConcaveHull(pointsInPlane, parameters.getConcaveHullThreshold(), MAX_ITERATIONS, true);
 
       if (VISUALIZE_CONCAVE_HULL)
          children.add(createConcaveHullGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
@@ -187,6 +193,9 @@ public class PolygonizerVisualizer extends Application
          children.add(createBorderVerticesGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
       if (VISUALIZE_CONCAVE_POCKETS)
          children.add(createConcavePocketsGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
+      if (VISUALIZE_ORDERED_BORDER_EDGES)
+         children.add(createOrderedBorderEdgesGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
+
       return regionGroup;
    }
 
@@ -434,6 +443,39 @@ public class PolygonizerVisualizer extends Application
          ConvexPolygon2d convexPolygon = convexPolygons.get(i);
          Color color = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) i / (double) convexPolygons.size()));
          meshBuilder.addPolygon(rigidBodyTransform, convexPolygon, color);
+      }
+
+      MeshView meshView = new MeshView(meshBuilder.generateMesh());
+      meshView.setMaterial(meshBuilder.generateMaterial());
+      return meshView;
+   }
+
+   private static Node createOrderedBorderEdgesGraphics(PlanarRegionSegmentationMessage planarRegionSegmentationMessage, ConcaveHullFactoryResult concaveHullFactoryResult)
+   {
+      JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(1024));
+      Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
+      Quat4d planeOrientation = PolygonizerTools.getRotationBasedOnNormal(planarRegionSegmentationMessage.getNormal());
+
+      double startHue = 0.0;
+      double endHue = 240.0;
+
+      double lineStartBirghtness = 0.2;
+      double lineEndBirghtness = 1.0;
+
+      for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
+      {
+         List<QuadEdge> orderedBorderEdges = intermediateVariables.getOrderedBorderEdges();
+         for (int edgeIndex = 0; edgeIndex < orderedBorderEdges.size(); edgeIndex++)
+         {
+            QuadEdge edge = orderedBorderEdges.get(edgeIndex);
+            Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
+            Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
+            double alpha = edgeIndex / (double) orderedBorderEdges.size();
+            double lineHue = (1.0 - alpha) * startHue + alpha * endHue;
+            Color startColor = Color.hsb(lineHue, 0.9, lineStartBirghtness);
+            Color endColor = Color.hsb(lineHue, 0.9, lineEndBirghtness);
+            meshBuilder.addLine(orig, dest, 0.002, startColor, endColor);
+         }
       }
 
       MeshView meshView = new MeshView(meshBuilder.generateMesh());

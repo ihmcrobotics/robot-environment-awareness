@@ -1,6 +1,5 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +16,7 @@ import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeSubdivision;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeTriangle;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
@@ -39,7 +39,7 @@ import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataImpor
 public class DelaunayTriangulationVisualizer extends Application
 {
    private static final boolean VISUALIZE_EDGES = false;
-   private static final boolean VISUALIZE_PRIMARY_EDGES = false;
+   private static final boolean VISUALIZE_PRIMARY_EDGES = true;
    private static final boolean VISUALIZE_ORDERED_BORDER_EDGES = true;
 
    @Override
@@ -47,10 +47,10 @@ public class DelaunayTriangulationVisualizer extends Application
    {
       primaryStage.setTitle(getClass().getSimpleName());
 
-    PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("Data/20161210_184102_PlanarRegionSegmentation_Sim_CB"));
-//      PlanarRegionSegmentationDataImporter dataImporter = PlanarRegionSegmentationDataImporter.createImporterWithFileChooser(primaryStage);
-//      if (dataImporter == null)
-//         Platform.exit();
+//    PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("Data/20161210_184102_PlanarRegionSegmentation_Sim_CB"));
+      PlanarRegionSegmentationDataImporter dataImporter = PlanarRegionSegmentationDataImporter.createImporterWithFileChooser(primaryStage);
+      if (dataImporter == null)
+         Platform.exit();
       dataImporter.loadPlanarRegionSegmentationData();
       List<PlanarRegionSegmentationMessage> planarRegionSegmentationData = dataImporter.getPlanarRegionSegmentationData();
 
@@ -81,6 +81,8 @@ public class DelaunayTriangulationVisualizer extends Application
             if (!event.isShiftDown())
                return;
             Node intersectedNode = event.getPickResult().getIntersectedNode();
+            if (intersectedNode == null)
+               return;
 
             Integer regionId = nodeToRegionId.get(intersectedNode);
 
@@ -188,21 +190,29 @@ public class DelaunayTriangulationVisualizer extends Application
       List<QuadEdgeTriangle> delaunayTriangles = QuadEdgeTriangle.createOn(quadEdgeSubdivision);
       List<QuadEdge> orderedBorderEdges = SimpleConcaveHullFactory.computeIntermediateVariables(delaunayTriangles).getOrderedBorderEdges();
 
-      int regionId = planarRegionSegmentationMessage.getRegionId();
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(16));
       Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
       Quat4d planeOrientation = PolygonizerTools.getRotationBasedOnNormal(planarRegionSegmentationMessage.getNormal());
-      Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
 
-      for (QuadEdge edge : orderedBorderEdges)
+      double startHue = 0.0;
+      double endHue = 240.0;
+
+      double lineStartBirghtness = 0.2;
+      double lineEndBirghtness = 1.0;
+
+      for (int edgeIndex = 0; edgeIndex < orderedBorderEdges.size(); edgeIndex++)
       {
+         QuadEdge edge = orderedBorderEdges.get(edgeIndex);
          Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
          Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
-         meshBuilder.addLine(orig, dest, 0.0015, Color.RED, Color.BLUE);
+         double alpha = edgeIndex / (double) orderedBorderEdges.size();
+         double lineHue = (1.0 - alpha) * startHue + alpha * endHue;
+         Color startColor = Color.hsb(lineHue, 0.9, lineStartBirghtness);
+         Color endColor = Color.hsb(lineHue, 0.9, lineEndBirghtness);
+         meshBuilder.addLine(orig, dest, 0.002, startColor, endColor);
       }
       MeshView meshView = new MeshView(meshBuilder.generateMesh());
       meshView.setMaterial(meshBuilder.generateMaterial());
-      meshView.setMouseTransparent(true);
       return meshView;
    }
 

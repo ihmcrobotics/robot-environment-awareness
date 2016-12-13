@@ -374,7 +374,7 @@ public abstract class SimpleConcaveHullFactory
             }
             else if (numberOfBorderEdges == 2)
             {
-               removeTriangleWithTwoBorderEdges(intermediateVariables, longestEdgeIndex, borderTriangleWithLongestEdge);
+               removeTriangleWithTwoBorderEdges(intermediateVariables, borderTriangleWithLongestEdge);
             }
             else
             {
@@ -436,8 +436,7 @@ public abstract class SimpleConcaveHullFactory
       outerTriangles.add(borderTriangleWithLongestEdge);
    }
 
-   private static void removeTriangleWithTwoBorderEdges(ConcaveHullFactoryIntermediateVariables intermediateVariables, int longestEdgeIndex,
-         QuadEdgeTriangle borderTriangleWithLongestEdge)
+   private static void removeTriangleWithTwoBorderEdges(ConcaveHullFactoryIntermediateVariables intermediateVariables, QuadEdgeTriangle borderTriangleToRemove)
    {
       Set<QuadEdgeTriangle> borderTriangles = intermediateVariables.borderTriangles;
       Set<QuadEdge> borderEdges = intermediateVariables.borderEdges;

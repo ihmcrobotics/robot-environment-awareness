@@ -577,7 +577,7 @@ public abstract class SimpleConcaveHullFactory
       for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
       {
          QuadEdge edge = triangle.getEdge(edgeIndex);
-         // Need to check the dual of the edge too (edge != edge.sym())
+         // Need to check the opposite of the edge too (edge != edge.sym())
          if (isBorderEdge(edge, borderEdges))
             numberOfBorderEdges++;
       }

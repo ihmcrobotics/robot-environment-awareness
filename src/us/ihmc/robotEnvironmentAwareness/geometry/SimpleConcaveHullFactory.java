@@ -14,6 +14,7 @@ import java.util.Set;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
@@ -281,6 +282,19 @@ public abstract class SimpleConcaveHullFactory
    private static List<ConcaveHullFactoryIntermediateVariables> computeConcaveHullBorderEdgesRecursive(double edgeLengthThreshold, int maxNumberOfIterations,
          boolean removeAllTrianglesWithTwoBorderEdges, ConcaveHullFactoryIntermediateVariables intermediateVariables)
    {
+      return computeConcaveHullBorderEdgesRecursive(edgeLengthThreshold, maxNumberOfIterations, removeAllTrianglesWithTwoBorderEdges, intermediateVariables, new MutableInt(0));
+   }
+
+   private static List<ConcaveHullFactoryIntermediateVariables> computeConcaveHullBorderEdgesRecursive(double edgeLengthThreshold, int maxNumberOfIterations,
+         boolean removeAllTrianglesWithTwoBorderEdges, ConcaveHullFactoryIntermediateVariables intermediateVariables, MutableInt currentIteration)
+   {
+      if (currentIteration.intValue() >= maxNumberOfIterations)
+      {
+         if (VERBOSE)
+            System.out.println("Reached max number of iterations");
+         return Collections.singletonList(intermediateVariables);
+      }
+
       // Vertices of the concave hull
       Set<Vertex> borderVertices = intermediateVariables.borderVertices;
       // The output of this method, the edges defining the concave hull
@@ -290,94 +304,84 @@ public abstract class SimpleConcaveHullFactory
 
       List<ImmutablePair<QuadEdge, QuadEdgeTriangle>> bakup = new ArrayList<>();
 
-      for (int iteration = 0; iteration < maxNumberOfIterations; iteration++)
+      // Find the regular triangle with the longest border edge
+      // Regular means that the triangle can be removed without generating a vertex with more than 2 connected border edges.
+      int longestEdgeIndex = -1;
+      int numberOfBorderEdges = -1;
+      QuadEdgeTriangle borderTriangleWithLongestEdge = null;
+
+      while (longestEdgeIndex == -1 && !sortedByLengthQueue.isEmpty())
       {
-         boolean hasRemovedATriangle = false;
+         ImmutablePair<QuadEdge, QuadEdgeTriangle> entry = sortedByLengthQueue.poll();
+         QuadEdge edge = entry.getKey();
+         QuadEdgeTriangle triangle = entry.getValue();
+         int edgeIndex = triangle.getEdgeIndex(edge);
+         double currentEdgeLength = quadEdgeComparator.getEdgeLength(edge);
 
-         // Find the regular triangle with the longest border edge
-         // Regular means that the triangle can be removed without generating a vertex with more than 2 connected border edges.
-         int longestEdgeIndex = -1;
-         int numberOfBorderEdges = -1;
-         QuadEdgeTriangle borderTriangleWithLongestEdge = null;
+         numberOfBorderEdges = numberOfBorderEdges(triangle, borderEdges);
 
-         while (longestEdgeIndex == -1 && !sortedByLengthQueue.isEmpty())
+         if (removeAllTrianglesWithTwoBorderEdges)
          {
-            ImmutablePair<QuadEdge, QuadEdgeTriangle> entry = sortedByLengthQueue.poll();
-            QuadEdge edge = entry.getKey();
-            QuadEdgeTriangle triangle = entry.getValue();
-            int edgeIndex = triangle.getEdgeIndex(edge);
-            double currentEdgeLength = quadEdgeComparator.getEdgeLength(edge);
-
-            numberOfBorderEdges = numberOfBorderEdges(triangle, borderEdges);
-
-            if (removeAllTrianglesWithTwoBorderEdges)
+            if (currentEdgeLength < edgeLengthThreshold && numberOfBorderEdges == 1)
             {
-               if (currentEdgeLength < edgeLengthThreshold && numberOfBorderEdges == 1)
-               {
-                  bakup.add(entry);
-                  continue;
-               }
+               bakup.add(entry);
+               continue;
             }
-            else
+         }
+         else
+         {
+            if (currentEdgeLength < edgeLengthThreshold)
             {
-               if (currentEdgeLength < edgeLengthThreshold)
-               {
-                  bakup.add(entry);
-                  continue;
-               }
+               bakup.add(entry);
+               continue;
             }
-
-            // The triangle is a candidate
-            boolean singleBorderEdgeCase = numberOfBorderEdges == 1 && !borderVertices.contains(triangle.getVertex(indexOfVertexOppositeToEdge(edgeIndex)));
-            boolean doubleBorderEdgeCase = numberOfBorderEdges == 2;
-            if (singleBorderEdgeCase || doubleBorderEdgeCase)
-            {
-               longestEdgeIndex = edgeIndex;
-               borderTriangleWithLongestEdge = triangle;
-               break;
-            }
-
-            // The entry's triangle is not removable this iteration, but it might later.
-            // So put it in a backup that'll be emptied back in the main queue.
-            // Not elegant, but couldn't figure out a way to navigate the queue and only remove a specific entry.
-            // Note: the PriorityQueue's iterator is not sorted.
-            bakup.add(entry);
          }
 
-         sortedByLengthQueue.addAll(bakup);
-         bakup.clear();
-
-         if (longestEdgeIndex >= 0)
+         // The triangle is a candidate
+         boolean singleBorderEdgeCase = numberOfBorderEdges == 1 && !borderVertices.contains(triangle.getVertex(indexOfVertexOppositeToEdge(edgeIndex)));
+         boolean doubleBorderEdgeCase = numberOfBorderEdges == 2;
+         if (singleBorderEdgeCase || doubleBorderEdgeCase)
          {
-            if (numberOfBorderEdges == 1)
-            {
-               removeTriangleWithOneBorderEdge(intermediateVariables, longestEdgeIndex, borderTriangleWithLongestEdge);
-            }
-            else if (numberOfBorderEdges == 2)
-            {
-               removeTriangleWithTwoBorderEdges(intermediateVariables, borderTriangleWithLongestEdge);
-            }
-            else
-            {
-               throw new RuntimeException("Cannot handle triangle with " + numberOfBorderEdges + " border edges.");
-            }
-            hasRemovedATriangle = true;
-         }
-
-         if (!hasRemovedATriangle)
-         {
-            if (VERBOSE)
-               System.out.println("Done, number of iterations: " + iteration);
+            longestEdgeIndex = edgeIndex;
+            borderTriangleWithLongestEdge = triangle;
             break;
          }
-         else if (iteration >= maxNumberOfIterations)
-         {
-            if (VERBOSE)
-               System.out.println("Reached max number of iterations");
-         }
+
+         // The entry's triangle is not removable this iteration, but it might later.
+         // So put it in a backup that'll be emptied back in the main queue.
+         // Not elegant, but couldn't figure out a way to navigate the queue and only remove a specific entry.
+         // Note: the PriorityQueue's iterator is not sorted.
+         bakup.add(entry);
       }
 
-      return Collections.singletonList(intermediateVariables);
+      sortedByLengthQueue.addAll(bakup);
+      bakup.clear();
+
+      if (longestEdgeIndex >= 0)
+      {
+         if (numberOfBorderEdges == 1)
+         {
+            removeTriangleWithOneBorderEdge(intermediateVariables, longestEdgeIndex, borderTriangleWithLongestEdge);
+            currentIteration.increment();
+            return computeConcaveHullBorderEdgesRecursive(edgeLengthThreshold, maxNumberOfIterations, removeAllTrianglesWithTwoBorderEdges, intermediateVariables, currentIteration);
+         }
+         else if (numberOfBorderEdges == 2)
+         {
+            removeTriangleWithTwoBorderEdges(intermediateVariables, borderTriangleWithLongestEdge);
+            currentIteration.increment();
+            return computeConcaveHullBorderEdgesRecursive(edgeLengthThreshold, maxNumberOfIterations, removeAllTrianglesWithTwoBorderEdges, intermediateVariables, currentIteration);
+         }
+         else
+         {
+            throw new RuntimeException("Cannot handle triangle with " + numberOfBorderEdges + " border edges.");
+         }
+      }
+      else
+      {
+         if (VERBOSE)
+            System.out.println("Done, number of iterations: " + currentIteration.intValue());
+         return Collections.singletonList(intermediateVariables);
+      }
    }
 
    private static void removeTriangleWithOneBorderEdge(ConcaveHullFactoryIntermediateVariables intermediateVariables, int indexOfTriangleEdgeToRemove,

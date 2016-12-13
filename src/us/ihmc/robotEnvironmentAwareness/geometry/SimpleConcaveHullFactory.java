@@ -17,6 +17,7 @@ import javax.vecmath.Point3d;
 import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -208,7 +209,7 @@ public abstract class SimpleConcaveHullFactory
       Set<QuadEdgeTriangle> borderTriangles = intermediateVariables.borderTriangles;
       // The output of this method, the edges defining the concave hull
       Set<QuadEdge> borderEdges = intermediateVariables.borderEdges;
-      PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = intermediateVariables.sortedByLengthQueue;
+      PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = intermediateVariables.sortedByLengthQueue;
 
       QuadEdge firstBorderEdge = null;
 
@@ -300,9 +301,9 @@ public abstract class SimpleConcaveHullFactory
       // The output of this method, the edges defining the concave hull
       Set<QuadEdge> borderEdges = intermediateVariables.borderEdges;
       QuadEdgeComparator quadEdgeComparator = intermediateVariables.quadEdgeComparator;
-      PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = intermediateVariables.sortedByLengthQueue;
+      PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = intermediateVariables.sortedByLengthQueue;
 
-      List<ImmutablePair<QuadEdge, QuadEdgeTriangle>> bakup = new ArrayList<>();
+      List<Pair<QuadEdge, QuadEdgeTriangle>> bakup = new ArrayList<>();
 
       // Find the regular triangle with the longest border edge
       // Regular means that the triangle can be removed without generating a vertex with more than 2 connected border edges.
@@ -312,7 +313,7 @@ public abstract class SimpleConcaveHullFactory
 
       while (longestEdgeIndex == -1 && !sortedByLengthQueue.isEmpty())
       {
-         ImmutablePair<QuadEdge, QuadEdgeTriangle> entry = sortedByLengthQueue.poll();
+         Pair<QuadEdge, QuadEdgeTriangle> entry = sortedByLengthQueue.poll();
          QuadEdge edge = entry.getKey();
          QuadEdgeTriangle triangle = entry.getValue();
          int edgeIndex = triangle.getEdgeIndex(edge);
@@ -394,7 +395,7 @@ public abstract class SimpleConcaveHullFactory
       Set<QuadEdge> borderEdges = intermediateVariables.borderEdges;
       Set<Vertex> borderVertices = intermediateVariables.borderVertices;
       Set<QuadEdgeTriangle> outerTriangles = intermediateVariables.outerTriangles;
-      PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> sortedByLengthMap = intermediateVariables.sortedByLengthQueue;
+      PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthMap = intermediateVariables.sortedByLengthQueue;
 
       // Remove the triangle and its edge
       borderTriangles.remove(borderTriangleToRemove);
@@ -431,7 +432,7 @@ public abstract class SimpleConcaveHullFactory
       Set<QuadEdge> borderEdges = intermediateVariables.borderEdges;
       Set<Vertex> borderVertices = intermediateVariables.borderVertices;
       Set<QuadEdgeTriangle> outerTriangles = intermediateVariables.outerTriangles;
-      PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> sortedByLengthMap = intermediateVariables.sortedByLengthQueue;
+      PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthMap = intermediateVariables.sortedByLengthQueue;
 
       int newBorderEdgeIndex = -1;
       QuadEdge newBorderEdge = null;
@@ -624,12 +625,12 @@ public abstract class SimpleConcaveHullFactory
       return point3ds;
    }
 
-   private static class QuadEdgeComparator implements Comparator<ImmutablePair<QuadEdge, QuadEdgeTriangle>>
+   private static class QuadEdgeComparator implements Comparator<Pair<QuadEdge, QuadEdgeTriangle>>
    {
       private final Map<QuadEdge, Double> map = new HashMap<>();
 
       @Override
-      public int compare(ImmutablePair<QuadEdge, QuadEdgeTriangle> pair1, ImmutablePair<QuadEdge, QuadEdgeTriangle> pair2)
+      public int compare(Pair<QuadEdge, QuadEdgeTriangle> pair1, Pair<QuadEdge, QuadEdgeTriangle> pair2)
       {
          double length1 = getEdgeLength(pair1.getKey());
          double length2 = getEdgeLength(pair2.getKey());
@@ -691,7 +692,7 @@ public abstract class SimpleConcaveHullFactory
       private final Set<QuadEdgeTriangle> borderTriangles = new HashSet<>();
       private final Set<QuadEdgeTriangle> outerTriangles = new HashSet<>();
       private final QuadEdgeComparator quadEdgeComparator = new QuadEdgeComparator();
-      private final PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = new PriorityQueue<>(quadEdgeComparator);
+      private final PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = new PriorityQueue<>(quadEdgeComparator);
 
       public ConcaveHullFactoryIntermediateVariables()
       {
@@ -726,7 +727,7 @@ public abstract class SimpleConcaveHullFactory
       }
 
       /** @return sorted queue from longest to shortest edges with their triangle. */
-      public PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> getSortedByLengthQueue()
+      public PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> getSortedByLengthQueue()
       {
          return sortedByLengthQueue;
       }

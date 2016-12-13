@@ -21,6 +21,7 @@ import javax.vecmath.Tuple3d;
 import javax.vecmath.Vector3d;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdge;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeTriangle;
@@ -395,9 +396,9 @@ public class PolygonizerVisualizer extends Application
 
       for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
       {
-         PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> queue = intermediateVariables.getSortedByLengthQueue();
+         PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> queue = intermediateVariables.getSortedByLengthQueue();
 
-         for (ImmutablePair<QuadEdge, QuadEdgeTriangle> edgeAndTriangle : queue)
+         for (Pair<QuadEdge, QuadEdgeTriangle> edgeAndTriangle : queue)
          {
             QuadEdge edge = edgeAndTriangle.getLeft();
             Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);

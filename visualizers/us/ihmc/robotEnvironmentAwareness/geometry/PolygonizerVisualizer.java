@@ -63,7 +63,7 @@ public class PolygonizerVisualizer extends Application
    private static final boolean VISUALIZE_DELAUNAY_TRIANGULATION = true;
    private static final boolean VISUALIZE_CONCAVE_HULL = false;
    private static final boolean VISUALIZE_BORDER_EDGES = false;
-   private static final boolean VISUALIZE_OUTER_TRIANGLES = false;
+   private static final boolean VISUALIZE_BORDER_TRIANGLES = true;
    private static final boolean VISUALIZE_PRIORITY_QUEUE = false;
    private static final boolean VISUALIZE_CONVEX_DECOMPOSITION = false;
    private static final boolean VISUALIZE_BORDER_VERTICES = false;
@@ -193,8 +193,8 @@ public class PolygonizerVisualizer extends Application
          children.add(createConcaveHullGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
       if (VISUALIZE_POINT_CLOUD)
          children.add(createRegionPointCloudGraphics(planarRegionSegmentationMessage));
-      if (VISUALIZE_OUTER_TRIANGLES)
-         children.add(createOuterTrianglesGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
+      if (VISUALIZE_BORDER_TRIANGLES)
+         children.add(createBorderTrianglesGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
       if (VISUALIZE_DELAUNAY_TRIANGULATION)
          children.add(createDelaunayTriangulationGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
       if (VISUALIZE_BORDER_EDGES)
@@ -370,7 +370,7 @@ public class PolygonizerVisualizer extends Application
       return trianglesMeshView;
    }
 
-   private Node createOuterTrianglesGraphics(PlanarRegionSegmentationMessage planarRegionSegmentationMessage, ConcaveHullFactoryResult concaveHullFactoryResult)
+   private Node createBorderTrianglesGraphics(PlanarRegionSegmentationMessage planarRegionSegmentationMessage, ConcaveHullFactoryResult concaveHullFactoryResult)
    {
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(512));
 
@@ -379,11 +379,11 @@ public class PolygonizerVisualizer extends Application
 
       for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
       {
-         Set<QuadEdgeTriangle> outerTriangles = intermediateVariables.getOuterTriangles();
+         Set<QuadEdgeTriangle> borderTriangles = intermediateVariables.getBorderTriangles();
 
-         for (QuadEdgeTriangle triangle : outerTriangles)
+         for (QuadEdgeTriangle borderTriangle : borderTriangles)
          {
-            List<Point2d> triangleVerticesLocal = Arrays.stream(triangle.getVertices()).map(v -> new Point2d(v.getX(), v.getY())).collect(Collectors.toList());
+            List<Point2d> triangleVerticesLocal = Arrays.stream(borderTriangle.getVertices()).map(v -> new Point2d(v.getX(), v.getY())).collect(Collectors.toList());
             List<Point3d> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeNormal);
             double hue = 360.0 * random.nextDouble();
             double saturation = 0.8 * random.nextDouble() + 0.1;

@@ -100,7 +100,7 @@ public class PolygonizerVisualizer extends Application
       List<PlanarRegionSegmentationMessage> planarRegionSegmentationData = dataImporter.getPlanarRegionSegmentationData();
 
       View3DFactory view3dFactory = new View3DFactory(600, 400);
-      view3dFactory.addCameraController();
+      view3dFactory.addCameraController(true);
       view3dFactory.addWorldCoordinateSystem(0.3);
 
       Point3d average = computeAverage(planarRegionSegmentationData);
@@ -129,7 +129,7 @@ public class PolygonizerVisualizer extends Application
          @Override
          public void handle(MouseEvent event)
          {
-            if (!event.isShiftDown())
+            if (!event.isAltDown())
                return;
             Node intersectedNode = event.getPickResult().getIntersectedNode();
             if (intersectedNode == null)

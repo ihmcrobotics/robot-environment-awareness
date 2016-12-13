@@ -78,7 +78,7 @@ public class DelaunayTriangulationVisualizer extends Application
          @Override
          public void handle(MouseEvent event)
          {
-            if (!event.isShiftDown())
+            if (!event.isAltDown())
                return;
             Node intersectedNode = event.getPickResult().getIntersectedNode();
             if (intersectedNode == null)

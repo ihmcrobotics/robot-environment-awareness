@@ -31,6 +31,7 @@ import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeSubdivision;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeTriangle;
 import com.vividsolutions.jts.triangulate.quadedge.Vertex;
 
+import us.ihmc.robotics.lists.ListWrappingIndexTools;
 import us.ihmc.robotics.time.TimeTools;
 
 /**
@@ -241,19 +242,23 @@ public abstract class SimpleConcaveHullFactory
       Vertex currentDestVertex = firstBorderEdge.dest();
       QuadEdge previousEdge = firstBorderEdge;
 
-      while (!currentDestVertex.equals(startVertex))
+      while (true)
       {
-         List<QuadEdge> incidentEdges = findEdgesIncidentOnOrigin(previousEdge.sym());
          QuadEdge currentEdge = null;
+         QuadEdge currentIncidentEdge = previousEdge.dNext();
 
-         for (QuadEdge incidentEdge : incidentEdges)
+         while (currentIncidentEdge != previousEdge)
          {
-            if (isBorderEdge(incidentEdge, borderEdges))
+            if (isBorderEdge(currentIncidentEdge, borderEdges))
             {
-               currentEdge = incidentEdge;
+               currentEdge = currentIncidentEdge.sym();
                break;
             }
+            currentIncidentEdge = currentIncidentEdge.dNext();
          }
+
+         if (currentDestVertex.equals(startVertex))
+            break;
 
          orderedBorderEdges.add(currentEdge);
          previousEdge = currentEdge;
@@ -261,30 +266,6 @@ public abstract class SimpleConcaveHullFactory
       }
 
       return intermediateVariables;
-   }
-
-   /**
-    * Gets all edges which are incident on the origin of the given edge.
-    * 
-    * @param startEdge
-    *          the edge to start at
-    * @return a List of edges which have their origin at the origin of the given
-    *         edge
-    */
-   public static List<QuadEdge> findEdgesIncidentOnOrigin(QuadEdge startEdge)
-   {
-      List<QuadEdge> incidentEdges = new ArrayList<>();
-
-      QuadEdge currentIncidentEdge = startEdge;
-      do
-      {
-         incidentEdges.add(currentIncidentEdge);
-         currentIncidentEdge = currentIncidentEdge.oNext();
-      }
-      while (currentIncidentEdge != startEdge);
-      incidentEdges.remove(0);
-
-      return incidentEdges;
    }
 
    /**
@@ -435,6 +416,9 @@ public abstract class SimpleConcaveHullFactory
       borderVertices.add(borderTriangleToRemove.getVertex(indexBeforeRemovedEdge));
 
       outerTriangles.add(borderTriangleToRemove);
+
+      List<QuadEdge> orderedBorderEdges = intermediateVariables.orderedBorderEdges;
+      replaceOneEdgeWithTwoInOrderedList(orderedBorderEdges, edgeToRemove, newBorderEdgeBeforeRemovedEdge, newBorderEdgeAfterRemovedEdge);
    }
 
    private static void removeTriangleWithTwoBorderEdges(ConcaveHullFactoryIntermediateVariables intermediateVariables, QuadEdgeTriangle borderTriangleToRemove)
@@ -474,6 +458,112 @@ public abstract class SimpleConcaveHullFactory
       sortedByLengthMap.add(new ImmutablePair<>(newBorderEdge, newBorderTriangle));
 
       outerTriangles.add(borderTriangleToRemove);
+
+      List<QuadEdge> orderedBorderEdges = intermediateVariables.orderedBorderEdges;
+      replaceTwoEdgesWithOneInOrderedList(orderedBorderEdges, borderTriangleToRemove.getEdge((newBorderEdgeIndex + 2) % 3), borderTriangleToRemove.getEdge((newBorderEdgeIndex + 1) % 3), newBorderEdge);
+   }
+
+   private static void replaceOneEdgeWithTwoInOrderedList(List<QuadEdge> orderedBorderEdges, QuadEdge edgeToReplace, QuadEdge newEdge1, QuadEdge newEdge2)
+   {
+      int indexOfEdgeToReplace = orderedBorderEdges.indexOf(edgeToReplace);
+      if (indexOfEdgeToReplace == -1)
+      {
+         edgeToReplace = edgeToReplace.sym();
+         indexOfEdgeToReplace = orderedBorderEdges.indexOf(edgeToReplace);
+      }
+      if (indexOfEdgeToReplace == -1)
+         throw new RuntimeException("Did not find edge to remove in the ordered border edge list.");
+
+      Vertex previousVertex = edgeToReplace.orig();
+      Vertex nextVertex = edgeToReplace.dest();
+
+      QuadEdge firstEdge;
+      QuadEdge secondEdge;
+      
+      if (doesVertexBelongToQuadEdge(previousVertex, newEdge1))
+      {
+         firstEdge = newEdge1.orig() == previousVertex ? newEdge1 : newEdge1.sym();
+         secondEdge = newEdge2.dest() == nextVertex ? newEdge2 : newEdge2.sym();
+         if (!doesVertexBelongToQuadEdge(nextVertex, newEdge2))
+            throw new RuntimeException("newEdge2 is not connected to nextVertex.");
+      }
+      else if (doesVertexBelongToQuadEdge(previousVertex, newEdge2))
+      {
+         firstEdge = newEdge2.orig() == previousVertex ? newEdge2 : newEdge2.sym();
+         secondEdge = newEdge1.dest() == nextVertex ? newEdge1 : newEdge1.sym();
+         if (!doesVertexBelongToQuadEdge(nextVertex, newEdge1))
+            throw new RuntimeException("newEdge1 is not connected to nextVertex.");
+      }
+      else
+      {
+         throw new RuntimeException("newEdge1 is not connected to either previousVertex or nextVertex.");
+      }
+
+      orderedBorderEdges.set(indexOfEdgeToReplace, firstEdge);
+      orderedBorderEdges.add(indexOfEdgeToReplace + 1, secondEdge);
+      checkOrderedBorderEdgeListValid(orderedBorderEdges);
+   }
+
+   private static void replaceTwoEdgesWithOneInOrderedList(List<QuadEdge> orderedBorderEdges, QuadEdge edgeToReplace1, QuadEdge edgeToReplace2, QuadEdge newEdge)
+   {
+      int firstEdgeIndex = orderedBorderEdges.indexOf(edgeToReplace1);
+      if (firstEdgeIndex == -1)
+      {
+         edgeToReplace1 = edgeToReplace1.sym();
+         firstEdgeIndex = orderedBorderEdges.indexOf(edgeToReplace1);
+      }
+      if (firstEdgeIndex == -1)
+         throw new RuntimeException("Did not find the first edge to remove in the ordered border edge list.");
+      int secondEdgeIndex = orderedBorderEdges.indexOf(edgeToReplace2);
+      if (secondEdgeIndex == -1)
+      {
+         edgeToReplace2 = edgeToReplace2.sym();
+         secondEdgeIndex = orderedBorderEdges.indexOf(edgeToReplace2);
+      }
+      if (secondEdgeIndex == -1)
+         throw new RuntimeException("Did not find the second edge to remove in the ordered border edge list.");
+
+      if (ListWrappingIndexTools.minDistanceExclusive(firstEdgeIndex, secondEdgeIndex, orderedBorderEdges) != 0)
+         throw new RuntimeException("The two edges are not connected");
+
+      Vertex previousVertex;
+      Vertex nextVertex;
+
+      if (ListWrappingIndexTools.previous(secondEdgeIndex, orderedBorderEdges) == firstEdgeIndex)
+      {
+         previousVertex = edgeToReplace1.orig();
+         nextVertex = edgeToReplace2.dest();
+      }
+      else
+      {
+         previousVertex = edgeToReplace2.orig();
+         nextVertex = edgeToReplace1.dest();
+      }
+
+      QuadEdge edgeToInsert = newEdge.orig() == previousVertex ? newEdge : newEdge.sym();
+      if (edgeToInsert.orig() != previousVertex || edgeToInsert.dest() != nextVertex)
+         throw new RuntimeException("The new edge to insert is not properly connected to the list.");
+
+      orderedBorderEdges.set(firstEdgeIndex, edgeToInsert);
+      orderedBorderEdges.remove(secondEdgeIndex);
+      checkOrderedBorderEdgeListValid(orderedBorderEdges);
+   }
+
+   private static boolean doesVertexBelongToQuadEdge(Vertex vertex, QuadEdge edge)
+   {
+      return edge.orig() == vertex || edge.dest() == vertex;
+   }
+
+   private static void checkOrderedBorderEdgeListValid(List<QuadEdge> orderedBorderEdges)
+   {
+      for (int edgeIndex = 0; edgeIndex < orderedBorderEdges.size(); edgeIndex++)
+      {
+         Vertex currentDest = orderedBorderEdges.get(edgeIndex).dest();
+         Vertex nextOrig = ListWrappingIndexTools.getNext(edgeIndex, orderedBorderEdges).orig();
+
+         if (currentDest != nextOrig)
+            throw new RuntimeException("Ordered border edge list is corrupted.");
+      }
    }
 
    private static int numberOfBorderEdges(QuadEdgeTriangle triangle, Set<QuadEdge> borderEdges)

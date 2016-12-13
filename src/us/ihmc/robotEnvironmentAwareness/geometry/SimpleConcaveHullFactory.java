@@ -309,7 +309,7 @@ public abstract class SimpleConcaveHullFactory
 
       List<ImmutablePair<QuadEdge, QuadEdgeTriangle>> bakup = new ArrayList<>();
 
-      for (int iteration = 0;; iteration++)
+      for (int iteration = 0; iteration < maxNumberOfIterations; iteration++)
       {
          boolean hasRemovedATriangle = false;
 
@@ -393,7 +393,6 @@ public abstract class SimpleConcaveHullFactory
          {
             if (VERBOSE)
                System.out.println("Reached max number of iterations");
-            break;
          }
       }
 

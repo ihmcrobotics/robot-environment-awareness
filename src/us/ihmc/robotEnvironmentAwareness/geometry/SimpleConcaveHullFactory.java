@@ -1,32 +1,28 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
 
 import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiPoint;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.operation.linemerge.LineMerger;
 import com.vividsolutions.jts.triangulate.ConformingDelaunayTriangulationBuilder;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdge;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeSubdivision;
@@ -35,6 +31,7 @@ import com.vividsolutions.jts.triangulate.quadedge.Vertex;
 
 import us.ihmc.robotics.lists.ListWrappingIndexTools;
 import us.ihmc.robotics.time.TimeTools;
+import us.ihmc.tools.io.printing.PrintTools;
 
 /**
  * Computes the concave hull of a 2D point cloud based on the paper
@@ -55,41 +52,16 @@ public abstract class SimpleConcaveHullFactory
 {
    private static final boolean VERBOSE = false;
    private static final boolean REPORT_TIME = false;
-   private static final int DEFAULT_MAX_NUMBER_OF_ITERATIONS = 5000;
 
-   public static ConcaveHullCollection createConcaveHullCollection(List<Point2d> pointCloud2d, double edgeLengthThreshold)
-   {
-      return createConcaveHullCollection(pointCloud2d, edgeLengthThreshold, DEFAULT_MAX_NUMBER_OF_ITERATIONS, true);
-   }
-
-   public static ConcaveHullCollection createConcaveHullCollection(List<Point2d> pointCloud2d, double edgeLengthThreshold,
-         boolean removeAllTrianglesWithTwoBorderEdges)
-   {
-      return createConcaveHullCollection(pointCloud2d, edgeLengthThreshold, DEFAULT_MAX_NUMBER_OF_ITERATIONS, removeAllTrianglesWithTwoBorderEdges);
-   }
-
-   public static ConcaveHullCollection createConcaveHullCollection(List<Point2d> pointCloud2d, double edgeLengthThreshold, int maxNumberOfIterations,
-         boolean removeAllTrianglesWithTwoBorderEdges)
+   public static ConcaveHullCollection createConcaveHullCollection(List<Point2d> pointCloud2d, ConcaveHullFactoryParameters parameters)
    {
       if (pointCloud2d.size() <= 3)
          return new ConcaveHullCollection(pointCloud2d);
 
-      return createConcaveHull(pointCloud2d, edgeLengthThreshold, maxNumberOfIterations, removeAllTrianglesWithTwoBorderEdges).getConcaveHullCollection();
+      return createConcaveHull(pointCloud2d, parameters).getConcaveHullCollection();
    }
 
-   public static ConcaveHullFactoryResult createConcaveHull(List<Point2d> pointCloud2d, double edgeLengthThreshold)
-   {
-      return createConcaveHull(pointCloud2d, edgeLengthThreshold, DEFAULT_MAX_NUMBER_OF_ITERATIONS, true);
-   }
-
-   public static ConcaveHullFactoryResult createConcaveHull(List<Point2d> pointCloud2d, double edgeLengthThreshold,
-         boolean removeAllTrianglesWithTwoBorderEdges)
-   {
-      return createConcaveHull(pointCloud2d, edgeLengthThreshold, DEFAULT_MAX_NUMBER_OF_ITERATIONS, removeAllTrianglesWithTwoBorderEdges);
-   }
-
-   public static ConcaveHullFactoryResult createConcaveHull(List<Point2d> pointCloud2d, double edgeLengthThreshold, int maxNumberOfIterations,
-         boolean removeAllTrianglesWithTwoBorderEdges)
+   public static ConcaveHullFactoryResult createConcaveHull(List<Point2d> pointCloud2d, ConcaveHullFactoryParameters parameters)
    {
       if (pointCloud2d.size() <= 3)
          return null;
@@ -97,18 +69,15 @@ public abstract class SimpleConcaveHullFactory
       MultiPoint multiPoint = createMultiPoint(pointCloud2d);
       ConcaveHullFactoryResult result = new ConcaveHullFactoryResult();
       ConcaveHullFactoryIntermediateVariables initialVariables = initializeTriangulation(multiPoint, result);
-      List<ConcaveHullFactoryIntermediateVariables> variableList = computeConcaveHullBorderEdgesRecursive(edgeLengthThreshold, maxNumberOfIterations,
-            removeAllTrianglesWithTwoBorderEdges, initialVariables);
+      List<ConcaveHullFactoryIntermediateVariables> variableList = computeConcaveHullBorderEdgesRecursive(parameters, initialVariables);
       result.intermediateVariables.addAll(variableList);
 
       for (ConcaveHullFactoryIntermediateVariables intermediateVariables : result.intermediateVariables)
       {
-         Geometry concaveHullGeometry = computeConcaveHullGeometry(intermediateVariables.getBorderEdges());
-         if (concaveHullGeometry != null)
+         ConcaveHull concaveHull = computeConcaveHull(intermediateVariables.getOrderedBorderEdges());
+         if (concaveHull != null)
          {
-            ConcaveHull concaveHull = convertGeometryToConcaveHull(concaveHullGeometry);
             concaveHull.ensureClockwiseOrdering();
-            concaveHull.removeSuccessiveDuplicateVertices();
             result.concaveHullCollection.add(concaveHull);
          }
       }
@@ -129,42 +98,13 @@ public abstract class SimpleConcaveHullFactory
       return new GeometryFactory().createMultiPoint(coordinates);
    }
 
-   private static Geometry computeConcaveHullGeometry(Set<QuadEdge> borderEdges)
+   private static ConcaveHull computeConcaveHull(List<QuadEdge> orderedBorderEdges)
    {
-      GeometryFactory geometryFactory = new GeometryFactory();
-
-      // concave hull creation
-      List<LineString> edges = new ArrayList<LineString>();
-      for (QuadEdge edge : borderEdges)
-      {
-         LineString lineString = edge.toLineSegment().toGeometry(geometryFactory);
-         edges.add(lineString);
-      }
-
-      // merge
-      LineMerger lineMerger = new LineMerger();
-      lineMerger.add(edges);
-      LineString merge;
-      try
-      {
-         merge = (LineString) lineMerger.getMergedLineStrings().iterator().next();
-      }
-      catch (NoSuchElementException e)
-      {
-         // FIXME Not sure yet why would that happen, needs to be debugged and fixed
-         return null;
-      }
-
-      if (merge.isRing())
-      {
-         LinearRing linearRing = new LinearRing(merge.getCoordinateSequence(), geometryFactory);
-         Polygon concaveHull = new Polygon(linearRing, null, geometryFactory);
-         return concaveHull;
-      }
-      else
-      {
-         return merge;
-      }
+      List<Point2d> orderedConcaveHullVertices = orderedBorderEdges.stream()
+                                                                   .map(QuadEdge::orig)
+                                                                   .map(vertex -> new Point2d(vertex.getX(), vertex.getY()))
+                                                                   .collect(Collectors.toList());
+      return new ConcaveHull(orderedConcaveHullVertices);
    }
 
    /**
@@ -277,15 +217,14 @@ public abstract class SimpleConcaveHullFactory
     * @param intermediateVariables the set of variables pre-initialized used internally to find the border edges of the concave hull.
     * @return list of new intermediate variables containing the sets of edges defining the concave hull(s).
     */
-   private static List<ConcaveHullFactoryIntermediateVariables> computeConcaveHullBorderEdgesRecursive(double edgeLengthThreshold, int maxNumberOfIterations,
-         boolean removeAllTrianglesWithTwoBorderEdges, ConcaveHullFactoryIntermediateVariables intermediateVariables)
+   private static List<ConcaveHullFactoryIntermediateVariables> computeConcaveHullBorderEdgesRecursive(ConcaveHullFactoryParameters parameters, ConcaveHullFactoryIntermediateVariables intermediateVariables)
    {
-      return computeConcaveHullBorderEdgesRecursive(edgeLengthThreshold, maxNumberOfIterations, removeAllTrianglesWithTwoBorderEdges, intermediateVariables, new MutableInt(0));
+      return computeConcaveHullBorderEdgesRecursive(parameters, intermediateVariables, new MutableInt(0));
    }
 
    private enum Case
    {
-      ONE_BORDER_EDGE_TWO_BORDER_VERTICES, TWO_BORDER_EDGES_THREE_BORDER_VERTICES, ONE_BORDER_EDGES_THREE_BORDER_VERTICES, KEEP_TRIANGLE;
+      ONE_BORDER_EDGE_TWO_BORDER_VERTICES, TWO_BORDER_EDGES_THREE_BORDER_VERTICES, ONE_BORDER_EDGES_THREE_BORDER_VERTICES, KEEP_TRIANGLE, THREE_BORDER_EDGES_THREE_BORDER_VERTICES;
 
       public boolean shouldKeepTriangle()
       {
@@ -296,6 +235,7 @@ public abstract class SimpleConcaveHullFactory
          case ONE_BORDER_EDGE_TWO_BORDER_VERTICES:
          case TWO_BORDER_EDGES_THREE_BORDER_VERTICES:
          case ONE_BORDER_EDGES_THREE_BORDER_VERTICES:
+         case THREE_BORDER_EDGES_THREE_BORDER_VERTICES:
             return false;
          default:
             throw new RuntimeException("Unknown case: " + this);
@@ -303,40 +243,72 @@ public abstract class SimpleConcaveHullFactory
       }
    };
 
-   public static Case determineCase(Pair<QuadEdge, QuadEdgeTriangle> candidatePair, double edgeLengthThreshold, boolean removeAllTrianglesWithTwoBorderEdges, ConcaveHullFactoryIntermediateVariables intermediateVariables)
+   @SuppressWarnings("unchecked")
+   public static Case determineCase(Pair<QuadEdge, QuadEdgeTriangle> candidatePair, ConcaveHullFactoryParameters parameters, ConcaveHullFactoryIntermediateVariables intermediateVariables)
    {
-      boolean isEdgeTooLong = intermediateVariables.quadEdgeComparator.getEdgeLength(candidatePair.getKey()) >= edgeLengthThreshold;
-      int numberOfBorderVertices = numberOfBorderVertices(candidatePair.getRight(), intermediateVariables.borderVertices);
+      QuadEdgeComparator quadEdgeComparator = intermediateVariables.quadEdgeComparator;
+      Set<Vertex> borderVertices = intermediateVariables.borderVertices;
+      Set<QuadEdge> borderEdges = intermediateVariables.borderEdges;
+
+      QuadEdge candidateEdge = candidatePair.getLeft();
+      QuadEdgeTriangle candidateTriangle = candidatePair.getRight();
+      double edgeLength = quadEdgeComparator.getEdgeLength(candidateEdge);
+      boolean isEdgeTooLong = edgeLength >= parameters.getEdgeLengthThreshold();
+      int numberOfBorderVertices = numberOfBorderVertices(candidateTriangle, borderVertices);
+      int numberOfBorderEdges = numberOfBorderEdges(candidateTriangle, borderEdges);
 
       if (numberOfBorderVertices == 2)
       {
+         if (numberOfBorderEdges != 1)
+            throw new RuntimeException("Triangle should have one border edge, but has: " + numberOfBorderEdges);
+
          return isEdgeTooLong ? Case.ONE_BORDER_EDGE_TWO_BORDER_VERTICES : Case.KEEP_TRIANGLE;
       }
 
-      int numberOfBorderEdges = numberOfBorderEdges(candidatePair.getRight(), intermediateVariables.borderEdges);
-
       if (numberOfBorderEdges == 2)
       {
-         if (removeAllTrianglesWithTwoBorderEdges || isEdgeTooLong)
+         if (numberOfBorderVertices != 3)
+            throw new RuntimeException("Triangle should have three border vertices, but has: " + numberOfBorderVertices);
+
+         int vertexIndexOppositeToCandidateEdge = indexOfVertexOppositeToEdge(candidateTriangle.getEdgeIndex(candidateEdge));
+         List<QuadEdgeTriangle> adjacentTrianglesToVertex = candidateTriangle.getTrianglesAdjacentToVertex(vertexIndexOppositeToCandidateEdge);
+
+         boolean atLeastOneAdjacentBorderTriangle = adjacentTrianglesToVertex.stream()
+                                                                             .filter(triangle -> isBorderTriangle(triangle, borderEdges))
+                                                                             .findFirst()
+                                                                             .isPresent();
+         if (atLeastOneAdjacentBorderTriangle)
+         {
+            PrintTools.warn("Messed up hull, skipping triangle");
+            return Case.KEEP_TRIANGLE;
+         }
+
+         if (parameters.doRemoveAllTrianglesWithTwoBorderEdges() || isEdgeTooLong)
             return Case.TWO_BORDER_EDGES_THREE_BORDER_VERTICES;
          else
             return Case.KEEP_TRIANGLE;
       }
 
-      boolean allowSplittingConcaveHull = false;
+      if (!parameters.isSplittingConcaveHullAllowed())
+         return Case.KEEP_TRIANGLE;
 
-      return allowSplittingConcaveHull ? Case.ONE_BORDER_EDGES_THREE_BORDER_VERTICES : Case.KEEP_TRIANGLE;
+      if (numberOfBorderEdges == 1)
+         return Case.ONE_BORDER_EDGES_THREE_BORDER_VERTICES;
+      else
+         return Case.THREE_BORDER_EDGES_THREE_BORDER_VERTICES;
    }
 
-   private static List<ConcaveHullFactoryIntermediateVariables> computeConcaveHullBorderEdgesRecursive(double edgeLengthThreshold, int maxNumberOfIterations,
-         boolean removeAllTrianglesWithTwoBorderEdges, ConcaveHullFactoryIntermediateVariables intermediateVariables, MutableInt currentIteration)
+   private static List<ConcaveHullFactoryIntermediateVariables> computeConcaveHullBorderEdgesRecursive(ConcaveHullFactoryParameters parameters, ConcaveHullFactoryIntermediateVariables intermediateVariables, MutableInt currentIteration)
    {
-      if (currentIteration.intValue() >= maxNumberOfIterations)
+      if (currentIteration.intValue() >= parameters.getMaxNumberOfIterations())
       {
          if (VERBOSE)
             System.out.println("Reached max number of iterations");
          return Collections.singletonList(intermediateVariables);
       }
+
+      if (intermediateVariables == null)
+         return Collections.emptyList();
 
       PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = intermediateVariables.sortedByLengthQueue;
 
@@ -348,7 +320,7 @@ public abstract class SimpleConcaveHullFactory
       while (!sortedByLengthQueue.isEmpty())
       {
          candidateEntry = sortedByLengthQueue.poll();
-         currentCase = determineCase(candidateEntry, edgeLengthThreshold, removeAllTrianglesWithTwoBorderEdges, intermediateVariables);
+         currentCase = determineCase(candidateEntry, parameters, intermediateVariables);
          if (currentCase.shouldKeepTriangle())
          {
             // The entry's triangle is not removable this iteration, but it might later.
@@ -372,11 +344,25 @@ public abstract class SimpleConcaveHullFactory
       case ONE_BORDER_EDGE_TWO_BORDER_VERTICES:
          removeTriangleWithOneBorderEdge(intermediateVariables, candidateEntry);
          currentIteration.increment();
-         return computeConcaveHullBorderEdgesRecursive(edgeLengthThreshold, maxNumberOfIterations, removeAllTrianglesWithTwoBorderEdges, intermediateVariables, currentIteration);
+         return computeConcaveHullBorderEdgesRecursive(parameters, intermediateVariables, currentIteration);
       case TWO_BORDER_EDGES_THREE_BORDER_VERTICES:
          removeTriangleWithTwoBorderEdges(intermediateVariables, candidateEntry);
          currentIteration.increment();
-         return computeConcaveHullBorderEdgesRecursive(edgeLengthThreshold, maxNumberOfIterations, removeAllTrianglesWithTwoBorderEdges, intermediateVariables, currentIteration);
+         return computeConcaveHullBorderEdgesRecursive(parameters, intermediateVariables, currentIteration);
+      case ONE_BORDER_EDGES_THREE_BORDER_VERTICES:
+      {
+         Pair<ConcaveHullFactoryIntermediateVariables, ConcaveHullFactoryIntermediateVariables> subVariables = removeTriangleAndDivideHull(intermediateVariables, candidateEntry);
+         currentIteration.increment();
+         List<ConcaveHullFactoryIntermediateVariables> left = computeConcaveHullBorderEdgesRecursive(parameters, subVariables.getLeft(), currentIteration);
+         currentIteration.increment();
+         List<ConcaveHullFactoryIntermediateVariables> right = computeConcaveHullBorderEdgesRecursive(parameters, subVariables.getRight(), currentIteration);
+         ArrayList<ConcaveHullFactoryIntermediateVariables> result = new ArrayList<>();
+         result.addAll(left);
+         result.addAll(right);
+         return result;
+      }
+      case THREE_BORDER_EDGES_THREE_BORDER_VERTICES:
+         return Collections.emptyList();
       case KEEP_TRIANGLE:
          if (VERBOSE)
             System.out.println("Done, number of iterations: " + currentIteration.intValue());
@@ -445,7 +431,7 @@ public abstract class SimpleConcaveHullFactory
          }
          borderEdges.remove(edge);
          borderEdges.remove(edge.sym());
-         sortedByLengthMap.remove(new ImmutablePair<QuadEdge, QuadEdgeTriangle>(edge, borderTriangleToRemove));
+         sortedByLengthMap.remove(new ImmutablePair<>(edge, borderTriangleToRemove));
       }
 
       borderVertices.remove(borderTriangleToRemove.getVertex(indexOfVertexOppositeToEdge(newBorderEdgeIndex)));
@@ -458,6 +444,133 @@ public abstract class SimpleConcaveHullFactory
 
       List<QuadEdge> orderedBorderEdges = intermediateVariables.orderedBorderEdges;
       replaceTwoEdgesWithOneInOrderedList(orderedBorderEdges, borderTriangleToRemove.getEdge((newBorderEdgeIndex + 2) % 3), borderTriangleToRemove.getEdge((newBorderEdgeIndex + 1) % 3), newBorderEdge);
+   }
+
+   private static Pair<ConcaveHullFactoryIntermediateVariables, ConcaveHullFactoryIntermediateVariables> removeTriangleAndDivideHull(
+         ConcaveHullFactoryIntermediateVariables intermediateVariables, Pair<QuadEdge, QuadEdgeTriangle> entryToRemove)
+   {
+      List<QuadEdge> orderedBorderEdges = intermediateVariables.orderedBorderEdges;
+      PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = intermediateVariables.sortedByLengthQueue;
+
+      QuadEdge edgeToRemove = entryToRemove.getLeft();
+      QuadEdgeTriangle borderTriangleToRemove = entryToRemove.getRight();
+      int indexOfTriangleEdgeToRemove = borderTriangleToRemove.getEdgeIndex(edgeToRemove);
+      Vertex vertexOppositeToEdgeToRemove = borderTriangleToRemove.getVertex(indexOfVertexOppositeToEdge(indexOfTriangleEdgeToRemove));
+
+      int orderedIndexOfEdgeToRemove = orderedBorderEdges.indexOf(edgeToRemove);
+      if (orderedIndexOfEdgeToRemove == -1)
+      {
+         edgeToRemove = edgeToRemove.sym();
+         orderedIndexOfEdgeToRemove = orderedBorderEdges.indexOf(edgeToRemove);
+      }
+      if (orderedIndexOfEdgeToRemove == -1)
+         throw new RuntimeException("Did not find edge to remove in the ordered border edge list.");
+
+      int firstHullStartIndex = ListWrappingIndexTools.next(orderedIndexOfEdgeToRemove, orderedBorderEdges);
+      int firstHullEndIndex = ListWrappingIndexTools.next(firstHullStartIndex, orderedBorderEdges);
+
+      int count = 0;
+
+      while (!doesVertexBelongToQuadEdge(vertexOppositeToEdgeToRemove, orderedBorderEdges.get(firstHullEndIndex)))
+      {
+         firstHullEndIndex = ListWrappingIndexTools.next(firstHullEndIndex, orderedBorderEdges);
+         if (count++ >= orderedBorderEdges.size())
+            throw new RuntimeException("Wrapped ");
+      }
+
+      int secondHullStartIndex = ListWrappingIndexTools.next(firstHullEndIndex, orderedBorderEdges);
+      int secondHullEndIndex = ListWrappingIndexTools.previous(orderedIndexOfEdgeToRemove, orderedBorderEdges);
+
+      int indexOfEdgeToKeep1 = (indexOfTriangleEdgeToRemove + 1) % 3;
+      int indexOfEdgeToKeep2 = (indexOfTriangleEdgeToRemove + 2) % 3;
+      QuadEdge edgeToKeep1 = borderTriangleToRemove.getEdge(indexOfEdgeToKeep1);
+      QuadEdge edgeToKeep2 = borderTriangleToRemove.getEdge(indexOfEdgeToKeep2);
+
+      QuadEdge edgeToAddToFirstHull;
+      QuadEdge edgeToAddToSecondHull;
+
+      QuadEdgeTriangle triangleToAddToFirstHull;
+      QuadEdgeTriangle triangleToAddToSecondHull;
+
+      if (doesVertexBelongToQuadEdge(orderedBorderEdges.get(firstHullStartIndex).orig(), edgeToKeep1))
+      {
+         edgeToAddToFirstHull = edgeToKeep1;
+         edgeToAddToSecondHull = edgeToKeep2;
+         triangleToAddToFirstHull = borderTriangleToRemove.getAdjacentTriangleAcrossEdge(indexOfEdgeToKeep1);
+         triangleToAddToSecondHull = borderTriangleToRemove.getAdjacentTriangleAcrossEdge(indexOfEdgeToKeep2);
+      }
+      else
+      {
+         edgeToAddToFirstHull = edgeToKeep2;
+         edgeToAddToSecondHull = edgeToKeep1;
+         triangleToAddToFirstHull = borderTriangleToRemove.getAdjacentTriangleAcrossEdge(indexOfEdgeToKeep2);
+         triangleToAddToSecondHull = borderTriangleToRemove.getAdjacentTriangleAcrossEdge(indexOfEdgeToKeep1);
+      }
+
+
+      MutablePair<ConcaveHullFactoryIntermediateVariables, ConcaveHullFactoryIntermediateVariables> result = new MutablePair<>();
+
+      { // Initializing the variable for the hull 1
+         ConcaveHullFactoryIntermediateVariables intermediateVariables1 = new ConcaveHullFactoryIntermediateVariables();
+         List<QuadEdge> orderedBorderEdges1 = intermediateVariables1.orderedBorderEdges;
+         Set<QuadEdge> borderEdges1 = intermediateVariables1.borderEdges;
+         Set<Vertex> borderVertices1 = intermediateVariables1.borderVertices;
+         PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue1 = intermediateVariables1.sortedByLengthQueue;
+
+         orderedBorderEdges1.addAll(ListWrappingIndexTools.subListInclusive(firstHullStartIndex, firstHullEndIndex, orderedBorderEdges));
+         if (edgeToAddToFirstHull.orig() == orderedBorderEdges1.get(orderedBorderEdges1.size() - 1).dest())
+            orderedBorderEdges1.add(edgeToAddToFirstHull);
+         else
+            orderedBorderEdges1.add(edgeToAddToFirstHull.sym());
+
+         if (orderedBorderEdges1.size() > 3)
+         {
+            checkOrderedBorderEdgeListValid(orderedBorderEdges1);
+            borderEdges1.addAll(orderedBorderEdges1);
+            borderEdges1.forEach(borderEdge -> borderVertices1.add(borderEdge.orig()));
+            
+            sortedByLengthQueue.stream().filter(pair -> isBorderEdge(pair.getLeft(), borderEdges1)).forEach(sortedByLengthQueue1::add);
+            sortedByLengthQueue1.add(new ImmutablePair<>(edgeToAddToFirstHull.sym(), triangleToAddToFirstHull));
+            
+            result.setLeft(intermediateVariables1);
+         }
+         else
+         {
+            result.setLeft(null);
+         }
+      }
+
+      { // Initializing the variable for the hull 2
+         ConcaveHullFactoryIntermediateVariables intermediateVariables2 = new ConcaveHullFactoryIntermediateVariables();
+         List<QuadEdge> orderedBorderEdges2 = intermediateVariables2.orderedBorderEdges;
+         Set<QuadEdge> borderEdges2 = intermediateVariables2.borderEdges;
+         Set<Vertex> borderVertices2 = intermediateVariables2.borderVertices;
+         PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue2 = intermediateVariables2.sortedByLengthQueue;
+
+         orderedBorderEdges2.addAll(ListWrappingIndexTools.subListInclusive(secondHullStartIndex, secondHullEndIndex, orderedBorderEdges));
+         if (edgeToAddToSecondHull.orig() == orderedBorderEdges2.get(orderedBorderEdges2.size() - 1).dest())
+            orderedBorderEdges2.add(edgeToAddToSecondHull);
+         else
+            orderedBorderEdges2.add(edgeToAddToSecondHull.sym());
+
+         if (orderedBorderEdges2.size() > 3)
+         {
+            checkOrderedBorderEdgeListValid(orderedBorderEdges2);
+            borderEdges2.addAll(orderedBorderEdges2);
+            borderEdges2.forEach(borderEdge -> borderVertices2.add(borderEdge.orig()));
+            
+            sortedByLengthQueue.stream().filter(pair -> isBorderEdge(pair.getLeft(), borderEdges2)).forEach(sortedByLengthQueue2::add);
+            sortedByLengthQueue2.add(new ImmutablePair<>(edgeToAddToSecondHull.sym(), triangleToAddToSecondHull));
+            
+            result.setRight(intermediateVariables2);
+         }
+         else
+         {
+            result.setRight(null);
+         }
+      }
+
+      return result;
    }
 
    private static void replaceOneEdgeWithTwoInOrderedList(List<QuadEdge> orderedBorderEdges, QuadEdge edgeToReplace, QuadEdge newEdge1, QuadEdge newEdge2)
@@ -593,40 +706,19 @@ public abstract class SimpleConcaveHullFactory
       return borderEdges.contains(edge) || borderEdges.contains(edge.sym());
    }
 
+   private static boolean isBorderTriangle(QuadEdgeTriangle triangle, Set<QuadEdge> borderEdges)
+   {
+      return Arrays.stream(triangle.getEdges())
+                   .filter(edge -> isBorderEdge(edge, borderEdges))
+                   .findFirst()
+                   .isPresent();
+   }
+
    private static int indexOfVertexOppositeToEdge(int edgeIndex)
    {
       if (edgeIndex < 0 || edgeIndex > 2)
          throw new RuntimeException("Bad edge index: " + edgeIndex);
       return QuadEdgeTriangle.nextIndex(QuadEdgeTriangle.nextIndex(edgeIndex));
-   }
-
-   public static ConcaveHull convertGeometryToConcaveHull(Geometry geometry)
-   {
-      return new ConcaveHull(convertGeometryToPoint2dList(geometry));
-   }
-
-   public static List<Point2d> convertGeometryToPoint2dList(Geometry geometry)
-   {
-      List<Point2d> geometryVertices = new ArrayList<>();
-      for (Coordinate vertex : geometry.getCoordinates())
-         geometryVertices.add(new Point2d(vertex.x, vertex.y));
-      return geometryVertices;
-   }
-
-   public static List<Point3d> convertGeometryToPoint3dList(Geometry geometry, double zConstant)
-   {
-      List<Point3d> geometryVertices = new ArrayList<>();
-      for (Coordinate vertex : geometry.getCoordinates())
-         geometryVertices.add(new Point3d(vertex.x, vertex.y, zConstant));
-      return geometryVertices;
-   }
-
-   public static List<Point3d> convertPoint2dListToPoint3dList(List<Point2d> point2ds, double zConstant)
-   {
-      List<Point3d> point3ds = new ArrayList<>();
-      for (Point2d point2d : point2ds)
-         point3ds.add(new Point3d(point2d.x, point2d.y, zConstant));
-      return point3ds;
    }
 
    private static class QuadEdgeComparator implements Comparator<Pair<QuadEdge, QuadEdgeTriangle>>

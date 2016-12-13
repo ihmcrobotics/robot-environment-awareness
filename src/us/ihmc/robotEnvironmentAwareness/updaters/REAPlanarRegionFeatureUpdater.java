@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullFactoryParameters;
 import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
@@ -40,8 +41,9 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private final AtomicReference<Boolean> clearPolygonizer;
    private final AtomicReference<Boolean> enableIntersectionCalulator;
    private final AtomicReference<PlanarRegionSegmentationParameters> planarRegionSegmentationParameters;
-   private final AtomicReference<IntersectionEstimationParameters> intersectionEstimationParameters;
+   private final AtomicReference<ConcaveHullFactoryParameters> concaveHullFactoryParameters;
    private final AtomicReference<PolygonizerParameters> polygonizerParameters;
+   private final AtomicReference<IntersectionEstimationParameters> intersectionEstimationParameters;
    private final REAMessager reaMessager;
 
    public REAPlanarRegionFeatureUpdater(NormalOcTree octree, REAMessager reaMessager)
@@ -56,8 +58,9 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       clearPolygonizer = reaMessager.createInput(REAModuleAPI.PlanarRegionsPolygonizerClear, false);
       enableIntersectionCalulator = reaMessager.createInput(REAModuleAPI.PlanarRegionsIntersectionEnable, false);
       planarRegionSegmentationParameters = reaMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationParameters, new PlanarRegionSegmentationParameters());
-      intersectionEstimationParameters = reaMessager.createInput(REAModuleAPI.PlanarRegionsIntersectionParameters, new IntersectionEstimationParameters());
+      concaveHullFactoryParameters = reaMessager.createInput(REAModuleAPI.PlanarRegionsConcaveHullParameters, new ConcaveHullFactoryParameters());
       polygonizerParameters = reaMessager.createInput(REAModuleAPI.PlanarRegionsPolygonizerParameters, new PolygonizerParameters());
+      intersectionEstimationParameters = reaMessager.createInput(REAModuleAPI.PlanarRegionsIntersectionParameters, new IntersectionEstimationParameters());
 
       reaMessager.registerTopicListener(REAModuleAPI.RequestEntireModuleState, (messageContent) -> sendCurrentState());
    }
@@ -159,11 +162,12 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
    private void updatePolygons()
    {
-      PolygonizerParameters parameters = polygonizerParameters.get();
+      ConcaveHullFactoryParameters concaveHullFactoryParameters = this.concaveHullFactoryParameters.get();
+      PolygonizerParameters polygonizerParameters = this.polygonizerParameters.get();
       List<OcTreeNodePlanarRegion> planarRegions = planarRegionCalculator.getOcTreeNodePlanarRegions();
 
-      concaveHulls = PlanarRegionPolygonizer.computeConcaveHulls(planarRegions, parameters);
-      convexPolygons = PlanarRegionPolygonizer.computeConvexDecomposition(concaveHulls, parameters);
+      concaveHulls = PlanarRegionPolygonizer.computeConcaveHulls(planarRegions, concaveHullFactoryParameters, polygonizerParameters);
+      convexPolygons = PlanarRegionPolygonizer.computeConvexDecomposition(concaveHulls, polygonizerParameters);
    }
 
    @Override

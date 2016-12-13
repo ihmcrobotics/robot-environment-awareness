@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -58,8 +59,8 @@ import us.ihmc.robotics.lists.ListWrappingIndexTools;
 public class PolygonizerVisualizer extends Application
 {
    private static final boolean VISUALIZE_POINT_CLOUD = true;
-   private static final boolean VISUALIZE_DELAUNAY_TRIANGULATION = false;
-   private static final boolean VISUALIZE_CONCAVE_HULL = true;
+   private static final boolean VISUALIZE_DELAUNAY_TRIANGULATION = true;
+   private static final boolean VISUALIZE_CONCAVE_HULL = false;
    private static final boolean VISUALIZE_BORDER_EDGES = false;
    private static final boolean VISUALIZE_PRIORITY_QUEUE = false;
    private static final boolean VISUALIZE_CONVEX_DECOMPOSITION = false;
@@ -67,15 +68,21 @@ public class PolygonizerVisualizer extends Application
    private static final boolean VISUALIZE_CONCAVE_POCKETS = false;
    private static final boolean VISUALIZE_ORDERED_BORDER_EDGES = true;
 
+   private static final double scaleX = 1.0;
+   private static final double scaleY = 1.0;
+
    private static final boolean FILTER_CONCAVE_HULLS = false;
 
-   private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
+   private static final int[] onlyRegionWithId = {}; //1925644726};
 
    private final Random random = new Random(54645L);
-   private final PolygonizerParameters parameters = new PolygonizerParameters();
+   private final ConcaveHullFactoryParameters parameters = new ConcaveHullFactoryParameters();
+   private final PolygonizerParameters polygonizerParameters = new PolygonizerParameters();
 
    public PolygonizerVisualizer() throws IOException
    {
+      parameters.setEdgeLengthThreshold(0.05);
+//      parameters.setMaxNumberOfIterations(3);
    }
 
    @Override
@@ -83,8 +90,8 @@ public class PolygonizerVisualizer extends Application
    {
       primaryStage.setTitle(getClass().getSimpleName());
 
-      PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("Data/20161210_185643_PlanarRegionSegmentation_Atlas_CB"));
-//      PlanarRegionSegmentationDataImporter dataImporter = PlanarRegionSegmentationDataImporter.createImporterWithFileChooser(primaryStage);
+//      PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("Data/20161212_223221_PlanarRegionSegmentation_ConcaveHullBug"));
+      PlanarRegionSegmentationDataImporter dataImporter = PlanarRegionSegmentationDataImporter.createImporterWithFileChooser(primaryStage);
       if (dataImporter == null)
          Platform.exit();
       dataImporter.loadPlanarRegionSegmentationData();
@@ -99,13 +106,19 @@ public class PolygonizerVisualizer extends Application
 
       Map<Node, Integer> nodeToRegionId = new HashMap<>();
 
+      Set<Integer> regionIdSet = new HashSet<>();
+      Arrays.stream(onlyRegionWithId).forEach(regionIdSet::add);
+
       for (PlanarRegionSegmentationMessage planarRegionSegmentationMessage : planarRegionSegmentationData)
       {
-         Node regionGraphics = createRegionGraphics(planarRegionSegmentationMessage);
-         regionGraphics.setManaged(false);
-         translateNode(regionGraphics, average);
-         nodeToRegionId.put(regionGraphics, planarRegionSegmentationMessage.getRegionId());
-         view3dFactory.addNodeToView(regionGraphics);
+         if (regionIdSet.isEmpty() || regionIdSet.contains(planarRegionSegmentationMessage.getRegionId()))
+         {
+            Node regionGraphics = createRegionGraphics(planarRegionSegmentationMessage);
+            regionGraphics.setManaged(false);
+            translateNode(regionGraphics, average);
+            nodeToRegionId.put(regionGraphics, planarRegionSegmentationMessage.getRegionId());
+            view3dFactory.addNodeToView(regionGraphics);
+         }
       }
 
       Scene scene = view3dFactory.getScene();
@@ -172,7 +185,7 @@ public class PolygonizerVisualizer extends Application
       ObservableList<Node> children = regionGroup.getChildren();
 
       List<Point2d> pointsInPlane = PolygonizerTools.extractPointsInPlane(planarRegionSegmentationMessage);
-      ConcaveHullFactoryResult concaveHullFactoryResult = SimpleConcaveHullFactory.createConcaveHull(pointsInPlane, parameters.getConcaveHullThreshold(), MAX_ITERATIONS, true);
+      ConcaveHullFactoryResult concaveHullFactoryResult = SimpleConcaveHullFactory.createConcaveHull(pointsInPlane, parameters);
 
       if (VISUALIZE_CONCAVE_HULL)
          children.add(createConcaveHullGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
@@ -203,7 +216,7 @@ public class PolygonizerVisualizer extends Application
 
       for (ConcaveHull concaveHull : concaveHullCollection)
       {
-         Set<ConcaveHullPocket> pockets = concaveHull.findConcaveHullPockets(0.5 * parameters.getDepthThreshold());
+         Set<ConcaveHullPocket> pockets = concaveHull.findConcaveHullPockets(0.5 * polygonizerParameters.getDepthThreshold());
          Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
          Quat4d planeOrientation = PolygonizerTools.getRotationBasedOnNormal(planarRegionSegmentationMessage.getNormal());
          RigidBodyTransform transform = new RigidBodyTransform(planeOrientation, planeOrigin);
@@ -241,7 +254,7 @@ public class PolygonizerVisualizer extends Application
          {
             Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
             Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
-            boolean isEdgeTooLong = dest.distance(orig) > parameters.getConcaveHullThreshold();
+            boolean isEdgeTooLong = dest.distance(orig) > parameters.getEdgeLengthThreshold();
             Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), isEdgeTooLong ? 0.25 : regionColor.getBrightness());
             meshBuilder.addLine(dest, orig, 0.0015, lineColor);
          }
@@ -297,9 +310,9 @@ public class PolygonizerVisualizer extends Application
 
          if (FILTER_CONCAVE_HULLS)
          {
-            double shallowAngleThreshold = parameters.getShallowAngleThreshold();
-            double peakAngleThreshold = parameters.getPeakAngleThreshold();
-            double lengthThreshold = parameters.getLengthThreshold();
+            double shallowAngleThreshold = polygonizerParameters.getShallowAngleThreshold();
+            double peakAngleThreshold = polygonizerParameters.getPeakAngleThreshold();
+            double lengthThreshold = polygonizerParameters.getLengthThreshold();
 
             for (int i = 0; i < 5; i++)
             {
@@ -315,7 +328,7 @@ public class PolygonizerVisualizer extends Application
          {
             Point3d vertex = concaveHullVertices.get(vertexIndex);
             Point3d nextVertex = ListWrappingIndexTools.getNext(vertexIndex, concaveHullVertices);
-            boolean isEdgeTooLong = vertex.distance(nextVertex) > parameters.getConcaveHullThreshold();
+            boolean isEdgeTooLong = vertex.distance(nextVertex) > parameters.getEdgeLengthThreshold();
             Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), isEdgeTooLong ? 0.25 : regionColor.getBrightness());
             meshBuilder.addLine(vertex, nextVertex, 0.0015, lineColor);
          }
@@ -339,6 +352,7 @@ public class PolygonizerVisualizer extends Application
       for (QuadEdgeTriangle triangle : allTriangles)
       {
          List<Point2d> triangleVerticesLocal = Arrays.stream(triangle.getVertices()).map(v -> new Point2d(v.getX(), v.getY())).collect(Collectors.toList());
+         triangleVerticesLocal.forEach(vertex -> {vertex.x *= scaleX; vertex.y *= scaleY;});
          List<Point3d> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeNormal);
          double hue = 360.0 * random.nextDouble();
          double saturation = 0.8 * random.nextDouble() + 0.1;
@@ -371,7 +385,7 @@ public class PolygonizerVisualizer extends Application
             QuadEdge edge = edgeAndTriangle.getLeft();
             Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
             Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
-            boolean isEdgeTooLong = dest.distance(orig) > parameters.getConcaveHullThreshold();
+            boolean isEdgeTooLong = dest.distance(orig) > parameters.getEdgeLengthThreshold();
             Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), isEdgeTooLong ? 0.25 : regionColor.getBrightness());
             meshBuilder.addLine(dest, orig, 0.0015, lineColor);
 
@@ -395,7 +409,7 @@ public class PolygonizerVisualizer extends Application
          ConcaveHullFactoryResult concaveHullFactoryResult)
    {
       ConcaveHullCollection concaveHullCollection = concaveHullFactoryResult.getConcaveHullCollection();
-      double depthThreshold = parameters.getDepthThreshold();
+      double depthThreshold = polygonizerParameters.getDepthThreshold();
       List<ConvexPolygon2d> convexPolygons = new ArrayList<>();
       ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHullCollection, depthThreshold, convexPolygons);
 
@@ -430,19 +444,44 @@ public class PolygonizerVisualizer extends Application
 
       double lineStartBirghtness = 0.2;
       double lineEndBirghtness = 1.0;
+      double minSaturation = 0.2;
+      double maxSaturation = 0.9;
+      double lineSat;
+      double lineHue;
+      
+      List<ConcaveHullFactoryIntermediateVariables> intermediateVariablesList = concaveHullFactoryResult.getIntermediateVariables();
 
-      for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
+      for (int variablesIndex = 0; variablesIndex < intermediateVariablesList.size(); variablesIndex++)
       {
-         List<QuadEdge> orderedBorderEdges = intermediateVariables.getOrderedBorderEdges();
+         if (intermediateVariablesList.size() == 1)
+         {
+            lineSat = maxSaturation;
+         }
+         else
+         {
+            double alphaSat = variablesIndex / (double) (intermediateVariablesList.size() - 1.0);
+            lineSat = (1.0 - alphaSat) * minSaturation + alphaSat * maxSaturation;
+         }
+
+         List<QuadEdge> orderedBorderEdges = intermediateVariablesList.get(variablesIndex).getOrderedBorderEdges();
          for (int edgeIndex = 0; edgeIndex < orderedBorderEdges.size(); edgeIndex++)
          {
             QuadEdge edge = orderedBorderEdges.get(edgeIndex);
-            Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
-            Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
-            double alpha = edgeIndex / (double) orderedBorderEdges.size();
-            double lineHue = (1.0 - alpha) * startHue + alpha * endHue;
-            Color startColor = Color.hsb(lineHue, 0.9, lineStartBirghtness);
-            Color endColor = Color.hsb(lineHue, 0.9, lineEndBirghtness);
+            Point3d orig = PolygonizerTools.toPointInWorld(scaleX * edge.orig().getX(), scaleY * edge.orig().getY(), planeOrigin, planeOrientation);
+            Point3d dest = PolygonizerTools.toPointInWorld(scaleX * edge.dest().getX(), scaleY * edge.dest().getY(), planeOrigin, planeOrientation);
+
+            if (orderedBorderEdges.size() == 1)
+            {
+               lineHue = startHue;
+            }
+            else
+            {
+               double alphaHue = edgeIndex / (double) (orderedBorderEdges.size() - 1.0);
+               lineHue = (1.0 - alphaHue) * startHue + alphaHue * endHue;
+            }
+            
+            Color startColor = Color.hsb(lineHue, lineSat, lineStartBirghtness);
+            Color endColor = Color.hsb(lineHue, lineSat, lineEndBirghtness);
             meshBuilder.addLine(orig, dest, 0.002, startColor, endColor);
          }
       }

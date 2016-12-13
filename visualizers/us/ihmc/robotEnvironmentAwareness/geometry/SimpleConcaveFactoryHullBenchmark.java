@@ -7,7 +7,6 @@ import java.util.List;
 import javax.vecmath.Point2d;
 
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerTools;
 import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataImporter;
 
@@ -23,14 +22,14 @@ public class SimpleConcaveFactoryHullBenchmark
       PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("Data/20161210_185643_PlanarRegionSegmentation_Atlas_CB"));
       dataImporter.loadPlanarRegionSegmentationData();
       List<PlanarRegionSegmentationMessage> planarRegionSegmentationData = dataImporter.getPlanarRegionSegmentationData();
-      PolygonizerParameters parameters = new PolygonizerParameters();
+      ConcaveHullFactoryParameters parameters = new ConcaveHullFactoryParameters();
 
       while (true)
       {
          for (PlanarRegionSegmentationMessage planarRegionSegmentationMessage : planarRegionSegmentationData)
          {
             List<Point2d> pointsInPlane = PolygonizerTools.extractPointsInPlane(planarRegionSegmentationMessage);
-            SimpleConcaveHullFactory.createConcaveHull(pointsInPlane, parameters.getConcaveHullThreshold());
+            SimpleConcaveHullFactory.createConcaveHull(pointsInPlane, parameters);
          }
       }
    }

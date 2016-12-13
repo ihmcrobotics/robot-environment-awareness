@@ -9,17 +9,18 @@ import javax.vecmath.Point2d;
 
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullCollection;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullDecomposition;
+import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullFactoryParameters;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullPruningFilteringTools;
 import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
 
 public abstract class PlanarRegionPolygonizer
 {
-   public static Map<OcTreeNodePlanarRegion, PlanarRegionConcaveHull> computeConcaveHulls(List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions, PolygonizerParameters parameters)
+   public static Map<OcTreeNodePlanarRegion, PlanarRegionConcaveHull> computeConcaveHulls(List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions, ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters)
    {
       return ocTreeNodePlanarRegions.parallelStream()
-                          .filter(region -> region.getNumberOfNodes() >= parameters.getMinNumberOfNodes())
-                          .map(region -> createConcaveHull(region, parameters))
+                          .filter(region -> region.getNumberOfNodes() >= polygonizerParameters.getMinNumberOfNodes())
+                          .map(region -> createConcaveHull(region, concaveHullFactoryParameters, polygonizerParameters))
                           .collect(Collectors.toConcurrentMap(PlanarRegionConcaveHull::getOcTreeNodePlanarRegion, concaveHull -> concaveHull));
    }
 
@@ -30,15 +31,14 @@ public abstract class PlanarRegionPolygonizer
                   .collect(Collectors.toConcurrentMap(PlanarRegionConvexPolygons::getOcTreeNodePlanarRegion, polygons -> polygons));
    }
 
-   private static PlanarRegionConcaveHull createConcaveHull(OcTreeNodePlanarRegion ocTreeNodePlanarRegion, PolygonizerParameters parameters)
+   private static PlanarRegionConcaveHull createConcaveHull(OcTreeNodePlanarRegion ocTreeNodePlanarRegion, ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters)
    {
-      double concaveHullThreshold = parameters.getConcaveHullThreshold();
-      double shallowAngleThreshold = parameters.getShallowAngleThreshold();
-      double peakAngleThreshold = parameters.getPeakAngleThreshold();
-      double lengthThreshold = parameters.getLengthThreshold();
+      double shallowAngleThreshold = polygonizerParameters.getShallowAngleThreshold();
+      double peakAngleThreshold = polygonizerParameters.getPeakAngleThreshold();
+      double lengthThreshold = polygonizerParameters.getLengthThreshold();
 
       List<Point2d> pointsInPlane = PolygonizerTools.extractPointsInPlane(ocTreeNodePlanarRegion);
-      ConcaveHullCollection concaveHullCollection = SimpleConcaveHullFactory.createConcaveHullCollection(pointsInPlane, concaveHullThreshold);
+      ConcaveHullCollection concaveHullCollection = SimpleConcaveHullFactory.createConcaveHullCollection(pointsInPlane, concaveHullFactoryParameters);
 
       for (int i = 0; i < 5; i++)
       {

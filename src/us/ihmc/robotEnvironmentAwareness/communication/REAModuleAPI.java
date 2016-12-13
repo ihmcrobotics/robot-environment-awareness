@@ -14,6 +14,7 @@ import us.ihmc.robotEnvironmentAwareness.communication.packets.BoxMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
+import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullFactoryParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
@@ -34,6 +35,7 @@ public class REAModuleAPI
    private static final CategoryTheme PlanarRegions = apiFactory.createCategoryTheme("PlanarRegions");
    private static final CategoryTheme Segmentation = apiFactory.createCategoryTheme("Segmentation");
    private static final CategoryTheme Intersection = apiFactory.createCategoryTheme("Intersection");
+   private static final CategoryTheme ConcaveHull = apiFactory.createCategoryTheme("ConcaveHull");
    private static final CategoryTheme Polygonizer = apiFactory.createCategoryTheme("Polygonizer");
    private static final CategoryTheme Buffer = apiFactory.createCategoryTheme("Buffer");
    private static final CategoryTheme Range = apiFactory.createCategoryTheme("Range");
@@ -83,6 +85,7 @@ public class REAModuleAPI
    public static final Topic<PlanarRegionSegmentationParameters> PlanarRegionsSegmentationParameters = PlanarRegionsCategory.child(Segmentation).topic(Parameters);
    public static final Topic<Boolean> PlanarRegionsPolygonizerEnable = PlanarRegionsCategory.child(Polygonizer).topic(Enable);
    public static final Topic<Boolean> PlanarRegionsPolygonizerClear = PlanarRegionsCategory.child(Polygonizer).topic(Clear);
+   public static final Topic<ConcaveHullFactoryParameters> PlanarRegionsConcaveHullParameters = PlanarRegionsCategory.child(ConcaveHull).topic(Parameters);
    public static final Topic<PolygonizerParameters> PlanarRegionsPolygonizerParameters = PlanarRegionsCategory.child(Polygonizer).topic(Parameters);
    public static final Topic<Boolean> PlanarRegionsIntersectionEnable = PlanarRegionsCategory.child(Intersection).topic(Enable);
    public static final Topic<IntersectionEstimationParameters> PlanarRegionsIntersectionParameters = PlanarRegionsCategory.child(Intersection).topic(Parameters);

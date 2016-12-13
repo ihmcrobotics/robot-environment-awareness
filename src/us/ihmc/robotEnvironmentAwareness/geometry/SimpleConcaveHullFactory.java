@@ -399,11 +399,11 @@ public abstract class SimpleConcaveHullFactory
       return Collections.singletonList(intermediateVariables);
    }
 
-   private static void removeTriangleWithOneBorderEdge(ConcaveHullFactoryIntermediateVariables intermediateVariables, int longestEdgeIndex,
-         QuadEdgeTriangle borderTriangleWithLongestEdge)
+   private static void removeTriangleWithOneBorderEdge(ConcaveHullFactoryIntermediateVariables intermediateVariables, int indexOfTriangleEdgeToRemove,
+         QuadEdgeTriangle borderTriangleToRemove)
    {
-      int afterEdgeIndex = QuadEdgeTriangle.nextIndex(longestEdgeIndex);
-      int beforeEdgeIndex = QuadEdgeTriangle.nextIndex(afterEdgeIndex);
+      int indexAfterRemovedEdge = QuadEdgeTriangle.nextIndex(indexOfTriangleEdgeToRemove);
+      int indexBeforeRemovedEdge = QuadEdgeTriangle.nextIndex(indexAfterRemovedEdge);
 
       Set<QuadEdgeTriangle> borderTriangles = intermediateVariables.borderTriangles;
       Set<QuadEdge> borderEdges = intermediateVariables.borderEdges;
@@ -412,28 +412,29 @@ public abstract class SimpleConcaveHullFactory
       PriorityQueue<ImmutablePair<QuadEdge, QuadEdgeTriangle>> sortedByLengthMap = intermediateVariables.sortedByLengthQueue;
 
       // Remove the triangle and its edge
-      borderTriangles.remove(borderTriangleWithLongestEdge);
-      borderEdges.remove(borderTriangleWithLongestEdge.getEdge(longestEdgeIndex));
-      borderEdges.remove(borderTriangleWithLongestEdge.getEdge(longestEdgeIndex).sym());
+      borderTriangles.remove(borderTriangleToRemove);
+      QuadEdge edgeToRemove = borderTriangleToRemove.getEdge(indexOfTriangleEdgeToRemove);
+      borderEdges.remove(edgeToRemove);
+      borderEdges.remove(edgeToRemove.sym());
 
       // Get and add the two adjacent triangles
-      QuadEdge afterEdge = borderTriangleWithLongestEdge.getEdge(afterEdgeIndex).sym();
-      QuadEdgeTriangle afterTriangle = (QuadEdgeTriangle) afterEdge.getData();
-      QuadEdge beforeEdge = borderTriangleWithLongestEdge.getEdge(beforeEdgeIndex).sym();
-      QuadEdgeTriangle beforeTriangle = (QuadEdgeTriangle) beforeEdge.getData();
+      QuadEdge newBorderEdgeAfterRemovedEdge = borderTriangleToRemove.getEdge(indexAfterRemovedEdge).sym();
+      QuadEdgeTriangle newBorderTriangleAfterRemovedTriangle = (QuadEdgeTriangle) newBorderEdgeAfterRemovedEdge.getData();
+      QuadEdge newBorderEdgeBeforeRemovedEdge = borderTriangleToRemove.getEdge(indexBeforeRemovedEdge).sym();
+      QuadEdgeTriangle newBorderTriangleBeforeRemovedTriangle = (QuadEdgeTriangle) newBorderEdgeBeforeRemovedEdge.getData();
 
-      borderTriangles.add(afterTriangle);
-      borderEdges.add(afterEdge);
-      sortedByLengthMap.add(new ImmutablePair<>(afterEdge, afterTriangle));
+      borderTriangles.add(newBorderTriangleAfterRemovedTriangle);
+      borderEdges.add(newBorderEdgeAfterRemovedEdge);
+      sortedByLengthMap.add(new ImmutablePair<>(newBorderEdgeAfterRemovedEdge, newBorderTriangleAfterRemovedTriangle));
 
-      borderTriangles.add(beforeTriangle);
-      borderEdges.add(beforeEdge);
-      sortedByLengthMap.add(new ImmutablePair<>(beforeEdge, beforeTriangle));
+      borderTriangles.add(newBorderTriangleBeforeRemovedTriangle);
+      borderEdges.add(newBorderEdgeBeforeRemovedEdge);
+      sortedByLengthMap.add(new ImmutablePair<>(newBorderEdgeBeforeRemovedEdge, newBorderTriangleBeforeRemovedTriangle));
 
       // Add the vertex opposite of the removed edge. Its index is the same as beforeEdgeIndex
-      borderVertices.add(borderTriangleWithLongestEdge.getVertex(beforeEdgeIndex));
+      borderVertices.add(borderTriangleToRemove.getVertex(indexBeforeRemovedEdge));
 
-      outerTriangles.add(borderTriangleWithLongestEdge);
+      outerTriangles.add(borderTriangleToRemove);
    }
 
    private static void removeTriangleWithTwoBorderEdges(ConcaveHullFactoryIntermediateVariables intermediateVariables, QuadEdgeTriangle borderTriangleToRemove)
@@ -448,10 +449,10 @@ public abstract class SimpleConcaveHullFactory
       QuadEdge newBorderEdge = null;
 
       // Remove the triangle, its edges, and one vertex
-      borderTriangles.remove(borderTriangleWithLongestEdge);
+      borderTriangles.remove(borderTriangleToRemove);
       for (int i = 0; i < 3; i++)
       {
-         QuadEdge edge = borderTriangleWithLongestEdge.getEdge(i);
+         QuadEdge edge = borderTriangleToRemove.getEdge(i);
          if (!isBorderEdge(edge, borderEdges))
          {
             newBorderEdgeIndex = i;
@@ -460,10 +461,10 @@ public abstract class SimpleConcaveHullFactory
          }
          borderEdges.remove(edge);
          borderEdges.remove(edge.sym());
-         sortedByLengthMap.remove(new ImmutablePair<QuadEdge, QuadEdgeTriangle>(edge, borderTriangleWithLongestEdge));
+         sortedByLengthMap.remove(new ImmutablePair<QuadEdge, QuadEdgeTriangle>(edge, borderTriangleToRemove));
       }
 
-      borderVertices.remove(borderTriangleWithLongestEdge.getVertex(indexOfVertexOppositeToEdge(newBorderEdgeIndex)));
+      borderVertices.remove(borderTriangleToRemove.getVertex(indexOfVertexOppositeToEdge(newBorderEdgeIndex)));
 
       // Get and add the one adjacent triangle
       QuadEdgeTriangle newBorderTriangle = (QuadEdgeTriangle) newBorderEdge.getData();
@@ -472,7 +473,7 @@ public abstract class SimpleConcaveHullFactory
       borderEdges.add(newBorderEdge);
       sortedByLengthMap.add(new ImmutablePair<>(newBorderEdge, newBorderTriangle));
 
-      outerTriangles.add(borderTriangleWithLongestEdge);
+      outerTriangles.add(borderTriangleToRemove);
    }
 
    private static int numberOfBorderEdges(QuadEdgeTriangle triangle, Set<QuadEdge> borderEdges)

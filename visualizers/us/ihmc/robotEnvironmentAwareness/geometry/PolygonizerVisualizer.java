@@ -21,6 +21,7 @@ import javax.vecmath.Quat4d;
 import javax.vecmath.Tuple3d;
 import javax.vecmath.Vector3d;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdge;
@@ -62,6 +63,7 @@ public class PolygonizerVisualizer extends Application
    private static final boolean VISUALIZE_DELAUNAY_TRIANGULATION = true;
    private static final boolean VISUALIZE_CONCAVE_HULL = false;
    private static final boolean VISUALIZE_BORDER_EDGES = false;
+   private static final boolean VISUALIZE_OUTER_TRIANGLES = false;
    private static final boolean VISUALIZE_PRIORITY_QUEUE = false;
    private static final boolean VISUALIZE_CONVEX_DECOMPOSITION = false;
    private static final boolean VISUALIZE_BORDER_VERTICES = false;
@@ -191,6 +193,8 @@ public class PolygonizerVisualizer extends Application
          children.add(createConcaveHullGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
       if (VISUALIZE_POINT_CLOUD)
          children.add(createRegionPointCloudGraphics(planarRegionSegmentationMessage));
+      if (VISUALIZE_OUTER_TRIANGLES)
+         children.add(createOuterTrianglesGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
       if (VISUALIZE_DELAUNAY_TRIANGULATION)
          children.add(createDelaunayTriangulationGraphics(planarRegionSegmentationMessage, concaveHullFactoryResult));
       if (VISUALIZE_BORDER_EDGES)
@@ -359,6 +363,34 @@ public class PolygonizerVisualizer extends Application
          double brightness = 0.9;
 
          meshBuilder.addPolyon(triangleVerticesWorld, Color.hsb(hue, saturation, brightness));
+      }
+
+      MeshView trianglesMeshView = new MeshView(meshBuilder.generateMesh());
+      trianglesMeshView.setMaterial(meshBuilder.generateMaterial());
+      return trianglesMeshView;
+   }
+
+   private Node createOuterTrianglesGraphics(PlanarRegionSegmentationMessage planarRegionSegmentationMessage, ConcaveHullFactoryResult concaveHullFactoryResult)
+   {
+      JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(512));
+
+      Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
+      Vector3d planeNormal = new Vector3d(planarRegionSegmentationMessage.getNormal());
+
+      for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
+      {
+         Set<QuadEdgeTriangle> outerTriangles = intermediateVariables.getOuterTriangles();
+
+         for (QuadEdgeTriangle triangle : outerTriangles)
+         {
+            List<Point2d> triangleVerticesLocal = Arrays.stream(triangle.getVertices()).map(v -> new Point2d(v.getX(), v.getY())).collect(Collectors.toList());
+            List<Point3d> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeNormal);
+            double hue = 360.0 * random.nextDouble();
+            double saturation = 0.8 * random.nextDouble() + 0.1;
+            double brightness = 0.9;
+
+            meshBuilder.addPolyon(triangleVerticesWorld, Color.hsb(hue, saturation, brightness));
+         }
       }
 
       MeshView trianglesMeshView = new MeshView(meshBuilder.generateMesh());

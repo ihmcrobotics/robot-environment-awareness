@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +61,7 @@ public class DelaunayTriangulationVisualizer extends Application
 
       Map<Node, Integer> nodeToRegionId = new HashMap<>();
 
-      Point3d average = PolygonizerVisualizer.computeAverage(planarRegionSegmentationData);
+      Point3d average = PolygonizerVisualizer.computeAverage(planarRegionSegmentationData, Collections.emptySet());
       average.negate();
 
       for (PlanarRegionSegmentationMessage planarRegionSegmentationMessage : planarRegionSegmentationData)

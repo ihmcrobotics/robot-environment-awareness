@@ -1,55 +1,99 @@
 buildscript {
   repositories {
+    mavenCentral();
+    jcenter();
+
+    maven {
+       url "http://artifactory.ihmc.us/artifactory/releases/"
+    }
+    maven {
+       url "http://artifactory.ihmc.us/artifactory/thirdparty/"
+    }
     maven {
       url "https://plugins.gradle.org/m2/"
     }
   }
   dependencies {
-    classpath "gradle.plugin.us.ihmc.gradle:ihmc-build:0.0.17"
+    classpath "us.ihmc.gradle:licenseChecker:1.1.1"
+    classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.4"
+    classpath group: 'gradle.plugin.us.ihmc.gradle', name: 'ihmc-build', version: '0.0.18'
   }
 }
 
+
+apply plugin: "maven-publish"
+apply plugin: "com.jfrog.artifactory"
 apply plugin: "us.ihmc.gradle.ihmc-build"
 
 sourceCompatibility = 1.8
-version = '1.0'
+version = '0.1'
 
+project.sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+
+        resources {
+            srcDirs = ['src', 'resources']
+        }
+    }
+
+    test {
+        java {
+            srcDirs = ['test', 'visualizers']
+        }
+
+        resources {
+            srcDirs = ['testResources']
+        }
+    }
+}
 
 repositories ihmc.ihmcDefaultArtifactProxies()
 
-repositories {
-    mavenLocal()
-    jcenter()
-    mavenCentral()
-    maven {
-        url "https://bengal.ihmc.us/nexus/content/repositories/thirdparty/"
-    }
+def artifactoryURLString = project.hasProperty("artifactoryURL") ? artifactoryURL : "unknown"
+def artifactoryUsernameString = project.hasProperty("artifactoryUsername") ? artifactoryUsername : "unknown"
+def artifactoryPasswordString = project.hasProperty("artifactoryPassword") ? artifactoryPassword : "unknown"
 
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.11'
+artifactory {
 
-    compile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-    compile "org.ros.rosjava_core:rosjava:0.2.1"
-    compile "org.ros.rosjava_bootstrap:message_generation:0.2.1"
-    compile "org.ros.rosjava_messages:std_msgs:0.5.9"
-    compile "org.ros.rosjava_messages:geometry_msgs:1.11.7"
+   contextUrl = artifactoryURLString   //The base Artifactory URL if not overridden by the publisher/resolver
+   publish {
+      //A closure defining publishing information
+      repository {
+         repoKey = "releases"   //The Artifactory repository key to publish to
+         username = artifactoryUsernameString   //The publisher user name
+         password = artifactoryPasswordString   //The publisher password
+      }
+      defaults {
+         //List of Gradle Publications (names or objects) from which to collect the list of artifacts to be deployed to Artifactory.
+         publications("mavenJava")
+         publishBuildInfo = false  //Publish build-info to Artifactory (true by default)
+         publishArtifacts = true   //Publish artifacts to Artifactory (true by default)
+         publishPom = true         //Publish generated POM files to Artifactory (true by default).
+         publishIvy = false        //Publish generated Ivy descriptor files to Artifactory (true by default).
+      }
+   }
+   resolve {
+      contextUrl = artifactoryURLString   //The base Artifactory URL if not overridden by the publisher/resolver
+      repository {
+         repoKey = "releases"        //The Artifactory (preferably virtual) repository key to resolve from
+         username = artifactoryUsernameString   //The publisher user name
+         password = artifactoryPasswordString   //The publisher password
+         maven = true                     //Resolve Maven-style artifacts and descriptors (true by default)
+      }
+   }
+   // Redefine basic properties of the build info object
+   clientConfig.setIncludeEnvVars(true)
+   clientConfig.info.setBuildName("${project.name}")
+   clientConfig.info.setBuildNumber("$version")
+   clientConfig.timeout = 600 // Artifactory connection timeout (in seconds). The default timeout is 300 seconds.
+}
 
-    compile ihmc.getProjectDependency(":Graphics3DAdapter")
-    compile ihmc.getProjectDependency(":SimulationConstructionSet")
-    compile ihmc.getProjectDependency(":Plotting")
-    compile ihmc.getProjectDependency(":IHMCCommunication")
-    compile ihmc.getProjectDependency(":IHMCROSTools")
-    compile ihmc.getProjectDependency(":IHMCJavaToolkit")
-    compile ihmc.getProjectDependency(":IHMCRoboticsToolkit")
-    compile ihmc.getProjectDependency(":IHMCJavaFXToolkit")
-    compile ihmc.getProjectDependency(":IHMCHumanoidRobotics")
-    compile ihmc.getProjectDependency(":IHMCPerception")
-    compile ihmc.getProjectDependency(":OctoMap")
-
-    testCompile ihmc.getProjectDependency(":Atlas")
-    testCompile ihmc.getProjectDependency(":SensorProcessing")
-    testCompile ihmc.getProjectTestDependency(":IHMCHumanoidRobotics")
-    testCompile ihmc.getProjectDependency(":IHMCUnitTesting")
+task sourceJar(type: Jar, dependsOn: classes) {
+   classifier = 'sources'
+   from sourceSets.main.allJava
 }
 
 jar {
@@ -66,4 +110,98 @@ jar {
                 "Bundle-Vendor": "IHMC")
     }
 }
+
+publishing {
+   publications {
+      mavenJava(MavenPublication) {
+         groupId "us.ihmc"
+
+         String projectShortName = "${project.name}";
+         projectShortName = projectShortName.split("_")[0];
+         artifactId projectShortName
+         version "$version"
+
+         from components.java
+		 
+		 pom.withXml {
+             asNode().children().last() + {
+                 resolveStrategy = Closure.DELEGATE_FIRST
+                 name project.name
+                 description 'Robot Environment Awareness is a library meant to provide interpretation to point cloud data such as identifying planar regions that can be used to planify footsteps for a bipedal robot.'
+                 url 'https://stash.ihmc.us/users/sbertrand/repos/robotenvironmentawareness'
+                 licenses {
+                     license {
+                         name 'The Apache Software License, Version 2.0'
+                         url 'http://www.apache.org/license/LICENSE-2.0.txt'
+                         distribution 'repo'
+                     }
+                 }
+                 developers {
+                     developer {
+                         id 'sbertrand'
+                         name 'Sylvain Bertrand'
+                         email 'sbertrand@ihmc.us'
+                     }
+                 }
+             }
+         }
+
+		artifact sourceJar {
+			classifier "sources"
+		}
+      }
+   }
+   repositories {
+      maven {
+         url artifactoryURLString
+      }
+   }
+}
+
+// Set of dependencies to get published along with REA
+dependencies {
+    runtime group: 'com.vividsolutions', name: 'jts', version: '1.13'
+    runtime group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+    runtime group: 'us.ihmc', name: 'JOctoMap', version: '1.5.0'
+}
+
+// Not doing afterEvaluate for now, as we want to keep part of the dependencies out of the publishing.
+// Call from the root project as follow: 'gradle :RobotEnvironmentAwareness:artifactoryPublish'
+// The build.gradle of the root project must apply the com.jfrog.artifactory plugin like it is applied here.
+artifactoryPublish {
+   dependsOn publishToMavenLocal
+   dependsOn sourceJar
+   
+   skip = false //Skip build info analysis and publishing (false by default)
+   contextUrl = artifactoryURLString
+   publications("mavenJava")
+   clientConfig.publisher.repoKey = "releases"
+   clientConfig.publisher.username = artifactoryUsernameString
+   clientConfig.publisher.password = artifactoryPasswordString
+}
+
+repositories {
+   mavenLocal()
+   jcenter()
+   mavenCentral()
+    maven {
+         url "http://artifactory.ihmc.us/artifactory/thirdparty/"
+    }
+    maven {
+         url "http://artifactory.ihmc.us/artifactory/releases/"
+    }
+}
+
+// Added that set of dependencies after artifactoryPublish so they don't get published (otherwise it's all broken).
+dependencies {
+    // TODO These needs to be references to snapshots of artifacts.
+    compile ihmc.getProjectDependency(":Graphics3DAdapter")
+    compile ihmc.getProjectDependency(":SimulationConstructionSet")
+    compile ihmc.getProjectDependency(":IHMCCommunication")
+    compile ihmc.getProjectDependency(":IHMCROSTools")
+    compile ihmc.getProjectDependency(":IHMCRoboticsToolkit")
+    compile ihmc.getProjectDependency(":IHMCJavaFXToolkit")
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile ihmc.getProjectDependency(":IHMCUnitTesting")
 }

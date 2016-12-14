@@ -18,12 +18,15 @@ import us.ihmc.tools.io.printing.PrintTools;
 
 public abstract class PlanarRegionPolygonizer
 {
-   public static Map<OcTreeNodePlanarRegion, PlanarRegionConcaveHull> computeConcaveHulls(List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions, ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters)
+   public static Map<OcTreeNodePlanarRegion, PlanarRegionConcaveHull> computeConcaveHulls(List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions,
+         ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters)
    {
       return computeConcaveHulls(ocTreeNodePlanarRegions, concaveHullFactoryParameters, polygonizerParameters, null);
    }
 
-   public static Map<OcTreeNodePlanarRegion, PlanarRegionConcaveHull> computeConcaveHulls(List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions, ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters, PlanarRegionSegmentationDataExporter dataExporter)
+   public static Map<OcTreeNodePlanarRegion, PlanarRegionConcaveHull> computeConcaveHulls(List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions,
+         ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters,
+         PlanarRegionSegmentationDataExporter dataExporter)
    {
       return ocTreeNodePlanarRegions.parallelStream()
                                     .filter(region -> region.getNumberOfNodes() >= polygonizerParameters.getMinNumberOfNodes())
@@ -38,7 +41,9 @@ public abstract class PlanarRegionPolygonizer
                          .collect(Collectors.toConcurrentMap(PlanarRegionConvexPolygons::getOcTreeNodePlanarRegion, polygons -> polygons));
    }
 
-   private static PlanarRegionConcaveHull createConcaveHull(OcTreeNodePlanarRegion ocTreeNodePlanarRegion, ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters, PlanarRegionSegmentationDataExporter dataExporter)
+   private static PlanarRegionConcaveHull createConcaveHull(OcTreeNodePlanarRegion ocTreeNodePlanarRegion,
+         ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters,
+         PlanarRegionSegmentationDataExporter dataExporter)
    {
       try
       {

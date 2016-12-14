@@ -252,6 +252,7 @@ public abstract class SimpleConcaveHullFactory
       QuadEdgeComparator quadEdgeComparator = intermediateVariables.quadEdgeComparator;
       Set<Vertex> borderVertices = intermediateVariables.borderVertices;
       Set<QuadEdge> borderEdges = intermediateVariables.borderEdges;
+      Set<QuadEdgeTriangle> borderTriangles = intermediateVariables.borderTriangles;
 
       QuadEdge candidateEdge = candidatePair.getLeft();
       QuadEdgeTriangle candidateTriangle = candidatePair.getRight();
@@ -273,23 +274,31 @@ public abstract class SimpleConcaveHullFactory
          if (numberOfBorderVertices != 3)
             throw new RuntimeException("Triangle should have three border vertices, but has: " + numberOfBorderVertices);
 
-         int vertexIndexOppositeToCandidateEdge = indexOfVertexOppositeToEdge(candidateTriangle.getEdgeIndex(candidateEdge));
-         List<QuadEdgeTriangle> adjacentTrianglesToVertex = candidateTriangle.getTrianglesAdjacentToVertex(vertexIndexOppositeToCandidateEdge);
-
-         boolean atLeastOneAdjacentBorderTriangle = adjacentTrianglesToVertex.stream()
-                                                                             .filter(triangle -> isBorderTriangle(triangle, borderEdges))
-                                                                             .findFirst()
-                                                                             .isPresent();
-         if (atLeastOneAdjacentBorderTriangle)
+         if (parameters.doRemoveAllTrianglesWithTwoBorderEdges() || isEdgeTooLong)
          {
-            PrintTools.warn("Messed up hull, skipping triangle");
+            // Here the triangle has only one edge inside the hull. If another border triangle shares the vertex opposite to this edge, the vertex is an intersection vertex.
+            QuadEdge uniqueNonBorderEdge = Arrays.stream(candidateTriangle.getEdges()).filter(edge -> !isBorderEdge(edge, borderEdges)).findFirst().get();
+            int vertexIndexOppositeToCandidateEdge = indexOfVertexOppositeToEdge(candidateTriangle.getEdgeIndex(uniqueNonBorderEdge));
+            List<QuadEdgeTriangle> adjacentTrianglesToVertex = candidateTriangle.getTrianglesAdjacentToVertex(vertexIndexOppositeToCandidateEdge);
+
+            long numberOfBorderTriangles = adjacentTrianglesToVertex.stream()
+                                                                    .filter(borderTriangles::contains)
+                                                                    .filter(triangle -> triangle != candidateTriangle)
+                                                                    .count();
+            if (numberOfBorderTriangles >= 1)
+            {
+               PrintTools.warn("Messed up hull, skipping triangle. Number of adjacent border triangles: " + numberOfBorderTriangles + ", candidate triangle: " + candidateTriangle);
+               return Case.KEEP_TRIANGLE;
+            }
+            else
+            {
+               return Case.TWO_BORDER_EDGES_THREE_BORDER_VERTICES;
+            }
+         }
+         else
+         {
             return Case.KEEP_TRIANGLE;
          }
-
-         if (parameters.doRemoveAllTrianglesWithTwoBorderEdges() || isEdgeTooLong)
-            return Case.TWO_BORDER_EDGES_THREE_BORDER_VERTICES;
-         else
-            return Case.KEEP_TRIANGLE;
       }
 
       if (!parameters.isSplittingConcaveHullAllowed())
@@ -365,7 +374,7 @@ public abstract class SimpleConcaveHullFactory
          return result;
       }
       case THREE_BORDER_EDGES_THREE_BORDER_VERTICES:
-         return Collections.emptyList();
+         return Collections.emptyList(); // FIXME
       case KEEP_TRIANGLE:
          if (VERBOSE)
             System.out.println("Done, number of iterations: " + currentIteration.intValue());
@@ -717,14 +726,6 @@ public abstract class SimpleConcaveHullFactory
    private static boolean isBorderEdge(QuadEdge edge, Set<QuadEdge> borderEdges)
    {
       return borderEdges.contains(edge) || borderEdges.contains(edge.sym());
-   }
-
-   private static boolean isBorderTriangle(QuadEdgeTriangle triangle, Set<QuadEdge> borderEdges)
-   {
-      return Arrays.stream(triangle.getEdges())
-                   .filter(edge -> isBorderEdge(edge, borderEdges))
-                   .findFirst()
-                   .isPresent();
    }
 
    private static int indexOfVertexOppositeToEdge(int edgeIndex)

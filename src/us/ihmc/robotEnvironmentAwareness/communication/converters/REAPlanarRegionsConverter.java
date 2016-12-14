@@ -68,7 +68,11 @@ public class REAPlanarRegionsConverter
          PlanarRegionConcaveHull planarRegionConcaveHull = regionFeaturesProvider.getPlanarRegionConcaveHull(ocTreeNodePlanarRegion);
          PlanarRegionConvexPolygons planarRegionConvexPolygons = regionFeaturesProvider.getPlanarRegionConvexPolygons(ocTreeNodePlanarRegion);
          if (planarRegionConcaveHull != null && planarRegionConvexPolygons != null)
-            planarRegionMessages.add(createPlanarRegionMessage(planarRegionConcaveHull, planarRegionConvexPolygons));
+         {
+            PlanarRegionMessage planarRegionMessage = createPlanarRegionMessage(planarRegionConcaveHull, planarRegionConvexPolygons);
+            if (planarRegionMessage != null)
+               planarRegionMessages.add(planarRegionMessage);
+         }
       }
 
       return new PlanarRegionsListMessage(planarRegionMessages);

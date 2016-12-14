@@ -55,7 +55,7 @@ import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorAdaptivePalette;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
-import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory.ConcaveHullFactoryIntermediateVariables;
+import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory.ConcaveHullVariables;
 import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory.ConcaveHullFactoryResult;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerTools;
@@ -68,10 +68,10 @@ import us.ihmc.robotics.lists.ListWrappingIndexTools;
 public class PolygonizerVisualizer extends Application
 {
    private static final boolean VISUALIZE_POINT_CLOUD = true;
-   private static final boolean VISUALIZE_DELAUNAY_TRIANGULATION = false;
+   private static final boolean VISUALIZE_DELAUNAY_TRIANGULATION = true;
    private static final boolean VISUALIZE_CONCAVE_HULL = false;
-   private static final boolean VISUALIZE_BORDER_EDGES = false;
-   private static final boolean VISUALIZE_BORDER_TRIANGLES = true;
+   private static final boolean VISUALIZE_BORDER_EDGES = true;
+   private static final boolean VISUALIZE_BORDER_TRIANGLES = false;
    private static final boolean VISUALIZE_PRIORITY_QUEUE = false;
    private static final boolean VISUALIZE_CONVEX_DECOMPOSITION = false;
    private static final boolean VISUALIZE_BORDER_VERTICES = false;
@@ -85,7 +85,7 @@ public class PolygonizerVisualizer extends Application
 
    private static final int[] onlyRegionWithId = {};
 
-   private File defaultFile = null; //new File("Data/20161210_184102_PlanarRegionSegmentation_Sim_CB");
+   private File defaultFile = null;// new File("DataThrowingException/20161213_220649_PlanarRegionSegmentation");
 
    private final Random random = new Random(54645L);
    private final ConcaveHullFactoryParameters parameters = new ConcaveHullFactoryParameters();
@@ -96,7 +96,7 @@ public class PolygonizerVisualizer extends Application
       parameters.setEdgeLengthThreshold(0.05);
       //      parameters.setAllowSplittingConcaveHull(false);
       //      parameters.setRemoveAllTrianglesWithTwoBorderEdges(false);
-//      parameters.setMaxNumberOfIterations(100);
+//      parameters.setMaxNumberOfIterations(0);
    }
 
    @Override
@@ -123,10 +123,14 @@ public class PolygonizerVisualizer extends Application
       Set<Integer> regionIdFilterSet = new HashSet<>();
       Arrays.stream(onlyRegionWithId).forEach(regionIdFilterSet::add);
 
-      if (regionIdFilterSet.size() == 1)
+      if (regionIdFilterSet.size() == 1 || planarRegionSegmentationData.size() == 1)
       {
-         PlanarRegionSegmentationMessage planarRegionSegmentationMessage = planarRegionSegmentationData.stream()
-               .filter(region -> regionIdFilterSet.contains(region.getRegionId())).findFirst().get();
+         PlanarRegionSegmentationMessage planarRegionSegmentationMessage;
+         if (planarRegionSegmentationData.size() == 1)
+            planarRegionSegmentationMessage = planarRegionSegmentationData.get(0);
+         else
+            planarRegionSegmentationMessage = planarRegionSegmentationData.stream().filter(region -> regionIdFilterSet.contains(region.getRegionId())).findFirst().get();
+
          RigidBodyTransform transform = getRegionTransformToWorld(planarRegionSegmentationMessage);
          transform.invert();
 
@@ -328,7 +332,7 @@ public class PolygonizerVisualizer extends Application
       Quat4d planeOrientation = PolygonizerTools.getRotationBasedOnNormal(planarRegionSegmentationMessage.getNormal());
       Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
 
-      for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
+      for (ConcaveHullVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
       {
          Set<QuadEdge> borderEdges = intermediateVariables.getBorderEdges();
 
@@ -365,7 +369,7 @@ public class PolygonizerVisualizer extends Application
       Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
       Quat4d planeOrientation = PolygonizerTools.getRotationBasedOnNormal(planarRegionSegmentationMessage.getNormal());
 
-      for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
+      for (ConcaveHullVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
       {
          for (Vertex vertex2d : intermediateVariables.getBorderVertices())
          {
@@ -459,7 +463,7 @@ public class PolygonizerVisualizer extends Application
       Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
       Vector3d planeNormal = new Vector3d(planarRegionSegmentationMessage.getNormal());
 
-      for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
+      for (ConcaveHullVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
       {
          Set<QuadEdgeTriangle> borderTriangles = intermediateVariables.getBorderTriangles();
 
@@ -491,7 +495,7 @@ public class PolygonizerVisualizer extends Application
 
       Color regionColor = OcTreeMeshBuilder.getRegionColor(planarRegionSegmentationMessage.getRegionId());
 
-      for (ConcaveHullFactoryIntermediateVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
+      for (ConcaveHullVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
       {
          PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> queue = intermediateVariables.getSortedByLengthQueue();
 
@@ -565,7 +569,7 @@ public class PolygonizerVisualizer extends Application
       double lineSat;
       double lineHue;
 
-      List<ConcaveHullFactoryIntermediateVariables> intermediateVariablesList = concaveHullFactoryResult.getIntermediateVariables();
+      List<ConcaveHullVariables> intermediateVariablesList = concaveHullFactoryResult.getIntermediateVariables();
 
       for (int variablesIndex = 0; variablesIndex < intermediateVariablesList.size(); variablesIndex++)
       {

@@ -6,11 +6,10 @@ import java.util.stream.Collectors;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
-import javax.vecmath.Quat4d;
+import javax.vecmath.Vector3d;
 
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
-import us.ihmc.robotics.geometry.GeometryTools;
 
 public class PlanarRegionConvexPolygons
 {
@@ -29,8 +28,7 @@ public class PlanarRegionConvexPolygons
       this.ocTreeNodePlanarRegion = ocTreeNodePlanarRegion;
       this.convexPolygonsInPlane = convexPolygonsInPlane;
       Point3d planeOrigin = ocTreeNodePlanarRegion.getOrigin();
-      Quat4d planeOrientation = new Quat4d();
-      planeOrientation.set(GeometryTools.getRotationBasedOnNormal(ocTreeNodePlanarRegion.getNormal()));
+      Vector3d planeNormal = ocTreeNodePlanarRegion.getNormal();
 
       for (int pIndex = 0; pIndex < convexPolygonsInPlane.size(); pIndex++)
       {
@@ -48,7 +46,7 @@ public class PlanarRegionConvexPolygons
       }
 
       convexPolygonsVerticesInWorld = convexPolygonsVerticesInPlane.parallelStream()
-                                   .map(convexPolygonInPlane -> PolygonizerTools.toPointsInWorld(convexPolygonInPlane, planeOrigin, planeOrientation))
+                                   .map(convexPolygonInPlane -> PolygonizerTools.toPointsInWorld(convexPolygonInPlane, planeOrigin, planeNormal))
                                    .collect(Collectors.toList());
    }
 

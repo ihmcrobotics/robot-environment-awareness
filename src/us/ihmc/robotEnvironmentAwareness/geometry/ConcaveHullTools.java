@@ -7,7 +7,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
@@ -164,11 +166,42 @@ public class ConcaveHullTools
       return true;
    }
 
+   public static Set<ConcaveHullPocket> findConcaveHullPockets(List<Point2d> concaveHullVertices, double depthThreshold)
+   {
+      Set<ConcaveHullPocket> pockets = new HashSet<>();
+
+      int startIndex = 0;
+
+      while (startIndex < concaveHullVertices.size())
+      {
+         ConcaveHullPocket newPocket = findFirstConcaveHullPocket(concaveHullVertices, startIndex);
+         if (newPocket == null)
+            break;
+
+         if (newPocket.getMaxDepth() >= depthThreshold)
+         {
+            if (!pockets.add(newPocket))
+               break;
+         }
+
+         startIndex = newPocket.getEndBridgeIndex() + 1;
+      }
+
+      return pockets;
+   }
+
    public static ConcaveHullPocket findFirstConcaveHullPocket(List<Point2d> concaveHullVertices)
    {
+      return findFirstConcaveHullPocket(concaveHullVertices, 0);
+   }
+
+   public static ConcaveHullPocket findFirstConcaveHullPocket(List<Point2d> concaveHullVertices, int startIndex)
+   {
+      if (startIndex < 0 || startIndex >= concaveHullVertices.size())
+         throw new IndexOutOfBoundsException("Expected startIndex in [0, " + concaveHullVertices.size() + "[, received: " + startIndex);
       ConcaveHullPocket pocket = null;
 
-      for (int i = 0; i < concaveHullVertices.size() && pocket == null; i++)
+      for (int i = startIndex; i < concaveHullVertices.size() && pocket == null; i++)
          pocket = ConcaveHullTools.computeConcaveHullPocket(i, concaveHullVertices);
 
       return pocket;
@@ -205,7 +238,7 @@ public class ConcaveHullTools
       Point2d secondBridgeVertex = concaveHullVertices.get(secondBridgeIndex);
 
       // The polygon is convex at this vertex => no pocket => no bridge
-      if (GeometryTools.isPointOnLeftSideOfLine(concaveVertex, firstBridgeVertex, secondBridgeVertex))
+      if (isPointOnLeftSideOfLine(concaveVertex, firstBridgeVertex, secondBridgeVertex))
          return false;
 
       int startIndexCandidate = firstBridgeIndex;
@@ -227,9 +260,9 @@ public class ConcaveHullTools
          Point2d startCandidate = concaveHullVertices.get(startIndexCandidate);
          Point2d endCandidate = concaveHullVertices.get(endIndexCandidate);
 
-         if (GeometryTools.isPointOnLeftSideOfLine(startCandidate, firstBridgeVertex, secondBridgeVertex))
+         if (isPointOnLeftSideOfLine(startCandidate, firstBridgeVertex, secondBridgeVertex))
          { // startIndexCandidate is a potential firstBridgeIndex.
-            boolean isBridgeCoveringPocket = false;
+            boolean isBridgeCoveringPocket = true;
 
             // Make sure that the new bridge would go over all the pocket vertices
             for (int i = next(startIndexCandidate, concaveHullVertices); i != secondBridgeIndex

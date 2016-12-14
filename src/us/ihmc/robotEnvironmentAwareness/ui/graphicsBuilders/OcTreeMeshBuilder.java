@@ -27,7 +27,7 @@ import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionNodeKeysMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTree;
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTreeNode;
@@ -70,7 +70,7 @@ public class OcTreeMeshBuilder implements Runnable
    private final IntersectionPlaneBoxCalculator intersectionPlaneBoxCalculator = new IntersectionPlaneBoxCalculator();
 
    private final AtomicReference<NormalOcTreeMessage> ocTreeState;
-   private final AtomicReference<PlanarRegionNodeKeysMessage[]> planarRegionNodeKeysState;
+   private final AtomicReference<PlanarRegionSegmentationMessage[]> planarRegionSegmentationState;
 
    private final AtomicBoolean processChange = new AtomicBoolean(false);
 
@@ -96,7 +96,7 @@ public class OcTreeMeshBuilder implements Runnable
       hidePlanarRegionNodes.addListener(this::setProcessChange);
 
       ocTreeState = uiMessager.createInput(REAModuleAPI.OcTreeState);
-      planarRegionNodeKeysState = uiMessager.createInput(REAModuleAPI.PlanarRegionsNodeState);
+      planarRegionSegmentationState = uiMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationState);
 
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
       normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);
@@ -129,11 +129,11 @@ public class OcTreeMeshBuilder implements Runnable
       if (enable.get())
       {
          uiMessager.submitStateRequestToModule(REAModuleAPI.RequestOctree);
-         uiMessager.submitStateRequestToModule(REAModuleAPI.RequestPlanarRegionsNodeKeys);
+         uiMessager.submitStateRequestToModule(REAModuleAPI.RequestPlanarRegionSegmentation);
 
 
          NormalOcTreeMessage newMessage = ocTreeState.get();
-         Map<OcTreeKey, Integer> nodeKeyToRegionIdMap = createNodeKeyToRegionIdMap(planarRegionNodeKeysState.getAndSet(null));
+         Map<OcTreeKey, Integer> nodeKeyToRegionIdMap = createNodeKeyToRegionIdMap(planarRegionSegmentationState.getAndSet(null));
 
          if (newMessage == null || nodeKeyToRegionIdMap == null)
             return;
@@ -231,7 +231,7 @@ public class OcTreeMeshBuilder implements Runnable
       }
    }
 
-   private Color getRegionColor(int regionId)
+   public static Color getRegionColor(int regionId)
    {
       java.awt.Color awtColor = new java.awt.Color(regionId);
       return Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
@@ -299,26 +299,26 @@ public class OcTreeMeshBuilder implements Runnable
       return new MeshDataHolder(vertices, texCoords, triangleIndices, normals);
    }
 
-   private Map<OcTreeKey, Integer> createNodeKeyToRegionIdMap(PlanarRegionNodeKeysMessage[] planarRegionNodeKeysMessages)
+   private Map<OcTreeKey, Integer> createNodeKeyToRegionIdMap(PlanarRegionSegmentationMessage[] planarRegionSegmentationMessages)
    {
-      if (planarRegionNodeKeysMessages == null)
+      if (planarRegionSegmentationMessages == null)
          return null;
 
       Map<OcTreeKey, Integer> nodeKeyToRegionIdMap = new HashMap<>();
 
-      for (PlanarRegionNodeKeysMessage planarRegionNodeKeysMessage : planarRegionNodeKeysMessages)
-         registerNodeKeysIntoMap(nodeKeyToRegionIdMap, planarRegionNodeKeysMessage);
+      for (PlanarRegionSegmentationMessage planarRegionSegmentationMessage : planarRegionSegmentationMessages)
+         registerNodeKeysIntoMap(nodeKeyToRegionIdMap, planarRegionSegmentationMessage);
 
       return nodeKeyToRegionIdMap;
    }
 
-   private void registerNodeKeysIntoMap(Map<OcTreeKey, Integer> nodeKeyToRegionIdMap, PlanarRegionNodeKeysMessage planarRegionNodeKeysMessage)
+   private void registerNodeKeysIntoMap(Map<OcTreeKey, Integer> nodeKeyToRegionIdMap, PlanarRegionSegmentationMessage planarRegionSegmentationMessage)
    {
-      for (int i = 0; i < planarRegionNodeKeysMessage.getNumberOfNodes(); i++)
+      for (int i = 0; i < planarRegionSegmentationMessage.getNumberOfNodes(); i++)
       {
          OcTreeKey nodeKey = new OcTreeKey();
-         planarRegionNodeKeysMessage.getNodeKey(i, nodeKey);
-         nodeKeyToRegionIdMap.put(nodeKey, planarRegionNodeKeysMessage.getRegionId());
+         planarRegionSegmentationMessage.getNodeKey(i, nodeKey);
+         nodeKeyToRegionIdMap.put(nodeKey, planarRegionSegmentationMessage.getRegionId());
       }
    }
 

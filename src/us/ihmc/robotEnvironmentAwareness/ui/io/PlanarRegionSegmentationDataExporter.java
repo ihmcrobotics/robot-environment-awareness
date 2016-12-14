@@ -10,6 +10,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -18,7 +19,9 @@ import javax.vecmath.Vector3f;
 
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
+import us.ihmc.robotEnvironmentAwareness.communication.converters.REAPlanarRegionsConverter;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
 
@@ -35,6 +38,25 @@ public class PlanarRegionSegmentationDataExporter
       dataDirectoryPath = uiMessager.createInput(REAModuleAPI.UIDataExporterDirectory, new File("Data/").getAbsolutePath());
       uiMessager.registerTopicListener(REAModuleAPI.UIPlanarRegionExportSegmentation, this::exportSegmentationData);
    }
+   
+   public PlanarRegionSegmentationDataExporter(File dataDirectoryPath)
+   {
+      planarRegionSegmentationState = new AtomicReference<>(null);
+      this.dataDirectoryPath = new AtomicReference<>(dataDirectoryPath.getAbsolutePath());
+   }
+
+   public void exportSegmentationData(List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions)
+   {
+      planarRegionSegmentationState.set(REAPlanarRegionsConverter.createPlanarRegionSegmentationMessages(ocTreeNodePlanarRegions));
+      exportSegmentationData(true);
+   }
+
+   public void exportSegmentationData(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
+   {
+      PlanarRegionSegmentationMessage message = REAPlanarRegionsConverter.createPlanarRegionSegmentationMessage(ocTreeNodePlanarRegion);
+      planarRegionSegmentationState.set(new PlanarRegionSegmentationMessage[]{message});
+      exportSegmentationData(true);
+   }
 
    private void exportSegmentationData(boolean export)
    {
@@ -48,6 +70,8 @@ public class PlanarRegionSegmentationDataExporter
       Path folderPath = Paths.get(dataDirectoryPath.get() + File.separator + getDate() + "PlanarRegionSegmentation");
       try
       {
+         if (folderPath.toFile().exists())
+            return;
          Files.createDirectories(folderPath);
          File header = new File(folderPath.toFile(), "header.txt");
          writeHeaderFile(header, segmentationData);

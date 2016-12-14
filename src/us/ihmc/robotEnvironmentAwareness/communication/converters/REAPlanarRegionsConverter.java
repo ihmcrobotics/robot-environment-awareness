@@ -23,7 +23,6 @@ import us.ihmc.robotics.geometry.ConvexPolygon2d;
 
 public class REAPlanarRegionsConverter
 {
-
    public static PlanarRegionMessage createPlanarRegionMessage(PlanarRegionConcaveHull planarRegionConcaveHull, PlanarRegionConvexPolygons planarRegionConvexPolygons)
    {
       OcTreeNodePlanarRegion ocTreeNodePlanarRegion = planarRegionConvexPolygons.getOcTreeNodePlanarRegion();
@@ -77,7 +76,11 @@ public class REAPlanarRegionsConverter
 
    public static PlanarRegionSegmentationMessage[] createPlanarRegionSegmentationMessages(RegionFeaturesProvider regionFeaturesProvider)
    {
-      List<OcTreeNodePlanarRegion> ocTreePlanarRegions = regionFeaturesProvider.getOcTreePlanarRegions();
+      return createPlanarRegionSegmentationMessages(regionFeaturesProvider.getOcTreePlanarRegions());
+   }
+
+   public static PlanarRegionSegmentationMessage[] createPlanarRegionSegmentationMessages(List<OcTreeNodePlanarRegion> ocTreePlanarRegions)
+   {
       PlanarRegionSegmentationMessage[] messages = new PlanarRegionSegmentationMessage[ocTreePlanarRegions.size()];
 
       for (int regionIndex = 0; regionIndex < ocTreePlanarRegions.size(); regionIndex++)
@@ -88,7 +91,7 @@ public class REAPlanarRegionsConverter
       return messages;
    }
 
-   private static PlanarRegionSegmentationMessage createPlanarRegionSegmentationMessage(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
+   public static PlanarRegionSegmentationMessage createPlanarRegionSegmentationMessage(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
    {
       int regionId = ocTreeNodePlanarRegion.getId();
       Point3f origin = new Point3f(ocTreeNodePlanarRegion.getOrigin());

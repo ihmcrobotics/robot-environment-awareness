@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -18,14 +19,19 @@ import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionIntersectionCa
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionPolygonizer;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
+import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataExporter;
 import us.ihmc.robotics.geometry.LineSegment3d;
 
 public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 {
+   private static final boolean EXPORT_SEGMENTATION_ON_EXCEPTION = true;
+
    private static final String segmentationTimeReport = "Segmentation took: ";
    private static final String intersectionsTimeReport = "Processing intersections took: ";
 
-   private TimeReporter timeReporter = new TimeReporter(this);
+   private final PlanarRegionSegmentationDataExporter dataExporter = EXPORT_SEGMENTATION_ON_EXCEPTION ? new PlanarRegionSegmentationDataExporter(new File("DataThrowingException/")) : null;
+
+   private final TimeReporter timeReporter = new TimeReporter(this);
    private final NormalOcTree octree;
 
    private final OcTreeNodePlanarRegionCalculator planarRegionCalculator = new OcTreeNodePlanarRegionCalculator();
@@ -166,7 +172,11 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       PolygonizerParameters polygonizerParameters = this.polygonizerParameters.get();
       List<OcTreeNodePlanarRegion> planarRegions = planarRegionCalculator.getOcTreeNodePlanarRegions();
 
-      concaveHulls = PlanarRegionPolygonizer.computeConcaveHulls(planarRegions, concaveHullFactoryParameters, polygonizerParameters);
+      if (EXPORT_SEGMENTATION_ON_EXCEPTION)
+         concaveHulls = PlanarRegionPolygonizer.computeConcaveHulls(planarRegions, concaveHullFactoryParameters, polygonizerParameters, dataExporter);
+      else
+         concaveHulls = PlanarRegionPolygonizer.computeConcaveHulls(planarRegions, concaveHullFactoryParameters, polygonizerParameters);
+
       convexPolygons = PlanarRegionPolygonizer.computeConvexDecomposition(concaveHulls, polygonizerParameters);
    }
 

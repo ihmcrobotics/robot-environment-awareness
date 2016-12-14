@@ -34,12 +34,13 @@ public class REAPlanarRegionsConverter
       if (concaveHullCollection.isEmpty())
          return null;
 
-      ConcaveHull concaveHull = concaveHullCollection.iterator().next();
+      List<Point2f[]> concaveHullsVertices = new ArrayList<>();
 
-      Point2f[] concaveHullVertices = new Point2f[concaveHull.getNumberOfVertices()];
-
-      for (int vertexIndex = 0; vertexIndex < concaveHull.getNumberOfVertices(); vertexIndex++)
-         concaveHullVertices[vertexIndex] = new Point2f(concaveHull.getVertex(vertexIndex));
+      for (ConcaveHull concaveHull : concaveHullCollection)
+      {
+         Point2f[] hullVertices = concaveHull.stream().map(vertex -> new Point2f(vertex)).toArray(size -> new Point2f[size]);
+         concaveHullsVertices.add(hullVertices);
+      }
 
       List<Point2f[]> convexPolygonsVertices = new ArrayList<>();
       List<ConvexPolygon2d> convexPolygons = planarRegionConvexPolygons.getConvexPolygonsInPlane();
@@ -53,7 +54,7 @@ public class REAPlanarRegionsConverter
          convexPolygonsVertices.add(convexPolygonVertices);
       }
 
-      PlanarRegionMessage planarRegionMessage = new PlanarRegionMessage(regionOrigin, regionNormal, concaveHullVertices, convexPolygonsVertices);
+      PlanarRegionMessage planarRegionMessage = new PlanarRegionMessage(regionOrigin, regionNormal, concaveHullsVertices, convexPolygonsVertices);
       planarRegionMessage.setRegionId(planarRegionConvexPolygons.getRegionId());
       return planarRegionMessage;
    }

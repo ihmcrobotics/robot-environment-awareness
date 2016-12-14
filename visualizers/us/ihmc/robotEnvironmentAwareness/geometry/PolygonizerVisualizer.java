@@ -21,7 +21,6 @@ import javax.vecmath.Quat4d;
 import javax.vecmath.Tuple3d;
 import javax.vecmath.Vector3d;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdge;
@@ -30,18 +29,26 @@ import com.vividsolutions.jts.triangulate.quadedge.Vertex;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.Observable;
+import javafx.beans.property.DoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.SubScene;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.MeshView;
 import javafx.stage.Stage;
+import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler;
 import us.ihmc.javaFXToolkit.scenes.View3DFactory;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
@@ -60,7 +67,7 @@ import us.ihmc.robotics.lists.ListWrappingIndexTools;
 public class PolygonizerVisualizer extends Application
 {
    private static final boolean VISUALIZE_POINT_CLOUD = true;
-   private static final boolean VISUALIZE_DELAUNAY_TRIANGULATION = true;
+   private static final boolean VISUALIZE_DELAUNAY_TRIANGULATION = false;
    private static final boolean VISUALIZE_CONCAVE_HULL = false;
    private static final boolean VISUALIZE_BORDER_EDGES = false;
    private static final boolean VISUALIZE_BORDER_TRIANGLES = true;
@@ -75,7 +82,9 @@ public class PolygonizerVisualizer extends Application
 
    private static final boolean FILTER_CONCAVE_HULLS = false;
 
-   private static final int[] onlyRegionWithId = {}; //1925644726};
+   private static final int[] onlyRegionWithId = {557372125};
+
+   private File defaultFile = new File("Data/20161210_184102_PlanarRegionSegmentation_Sim_CB");
 
    private final Random random = new Random(54645L);
    private final ConcaveHullFactoryParameters parameters = new ConcaveHullFactoryParameters();
@@ -84,7 +93,9 @@ public class PolygonizerVisualizer extends Application
    public PolygonizerVisualizer() throws IOException
    {
       parameters.setEdgeLengthThreshold(0.05);
-//      parameters.setMaxNumberOfIterations(3);
+//      parameters.setAllowSplittingConcaveHull(false);
+//      parameters.setRemoveAllTrianglesWithTwoBorderEdges(false);
+      parameters.setMaxNumberOfIterations(85);
    }
 
    @Override
@@ -92,28 +103,32 @@ public class PolygonizerVisualizer extends Application
    {
       primaryStage.setTitle(getClass().getSimpleName());
 
-//      PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("Data/20161212_223221_PlanarRegionSegmentation_ConcaveHullBug"));
-      PlanarRegionSegmentationDataImporter dataImporter = PlanarRegionSegmentationDataImporter.createImporterWithFileChooser(primaryStage);
+      PlanarRegionSegmentationDataImporter dataImporter;
+      if (defaultFile != null)
+         dataImporter = new PlanarRegionSegmentationDataImporter(defaultFile);
+      else
+         dataImporter = PlanarRegionSegmentationDataImporter.createImporterWithFileChooser(primaryStage);
       if (dataImporter == null)
          Platform.exit();
       dataImporter.loadPlanarRegionSegmentationData();
       List<PlanarRegionSegmentationMessage> planarRegionSegmentationData = dataImporter.getPlanarRegionSegmentationData();
 
-      View3DFactory view3dFactory = new View3DFactory(600, 400);
-      view3dFactory.addCameraController(true);
+      View3DFactory view3dFactory = View3DFactory.createSubscene();
+      FocusBasedCameraMouseEventHandler cameraController = view3dFactory.addCameraController(true);
       view3dFactory.addWorldCoordinateSystem(0.3);
+      view3dFactory.enableRequestFocusOnMouseClicked();
+      
+      Set<Integer> regionIdFilterSet = new HashSet<>();
+      Arrays.stream(onlyRegionWithId).forEach(regionIdFilterSet::add);
 
-      Point3d average = computeAverage(planarRegionSegmentationData);
+      Point3d average = computeAverage(planarRegionSegmentationData, regionIdFilterSet);
       average.negate();
 
       Map<Node, Integer> nodeToRegionId = new HashMap<>();
 
-      Set<Integer> regionIdSet = new HashSet<>();
-      Arrays.stream(onlyRegionWithId).forEach(regionIdSet::add);
-
       for (PlanarRegionSegmentationMessage planarRegionSegmentationMessage : planarRegionSegmentationData)
       {
-         if (regionIdSet.isEmpty() || regionIdSet.contains(planarRegionSegmentationMessage.getRegionId()))
+         if (regionIdFilterSet.isEmpty() || regionIdFilterSet.contains(planarRegionSegmentationMessage.getRegionId()))
          {
             Node regionGraphics = createRegionGraphics(planarRegionSegmentationMessage);
             regionGraphics.setManaged(false);
@@ -123,7 +138,7 @@ public class PolygonizerVisualizer extends Application
          }
       }
 
-      Scene scene = view3dFactory.getScene();
+      SubScene scene = view3dFactory.getSubScene();
       scene.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>()
       {
          @Override
@@ -160,8 +175,42 @@ public class PolygonizerVisualizer extends Application
             nodeToRegionId.keySet().stream().forEach(node -> node.setVisible(true));
       });
 
-      primaryStage.setScene(scene);
+      HBox coordinatesHBox = setupFocusCoordinatesViz(cameraController);
+      BorderPane mainPane = new BorderPane();
+      view3dFactory.bindSizeToParent(mainPane);
+      mainPane.setCenter(scene);
+      mainPane.setTop(coordinatesHBox);
+      
+      primaryStage.setScene(new Scene(mainPane, 800, 400, true));
       primaryStage.show();
+   }
+
+   private HBox setupFocusCoordinatesViz(FocusBasedCameraMouseEventHandler cameraController)
+   {
+      HBox coordinatesHBox = new HBox();
+
+      DoubleProperty xProperty = cameraController.getTranslate().xProperty();
+      DoubleProperty yProperty = cameraController.getTranslate().yProperty();
+      DoubleProperty zProperty = cameraController.getTranslate().zProperty();
+
+      Label xFocusLabel = new Label("x focus: ");
+      Label yFocusLabel = new Label("y focus: ");
+      Label zFocusLabel = new Label("z focus: ");
+
+      TextField xFocus = new TextField("blop");
+      TextField yFocus = new TextField("blop");
+      TextField zFocus = new TextField("blop");
+
+      xFocus.setEditable(false);
+      yFocus.setEditable(false);
+      zFocus.setEditable(false);
+
+      xProperty.addListener((Observable o) -> xFocus.setText(xProperty.getValue().toString()));
+      yProperty.addListener((Observable o) -> yFocus.setText(yProperty.getValue().toString()));
+      zProperty.addListener((Observable o) -> zFocus.setText(zProperty.getValue().toString()));
+
+      coordinatesHBox.getChildren().addAll(xFocusLabel, xFocus, yFocusLabel, yFocus, zFocusLabel, zFocus);
+      return coordinatesHBox;
    }
 
    public static void translateNode(Node nodeToTranslate, Tuple3d translation)
@@ -171,12 +220,15 @@ public class PolygonizerVisualizer extends Application
       nodeToTranslate.setTranslateZ(nodeToTranslate.getTranslateZ() + translation.getZ());
    }
 
-   public static Point3d computeAverage(List<PlanarRegionSegmentationMessage> planarRegionSegmentationMessages)
+   public static Point3d computeAverage(List<PlanarRegionSegmentationMessage> planarRegionSegmentationMessages, Set<Integer> regionIdFilterSet)
    {
       PointMean average = new PointMean();
 
       for (PlanarRegionSegmentationMessage planarRegionSegmentationMessage : planarRegionSegmentationMessages)
-         Arrays.stream(planarRegionSegmentationMessage.getHitLocations()).forEach(average::update);
+      {
+         if (regionIdFilterSet.isEmpty() || regionIdFilterSet.contains(planarRegionSegmentationMessage.getRegionId()))
+            Arrays.stream(planarRegionSegmentationMessage.getHitLocations()).forEach(average::update);
+      }
 
       return average;
    }

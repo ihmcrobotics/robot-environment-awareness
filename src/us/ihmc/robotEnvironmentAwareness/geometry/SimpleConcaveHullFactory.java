@@ -387,7 +387,6 @@ public abstract class SimpleConcaveHullFactory
       Set<QuadEdgeTriangle> borderTriangles = intermediateVariables.borderTriangles;
       Set<QuadEdge> borderEdges = intermediateVariables.borderEdges;
       Set<Vertex> borderVertices = intermediateVariables.borderVertices;
-      Set<QuadEdgeTriangle> outerTriangles = intermediateVariables.outerTriangles;
       PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthMap = intermediateVariables.sortedByLengthQueue;
 
       // Remove the triangle and its edge
@@ -412,8 +411,6 @@ public abstract class SimpleConcaveHullFactory
       // Add the vertex opposite of the removed edge. Its index is the same as beforeEdgeIndex
       borderVertices.add(borderTriangleToRemove.getVertex(indexBeforeRemovedEdge));
 
-      outerTriangles.add(borderTriangleToRemove);
-
       List<QuadEdge> orderedBorderEdges = intermediateVariables.orderedBorderEdges;
       replaceOneEdgeWithTwoInOrderedList(orderedBorderEdges, edgeToRemove, newBorderEdgeBeforeRemovedEdge, newBorderEdgeAfterRemovedEdge);
    }
@@ -425,7 +422,6 @@ public abstract class SimpleConcaveHullFactory
       Set<QuadEdgeTriangle> borderTriangles = intermediateVariables.borderTriangles;
       Set<QuadEdge> borderEdges = intermediateVariables.borderEdges;
       Set<Vertex> borderVertices = intermediateVariables.borderVertices;
-      Set<QuadEdgeTriangle> outerTriangles = intermediateVariables.outerTriangles;
       PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthMap = intermediateVariables.sortedByLengthQueue;
 
       int newBorderEdgeIndex = -1;
@@ -455,8 +451,6 @@ public abstract class SimpleConcaveHullFactory
       borderTriangles.add(newBorderTriangle);
       borderEdges.add(newBorderEdge);
       sortedByLengthMap.add(new ImmutablePair<>(newBorderEdge, newBorderTriangle));
-
-      outerTriangles.add(borderTriangleToRemove);
 
       List<QuadEdge> orderedBorderEdges = intermediateVariables.orderedBorderEdges;
       replaceTwoEdgesWithOneInOrderedList(orderedBorderEdges, borderTriangleToRemove.getEdge((newBorderEdgeIndex + 2) % 3), borderTriangleToRemove.getEdge((newBorderEdgeIndex + 1) % 3), newBorderEdge);
@@ -523,13 +517,13 @@ public abstract class SimpleConcaveHullFactory
          triangleToAddToSecondHull = borderTriangleToRemove.getAdjacentTriangleAcrossEdge(indexOfEdgeToKeep1);
       }
 
-
       MutablePair<ConcaveHullFactoryIntermediateVariables, ConcaveHullFactoryIntermediateVariables> result = new MutablePair<>();
 
       { // Initializing the variable for the hull 1
          ConcaveHullFactoryIntermediateVariables intermediateVariables1 = new ConcaveHullFactoryIntermediateVariables();
          List<QuadEdge> orderedBorderEdges1 = intermediateVariables1.orderedBorderEdges;
          Set<QuadEdge> borderEdges1 = intermediateVariables1.borderEdges;
+         Set<QuadEdgeTriangle> borderTriangles1 = intermediateVariables1.borderTriangles;
          Set<Vertex> borderVertices1 = intermediateVariables1.borderVertices;
          PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue1 = intermediateVariables1.sortedByLengthQueue;
 
@@ -544,10 +538,11 @@ public abstract class SimpleConcaveHullFactory
             checkOrderedBorderEdgeListValid(orderedBorderEdges1);
             borderEdges1.addAll(orderedBorderEdges1);
             borderEdges1.forEach(borderEdge -> borderVertices1.add(borderEdge.orig()));
-            
+
             sortedByLengthQueue.stream().filter(pair -> isBorderEdge(pair.getLeft(), borderEdges1)).forEach(sortedByLengthQueue1::add);
             sortedByLengthQueue1.add(new ImmutablePair<>(edgeToAddToFirstHull.sym(), triangleToAddToFirstHull));
-            
+            sortedByLengthQueue1.forEach(pair -> borderTriangles1.add(pair.getRight()));
+
             result.setLeft(intermediateVariables1);
          }
          else
@@ -560,6 +555,7 @@ public abstract class SimpleConcaveHullFactory
          ConcaveHullFactoryIntermediateVariables intermediateVariables2 = new ConcaveHullFactoryIntermediateVariables();
          List<QuadEdge> orderedBorderEdges2 = intermediateVariables2.orderedBorderEdges;
          Set<QuadEdge> borderEdges2 = intermediateVariables2.borderEdges;
+         Set<QuadEdgeTriangle> borderTriangles2 = intermediateVariables2.borderTriangles;
          Set<Vertex> borderVertices2 = intermediateVariables2.borderVertices;
          PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue2 = intermediateVariables2.sortedByLengthQueue;
 
@@ -574,10 +570,11 @@ public abstract class SimpleConcaveHullFactory
             checkOrderedBorderEdgeListValid(orderedBorderEdges2);
             borderEdges2.addAll(orderedBorderEdges2);
             borderEdges2.forEach(borderEdge -> borderVertices2.add(borderEdge.orig()));
-            
+
             sortedByLengthQueue.stream().filter(pair -> isBorderEdge(pair.getLeft(), borderEdges2)).forEach(sortedByLengthQueue2::add);
             sortedByLengthQueue2.add(new ImmutablePair<>(edgeToAddToSecondHull.sym(), triangleToAddToSecondHull));
-            
+            sortedByLengthQueue2.forEach(pair -> borderTriangles2.add(pair.getRight()));
+
             result.setRight(intermediateVariables2);
          }
          else
@@ -802,7 +799,6 @@ public abstract class SimpleConcaveHullFactory
       private final Set<QuadEdge> borderEdges = new HashSet<>();
       private final List<QuadEdge> orderedBorderEdges = new ArrayList<>();
       private final Set<QuadEdgeTriangle> borderTriangles = new HashSet<>();
-      private final Set<QuadEdgeTriangle> outerTriangles = new HashSet<>();
       private final QuadEdgeComparator quadEdgeComparator = new QuadEdgeComparator();
       private final PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = new PriorityQueue<>(quadEdgeComparator);
 
@@ -830,12 +826,6 @@ public abstract class SimpleConcaveHullFactory
       public Set<QuadEdgeTriangle> getBorderTriangles()
       {
          return borderTriangles;
-      }
-
-      /** @return former border triangles. Internally used to figure out border edges as triangles are being filtered out. */
-      public Set<QuadEdgeTriangle> getOuterTriangles()
-      {
-         return outerTriangles;
       }
 
       /** @return sorted queue from longest to shortest edges with their triangle. */

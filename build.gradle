@@ -160,9 +160,9 @@ publishing {
 
 // Set of dependencies to get published along with REA
 dependencies {
-    runtime group: 'com.vividsolutions', name: 'jts', version: '1.13'
-    runtime group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-    runtime group: 'us.ihmc', name: 'JOctoMap', version: '1.5.0'
+    compile group: 'com.vividsolutions', name: 'jts', version: '1.13'
+    compile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
+    compile group: 'us.ihmc', name: 'JOctoMap', version: '1.5.0'
 }
 
 // Not doing afterEvaluate for now, as we want to keep part of the dependencies out of the publishing.

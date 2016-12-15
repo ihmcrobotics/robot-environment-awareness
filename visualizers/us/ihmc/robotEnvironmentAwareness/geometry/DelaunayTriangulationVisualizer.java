@@ -32,10 +32,10 @@ import javafx.stage.Stage;
 import us.ihmc.javaFXToolkit.scenes.View3DFactory;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorAdaptivePalette;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationRawData;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerTools;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
-import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataImporter;
+import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationRawDataImporter;
 
 public class DelaunayTriangulationVisualizer extends Application
 {
@@ -49,11 +49,11 @@ public class DelaunayTriangulationVisualizer extends Application
       primaryStage.setTitle(getClass().getSimpleName());
 
 //    PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("Data/20161210_184102_PlanarRegionSegmentation_Sim_CB"));
-      PlanarRegionSegmentationDataImporter dataImporter = PlanarRegionSegmentationDataImporter.createImporterWithFileChooser(primaryStage);
+      PlanarRegionSegmentationRawDataImporter dataImporter = PlanarRegionSegmentationRawDataImporter.createImporterWithFileChooser(primaryStage);
       if (dataImporter == null)
          Platform.exit();
       dataImporter.loadPlanarRegionSegmentationData();
-      List<PlanarRegionSegmentationMessage> planarRegionSegmentationData = dataImporter.getPlanarRegionSegmentationData();
+      List<PlanarRegionSegmentationRawData> regionsRawData = dataImporter.getPlanarRegionSegmentationRawData();
 
       View3DFactory view3dFactory = new View3DFactory(600, 400);
       view3dFactory.addCameraController();
@@ -61,15 +61,15 @@ public class DelaunayTriangulationVisualizer extends Application
 
       Map<Node, Integer> nodeToRegionId = new HashMap<>();
 
-      Point3d average = PolygonizerVisualizer.computeAverage(planarRegionSegmentationData, Collections.emptySet());
+      Point3d average = PolygonizerVisualizer.computeAverage(regionsRawData, Collections.emptySet());
       average.negate();
 
-      for (PlanarRegionSegmentationMessage planarRegionSegmentationMessage : planarRegionSegmentationData)
+      for (PlanarRegionSegmentationRawData rawData : regionsRawData)
       {
-         Node regionGraphics = createRegionGraphics(planarRegionSegmentationMessage);
+         Node regionGraphics = createRegionGraphics(rawData);
          regionGraphics.setManaged(false);
          PolygonizerVisualizer.translateNode(regionGraphics, average);
-         nodeToRegionId.put(regionGraphics, planarRegionSegmentationMessage.getRegionId());
+         nodeToRegionId.put(regionGraphics, rawData.getRegionId());
          view3dFactory.addNodeToView(regionGraphics);
       }
 
@@ -114,24 +114,24 @@ public class DelaunayTriangulationVisualizer extends Application
       primaryStage.show();
    }
 
-   private static Node createRegionGraphics(PlanarRegionSegmentationMessage planarRegionSegmentationMessage)
+   private static Node createRegionGraphics(PlanarRegionSegmentationRawData rawData)
    {
       Group regionGroup = new Group();
       ObservableList<Node> children = regionGroup.getChildren();
 
-      QuadEdgeSubdivision quadEdgeSubdivision = createQuadEdgeSubdivision(planarRegionSegmentationMessage);
+      QuadEdgeSubdivision quadEdgeSubdivision = createQuadEdgeSubdivision(rawData);
       if (VISUALIZE_EDGES)
-         children.add(createEdgesGraphics(quadEdgeSubdivision, planarRegionSegmentationMessage));
+         children.add(createEdgesGraphics(quadEdgeSubdivision, rawData));
       if (VISUALIZE_PRIMARY_EDGES)
-         children.add(createPrimaryEdgesGraphics(quadEdgeSubdivision, planarRegionSegmentationMessage));
+         children.add(createPrimaryEdgesGraphics(quadEdgeSubdivision, rawData));
       if (VISUALIZE_ORDERED_BORDER_EDGES)
-         children.add(createOrderedBorderEdgesGraphics(quadEdgeSubdivision, planarRegionSegmentationMessage));
+         children.add(createOrderedBorderEdgesGraphics(quadEdgeSubdivision, rawData));
       return regionGroup;
    }
 
-   private static QuadEdgeSubdivision createQuadEdgeSubdivision(PlanarRegionSegmentationMessage planarRegionSegmentationMessage)
+   private static QuadEdgeSubdivision createQuadEdgeSubdivision(PlanarRegionSegmentationRawData rawData)
    {
-      List<Point2d> point2ds = PolygonizerTools.extractPointsInPlane(planarRegionSegmentationMessage);
+      List<Point2d> point2ds = rawData.getPointCloudInPlane();
       MultiPoint multiPoint = SimpleConcaveHullFactory.createMultiPoint(point2ds);
 
       ConformingDelaunayTriangulationBuilder conformingDelaunayTriangulationBuilder = new ConformingDelaunayTriangulationBuilder();
@@ -140,14 +140,14 @@ public class DelaunayTriangulationVisualizer extends Application
    }
 
    @SuppressWarnings("unchecked")
-   private static Node createEdgesGraphics(QuadEdgeSubdivision quadEdgeSubdivision, PlanarRegionSegmentationMessage planarRegionSegmentationMessage)
+   private static Node createEdgesGraphics(QuadEdgeSubdivision quadEdgeSubdivision, PlanarRegionSegmentationRawData rawData)
    {
       List<QuadEdge> edges = (List<QuadEdge>) quadEdgeSubdivision.getEdges();
 
-      int regionId = planarRegionSegmentationMessage.getRegionId();
+      int regionId = rawData.getRegionId();
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(16));
-      Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
-      Quat4d planeOrientation = PolygonizerTools.getRotationBasedOnNormal(planarRegionSegmentationMessage.getNormal());
+      Point3d planeOrigin = rawData.getOrigin();
+      Quat4d planeOrientation = rawData.getOrientation();
       Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
 
       for (QuadEdge edge : edges)
@@ -163,14 +163,14 @@ public class DelaunayTriangulationVisualizer extends Application
    }
 
    @SuppressWarnings("unchecked")
-   private static Node createPrimaryEdgesGraphics(QuadEdgeSubdivision quadEdgeSubdivision, PlanarRegionSegmentationMessage planarRegionSegmentationMessage)
+   private static Node createPrimaryEdgesGraphics(QuadEdgeSubdivision quadEdgeSubdivision, PlanarRegionSegmentationRawData rawData)
    {
       List<QuadEdge> primaryEdges = (List<QuadEdge>) quadEdgeSubdivision.getPrimaryEdges(false);
 
-      int regionId = planarRegionSegmentationMessage.getRegionId();
+      int regionId = rawData.getRegionId();
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(16));
-      Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
-      Quat4d planeOrientation = PolygonizerTools.getRotationBasedOnNormal(planarRegionSegmentationMessage.getNormal());
+      Point3d planeOrigin = rawData.getOrigin();
+      Quat4d planeOrientation = rawData.getOrientation();
       Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
 
       for (QuadEdge edge : primaryEdges)
@@ -186,14 +186,14 @@ public class DelaunayTriangulationVisualizer extends Application
    }
 
    @SuppressWarnings("unchecked")
-   private static Node createOrderedBorderEdgesGraphics(QuadEdgeSubdivision quadEdgeSubdivision, PlanarRegionSegmentationMessage planarRegionSegmentationMessage)
+   private static Node createOrderedBorderEdgesGraphics(QuadEdgeSubdivision quadEdgeSubdivision, PlanarRegionSegmentationRawData rawData)
    {
       List<QuadEdgeTriangle> delaunayTriangles = QuadEdgeTriangle.createOn(quadEdgeSubdivision);
       List<QuadEdge> orderedBorderEdges = SimpleConcaveHullFactory.computeIntermediateVariables(delaunayTriangles).getOrderedBorderEdges();
 
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(16));
-      Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
-      Quat4d planeOrientation = PolygonizerTools.getRotationBasedOnNormal(planarRegionSegmentationMessage.getNormal());
+      Point3d planeOrigin = rawData.getOrigin();
+      Quat4d planeOrientation = rawData.getOrientation();
 
       double startHue = 0.0;
       double endHue = 240.0;

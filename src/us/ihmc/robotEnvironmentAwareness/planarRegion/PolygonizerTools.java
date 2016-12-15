@@ -11,7 +11,6 @@ import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
-import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.tools.JOctoMapGeometryTools;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
 
@@ -25,13 +24,6 @@ public class PolygonizerTools
    public static List<Point2d> toPointsInPlane(List<Point3d> pointsToTransform, Point3d planeOrigin, Quat4d planeOrientation)
    {
       return pointsToTransform.stream().map(point -> toPointInPlane(point, planeOrigin, planeOrientation)).collect(Collectors.toList());
-   }
-
-   public static List<Point2d> extractPointsInPlane(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
-   {
-      Point3d planeOrigin = ocTreeNodePlanarRegion.getOrigin();
-      Quat4d planeOrientation = getRotationBasedOnNormal(ocTreeNodePlanarRegion.getNormal());
-      return ocTreeNodePlanarRegion.nodeStream().map(node -> toPointInPlane(node, planeOrigin, planeOrientation)).collect(Collectors.toList());
    }
 
    public static List<Point2d> extractPointsInPlane(PlanarRegionSegmentationMessage planarRegionSegmentationMessage)
@@ -49,17 +41,6 @@ public class PolygonizerTools
    public static Point2d toPointInPlane(Point3f pointToTransform, Point3d planeOrigin, Quat4d planeOrientation)
    {
       return toPointInPlane(pointToTransform.getX(), pointToTransform.getY(), pointToTransform.getZ(), planeOrigin, planeOrientation);
-   }
-
-   public static Point2d toPointInPlane(NormalOcTreeNode nodeToTransform, Point3d planeOrigin, Vector3d planeNormal)
-   {
-      return toPointInPlane(nodeToTransform, planeOrigin, getRotationBasedOnNormal(planeNormal));
-   }
-
-   public static Point2d toPointInPlane(NormalOcTreeNode nodeToTransform, Point3d planeOrigin, Quat4d planeOrientation)
-   {
-      return toPointInPlane(nodeToTransform.getHitLocationX(), nodeToTransform.getHitLocationY(), nodeToTransform.getHitLocationZ(), planeOrigin,
-            planeOrientation);
    }
 
    public static Point2d toPointInPlane(double xToTransform, double yToTransform, double zToTransform, Point3d planeOrigin, Quat4d planeOrientation)

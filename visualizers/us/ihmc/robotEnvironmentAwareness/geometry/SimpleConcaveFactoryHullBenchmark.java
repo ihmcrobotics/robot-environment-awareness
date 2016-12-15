@@ -6,9 +6,8 @@ import java.util.List;
 
 import javax.vecmath.Point2d;
 
-import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerTools;
-import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataImporter;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationRawData;
+import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationRawDataImporter;
 
 /**
  * Simple infinite loop on the {@link SimpleConcaveHullFactory} for convenience for profiling the algorithm.
@@ -19,16 +18,16 @@ public class SimpleConcaveFactoryHullBenchmark
 {
    public static void main(String[] args) throws IOException
    {
-      PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("Data/20161210_185643_PlanarRegionSegmentation_Atlas_CB"));
+      PlanarRegionSegmentationRawDataImporter dataImporter = new PlanarRegionSegmentationRawDataImporter(new File("Data/20161210_185643_PlanarRegionSegmentation_Atlas_CB"));
       dataImporter.loadPlanarRegionSegmentationData();
-      List<PlanarRegionSegmentationMessage> planarRegionSegmentationData = dataImporter.getPlanarRegionSegmentationData();
+      List<PlanarRegionSegmentationRawData> regionsRawData = dataImporter.getPlanarRegionSegmentationRawData();
       ConcaveHullFactoryParameters parameters = new ConcaveHullFactoryParameters();
 
       while (true)
       {
-         for (PlanarRegionSegmentationMessage planarRegionSegmentationMessage : planarRegionSegmentationData)
+         for (PlanarRegionSegmentationRawData rawData : regionsRawData)
          {
-            List<Point2d> pointsInPlane = PolygonizerTools.extractPointsInPlane(planarRegionSegmentationMessage);
+            List<Point2d> pointsInPlane = rawData.getPointCloudInPlane();
             SimpleConcaveHullFactory.createConcaveHull(pointsInPlane, parameters);
          }
       }

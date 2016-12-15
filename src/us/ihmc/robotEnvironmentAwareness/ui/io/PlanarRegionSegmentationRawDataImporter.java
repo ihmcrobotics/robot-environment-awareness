@@ -6,20 +6,23 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import javax.vecmath.Point3d;
 import javax.vecmath.Point3f;
+import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationRawData;
 
-public class PlanarRegionSegmentationDataImporter
+public class PlanarRegionSegmentationRawDataImporter
 {
    private final File dataFolder;
-   private final List<PlanarRegionSegmentationMessage> planarRegionSegmentationData = new ArrayList<>();
+   private List<PlanarRegionSegmentationRawData> planarRegionSegmentationRawData = new ArrayList<>();
 
-   public static PlanarRegionSegmentationDataImporter createImporterWithFileChooser(Window ownerWindow)
+   public static PlanarRegionSegmentationRawDataImporter createImporterWithFileChooser(Window ownerWindow)
    {
       DirectoryChooser directoryChooser = new DirectoryChooser();
       directoryChooser.setInitialDirectory(new File("Data"));
@@ -27,10 +30,10 @@ public class PlanarRegionSegmentationDataImporter
       if (result == null)
          return null;
       else
-         return new PlanarRegionSegmentationDataImporter(result);
+         return new PlanarRegionSegmentationRawDataImporter(result);
    }
 
-   public PlanarRegionSegmentationDataImporter(File dataFolder)
+   public PlanarRegionSegmentationRawDataImporter(File dataFolder)
    {
       this.dataFolder = dataFolder;
    }
@@ -64,11 +67,10 @@ public class PlanarRegionSegmentationDataImporter
          float yNormal = Float.parseFloat(values[5]);
          float zNormal = Float.parseFloat(values[6]);
 
-         PlanarRegionSegmentationMessage planarRegionSegmentation = new PlanarRegionSegmentationMessage();
-         planarRegionSegmentation.id = regionId;
-         planarRegionSegmentation.origin = new Point3f(xOrigin, yOrigin, zOrigin);
-         planarRegionSegmentation.normal = new Vector3f(xNormal, yNormal, zNormal);
-         planarRegionSegmentationData.add(planarRegionSegmentation);
+         Point3f origin = new Point3f(xOrigin, yOrigin, zOrigin);
+         Vector3f normal = new Vector3f(xNormal, yNormal, zNormal);
+         PlanarRegionSegmentationRawData rawData = new PlanarRegionSegmentationRawData(regionId, normal, origin);
+         planarRegionSegmentationRawData.add(rawData);
       }
 
       bufferedReader.close();
@@ -76,10 +78,10 @@ public class PlanarRegionSegmentationDataImporter
 
    private void loadAllRegions()
    {
-      planarRegionSegmentationData.parallelStream().forEach(this::loadRegion);
+      planarRegionSegmentationRawData = planarRegionSegmentationRawData.parallelStream().map(this::loadRegion).collect(Collectors.toList());
    }
 
-   private void loadRegion(PlanarRegionSegmentationMessage regionToLoad)
+   private PlanarRegionSegmentationRawData loadRegion(PlanarRegionSegmentationRawData regionToLoad)
    {
       try
       {
@@ -90,7 +92,7 @@ public class PlanarRegionSegmentationDataImporter
          String line = "";
          String cvsSplitBy = ",";
 
-         List<Point3f> loadedPoints = new ArrayList<>();
+         List<Point3d> loadedPoints = new ArrayList<>();
          
          while ((line = bufferedReader.readLine()) != null)
          {
@@ -98,19 +100,24 @@ public class PlanarRegionSegmentationDataImporter
             float x = Float.parseFloat(coordsAsString[0]);
             float y = Float.parseFloat(coordsAsString[1]);
             float z = Float.parseFloat(coordsAsString[2]);
-            loadedPoints.add(new Point3f(x, y, z));
+            loadedPoints.add(new Point3d(x, y, z));
          }
-         regionToLoad.hitLocations = loadedPoints.toArray(new Point3f[0]);
 
          bufferedReader.close();
+
+         int regionId = regionToLoad.getRegionId();
+         Vector3d normal = regionToLoad.getNormal();
+         Point3d origin = regionToLoad.getOrigin();
+         return new PlanarRegionSegmentationRawData(regionId, normal, origin, loadedPoints);
       }
       catch (IOException e)
       {
+         return null;
       }
    }
 
-   public List<PlanarRegionSegmentationMessage> getPlanarRegionSegmentationData()
+   public List<PlanarRegionSegmentationRawData> getPlanarRegionSegmentationRawData()
    {
-      return planarRegionSegmentationData;
+      return planarRegionSegmentationRawData;
    }
 }

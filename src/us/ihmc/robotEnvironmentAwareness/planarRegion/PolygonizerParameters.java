@@ -14,7 +14,7 @@ public class PolygonizerParameters
     * the shape of a set of points in the plane".
     */
    private double concaveHullThreshold;
-   /** The minimum number of nodes required for a {@link OcTreeNodePlanarRegion} to be polygonized. */
+   /** The minimum number of nodes required for a {@link PlanarRegionSegmentationNodeData} to be polygonized. */
    private int minNumberOfNodes;
    /** Filter parameter on the concave hull of a region. Used to removed vertices describing shallow angle. */
    private double shallowAngleThreshold;

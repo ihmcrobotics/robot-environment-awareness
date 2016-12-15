@@ -21,7 +21,8 @@ import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.converters.REAPlanarRegionsConverter;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationNodeData;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationRawData;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
 
@@ -45,15 +46,27 @@ public class PlanarRegionSegmentationDataExporter
       this.dataDirectoryPath = new AtomicReference<>(dataDirectoryPath.getAbsolutePath());
    }
 
-   public void exportSegmentationData(List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions)
+   public void exportSegmentationRawData(List<PlanarRegionSegmentationRawData> rawData)
    {
-      planarRegionSegmentationState.set(REAPlanarRegionsConverter.createPlanarRegionSegmentationMessages(ocTreeNodePlanarRegions));
+      planarRegionSegmentationState.set(PlanarRegionSegmentationRawData.toMessageArray(rawData));
       exportSegmentationData(true);
    }
 
-   public void exportSegmentationData(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
+   public void exportSegmentationRawData(PlanarRegionSegmentationRawData rawData)
    {
-      PlanarRegionSegmentationMessage message = REAPlanarRegionsConverter.createPlanarRegionSegmentationMessage(ocTreeNodePlanarRegion);
+      planarRegionSegmentationState.set(new PlanarRegionSegmentationMessage[]{rawData.toMessage()});
+      exportSegmentationData(true);
+   }
+
+   public void exportSegmentationData(List<PlanarRegionSegmentationNodeData> nodeData)
+   {
+      planarRegionSegmentationState.set(REAPlanarRegionsConverter.createPlanarRegionSegmentationMessages(nodeData));
+      exportSegmentationData(true);
+   }
+
+   public void exportSegmentationData(PlanarRegionSegmentationNodeData nodeData)
+   {
+      PlanarRegionSegmentationMessage message = REAPlanarRegionsConverter.createPlanarRegionSegmentationMessage(nodeData);
       planarRegionSegmentationState.set(new PlanarRegionSegmentationMessage[]{message});
       exportSegmentationData(true);
    }

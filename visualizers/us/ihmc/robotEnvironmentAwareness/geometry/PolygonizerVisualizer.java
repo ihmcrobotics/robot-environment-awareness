@@ -55,12 +55,15 @@ import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorAdaptivePalette;
 import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory.ConcaveHullFactoryResult;
 import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory.ConcaveHullVariables;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionIntersectionCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationRawData;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerTools;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationRawDataImporter;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
+import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.geometry.RigidBodyTransform;
 import us.ihmc.robotics.lists.ListWrappingIndexTools;
 
@@ -76,6 +79,7 @@ public class PolygonizerVisualizer extends Application
    private static final boolean VISUALIZE_BORDER_VERTICES = false;
    private static final boolean VISUALIZE_CONCAVE_POCKETS = false;
    private static final boolean VISUALIZE_ORDERED_BORDER_EDGES = true;
+   private static final boolean VISUALIZE_INTERSECTIONS = true;
 
    private static final double scaleX = 1.0;
    private static final double scaleY = 1.0;
@@ -89,6 +93,7 @@ public class PolygonizerVisualizer extends Application
    private final Random random = new Random(54645L);
    private final ConcaveHullFactoryParameters parameters = new ConcaveHullFactoryParameters();
    private final PolygonizerParameters polygonizerParameters = new PolygonizerParameters();
+   private final IntersectionEstimationParameters intersectionParameters = new IntersectionEstimationParameters();
 
    public PolygonizerVisualizer() throws IOException
    {
@@ -154,6 +159,13 @@ public class PolygonizerVisualizer extends Application
                nodeToRegionId.put(regionGraphics, rawData.getRegionId());
                view3dFactory.addNodeToView(regionGraphics);
             }
+         }
+
+         if (VISUALIZE_INTERSECTIONS)
+         {
+            Node intersectionsNode = createIntersectionsGraphics(regionsRawData);
+            translateNode(intersectionsNode, average);
+            view3dFactory.addNodeToView(intersectionsNode);
          }
 
          scene.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>()
@@ -590,6 +602,22 @@ public class PolygonizerVisualizer extends Application
             Color endColor = Color.hsb(lineHue, lineSat, lineEndBirghtness);
             meshBuilder.addLine(orig, dest, 0.002, startColor, endColor);
          }
+      }
+
+      MeshView meshView = new MeshView(meshBuilder.generateMesh());
+      meshView.setMaterial(meshBuilder.generateMaterial());
+      return meshView;
+   }
+
+   private Node createIntersectionsGraphics(List<PlanarRegionSegmentationRawData> regionsRawData)
+   {
+      JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(32));
+
+      List<LineSegment3d> intersections = PlanarRegionIntersectionCalculator.computeIntersections(regionsRawData, intersectionParameters);
+
+      for (LineSegment3d intersection : intersections)
+      {
+         meshBuilder.addLine(intersection.getPointA(), intersection.getPointB(), 0.01, Color.RED);
       }
 
       MeshView meshView = new MeshView(meshBuilder.generateMesh());

@@ -9,39 +9,39 @@ import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OcTreeKeyMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationNodeData;
 import us.ihmc.robotEnvironmentAwareness.updaters.RegionFeaturesProvider;
 
 public class REAPlanarRegionsConverter
 {
    public static PlanarRegionSegmentationMessage[] createPlanarRegionSegmentationMessages(RegionFeaturesProvider regionFeaturesProvider)
    {
-      return createPlanarRegionSegmentationMessages(regionFeaturesProvider.getOcTreePlanarRegions());
+      return createPlanarRegionSegmentationMessages(regionFeaturesProvider.getSegmentationNodeData());
    }
 
-   public static PlanarRegionSegmentationMessage[] createPlanarRegionSegmentationMessages(List<OcTreeNodePlanarRegion> ocTreePlanarRegions)
+   public static PlanarRegionSegmentationMessage[] createPlanarRegionSegmentationMessages(List<PlanarRegionSegmentationNodeData> regionsNodeData)
    {
-      PlanarRegionSegmentationMessage[] messages = new PlanarRegionSegmentationMessage[ocTreePlanarRegions.size()];
+      PlanarRegionSegmentationMessage[] messages = new PlanarRegionSegmentationMessage[regionsNodeData.size()];
 
-      for (int regionIndex = 0; regionIndex < ocTreePlanarRegions.size(); regionIndex++)
+      for (int regionIndex = 0; regionIndex < regionsNodeData.size(); regionIndex++)
       {
-         OcTreeNodePlanarRegion ocTreeNodePlanarRegion = ocTreePlanarRegions.get(regionIndex);
-         messages[regionIndex] = createPlanarRegionSegmentationMessage(ocTreeNodePlanarRegion);
+         PlanarRegionSegmentationNodeData nodeData = regionsNodeData.get(regionIndex);
+         messages[regionIndex] = createPlanarRegionSegmentationMessage(nodeData);
       }
       return messages;
    }
 
-   public static PlanarRegionSegmentationMessage createPlanarRegionSegmentationMessage(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
+   public static PlanarRegionSegmentationMessage createPlanarRegionSegmentationMessage(PlanarRegionSegmentationNodeData nodeData)
    {
-      int regionId = ocTreeNodePlanarRegion.getId();
-      Point3f origin = new Point3f(ocTreeNodePlanarRegion.getOrigin());
-      Vector3f normal = new Vector3f(ocTreeNodePlanarRegion.getNormal());
-      OcTreeKeyMessage[] nodeKeys = new OcTreeKeyMessage[ocTreeNodePlanarRegion.getNumberOfNodes()];
-      Point3f[] nodeHitLocations = new Point3f[ocTreeNodePlanarRegion.getNumberOfNodes()];
+      int regionId = nodeData.getId();
+      Point3f origin = new Point3f(nodeData.getOrigin());
+      Vector3f normal = new Vector3f(nodeData.getNormal());
+      OcTreeKeyMessage[] nodeKeys = new OcTreeKeyMessage[nodeData.getNumberOfNodes()];
+      Point3f[] nodeHitLocations = new Point3f[nodeData.getNumberOfNodes()];
 
-      for (int nodeIndex = 0; nodeIndex < ocTreeNodePlanarRegion.getNumberOfNodes(); nodeIndex++)
+      for (int nodeIndex = 0; nodeIndex < nodeData.getNumberOfNodes(); nodeIndex++)
       {
-         NormalOcTreeNode node = ocTreeNodePlanarRegion.getNode(nodeIndex);
+         NormalOcTreeNode node = nodeData.getNode(nodeIndex);
          OcTreeKeyMessage nodeKey = new OcTreeKeyMessage(node.getKeyCopy());
          nodeKeys[nodeIndex] = nodeKey;
          nodeHitLocations[nodeIndex] = new Point3f(node.getHitLocationCopy());

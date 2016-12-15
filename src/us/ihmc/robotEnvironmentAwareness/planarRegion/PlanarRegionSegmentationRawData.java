@@ -21,7 +21,7 @@ public class PlanarRegionSegmentationRawData
    private final List<Point3d> pointCloud;
    private final Quat4d orientation;
 
-   public PlanarRegionSegmentationRawData(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
+   public PlanarRegionSegmentationRawData(PlanarRegionSegmentationNodeData ocTreeNodePlanarRegion)
    {
       regionId = ocTreeNodePlanarRegion.getId();
       normal = new Vector3d(ocTreeNodePlanarRegion.getNormal());

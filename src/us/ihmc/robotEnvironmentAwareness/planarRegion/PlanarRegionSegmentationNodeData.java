@@ -1,7 +1,5 @@
 package us.ihmc.robotEnvironmentAwareness.planarRegion;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -20,7 +18,7 @@ import us.ihmc.robotEnvironmentAwareness.geometry.VectorMean;
 import us.ihmc.robotics.geometry.PlanarRegion;
 import us.ihmc.robotics.linearAlgebra.PrincipalComponentAnalysis3D;
 
-public class OcTreeNodePlanarRegion implements Iterable<NormalOcTreeNode>
+public class PlanarRegionSegmentationNodeData implements Iterable<NormalOcTreeNode>
 {
    private int id = PlanarRegion.NO_REGION_ID;
 
@@ -35,12 +33,12 @@ public class OcTreeNodePlanarRegion implements Iterable<NormalOcTreeNode>
    private final List<NormalOcTreeNode> nodes = new ArrayList<>();
    private final Set<NormalOcTreeNode> nodeSet = new HashSet<>();
 
-   public OcTreeNodePlanarRegion(int id)
+   public PlanarRegionSegmentationNodeData(int id)
    {
       this.id = id;
    }
 
-   public OcTreeNodePlanarRegion(int id, Collection<NormalOcTreeNode> nodes)
+   public PlanarRegionSegmentationNodeData(int id, Collection<NormalOcTreeNode> nodes)
    {
       this(id);
       addNodes(nodes);
@@ -63,7 +61,7 @@ public class OcTreeNodePlanarRegion implements Iterable<NormalOcTreeNode>
       return nodes.stream().filter(this::addNode).findFirst().isPresent();
    }
 
-   public boolean addNodesFromOtherRegion(OcTreeNodePlanarRegion other)
+   public boolean addNodesFromOtherRegion(PlanarRegionSegmentationNodeData other)
    {
       return other.nodeStream().filter(this::addNode).findFirst().isPresent();
    }
@@ -154,12 +152,12 @@ public class OcTreeNodePlanarRegion implements Iterable<NormalOcTreeNode>
       return dx * dx + dy * dy + dz * dz;
    }
 
-   public double distanceFromOtherRegionBoundingBox(OcTreeNodePlanarRegion other)
+   public double distanceFromOtherRegionBoundingBox(PlanarRegionSegmentationNodeData other)
    {
       return Math.sqrt(distanceSquaredFromOtherRegionBoundingBox(other));
    }
 
-   public double distanceSquaredFromOtherRegionBoundingBox(OcTreeNodePlanarRegion other)
+   public double distanceSquaredFromOtherRegionBoundingBox(PlanarRegionSegmentationNodeData other)
    {
       double dx = max(min.getX() - other.max.getX(), 0.0, other.min.getX() - max.getX());
       double dy = max(min.getY() - other.max.getY(), 0.0, other.min.getY() - max.getY());
@@ -294,12 +292,12 @@ public class OcTreeNodePlanarRegion implements Iterable<NormalOcTreeNode>
       return Math.abs(dot(normal));
    }
 
-   public double dot(OcTreeNodePlanarRegion other)
+   public double dot(PlanarRegionSegmentationNodeData other)
    {
       return dot(other.normal);
    }
 
-   public double absoluteDot(OcTreeNodePlanarRegion other)
+   public double absoluteDot(PlanarRegionSegmentationNodeData other)
    {
       return Math.abs(dot(other));
    }
@@ -348,21 +346,6 @@ public class OcTreeNodePlanarRegion implements Iterable<NormalOcTreeNode>
    public Iterator<NormalOcTreeNode> iterator()
    {
       return nodes.iterator();
-   }
-
-   public void printPointsToFile()
-   {
-      try
-      {
-         FileWriter fw = new FileWriter("regionPoints");
-         for (NormalOcTreeNode node : this)
-            fw.write(node.getHitLocationX() + ", " + node.getHitLocationY() + ", " + node.getHitLocationZ() + "\n");
-         fw.close();
-      }
-      catch (IOException e)
-      {
-         e.printStackTrace();
-      }
    }
 
    @Override

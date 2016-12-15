@@ -10,10 +10,10 @@ import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullFactoryParameters;
 import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegionCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionIntersectionCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionPolygonizer;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationCalculator;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationNodeData;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationRawData;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
@@ -33,7 +33,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private final TimeReporter timeReporter = new TimeReporter(this);
    private final NormalOcTree octree;
 
-   private final OcTreeNodePlanarRegionCalculator planarRegionCalculator = new OcTreeNodePlanarRegionCalculator();
+   private final PlanarRegionSegmentationCalculator segmentationCalculator = new PlanarRegionSegmentationCalculator();
    private final PlanarRegionIntersectionCalculator intersectionCalculator = new PlanarRegionIntersectionCalculator();
 
    private PlanarRegionsList planarRegionsList = null;
@@ -128,23 +128,23 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
       if (clearSegmentation.getAndSet(false))
       {
-         planarRegionCalculator.clear();
+         segmentationCalculator.clear();
          return;
       }
 
       if (!enableSegmentation.get())
       {
-         planarRegionCalculator.removeDeadNodes();
+         segmentationCalculator.removeDeadNodes();
          return;
       }
 
-      planarRegionCalculator.setBoundingBox(octree.getBoundingBox());
-      planarRegionCalculator.setParameters(planarRegionSegmentationParameters.get());
+      segmentationCalculator.setBoundingBox(octree.getBoundingBox());
+      segmentationCalculator.setParameters(planarRegionSegmentationParameters.get());
       intersectionCalculator.setParameters(intersectionEstimationParameters.get());
 
-      timeReporter.run(() -> planarRegionCalculator.compute(octree.getRoot()), segmentationTimeReport);
+      timeReporter.run(() -> segmentationCalculator.compute(octree.getRoot()), segmentationTimeReport);
 
-      List<PlanarRegionSegmentationRawData> rawData = planarRegionCalculator.getSegmentationRawData();
+      List<PlanarRegionSegmentationRawData> rawData = segmentationCalculator.getSegmentationRawData();
 
       if (clearPolygonizer.getAndSet(false))
       {
@@ -162,7 +162,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    public void clearOcTree()
    {
       intersectionCalculator.clear();
-      planarRegionCalculator.clear();
+      segmentationCalculator.clear();
    }
 
    private void updatePolygons(List<PlanarRegionSegmentationRawData> rawData)
@@ -177,9 +177,9 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    }
 
    @Override
-   public List<OcTreeNodePlanarRegion> getOcTreePlanarRegions()
+   public List<PlanarRegionSegmentationNodeData> getSegmentationNodeData()
    {
-      return planarRegionCalculator.getOcTreeNodePlanarRegions();
+      return segmentationCalculator.getSegmentationNodeData();
    }
 
    @Override

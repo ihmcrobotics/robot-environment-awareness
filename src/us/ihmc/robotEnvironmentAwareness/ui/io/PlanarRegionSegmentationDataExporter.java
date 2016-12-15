@@ -21,7 +21,7 @@ import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.converters.REAPlanarRegionsConverter;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationNodeData;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationRawData;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
@@ -58,15 +58,15 @@ public class PlanarRegionSegmentationDataExporter
       exportSegmentationData(true);
    }
 
-   public void exportSegmentationData(List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions)
+   public void exportSegmentationData(List<PlanarRegionSegmentationNodeData> nodeData)
    {
-      planarRegionSegmentationState.set(REAPlanarRegionsConverter.createPlanarRegionSegmentationMessages(ocTreeNodePlanarRegions));
+      planarRegionSegmentationState.set(REAPlanarRegionsConverter.createPlanarRegionSegmentationMessages(nodeData));
       exportSegmentationData(true);
    }
 
-   public void exportSegmentationData(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
+   public void exportSegmentationData(PlanarRegionSegmentationNodeData nodeData)
    {
-      PlanarRegionSegmentationMessage message = REAPlanarRegionsConverter.createPlanarRegionSegmentationMessage(ocTreeNodePlanarRegion);
+      PlanarRegionSegmentationMessage message = REAPlanarRegionsConverter.createPlanarRegionSegmentationMessage(nodeData);
       planarRegionSegmentationState.set(new PlanarRegionSegmentationMessage[]{message});
       exportSegmentationData(true);
    }

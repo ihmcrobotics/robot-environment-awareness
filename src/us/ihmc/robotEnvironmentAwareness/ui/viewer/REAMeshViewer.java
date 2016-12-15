@@ -59,8 +59,12 @@ public class REAMeshViewer
       intersectionsMeshBuilder = new PlanarRegionsIntersectionsMeshBuilder(uiMessager);
       boundingBoxMeshView = new BoundingBoxMeshView(uiMessager);
 
-      root.getChildren().addAll(lidarScanViewer.getRoot(), bufferOcTreeMeshView, ocTreeMeshView, planarRegionMeshView, intersectionsMeshView, boundingBoxMeshView);
-      root.setMouseTransparent(true);
+      Node lidarScanRootNode = lidarScanViewer.getRoot();
+      lidarScanRootNode.setMouseTransparent(true);
+      bufferOcTreeMeshView.setMouseTransparent(true);
+      ocTreeMeshView.setMouseTransparent(true);
+      boundingBoxMeshView.setMouseTransparent(true);
+      root.getChildren().addAll(lidarScanRootNode, bufferOcTreeMeshView, ocTreeMeshView, planarRegionMeshView, intersectionsMeshView, boundingBoxMeshView);
 
       renderMeshAnimation = new AnimationTimer()
       {

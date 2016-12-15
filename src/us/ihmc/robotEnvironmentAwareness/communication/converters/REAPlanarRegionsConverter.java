@@ -12,7 +12,9 @@ import us.ihmc.communication.packets.PlanarRegionsListMessage;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OcTreeKeyMessage;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionNodeKeysMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
+import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHull;
+import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullCollection;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
@@ -21,17 +23,24 @@ import us.ihmc.robotics.geometry.ConvexPolygon2d;
 
 public class REAPlanarRegionsConverter
 {
-
    public static PlanarRegionMessage createPlanarRegionMessage(PlanarRegionConcaveHull planarRegionConcaveHull, PlanarRegionConvexPolygons planarRegionConvexPolygons)
    {
       OcTreeNodePlanarRegion ocTreeNodePlanarRegion = planarRegionConvexPolygons.getOcTreeNodePlanarRegion();
       Point3f regionOrigin = new Point3f(ocTreeNodePlanarRegion.getOrigin());
       Vector3f regionNormal = new Vector3f(ocTreeNodePlanarRegion.getNormal());
 
-      Point2f[] concaveHullVertices = new Point2f[planarRegionConcaveHull.getConcaveHullVerticesInPlane().size()];
+      ConcaveHullCollection concaveHullCollection = planarRegionConcaveHull.getConcaveHullCollection();
+      // FIXME update the message so it can carry more than one conave hull
+      if (concaveHullCollection.isEmpty())
+         return null;
 
-      for (int vertexIndex = 0; vertexIndex < planarRegionConcaveHull.getConcaveHullVerticesInPlane().size(); vertexIndex++)
-         concaveHullVertices[vertexIndex] = new Point2f(planarRegionConcaveHull.getConcaveHullVerticesInPlane().get(vertexIndex));
+      List<Point2f[]> concaveHullsVertices = new ArrayList<>();
+
+      for (ConcaveHull concaveHull : concaveHullCollection)
+      {
+         Point2f[] hullVertices = concaveHull.stream().map(vertex -> new Point2f(vertex)).toArray(size -> new Point2f[size]);
+         concaveHullsVertices.add(hullVertices);
+      }
 
       List<Point2f[]> convexPolygonsVertices = new ArrayList<>();
       List<ConvexPolygon2d> convexPolygons = planarRegionConvexPolygons.getConvexPolygonsInPlane();
@@ -45,7 +54,7 @@ public class REAPlanarRegionsConverter
          convexPolygonsVertices.add(convexPolygonVertices);
       }
 
-      PlanarRegionMessage planarRegionMessage = new PlanarRegionMessage(regionOrigin, regionNormal, concaveHullVertices, convexPolygonsVertices);
+      PlanarRegionMessage planarRegionMessage = new PlanarRegionMessage(regionOrigin, regionNormal, concaveHullsVertices, convexPolygonsVertices);
       planarRegionMessage.setRegionId(planarRegionConvexPolygons.getRegionId());
       return planarRegionMessage;
    }
@@ -60,37 +69,49 @@ public class REAPlanarRegionsConverter
          PlanarRegionConcaveHull planarRegionConcaveHull = regionFeaturesProvider.getPlanarRegionConcaveHull(ocTreeNodePlanarRegion);
          PlanarRegionConvexPolygons planarRegionConvexPolygons = regionFeaturesProvider.getPlanarRegionConvexPolygons(ocTreeNodePlanarRegion);
          if (planarRegionConcaveHull != null && planarRegionConvexPolygons != null)
-            planarRegionMessages.add(createPlanarRegionMessage(planarRegionConcaveHull, planarRegionConvexPolygons));
+         {
+            PlanarRegionMessage planarRegionMessage = createPlanarRegionMessage(planarRegionConcaveHull, planarRegionConvexPolygons);
+            if (planarRegionMessage != null)
+               planarRegionMessages.add(planarRegionMessage);
+         }
       }
 
       return new PlanarRegionsListMessage(planarRegionMessages);
    }
 
-   public static PlanarRegionNodeKeysMessage[] createPlanarRegionNodeKeysMessages(RegionFeaturesProvider regionFeaturesProvider)
+   public static PlanarRegionSegmentationMessage[] createPlanarRegionSegmentationMessages(RegionFeaturesProvider regionFeaturesProvider)
    {
-      List<OcTreeNodePlanarRegion> ocTreePlanarRegions = regionFeaturesProvider.getOcTreePlanarRegions();
-      PlanarRegionNodeKeysMessage[] messages = new PlanarRegionNodeKeysMessage[ocTreePlanarRegions.size()];
+      return createPlanarRegionSegmentationMessages(regionFeaturesProvider.getOcTreePlanarRegions());
+   }
+
+   public static PlanarRegionSegmentationMessage[] createPlanarRegionSegmentationMessages(List<OcTreeNodePlanarRegion> ocTreePlanarRegions)
+   {
+      PlanarRegionSegmentationMessage[] messages = new PlanarRegionSegmentationMessage[ocTreePlanarRegions.size()];
 
       for (int regionIndex = 0; regionIndex < ocTreePlanarRegions.size(); regionIndex++)
       {
          OcTreeNodePlanarRegion ocTreeNodePlanarRegion = ocTreePlanarRegions.get(regionIndex);
-         messages[regionIndex] = createPlanarRegionNodeKeysMessage(ocTreeNodePlanarRegion);
+         messages[regionIndex] = createPlanarRegionSegmentationMessage(ocTreeNodePlanarRegion);
       }
       return messages;
    }
 
-   private static PlanarRegionNodeKeysMessage createPlanarRegionNodeKeysMessage(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
+   public static PlanarRegionSegmentationMessage createPlanarRegionSegmentationMessage(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
    {
       int regionId = ocTreeNodePlanarRegion.getId();
+      Point3f origin = new Point3f(ocTreeNodePlanarRegion.getOrigin());
+      Vector3f normal = new Vector3f(ocTreeNodePlanarRegion.getNormal());
       OcTreeKeyMessage[] nodeKeys = new OcTreeKeyMessage[ocTreeNodePlanarRegion.getNumberOfNodes()];
+      Point3f[] nodeHitLocations = new Point3f[ocTreeNodePlanarRegion.getNumberOfNodes()];
 
       for (int nodeIndex = 0; nodeIndex < ocTreeNodePlanarRegion.getNumberOfNodes(); nodeIndex++)
       {
          NormalOcTreeNode node = ocTreeNodePlanarRegion.getNode(nodeIndex);
          OcTreeKeyMessage nodeKey = new OcTreeKeyMessage(node.getKeyCopy());
          nodeKeys[nodeIndex] = nodeKey;
+         nodeHitLocations[nodeIndex] = new Point3f(node.getHitLocationCopy());
       }
-      PlanarRegionNodeKeysMessage planarRegionNodeKeysMessage = new PlanarRegionNodeKeysMessage(regionId, nodeKeys);
+      PlanarRegionSegmentationMessage planarRegionNodeKeysMessage = new PlanarRegionSegmentationMessage(regionId, origin, normal, nodeKeys, nodeHitLocations);
       return planarRegionNodeKeysMessage;
    }
 

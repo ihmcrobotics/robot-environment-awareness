@@ -32,6 +32,7 @@ public class LidarFrameViewer extends AnimationTimer
       lidarCoordinateSystem = new JavaFXCoordinateSystem(0.1);
       lidarCoordinateSystem.getTransforms().add(lidarPose);
       root.getChildren().add(lidarCoordinateSystem);
+      root.setMouseTransparent(true);
 
       uiMessager.registerTopicListener(REAModuleAPI.LidarScanState, this::handleMessage);
       uiMessager.registerModuleConnectionStateListener(new NetStateListener()

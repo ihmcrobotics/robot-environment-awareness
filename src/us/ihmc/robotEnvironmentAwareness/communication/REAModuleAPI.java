@@ -13,7 +13,8 @@ import us.ihmc.robotEnvironmentAwareness.communication.packets.BoundingBoxParame
 import us.ihmc.robotEnvironmentAwareness.communication.packets.BoxMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionNodeKeysMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
+import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullFactoryParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
@@ -34,19 +35,23 @@ public class REAModuleAPI
    private static final CategoryTheme PlanarRegions = apiFactory.createCategoryTheme("PlanarRegions");
    private static final CategoryTheme Segmentation = apiFactory.createCategoryTheme("Segmentation");
    private static final CategoryTheme Intersection = apiFactory.createCategoryTheme("Intersection");
+   private static final CategoryTheme ConcaveHull = apiFactory.createCategoryTheme("ConcaveHull");
    private static final CategoryTheme Polygonizer = apiFactory.createCategoryTheme("Polygonizer");
    private static final CategoryTheme Buffer = apiFactory.createCategoryTheme("Buffer");
    private static final CategoryTheme Range = apiFactory.createCategoryTheme("Range");
    private static final CategoryTheme Node = apiFactory.createCategoryTheme("Node");
    private static final CategoryTheme Request = apiFactory.createCategoryTheme("Request");
+   private static final CategoryTheme DataExporter = apiFactory.createCategoryTheme("DataExporter");
 
    private static final TypedTopicTheme<Boolean> Enable = apiFactory.createTypedTopicTheme("Enable");
    private static final TypedTopicTheme<Boolean> Clear = apiFactory.createTypedTopicTheme("Clear");
    private static final TypedTopicTheme<Boolean> Show = apiFactory.createTypedTopicTheme("Show");
    private static final TypedTopicTheme<Boolean> Hide = apiFactory.createTypedTopicTheme("Hide");
    private static final TypedTopicTheme<Boolean> Save = apiFactory.createTypedTopicTheme("Save");
+   private static final TypedTopicTheme<Boolean> Export = apiFactory.createTypedTopicTheme("Export");
    private static final TypedTopicTheme<Integer> Size = apiFactory.createTypedTopicTheme("Size");
    private static final TypedTopicTheme<Integer> Depth = apiFactory.createTypedTopicTheme("Depth");
+   private static final TypedTopicTheme<String> Path = apiFactory.createTypedTopicTheme("Path");
 
    private static final TopicTheme Parameters = apiFactory.createTopicTheme("Parameters");
    private static final TopicTheme Min = apiFactory.createTopicTheme("Min");
@@ -80,6 +85,7 @@ public class REAModuleAPI
    public static final Topic<PlanarRegionSegmentationParameters> PlanarRegionsSegmentationParameters = PlanarRegionsCategory.child(Segmentation).topic(Parameters);
    public static final Topic<Boolean> PlanarRegionsPolygonizerEnable = PlanarRegionsCategory.child(Polygonizer).topic(Enable);
    public static final Topic<Boolean> PlanarRegionsPolygonizerClear = PlanarRegionsCategory.child(Polygonizer).topic(Clear);
+   public static final Topic<ConcaveHullFactoryParameters> PlanarRegionsConcaveHullParameters = PlanarRegionsCategory.child(ConcaveHull).topic(Parameters);
    public static final Topic<PolygonizerParameters> PlanarRegionsPolygonizerParameters = PlanarRegionsCategory.child(Polygonizer).topic(Parameters);
    public static final Topic<Boolean> PlanarRegionsIntersectionEnable = PlanarRegionsCategory.child(Intersection).topic(Enable);
    public static final Topic<IntersectionEstimationParameters> PlanarRegionsIntersectionParameters = PlanarRegionsCategory.child(Intersection).topic(Parameters);
@@ -88,17 +94,19 @@ public class REAModuleAPI
    public static final Topic<ColoringType> UIOcTreeColoringMode = Root.child(UI).child(OcTree).topic(Color);
    public static final Topic<DisplayType> UIOcTreeDisplayType = Root.child(UI).child(OcTree).topic(Display);
    public static final Topic<Boolean> UIPlanarRegionHideNodes = Root.child(UI).child(PlanarRegions).child(Node).topic(Hide);
+   public static final Topic<Boolean> UIPlanarRegionExportSegmentation = Root.child(UI).child(PlanarRegions).child(Segmentation).topic(Export);
    public static final Topic<Boolean> UIOcTreeBoundingBoxShow = Root.child(UI).child(OcTree).child(BoundingBox).topic(Show);
    public static final Topic<Boolean> UIOcTreeShowBuffer = Root.child(UI).child(OcTree).child(Buffer).topic(Show);
    public static final Topic<Boolean> UILidarScanShow = Root.child(UI).child(Lidar).topic(Show);
    public static final Topic<Boolean> UILidarScanClear = Root.child(UI).child(Lidar).topic(Clear);
    public static final Topic<Integer> UILidarScanSize = Root.child(UI).child(Lidar).topic(Size);
+   public static final Topic<String> UIDataExporterDirectory = Root.child(UI).child(DataExporter).topic(Path);
 
    public static final Topic<LidarScanMessage> LidarScanState = ModuleCategory.child(Lidar).topic(Data);
    public static final Topic<NormalOcTreeMessage> OcTreeState = OcTreeCategory.topic(Data);
    public static final Topic<NormalOcTreeMessage> OcTreeBufferState = OcTreeCategory.child(Buffer).topic(Data);
    public static final Topic<PlanarRegionsListMessage> PlanarRegionsState = PlanarRegionsCategory.topic(Data);
-   public static final Topic<PlanarRegionNodeKeysMessage[]> PlanarRegionsNodeState = PlanarRegionsCategory.child(Node).topic(Data);
+   public static final Topic<PlanarRegionSegmentationMessage[]> PlanarRegionsSegmentationState = PlanarRegionsCategory.child(Segmentation).topic(Data);
    public static final Topic<LineSegment3dMessage[]> PlanarRegionsIntersectionState = PlanarRegionsCategory.child(Intersection).topic(Data);
    public static final Topic<BoxMessage> OcTreeBoundingBoxState = OcTreeCategory.child(BoundingBox).topic(Data);
 
@@ -108,7 +116,7 @@ public class REAModuleAPI
    public static final Topic<Boolean> RequestBuffer = OcTreeCategory.child(Buffer).child(Request).topic(Data);
    public static final Topic<Boolean> RequestPlanarRegions = PlanarRegionsCategory.child(Request).topic(Data);
    public static final Topic<Boolean> RequestPlanarRegionsIntersections = PlanarRegionsCategory.child(Intersection).child(Request).topic(Data);
-   public static final Topic<Boolean> RequestPlanarRegionsNodeKeys = PlanarRegionsCategory.child(Request).child(Node).topic(Data);
+   public static final Topic<Boolean> RequestPlanarRegionSegmentation = PlanarRegionsCategory.child(Request).child(Segmentation).topic(Data);
    public static final Topic<Boolean> RequestBoundingBox = OcTreeCategory.child(BoundingBox).child(Request).topic(Data);
 
    public static final Topic<Boolean> SaveMainUpdaterConfiguration = OcTreeCategory.topic(Save);

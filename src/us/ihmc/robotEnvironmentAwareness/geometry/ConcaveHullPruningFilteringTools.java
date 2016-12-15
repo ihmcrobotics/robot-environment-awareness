@@ -19,6 +19,38 @@ import javax.vecmath.Vector2d;
  */
 public class ConcaveHullPruningFilteringTools
 {
+
+   /**
+    * Filter out vertices that create "peaks" or barely stick out the line described by the previous and next vertices.
+    * Peaks are identified by a threshold on the angle between two consecutive edges.
+    * Only convex peaks or shallow angles are removed, meaning this filter only reduces the area of the concave hull.
+    * @param shallowAngleThreshold should be a small positive angle in radians. 0 will not remove any vertex.
+    * @param peakAngleThreshold should be close to {@link Math#PI}.
+    * @param concaveHullCollectionToFilter the collection of concave hulls to filter. 
+    * @return the number of vertices removed.
+    */
+   public static int filterOutPeaksAndShallowAngles(double shallowAngleThreshold, double peakAngleThreshold, ConcaveHullCollection concaveHullCollectionToFilter)
+   {
+      int numberOfVerticesRemoved = 0;
+      for (ConcaveHull concaveHullToFilter : concaveHullCollectionToFilter)
+         numberOfVerticesRemoved += filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, concaveHullToFilter.getConcaveHullVertices());
+      return numberOfVerticesRemoved;
+   }
+
+   /**
+    * Filter out vertices that create "peaks" or barely stick out the line described by the previous and next vertices.
+    * Peaks are identified by a threshold on the angle between two consecutive edges.
+    * Only convex peaks or shallow angles are removed, meaning this filter only reduces the area of the concave hull.
+    * @param shallowAngleThreshold should be a small positive angle in radians. 0 will not remove any vertex.
+    * @param peakAngleThreshold should be close to {@link Math#PI}.
+    * @param concaveHullToFilter the concave hull to filter. 
+    * @return the number of vertices removed.
+    */
+   public static int filterOutPeaksAndShallowAngles(double shallowAngleThreshold, double peakAngleThreshold, ConcaveHull concaveHullToFilter)
+   {
+      return filterOutPeaksAndShallowAngles(shallowAngleThreshold, peakAngleThreshold, concaveHullToFilter.getConcaveHullVertices());
+   }
+
    /**
     * Filter out vertices that create "peaks" or barely stick out the line described by the previous and next vertices.
     * Peaks are identified by a threshold on the angle between two consecutive edges.
@@ -258,6 +290,33 @@ public class ConcaveHullPruningFilteringTools
       }
 
       return numberOfVerticesRemoved;
+   }
+
+   /**
+    * Removes vertices to filter short edges. Only convex vertices are removed, meaning the polygon area can only decrease when calling this method.
+    * @param concaveAngleLimit threshold to define a concavity. 0 rad being flat, negative convex, positive concave.
+    * @param lengthThreshold any edge shorter than that will be removed, if possible.
+    * @param concaveHullVerticesToFilter the vertices of the concave hull to filter.
+    * @return the number of vertices removed.
+    */
+   public static int filterOutShortEdges(double lengthThreshold, ConcaveHullCollection concaveHullCollectionToFilter)
+   {
+      int numberOfRemovedVertices = 0;
+      for (ConcaveHull concaveHullToFilter : concaveHullCollectionToFilter)
+         numberOfRemovedVertices += filterOutShortEdges(lengthThreshold, concaveHullToFilter.getConcaveHullVertices());
+      return numberOfRemovedVertices;
+   }
+
+   /**
+    * Removes vertices to filter short edges. Only convex vertices are removed, meaning the polygon area can only decrease when calling this method.
+    * @param concaveAngleLimit threshold to define a concavity. 0 rad being flat, negative convex, positive concave.
+    * @param lengthThreshold any edge shorter than that will be removed, if possible.
+    * @param concaveHullVerticesToFilter the vertices of the concave hull to filter.
+    * @return the number of vertices removed.
+    */
+   public static int filterOutShortEdges(double lengthThreshold, ConcaveHull concaveHullToFilter)
+   {
+      return filterOutShortEdges(lengthThreshold, concaveHullToFilter.getConcaveHullVertices());
    }
 
    /**

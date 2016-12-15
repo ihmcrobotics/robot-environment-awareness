@@ -9,12 +9,44 @@ import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
 
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
+import us.ihmc.tools.io.printing.PrintTools;
 
 public class ConcaveHullDecomposition
 {
    private static final boolean EXPORT_BAD_POLYGONS_TO_FILE = false;
    private static final String BAD_POLYGONS_FILE_NAME = "badPolygon";
    private static int badPolygonsFileIndex = 0;
+
+   /**
+    * Inspired from the SL-decomposition in the paper 
+    * <a href="https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=0ahUKEwjZlOab96XPAhXBQD4KHcXeB4MQFggsMAE&url=https%3A%2F%2Fparasol.tamu.edu%2Fpublications%2Fdownload.php%3Ffile_id%3D390&usg=AFQjCNF3wXvuCxXNREhu4CW-oNyd1caa0A&sig2=X-zxaHykED7EuqkYhkfUgg">
+    *  Approximate Convex Decomposition of Polygons</a>.
+    *  @param concaveHullCollection [input] the collection of concave hulls to be decomposed into convex polygons.
+    *  @param depthThreshold [input] the algorithm determines whether the polygon is to split or not by looking at the maximum depth of concave pockets in the concave hull.
+    *  When a pocket is deeper than {@code depthThreshold} the concave hull will be split in two.
+    *  Otherwise, the pocket vertices will be removed.
+    *  @param convexPolygonsToPack [output] the convex polygons approximating the concave hull.
+    */
+   public static void recursiveApproximateDecomposition(ConcaveHullCollection concaveHullCollection, double depthThreshold, List<ConvexPolygon2d> convexPolygonsToPack)
+   {
+      for (ConcaveHull concaveHull : concaveHullCollection)
+         recursiveApproximateDecomposition(concaveHull.getConcaveHullVertices(), depthThreshold, convexPolygonsToPack);
+   }
+
+   /**
+    * Inspired from the SL-decomposition in the paper 
+    * <a href="https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=0ahUKEwjZlOab96XPAhXBQD4KHcXeB4MQFggsMAE&url=https%3A%2F%2Fparasol.tamu.edu%2Fpublications%2Fdownload.php%3Ffile_id%3D390&usg=AFQjCNF3wXvuCxXNREhu4CW-oNyd1caa0A&sig2=X-zxaHykED7EuqkYhkfUgg">
+    *  Approximate Convex Decomposition of Polygons</a>.
+    *  @param concaveHull [input] the concave hull to be decomposed into convex polygons.
+    *  @param depthThreshold [input] the algorithm determines whether the polygon is to split or not by looking at the maximum depth of concave pockets in the concave hull.
+    *  When a pocket is deeper than {@code depthThreshold} the concave hull will be split in two.
+    *  Otherwise, the pocket vertices will be removed.
+    *  @param convexPolygonsToPack [output] the convex polygons approximating the concave hull.
+    */
+   public static void recursiveApproximateDecomposition(ConcaveHull concaveHull, double depthThreshold, List<ConvexPolygon2d> convexPolygonsToPack)
+   {
+      recursiveApproximateDecomposition(concaveHull.getConcaveHullVertices(), depthThreshold, convexPolygonsToPack);
+   }
 
    /**
     * Inspired from the SL-decomposition in the paper 
@@ -35,7 +67,7 @@ public class ConcaveHullDecomposition
       {
          if (concaveHullVertices.isEmpty())
          {
-            System.err.println("The concave hull is empty");
+            PrintTools.warn("The concave hull is empty");
             return;
          }
 

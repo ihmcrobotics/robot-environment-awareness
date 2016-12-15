@@ -26,7 +26,7 @@ import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMess
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeNodeMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OcTreeKeyMessage;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionNodeKeysMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
@@ -71,8 +71,8 @@ public class REACommunicationKryoNetClassLists
       privateNetClassList.registerPacketField(NormalOcTreeNodeMessage[].class);
       privateNetClassList.registerPacketField(OcTreeKeyMessage.class);
       privateNetClassList.registerPacketField(OcTreeKeyMessage[].class);
-      privateNetClassList.registerPacketField(PlanarRegionNodeKeysMessage.class);
-      privateNetClassList.registerPacketField(PlanarRegionNodeKeysMessage[].class);
+      privateNetClassList.registerPacketField(PlanarRegionSegmentationMessage.class);
+      privateNetClassList.registerPacketField(PlanarRegionSegmentationMessage[].class);
       privateNetClassList.registerPacketField(PlanarRegionsListMessage.class);
       privateNetClassList.registerPacketField(PlanarRegionMessage.class);
    }

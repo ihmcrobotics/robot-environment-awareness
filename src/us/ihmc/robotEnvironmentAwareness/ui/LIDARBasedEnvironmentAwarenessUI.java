@@ -15,12 +15,14 @@ import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
+import us.ihmc.robotEnvironmentAwareness.ui.controller.DataExporterAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.LIDARFilterAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.NormalEstimationAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.OcTreeBasicsAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.PointCloudAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.PolygonizerAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.RegionSegmentationAnchorPaneController;
+import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataExporter;
 import us.ihmc.robotEnvironmentAwareness.ui.scene3D.RobotEnvironmentAwareness3DScene;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.LidarFrameViewer;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.REAMeshViewer;
@@ -48,6 +50,8 @@ public class LIDARBasedEnvironmentAwarenessUI
    private RegionSegmentationAnchorPaneController regionSegmentationAnchorPaneController;
    @FXML
    private PolygonizerAnchorPaneController polygonizerAnchorPaneController;
+   @FXML
+   private DataExporterAnchorPaneController dataExporterAnchorPaneController;
 
    private final Stage primaryStage;
 
@@ -67,6 +71,7 @@ public class LIDARBasedEnvironmentAwarenessUI
 
       lidarFrameViewer = new LidarFrameViewer(uiMessager);
       reaMeshViewer = new REAMeshViewer(uiMessager);
+      new PlanarRegionSegmentationDataExporter(uiMessager); // No need to anything with it beside instantiating it.
 
       initializeControllers(uiMessager);
 
@@ -125,6 +130,11 @@ public class LIDARBasedEnvironmentAwarenessUI
       polygonizerAnchorPaneController.setConfigurationFile(configurationFile);
       polygonizerAnchorPaneController.attachREAMessager(uiMessager);
       polygonizerAnchorPaneController.bindControls();
+
+      dataExporterAnchorPaneController.setConfigurationFile(configurationFile);
+      dataExporterAnchorPaneController.attachREAMessager(uiMessager);
+      dataExporterAnchorPaneController.setMainWindow(primaryStage);
+      dataExporterAnchorPaneController.bindControls();
    }
 
    public void show() throws IOException

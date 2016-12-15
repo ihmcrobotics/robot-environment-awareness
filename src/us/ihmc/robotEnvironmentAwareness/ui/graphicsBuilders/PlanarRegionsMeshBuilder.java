@@ -77,21 +77,22 @@ public class PlanarRegionsMeshBuilder implements Runnable
       RigidBodyTransform transformToWorld = new RigidBodyTransform();
       PlanarRegionsList planarRegionsList = PlanarRegionMessageConverter.convertToPlanarRegionsList(newMessage);
 
-      for (int index = 0; index < planarRegionsList.getNumberOfPlanarRegions(); index++)
+      for (int regionIndex = 0; regionIndex < planarRegionsList.getNumberOfPlanarRegions(); regionIndex++)
       {
-         PlanarRegion planarRegion = planarRegionsList.getPlanarRegion(index);
+         PlanarRegion planarRegion = planarRegionsList.getPlanarRegion(regionIndex);
 
          int regionId = planarRegion.getRegionId();
          Color regionColor = getRegionColor(regionId);
          planarRegion.getTransformToWorld(transformToWorld);
 
-         meshBuilder.addMultiLine(transformToWorld, planarRegion.getConcaveHull(), lineWidth, regionColor, true);
+         for (int hullIndex = 0; hullIndex < planarRegion.getNumberOfConcaveHulls(); hullIndex++)
+            meshBuilder.addMultiLine(transformToWorld, planarRegion.getConcaveHull(hullIndex), lineWidth, regionColor, true);
 
 
-         for (int i = 0; i < planarRegion.getNumberOfConvexPolygons(); i++)
+         for (int polygonIndex = 0; polygonIndex < planarRegion.getNumberOfConvexPolygons(); polygonIndex++)
          {
-            ConvexPolygon2d convexPolygon2d = planarRegion.getConvexPolygon(i);
-            regionColor = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) i / (double) planarRegion.getNumberOfConvexPolygons()));
+            ConvexPolygon2d convexPolygon2d = planarRegion.getConvexPolygon(polygonIndex);
+            regionColor = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) polygonIndex / (double) planarRegion.getNumberOfConvexPolygons()));
             meshBuilder.addPolygon(transformToWorld, convexPolygon2d, regionColor);
          }
       }

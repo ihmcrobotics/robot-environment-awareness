@@ -41,7 +41,7 @@ public class PlanarRegionIntersectionCalculator
             double maxDistanceToRegion = parameters.getMaxDistanceToRegion();
             double minIntersectionLength = parameters.getMinIntersectionLength();
 
-            List<LineSegment3d> intersectionList = findIntersectionEndPoints2(currentRegion, currentNeighbor, maxDistanceToRegion, minIntersectionLength, intersectionPoint, intersectionDirection);
+            List<LineSegment3d> intersectionList = findIntersectionEndPoints(currentRegion, currentNeighbor, maxDistanceToRegion, minIntersectionLength, intersectionPoint, intersectionDirection);
 
             if (intersectionList != null)
             {
@@ -112,7 +112,7 @@ public class PlanarRegionIntersectionCalculator
       return true;
    }
 
-   private static List<LineSegment3d> findIntersectionEndPoints2(PlanarRegionSegmentationRawData currentRegion, PlanarRegionSegmentationRawData currentNeighbor, double maxDistance, double minIntersectionLength, Point3d intersectionPoint,
+   private static List<LineSegment3d> findIntersectionEndPoints(PlanarRegionSegmentationRawData currentRegion, PlanarRegionSegmentationRawData currentNeighbor, double maxDistance, double minIntersectionLength, Point3d intersectionPoint,
          Vector3d intersectionDirection)
    {
 

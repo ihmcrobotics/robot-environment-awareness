@@ -1,84 +1,19 @@
 package us.ihmc.robotEnvironmentAwareness.communication.converters;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.vecmath.Point2f;
 import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
 
-import us.ihmc.communication.packets.PlanarRegionMessage;
-import us.ihmc.communication.packets.PlanarRegionsListMessage;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OcTreeKeyMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
-import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHull;
-import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullCollection;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
 import us.ihmc.robotEnvironmentAwareness.updaters.RegionFeaturesProvider;
-import us.ihmc.robotics.geometry.ConvexPolygon2d;
 
 public class REAPlanarRegionsConverter
 {
-   public static PlanarRegionMessage createPlanarRegionMessage(PlanarRegionConcaveHull planarRegionConcaveHull, PlanarRegionConvexPolygons planarRegionConvexPolygons)
-   {
-      OcTreeNodePlanarRegion ocTreeNodePlanarRegion = planarRegionConvexPolygons.getOcTreeNodePlanarRegion();
-      Point3f regionOrigin = new Point3f(ocTreeNodePlanarRegion.getOrigin());
-      Vector3f regionNormal = new Vector3f(ocTreeNodePlanarRegion.getNormal());
-
-      ConcaveHullCollection concaveHullCollection = planarRegionConcaveHull.getConcaveHullCollection();
-      // FIXME update the message so it can carry more than one conave hull
-      if (concaveHullCollection.isEmpty())
-         return null;
-
-      List<Point2f[]> concaveHullsVertices = new ArrayList<>();
-
-      for (ConcaveHull concaveHull : concaveHullCollection)
-      {
-         Point2f[] hullVertices = concaveHull.stream().map(vertex -> new Point2f(vertex)).toArray(size -> new Point2f[size]);
-         concaveHullsVertices.add(hullVertices);
-      }
-
-      List<Point2f[]> convexPolygonsVertices = new ArrayList<>();
-      List<ConvexPolygon2d> convexPolygons = planarRegionConvexPolygons.getConvexPolygonsInPlane();
-
-      for (int polygonIndex = 0; polygonIndex < convexPolygons.size(); polygonIndex++)
-      {
-         ConvexPolygon2d convexPolygon = convexPolygons.get(polygonIndex);
-         Point2f[] convexPolygonVertices = new Point2f[convexPolygon.getNumberOfVertices()];
-         for (int vertexIndex = 0; vertexIndex < convexPolygon.getNumberOfVertices(); vertexIndex++)
-            convexPolygonVertices[vertexIndex] = new Point2f(convexPolygon.getVertex(vertexIndex));
-         convexPolygonsVertices.add(convexPolygonVertices);
-      }
-
-      PlanarRegionMessage planarRegionMessage = new PlanarRegionMessage(regionOrigin, regionNormal, concaveHullsVertices, convexPolygonsVertices);
-      planarRegionMessage.setRegionId(planarRegionConvexPolygons.getRegionId());
-      return planarRegionMessage;
-   }
-
-   public static PlanarRegionsListMessage createPlanarRegionsListMessage(RegionFeaturesProvider regionFeaturesProvider)
-   {
-      List<OcTreeNodePlanarRegion> ocTreePlanarRegions = regionFeaturesProvider.getOcTreePlanarRegions();
-      List<PlanarRegionMessage> planarRegionMessages = new ArrayList<>();
-
-      for (OcTreeNodePlanarRegion ocTreeNodePlanarRegion : ocTreePlanarRegions)
-      {
-         PlanarRegionConcaveHull planarRegionConcaveHull = regionFeaturesProvider.getPlanarRegionConcaveHull(ocTreeNodePlanarRegion);
-         PlanarRegionConvexPolygons planarRegionConvexPolygons = regionFeaturesProvider.getPlanarRegionConvexPolygons(ocTreeNodePlanarRegion);
-         if (planarRegionConcaveHull != null && planarRegionConvexPolygons != null)
-         {
-            PlanarRegionMessage planarRegionMessage = createPlanarRegionMessage(planarRegionConcaveHull, planarRegionConvexPolygons);
-            if (planarRegionMessage != null)
-               planarRegionMessages.add(planarRegionMessage);
-         }
-      }
-
-      return new PlanarRegionsListMessage(planarRegionMessages);
-   }
-
    public static PlanarRegionSegmentationMessage[] createPlanarRegionSegmentationMessages(RegionFeaturesProvider regionFeaturesProvider)
    {
       return createPlanarRegionSegmentationMessages(regionFeaturesProvider.getOcTreePlanarRegions());

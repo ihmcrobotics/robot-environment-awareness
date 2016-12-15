@@ -22,6 +22,7 @@ import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.converters.REAPlanarRegionsConverter;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationRawData;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
 
@@ -43,6 +44,18 @@ public class PlanarRegionSegmentationDataExporter
    {
       planarRegionSegmentationState = new AtomicReference<>(null);
       this.dataDirectoryPath = new AtomicReference<>(dataDirectoryPath.getAbsolutePath());
+   }
+
+   public void exportSegmentationRawData(List<PlanarRegionSegmentationRawData> rawData)
+   {
+      planarRegionSegmentationState.set(PlanarRegionSegmentationRawData.toMessageArray(rawData));
+      exportSegmentationData(true);
+   }
+
+   public void exportSegmentationRawData(PlanarRegionSegmentationRawData rawData)
+   {
+      planarRegionSegmentationState.set(new PlanarRegionSegmentationMessage[]{rawData.toMessage()});
+      exportSegmentationData(true);
    }
 
    public void exportSegmentationData(List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions)

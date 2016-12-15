@@ -1,9 +1,11 @@
 package us.ihmc.robotEnvironmentAwareness.communication.packets;
 
 import java.util.Arrays;
+import java.util.List;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Point3f;
+import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
 import us.ihmc.communication.packets.Packet;
@@ -19,6 +21,17 @@ public class PlanarRegionSegmentationMessage extends Packet<PlanarRegionSegmenta
 
    public PlanarRegionSegmentationMessage()
    {
+   }
+
+   public PlanarRegionSegmentationMessage(int id, Point3d origin, Vector3d normal, OcTreeKeyMessage[] regionNodeKeys, List<Point3d> hitLocations)
+   {
+      this.id = id;
+      this.origin = new Point3f(origin);
+      this.normal = new Vector3f(normal);
+      this.nodeKeys = regionNodeKeys;
+      this.hitLocations = hitLocations.stream()
+                                      .map(point3d -> new Point3f(point3d))
+                                      .toArray(size -> new Point3f[size]);
    }
 
    public PlanarRegionSegmentationMessage(int id, Point3f origin, Vector3f normal, OcTreeKeyMessage[] regionNodeKeys, Point3f[] hitLocations)

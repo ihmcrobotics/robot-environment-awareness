@@ -70,6 +70,13 @@ public class OcTreeNodePlanarRegionCalculator
       return ocTreeNodePlanarRegions;
    }
 
+   public List<PlanarRegionSegmentationRawData> getSegmentationRawData()
+   {
+      return ocTreeNodePlanarRegions.stream()
+                                    .map(region -> new PlanarRegionSegmentationRawData(region))
+                                    .collect(Collectors.toList());
+   }
+
    public void clear()
    {
       ocTreeNodePlanarRegions.clear();

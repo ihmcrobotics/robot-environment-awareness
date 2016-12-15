@@ -2,7 +2,6 @@ package us.ihmc.robotEnvironmentAwareness.updaters;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
@@ -13,14 +12,14 @@ import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegionCalculator;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionIntersectionCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionPolygonizer;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationRawData;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataExporter;
 import us.ihmc.robotics.geometry.LineSegment3d;
+import us.ihmc.robotics.geometry.PlanarRegionsList;
 
 public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 {
@@ -37,8 +36,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private final OcTreeNodePlanarRegionCalculator planarRegionCalculator = new OcTreeNodePlanarRegionCalculator();
    private final PlanarRegionIntersectionCalculator intersectionCalculator = new PlanarRegionIntersectionCalculator();
 
-   private Map<OcTreeNodePlanarRegion, PlanarRegionConcaveHull> concaveHulls = null;
-   private Map<OcTreeNodePlanarRegion, PlanarRegionConvexPolygons> convexPolygons = null;
+   private PlanarRegionsList planarRegionsList = null;
 
    private final AtomicReference<Boolean> isOcTreeEnabled;
    private final AtomicReference<Boolean> enableSegmentation;
@@ -146,14 +144,15 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
       timeReporter.run(() -> planarRegionCalculator.compute(octree.getRoot()), segmentationTimeReport);
 
+      List<PlanarRegionSegmentationRawData> rawData = planarRegionCalculator.getSegmentationRawData();
+
       if (clearPolygonizer.getAndSet(false))
       {
-         concaveHulls = null;
-         convexPolygons = null;
+         planarRegionsList = null;
       }
       else if (enablePolygonizer.get())
       {
-         timeReporter.run(this::updatePolygons, segmentationTimeReport);
+         timeReporter.run(() -> updatePolygons(rawData), segmentationTimeReport);
       }
 
       if (enableIntersectionCalulator.get())
@@ -166,18 +165,15 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       planarRegionCalculator.clear();
    }
 
-   private void updatePolygons()
+   private void updatePolygons(List<PlanarRegionSegmentationRawData> rawData)
    {
       ConcaveHullFactoryParameters concaveHullFactoryParameters = this.concaveHullFactoryParameters.get();
       PolygonizerParameters polygonizerParameters = this.polygonizerParameters.get();
-      List<OcTreeNodePlanarRegion> planarRegions = planarRegionCalculator.getOcTreeNodePlanarRegions();
 
       if (EXPORT_SEGMENTATION_ON_EXCEPTION)
-         concaveHulls = PlanarRegionPolygonizer.computeConcaveHulls(planarRegions, concaveHullFactoryParameters, polygonizerParameters, dataExporter);
+         planarRegionsList = PlanarRegionPolygonizer.createPlanarRegionsList(rawData, concaveHullFactoryParameters, polygonizerParameters, dataExporter);
       else
-         concaveHulls = PlanarRegionPolygonizer.computeConcaveHulls(planarRegions, concaveHullFactoryParameters, polygonizerParameters);
-
-      convexPolygons = PlanarRegionPolygonizer.computeConvexDecomposition(concaveHulls, polygonizerParameters);
+         planarRegionsList = PlanarRegionPolygonizer.createPlanarRegionsList(rawData, concaveHullFactoryParameters, polygonizerParameters);
    }
 
    @Override
@@ -187,21 +183,9 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    }
 
    @Override
-   public boolean hasPolygonizedOcTreeNodePlanarRegions()
+   public PlanarRegionsList getPlanarRegionsList()
    {
-      return concaveHulls != null;
-   }
-
-   @Override
-   public PlanarRegionConcaveHull getPlanarRegionConcaveHull(OcTreeNodePlanarRegion planarRegion)
-   {
-      return concaveHulls == null ? null : concaveHulls.get(planarRegion);
-   }
-
-   @Override
-   public PlanarRegionConvexPolygons getPlanarRegionConvexPolygons(OcTreeNodePlanarRegion planarRegion)
-   {
-      return convexPolygons == null ? null : convexPolygons.get(planarRegion);
+      return planarRegionsList;
    }
 
    @Override

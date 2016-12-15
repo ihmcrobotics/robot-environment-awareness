@@ -28,6 +28,7 @@ public class RobotEnvironmentAwareness3DScene extends Pane
       subScene3D = new SubScene(rootNode, -1, -1, true, SceneAntialiasing.DISABLED);
       subScene3D.setFill(Color.GRAY);
       JavaFXCoordinateSystem worldCoordinateSystem = new JavaFXCoordinateSystem(0.3);
+      worldCoordinateSystem.setMouseTransparent(true);
       rootNode.getChildren().add(worldCoordinateSystem);
 
       PerspectiveCamera camera = new PerspectiveCamera(true);
@@ -46,6 +47,7 @@ public class RobotEnvironmentAwareness3DScene extends Pane
 
       Vector3d up = new Vector3d(0.0, 0.0, 1.0);
       cameraController = new FocusBasedCameraMouseEventHandler(subScene3D.widthProperty(), subScene3D.heightProperty(), camera, up);
+      cameraController.enableShiftClickFocusTranslation();
       subScene3D.addEventHandler(Event.ANY, cameraController);
       rootNode.getChildren().add(cameraController.getFocusPointViz());
 

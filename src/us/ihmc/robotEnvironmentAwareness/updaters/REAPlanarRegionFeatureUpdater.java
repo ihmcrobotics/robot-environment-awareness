@@ -156,7 +156,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       }
 
       if (enableIntersectionCalulator.get())
-         timeReporter.run(() -> intersectionCalculator.compute(planarRegionCalculator.getOcTreeNodePlanarRegions()), intersectionsTimeReport);
+         timeReporter.run(() -> intersectionCalculator.compute(rawData), intersectionsTimeReport);
    }
 
    public void clearOcTree()

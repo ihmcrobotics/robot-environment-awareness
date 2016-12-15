@@ -70,6 +70,11 @@ public class PlanarRegionSegmentationRawData
       return pointCloud;
    }
 
+   public void getPoint(int index, Point3d pointToPack)
+   {
+      pointToPack.set(pointCloud.get(index));
+   }
+
    public Point3d getOrigin()
    {
       return origin;

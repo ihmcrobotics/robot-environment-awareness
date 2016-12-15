@@ -34,9 +34,9 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private final NormalOcTree octree;
 
    private final PlanarRegionSegmentationCalculator segmentationCalculator = new PlanarRegionSegmentationCalculator();
-   private final PlanarRegionIntersectionCalculator intersectionCalculator = new PlanarRegionIntersectionCalculator();
 
    private PlanarRegionsList planarRegionsList = null;
+   private List<LineSegment3d> planarRegionsIntersections = null;
 
    private final AtomicReference<Boolean> isOcTreeEnabled;
    private final AtomicReference<Boolean> enableSegmentation;
@@ -124,8 +124,6 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       if (!isOcTreeEnabled.get())
          return;
 
-      intersectionCalculator.clear();
-
       if (clearSegmentation.getAndSet(false))
       {
          segmentationCalculator.clear();
@@ -140,7 +138,6 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
       segmentationCalculator.setBoundingBox(octree.getBoundingBox());
       segmentationCalculator.setParameters(planarRegionSegmentationParameters.get());
-      intersectionCalculator.setParameters(intersectionEstimationParameters.get());
 
       timeReporter.run(() -> segmentationCalculator.compute(octree.getRoot()), segmentationTimeReport);
 
@@ -156,12 +153,11 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       }
 
       if (enableIntersectionCalulator.get())
-         timeReporter.run(() -> intersectionCalculator.compute(rawData), intersectionsTimeReport);
+         timeReporter.run(() -> updateIntersections(rawData), intersectionsTimeReport);
    }
 
    public void clearOcTree()
    {
-      intersectionCalculator.clear();
       segmentationCalculator.clear();
    }
 
@@ -174,6 +170,11 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
          planarRegionsList = PlanarRegionPolygonizer.createPlanarRegionsList(rawData, concaveHullFactoryParameters, polygonizerParameters, dataExporter);
       else
          planarRegionsList = PlanarRegionPolygonizer.createPlanarRegionsList(rawData, concaveHullFactoryParameters, polygonizerParameters);
+   }
+   
+   private void updateIntersections(List<PlanarRegionSegmentationRawData> rawData)
+   {
+      planarRegionsIntersections = PlanarRegionIntersectionCalculator.computeIntersections(rawData, intersectionEstimationParameters.get());
    }
 
    @Override
@@ -191,12 +192,12 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    @Override
    public int getNumberOfPlaneIntersections()
    {
-      return intersectionCalculator.getNumberOfIntersections();
+      return planarRegionsIntersections == null ? 0 : planarRegionsIntersections.size();
    }
 
    @Override
    public LineSegment3d getIntersection(int index)
    {
-      return intersectionCalculator.getIntersection(index);
+      return planarRegionsIntersections.get(index);
    }
 }

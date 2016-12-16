@@ -17,7 +17,7 @@
    <children>
       <HBox layoutX="14.0" layoutY="11.0" spacing="15.0">
          <children>
-            <VBox alignment="CENTER" prefWidth="129.0" spacing="10.0">
+            <VBox alignment="CENTER" spacing="10.0">
                <children>
                   <ToggleButton fx:id="enableBoundingBoxButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Enable Bounding Box" />
                   <ToggleButton fx:id="showBoundingBoxButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Show Bounding Box" />

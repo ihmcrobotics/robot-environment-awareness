@@ -16,6 +16,19 @@ public class ConcaveHullFactoryParameters
       setDefaultParameters();
    }
 
+   public ConcaveHullFactoryParameters(ConcaveHullFactoryParameters other)
+   {
+      set(other);
+   }
+
+   public void set(ConcaveHullFactoryParameters other)
+   {
+      edgeLengthThreshold = other.edgeLengthThreshold;
+      removeAllTrianglesWithTwoBorderEdges = other.removeAllTrianglesWithTwoBorderEdges;
+      allowSplittingConcaveHull = other.allowSplittingConcaveHull;
+      maxNumberOfIterations = other.maxNumberOfIterations;
+   }
+
    public void setDefaultParameters()
    {
       edgeLengthThreshold = 0.10;

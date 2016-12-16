@@ -39,6 +39,8 @@
             <Label text="Max average deviation ratio: " GridPane.columnIndex="2" GridPane.rowIndex="1" />
             <Slider fx:id="minConsensusRatioSlider" blockIncrement="0.05" majorTickUnit="0.1" max="1.0" minorTickCount="9" prefHeight="38.0" prefWidth="194.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.5" GridPane.columnIndex="3" />
             <Slider fx:id="maxAverageDeviationRatioSlider" blockIncrement="0.05" majorTickUnit="0.1" max="1.0" minorTickCount="9" prefHeight="38.0" prefWidth="194.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.75" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+            <Label text="Number of iterations:" GridPane.rowIndex="2" />
+            <Slider fx:id="numberOfIterationsSlider" blockIncrement="1.0" majorTickUnit="10.0" max="50.0" minorTickCount="4" prefHeight="38.0" prefWidth="194.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="2.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
          </children>
       </GridPane>
    </children>

@@ -2,6 +2,7 @@ package us.ihmc.robotEnvironmentAwareness.planarRegion;
 
 import java.util.Scanner;
 
+import us.ihmc.jOctoMap.tools.ScannerTools;
 import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory;
 
 public class PolygonizerParameters
@@ -129,33 +130,14 @@ public class PolygonizerParameters
    {
       parametersAsString = parametersAsString.replace(",", "");
       Scanner scanner = new Scanner(parametersAsString);
-      while (!scanner.hasNextDouble())
-         scanner.next();
-      double concaveHullThreshold = scanner.nextDouble();
-      while (!scanner.hasNextInt())
-         scanner.next();
-      int minNumberOfNodes = scanner.nextInt();
-      while (!scanner.hasNextDouble())
-         scanner.next();
-      double shallowAngleThreshold = scanner.nextDouble();
-      while (!scanner.hasNextDouble())
-         scanner.next();
-      double peakAngleThreshold = scanner.nextDouble();
-      while (!scanner.hasNextDouble())
-         scanner.next();
-      double lengthThreshold = scanner.nextDouble();
-      while (!scanner.hasNextDouble())
-         scanner.next();
-      double depthThreshold = scanner.nextDouble();
-      scanner.close();
-
       PolygonizerParameters parameters = new PolygonizerParameters();
-      parameters.setConcaveHullThreshold(concaveHullThreshold);
-      parameters.setMinNumberOfNodes(minNumberOfNodes);
-      parameters.setShallowAngleThreshold(shallowAngleThreshold);
-      parameters.setPeakAngleThreshold(peakAngleThreshold);
-      parameters.setLengthThreshold(lengthThreshold);
-      parameters.setDepthThreshold(depthThreshold);
+      parameters.setConcaveHullThreshold(ScannerTools.readNextDouble(scanner, parameters.getConcaveHullThreshold()));
+      parameters.setMinNumberOfNodes(ScannerTools.readNextInt(scanner, parameters.getMinNumberOfNodes()));
+      parameters.setShallowAngleThreshold(ScannerTools.readNextDouble(scanner, parameters.getShallowAngleThreshold()));
+      parameters.setPeakAngleThreshold(ScannerTools.readNextDouble(scanner, parameters.getPeakAngleThreshold()));
+      parameters.setLengthThreshold(ScannerTools.readNextDouble(scanner, parameters.getLengthThreshold()));
+      parameters.setDepthThreshold(ScannerTools.readNextDouble(scanner, parameters.getDepthThreshold()));
+      scanner.close();
       return parameters;
    }
 }

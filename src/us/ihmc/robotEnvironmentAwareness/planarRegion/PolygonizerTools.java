@@ -128,4 +128,14 @@ public class PolygonizerTools
       orientation.set(JOctoMapGeometryTools.getRotationBasedOnNormal(normal));
       return orientation;
    }
+
+   public static double computeEllipsoidVolume(Vector3d radii)
+   {
+      return computeEllipsoidVolume(radii.getX(), radii.getY(), radii.getZ());
+   }
+
+   public static double computeEllipsoidVolume(double xRadius, double yRadius, double zRadius)
+   {
+      return 4.0 / 3.0 * Math.PI * xRadius * yRadius * zRadius;
+   }
 }

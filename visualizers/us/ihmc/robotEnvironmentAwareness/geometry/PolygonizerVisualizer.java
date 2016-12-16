@@ -2,6 +2,8 @@ package us.ihmc.robotEnvironmentAwareness.geometry;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,6 +32,10 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
@@ -42,7 +48,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.MeshView;
@@ -65,6 +72,7 @@ import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationRawDataIm
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
 import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.geometry.RigidBodyTransform;
+import us.ihmc.robotics.linearAlgebra.PrincipalComponentAnalysis3D;
 import us.ihmc.robotics.lists.ListWrappingIndexTools;
 
 public class PolygonizerVisualizer extends Application
@@ -95,6 +103,9 @@ public class PolygonizerVisualizer extends Application
    private final PolygonizerParameters polygonizerParameters = new PolygonizerParameters();
    private final IntersectionEstimationParameters intersectionParameters = new IntersectionEstimationParameters();
 
+   private final Map<Integer, PlanarRegionSegmentationRawData> idToRawData = new HashMap<>();
+   private final IntegerProperty currentRegionIdProperty = new SimpleIntegerProperty(this, "currentRegionId", -1);
+
    public PolygonizerVisualizer() throws IOException
    {
       parameters.setEdgeLengthThreshold(0.05);
@@ -117,6 +128,7 @@ public class PolygonizerVisualizer extends Application
          Platform.exit();
       dataImporter.loadPlanarRegionSegmentationData();
       List<PlanarRegionSegmentationRawData> regionsRawData = dataImporter.getPlanarRegionSegmentationRawData();
+      regionsRawData.forEach(rawData -> idToRawData.put(rawData.getRegionId(), rawData));
 
       View3DFactory view3dFactory = View3DFactory.createSubscene();
       FocusBasedCameraMouseEventHandler cameraController = view3dFactory.addCameraController(true);
@@ -135,6 +147,7 @@ public class PolygonizerVisualizer extends Application
          else
             rawData = regionsRawData.stream().filter(region -> regionIdFilterSet.contains(region.getRegionId())).findFirst().get();
 
+         currentRegionIdProperty.set(rawData.getRegionId());
          RigidBodyTransform transform = rawData.getTransformFromLocalToWorld();
          transform.invert();
 
@@ -190,6 +203,7 @@ public class PolygonizerVisualizer extends Application
                if (regionId != null)
                {
                   System.out.println("Region picked: " + regionId);
+                  currentRegionIdProperty.set(regionId);
                   for (Entry<Node, Integer> nodeAndId : nodeToRegionId.entrySet())
                   {
                      if (nodeAndId.getValue() != regionId)
@@ -204,19 +218,18 @@ public class PolygonizerVisualizer extends Application
          });
       }
 
-      HBox coordinatesHBox = setupFocusCoordinatesViz(cameraController);
       BorderPane mainPane = new BorderPane();
       view3dFactory.bindSubSceneSizeToPaneSize(mainPane);
       mainPane.setCenter(scene);
-      mainPane.setTop(coordinatesHBox);
+      mainPane.setTop(setupStatisticViz(cameraController));
 
       primaryStage.setScene(new Scene(mainPane, 800, 400, true));
       primaryStage.show();
    }
 
-   private HBox setupFocusCoordinatesViz(FocusBasedCameraMouseEventHandler cameraController)
+   private Pane setupStatisticViz(FocusBasedCameraMouseEventHandler cameraController)
    {
-      HBox coordinatesHBox = new HBox();
+      FlowPane dataPane = new FlowPane();
 
       DoubleProperty xProperty = cameraController.getTranslate().xProperty();
       DoubleProperty yProperty = cameraController.getTranslate().yProperty();
@@ -226,20 +239,86 @@ public class PolygonizerVisualizer extends Application
       Label yFocusLabel = new Label("y focus: ");
       Label zFocusLabel = new Label("z focus: ");
 
-      TextField xFocus = new TextField("blop");
-      TextField yFocus = new TextField("blop");
-      TextField zFocus = new TextField("blop");
+      TextField xFocus = new TextField("0");
+      xFocus.setPrefWidth(50.0);
+      TextField yFocus = new TextField("0");
+      yFocus.setPrefWidth(50.0);
+      TextField zFocus = new TextField("0");
+      zFocus.setPrefWidth(50.0);
 
       xFocus.setEditable(false);
       yFocus.setEditable(false);
       zFocus.setEditable(false);
 
-      xProperty.addListener((Observable o) -> xFocus.setText(xProperty.getValue().toString()));
-      yProperty.addListener((Observable o) -> yFocus.setText(yProperty.getValue().toString()));
-      zProperty.addListener((Observable o) -> zFocus.setText(zProperty.getValue().toString()));
+      NumberFormat formatter1 = new DecimalFormat("0.000;-0.000");
 
-      coordinatesHBox.getChildren().addAll(xFocusLabel, xFocus, yFocusLabel, yFocus, zFocusLabel, zFocus);
-      return coordinatesHBox;
+      xProperty.addListener((Observable o) -> xFocus.setText(formatter1.format(xProperty.getValue())));
+      yProperty.addListener((Observable o) -> yFocus.setText(formatter1.format(yProperty.getValue())));
+      zProperty.addListener((Observable o) -> zFocus.setText(formatter1.format(zProperty.getValue())));
+
+      dataPane.getChildren().addAll(xFocusLabel, xFocus, yFocusLabel, yFocus, zFocusLabel, zFocus);
+
+      ObjectProperty<Vector3d> standardDeviationProperty = new SimpleObjectProperty<>(this, "standardDeviation", new Vector3d());
+      currentRegionIdProperty.addListener((Observable o) -> standardDeviationProperty.set(computePrincipalStandardDeviationValues(idToRawData.get(currentRegionIdProperty.get()))));
+
+      Label regionIdLabel = new Label("current region ID: ");
+      TextField regionId = new TextField("-1");
+      regionId.setPrefWidth(100.0);
+      regionId.setEditable(false);
+      Label stdXLabel = new Label("standard dev. x: ");
+      TextField stdx = new TextField("-1");
+      stdx.setPrefWidth(75.0);
+      stdx.setEditable(false);
+      Label stdYLabel = new Label("y: ");
+      TextField stdy = new TextField("-1");
+      stdy.setPrefWidth(75.0);
+      stdy.setEditable(false);
+      Label stdZLabel = new Label("z: ");
+      TextField stdz = new TextField("-1");
+      stdz.setPrefWidth(75.0);
+      stdz.setEditable(false);
+
+      Label stdVolumeLabel = new Label("volume: ");
+      TextField stdVolume = new TextField("-1");
+      stdVolume.setPrefWidth(75.0);
+      stdVolume.setEditable(false);
+      Label stdDensityLabel = new Label("density: ");
+      TextField stdDensity = new TextField("-1");
+      stdDensity.setPrefWidth(75.0);
+      stdDensity.setEditable(false);
+
+      NumberFormat formatter2 = new DecimalFormat("0.###E0");
+      
+      currentRegionIdProperty.addListener((Observable o) -> regionId.setText(Integer.toString(currentRegionIdProperty.get())));
+      standardDeviationProperty.addListener((Observable o) -> stdx.setText(formatter2.format(standardDeviationProperty.get().getX())));
+      standardDeviationProperty.addListener((Observable o) -> stdy.setText(formatter2.format(standardDeviationProperty.get().getY())));
+      standardDeviationProperty.addListener((Observable o) -> stdz.setText(formatter2.format(standardDeviationProperty.get().getZ())));
+      standardDeviationProperty.addListener((Observable o) -> stdVolume.setText(formatter2.format(ellipsoidVolume(standardDeviationProperty.get()))));
+      standardDeviationProperty.addListener((Observable o) -> stdDensity.setText(formatter2.format(idToRawData.get(currentRegionIdProperty.get()).size() / ellipsoidVolume(standardDeviationProperty.get()))));
+
+      dataPane.getChildren().addAll(regionIdLabel, regionId, stdXLabel, stdx, stdYLabel, stdy, stdZLabel, stdz, stdVolumeLabel, stdVolume, stdDensityLabel, stdDensity);
+
+      return dataPane;
+   }
+
+   public double ellipsoidVolume(Vector3d radii)
+   {
+      return ellipsoidVolume(radii.getX(), radii.getY(), radii.getZ());
+   }
+
+   public double ellipsoidVolume(double xRadius, double yRadius, double zRadius)
+   {
+      return 4.0 / 3.0 * Math.PI * xRadius * yRadius * zRadius * 100.0 * 100.0 * 100.0;
+   }
+
+   public static Vector3d computePrincipalStandardDeviationValues(PlanarRegionSegmentationRawData rawData)
+   {
+      PrincipalComponentAnalysis3D pca = new PrincipalComponentAnalysis3D();
+      rawData.stream().forEach(point -> pca.addPoint(point.getX(), point.getY(), point.getZ()));
+      pca.compute();
+      Vector3d principalStandardDeviation = new Vector3d();
+      pca.getStandardDeviation(principalStandardDeviation);
+      return principalStandardDeviation;
    }
 
    public static void translateNode(Node nodeToTranslate, Tuple3d translation)

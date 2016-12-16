@@ -40,14 +40,12 @@ public class PlanarRegionSegmentationCalculator
    {
       allRegionNodes.clear();
 
-      regionsNodeData.stream().forEach(region -> removeBadNodesFromRegion(boundingBox, parameters, region));
-      regionsNodeData = regionsNodeData.stream().filter(region -> !region.isEmpty()).collect(Collectors.toList());
-      regionsNodeData.stream().forEach(region -> region.nodeStream().forEach(allRegionNodes::add));
-      regionsNodeData.stream().forEach(region -> growPlanarRegion(root, region, boundingBox, parameters));
+      regionsNodeData.parallelStream().forEach(region -> removeBadNodesFromRegion(boundingBox, parameters, region));
+      regionsNodeData = regionsNodeData.parallelStream().filter(region -> !region.isEmpty()).collect(Collectors.toList());
+      regionsNodeData.forEach(region -> region.nodeStream().forEach(allRegionNodes::add));
+      regionsNodeData.forEach(region -> growPlanarRegion(root, region, boundingBox, parameters));
       regionsNodeData = regionsNodeData.stream().filter(region -> region.getNumberOfNodes() > parameters.getMinRegionSize()).collect(Collectors.toList());
-      regionsNodeData.parallelStream().forEach(PlanarRegionSegmentationNodeData::recomputeNormalAndOrigin);
-      regionsNodeData.parallelStream().forEach(PlanarRegionSegmentationCalculator::flipNormalOfOutliers);
-      
+
       Set<NormalOcTreeNode> nodeSet = new HashSet<>();
       nodeSet.clear();
       new OcTreeIterable<>(root, leafInBoundingBoxWithNormalSetRule(boundingBox)).forEach(nodeSet::add);
@@ -57,7 +55,20 @@ public class PlanarRegionSegmentationCalculator
       nodesWithoutRegion.addAll(nodeSet);
 
       regionsNodeData.addAll(searchNewPlanarRegions(root, boundingBox, parameters, random));
+      regionsNodeData.parallelStream().forEach(PlanarRegionSegmentationNodeData::recomputeNormalAndOrigin);
+      regionsNodeData.parallelStream().forEach(PlanarRegionSegmentationCalculator::flipNormalOfOutliers);
+      regionsNodeData = regionsNodeData.parallelStream().filter(region -> !isRegionSparse(region)).collect(Collectors.toList());
+
       regionsNodeData = mergePlanarRegionsIfPossible(root, regionsNodeData, parameters);
+   }
+
+   public boolean isRegionSparse(PlanarRegionSegmentationNodeData region)
+   {
+      Vector3d standardDeviationPrincipalValues = region.getStandardDeviationPrincipalValues();
+      if (standardDeviationPrincipalValues.getZ() > parameters.getMaxStandardDeviation())
+         return true;
+      double density = region.getNumberOfNodes() / PolygonizerTools.computeEllipsoidVolume(standardDeviationPrincipalValues);
+      return density < parameters.getMinVolumicDensity();
    }
 
    public void removeDeadNodes()

@@ -10,6 +10,8 @@ public class PlanarRegionSegmentationParametersProperty extends ParametersProper
    private final DoubleField maxAngleFromPlane = new DoubleField(PlanarRegionSegmentationParameters::getMaxAngleFromPlane, (p, v) -> p.setMaxAngleFromPlane(v));
    private final DoubleField minNormalQuality = new DoubleField(PlanarRegionSegmentationParameters::getMinNormalQuality, (p, v) -> p.setMinNormalQuality(v));
    private final IntegerField minRegionSize = new IntegerField(PlanarRegionSegmentationParameters::getMinRegionSize, (p, v) -> p.setMinRegionSize(v));
+   private final DoubleField maxStandardDeviation = new DoubleField(PlanarRegionSegmentationParameters::getMaxStandardDeviation, (p, v) -> p.setMaxStandardDeviation(v));
+   private final DoubleField minVolumicDensity = new DoubleField(PlanarRegionSegmentationParameters::getMinVolumicDensity, (p, v) -> p.setMinVolumicDensity(v));
 
    public PlanarRegionSegmentationParametersProperty(Object bean, String name)
    {
@@ -39,6 +41,16 @@ public class PlanarRegionSegmentationParametersProperty extends ParametersProper
    public void bindBidirectionalMinRegionSize(Property<? extends Number> property)
    {
       bindFieldBidirectionalToNumberProperty(property, minRegionSize);
+   }
+
+   public void bindBidirectionalMaxStandardDeviation(Property<? extends Number> property)
+   {
+      bindFieldBidirectionalToNumberProperty(property, maxStandardDeviation);
+   }
+
+   public void bindBidirectionalMinVolumicDensity(Property<? extends Number> property)
+   {
+      bindFieldBidirectionalToNumberProperty(property, minVolumicDensity);
    }
 
    @Override

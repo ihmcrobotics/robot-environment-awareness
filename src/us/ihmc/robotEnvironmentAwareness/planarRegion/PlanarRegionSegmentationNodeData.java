@@ -25,6 +25,7 @@ public class PlanarRegionSegmentationNodeData implements Iterable<NormalOcTreeNo
    private final PrincipalComponentAnalysis3D pca = new PrincipalComponentAnalysis3D();
    private final VectorMean normal = new VectorMean();
    private final PointMean point = new PointMean();
+   private final Vector3d standardDeviationPrincipalValues = new Vector3d();
    private final Vector3d temporaryVector = new Vector3d();
 
    private final Point3d min = new Point3d(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
@@ -99,6 +100,8 @@ public class PlanarRegionSegmentationNodeData implements Iterable<NormalOcTreeNo
 
       Vector3d thirdVector = new Vector3d();
       pca.getThirdVector(thirdVector);
+      pca.getStandardDeviation(standardDeviationPrincipalValues);
+
       if (thirdVector.dot(normal) < 0.0)
          thirdVector.negate();
       normal.clear();
@@ -320,6 +323,11 @@ public class PlanarRegionSegmentationNodeData implements Iterable<NormalOcTreeNo
    public Point3d getOrigin()
    {
       return point;
+   }
+
+   public Vector3d getStandardDeviationPrincipalValues()
+   {
+      return standardDeviationPrincipalValues;
    }
 
    public boolean isEmpty()

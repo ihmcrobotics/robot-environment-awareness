@@ -1,5 +1,9 @@
 #
+<<<<<<< HEAD
 #Thu Dec 15 19:40:39 CST 2016
+=======
+#Sun Dec 11 16:04:45 CST 2016
+>>>>>>> refs/heads/develop
 REA/UserInterface/Lidar/Show=false
 REA/UserInterface/NormalEstimation/Show=true
 REA/UserInterface/OcTree/BoundingBox/Show=false

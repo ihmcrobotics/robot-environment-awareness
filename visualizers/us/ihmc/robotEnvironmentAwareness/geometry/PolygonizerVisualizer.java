@@ -41,7 +41,6 @@ import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.SubScene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -133,8 +132,6 @@ public class PolygonizerVisualizer extends Application
       View3DFactory view3dFactory = View3DFactory.createSubscene();
       FocusBasedCameraMouseEventHandler cameraController = view3dFactory.addCameraController(true);
       view3dFactory.addWorldCoordinateSystem(0.3);
-      view3dFactory.enableRequestFocusOnMouseClicked();
-      SubScene scene = view3dFactory.getSubScene();
 
       Set<Integer> regionIdFilterSet = new HashSet<>();
       Arrays.stream(onlyRegionWithId).forEach(regionIdFilterSet::add);
@@ -181,7 +178,7 @@ public class PolygonizerVisualizer extends Application
             view3dFactory.addNodeToView(intersectionsNode);
          }
 
-         scene.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>()
+         view3dFactory.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>()
          {
             @Override
             public void handle(MouseEvent event)
@@ -220,7 +217,7 @@ public class PolygonizerVisualizer extends Application
 
       BorderPane mainPane = new BorderPane();
       view3dFactory.bindSubSceneSizeToPaneSize(mainPane);
-      mainPane.setCenter(scene);
+      mainPane.setCenter(view3dFactory.getSubScene());
       mainPane.setTop(setupStatisticViz(cameraController));
 
       primaryStage.setScene(new Scene(mainPane, 800, 400, true));

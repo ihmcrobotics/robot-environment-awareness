@@ -1,10 +1,11 @@
 #
-#Sun Dec 04 22:38:44 CST 2016
+#Sun Dec 11 16:04:45 CST 2016
 REA/UserInterface/Lidar/Show=false
 REA/UserInterface/NormalEstimation/Show=true
 REA/UserInterface/OcTree/BoundingBox/Show=false
 REA/UserInterface/OcTree/Buffer/Show=false
 REA/UserInterface/OcTree/Color=REGION
 REA/UserInterface/OcTree/Depth=16.0
+REA/UserInterface/OcTree/Display=PLANE
 REA/UserInterface/OcTree/Show=true
 REA/UserInterface/PlanarRegions/Node/Hide=false

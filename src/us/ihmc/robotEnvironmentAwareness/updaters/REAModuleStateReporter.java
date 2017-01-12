@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
+import us.ihmc.communication.packets.PlanarRegionMessageConverter;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
@@ -52,8 +53,8 @@ public class REAModuleStateReporter
 
    public void reportPlanarRegionsState(RegionFeaturesProvider regionFeaturesProvider)
    {
-      if (arePlanarRegionsRequested.getAndSet(false))
-         reaMessager.submitMessage(REAModuleAPI.PlanarRegionsState, REAPlanarRegionsConverter.createPlanarRegionsListMessage(regionFeaturesProvider));
+      if (regionFeaturesProvider.getPlanarRegionsList() != null && arePlanarRegionsRequested.getAndSet(false))
+         reaMessager.submitMessage(REAModuleAPI.PlanarRegionsState, PlanarRegionMessageConverter.convertToPlanarRegionsListMessage(regionFeaturesProvider.getPlanarRegionsList()));
       if (isPlanarRegionSegmentationRequested.getAndSet(false))
          reaMessager.submitMessage(REAModuleAPI.PlanarRegionsSegmentationState, REAPlanarRegionsConverter.createPlanarRegionSegmentationMessages(regionFeaturesProvider));
       if (arePlanarRegionsIntersectionsRequested.getAndSet(false))

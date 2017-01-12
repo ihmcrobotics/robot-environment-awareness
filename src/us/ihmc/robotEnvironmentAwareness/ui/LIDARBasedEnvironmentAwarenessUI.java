@@ -10,6 +10,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import us.ihmc.communication.util.NetworkPorts;
+import us.ihmc.javaFXToolkit.scenes.View3DFactory;
 import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassLists;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
@@ -23,7 +24,6 @@ import us.ihmc.robotEnvironmentAwareness.ui.controller.PointCloudAnchorPaneContr
 import us.ihmc.robotEnvironmentAwareness.ui.controller.PolygonizerAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.RegionSegmentationAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataExporter;
-import us.ihmc.robotEnvironmentAwareness.ui.scene3D.RobotEnvironmentAwareness3DScene;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.LidarFrameViewer;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.REAMeshViewer;
 
@@ -31,7 +31,6 @@ public class LIDARBasedEnvironmentAwarenessUI
 {
    private static final String UI_CONFIGURATION_FILE_NAME = "./Configurations/defaultREAUIConfiguration.txt";
 
-   private final RobotEnvironmentAwareness3DScene scene3D = new RobotEnvironmentAwareness3DScene();
    private final BorderPane mainPane;
 
    private final REAUIMessager uiMessager;
@@ -62,7 +61,7 @@ public class LIDARBasedEnvironmentAwarenessUI
       this.primaryStage = primaryStage;
       FXMLLoader loader = new FXMLLoader();
       loader.setController(this);
-      loader.setLocation(getClass().getResource("LIDARBasedEnvironmentAwarenessUI.fxml")); // temporary
+      loader.setLocation(getClass().getResource(getClass().getSimpleName() + ".fxml"));
       mainPane = loader.load();
 
       // Client
@@ -75,10 +74,13 @@ public class LIDARBasedEnvironmentAwarenessUI
 
       initializeControllers(uiMessager);
 
-      mainPane.setCenter(scene3D);
+      View3DFactory view3dFactory = View3DFactory.createSubscene();
+      view3dFactory.addCameraController();
+      view3dFactory.addWorldCoordinateSystem(0.3);
+      mainPane.setCenter(view3dFactory.getSubSceneWrappedInsidePane());
 
-      scene3D.attachChild(reaMeshViewer.getRoot());
-      scene3D.attachChild(lidarFrameViewer.getRoot());
+      view3dFactory.addNodeToView(reaMeshViewer.getRoot());
+      view3dFactory.addNodeToView(lidarFrameViewer.getRoot());
 
       uiConnectionHandler = new UIConnectionHandler(primaryStage, uiMessager);
       uiConnectionHandler.start();
@@ -150,7 +152,6 @@ public class LIDARBasedEnvironmentAwarenessUI
          uiConnectionHandler.stop();
          uiMessager.closeMessager();
 
-         scene3D.stop();
          reaMeshViewer.stop();
          lidarFrameViewer.stop();
       }

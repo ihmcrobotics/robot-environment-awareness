@@ -2,19 +2,26 @@ package us.ihmc.robotEnvironmentAwareness.planarRegion;
 
 import java.util.Scanner;
 
+import us.ihmc.jOctoMap.tools.ScannerTools;
+
 public class PlanarRegionSegmentationParameters
 {
-   public static final double DEFAULT_SEARCH_RADIUS = 0.05;
-   public static final double DEFAULT_MAX_DISTANCE_FROM_PLANE = 0.05;
-   public static final double DEFAULT_MAX_ANGLE_FROM_PLANE = Math.toRadians(10.0);
-   public static final double DEFAULT_MIN_NORMAL_QUALITY = 0.005;
-   public static final int DEFAULT_MIN_REGION_SIZE = 50;
+   private static final double DEFAULT_SEARCH_RADIUS = 0.05;
+   private static final double DEFAULT_MAX_DISTANCE_FROM_PLANE = 0.05;
+   private static final double DEFAULT_MAX_ANGLE_FROM_PLANE = Math.toRadians(10.0);
+   private static final double DEFAULT_MIN_NORMAL_QUALITY = 0.005;
+   private static final int DEFAULT_MIN_REGION_SIZE = 50;
+   private static final double DEFAULT_MAX_STANDARD_DEVIATION = 0.015;
+   private static final double DEFAULT_VOLUMIC_DENSITY = 0.10 * 1.0e6; // cm^3 to m^3
 
    private double searchRadius;
    private double maxDistanceFromPlane;
    private double maxAngleFromPlane;
    private double minNormalQuality;
    private int minRegionSize;
+
+   private double maxStandardDeviation;
+   private double minVolumicDensity;
 
    public PlanarRegionSegmentationParameters()
    {
@@ -33,6 +40,9 @@ public class PlanarRegionSegmentationParameters
       maxAngleFromPlane = DEFAULT_MAX_ANGLE_FROM_PLANE;
       minNormalQuality = DEFAULT_MIN_NORMAL_QUALITY;
       minRegionSize = DEFAULT_MIN_REGION_SIZE;
+
+      maxStandardDeviation = DEFAULT_MAX_STANDARD_DEVIATION;
+      minVolumicDensity = DEFAULT_VOLUMIC_DENSITY;
    }
 
    public void set(PlanarRegionSegmentationParameters other)
@@ -42,6 +52,8 @@ public class PlanarRegionSegmentationParameters
       maxAngleFromPlane = other.maxAngleFromPlane;
       minNormalQuality = other.minNormalQuality;
       minRegionSize = other.minRegionSize;
+      maxStandardDeviation = other.maxStandardDeviation;
+      minVolumicDensity = other.minVolumicDensity;
    }
 
    public void setSearchRadius(double searchRadius)
@@ -69,6 +81,16 @@ public class PlanarRegionSegmentationParameters
       this.minRegionSize = minRegionSize;
    }
 
+   public void setMaxStandardDeviation(double maxStandardDeviation)
+   {
+      this.maxStandardDeviation = maxStandardDeviation;
+   }
+
+   public void setMinVolumicDensity(double minVolumicDensity)
+   {
+      this.minVolumicDensity = minVolumicDensity;
+   }
+
    public double getSearchRadius()
    {
       return searchRadius;
@@ -93,39 +115,38 @@ public class PlanarRegionSegmentationParameters
    {
       return minRegionSize;
    }
-   
+
+   public double getMaxStandardDeviation()
+   {
+      return maxStandardDeviation;
+   }
+
+   public double getMinVolumicDensity()
+   {
+      return minVolumicDensity;
+   }
+
    @Override
    public String toString()
    {
-      return "search radius: " + searchRadius + ", max distance from plane: " + maxDistanceFromPlane + ", maxAngleFromPlane: " + maxAngleFromPlane + ", minNormalQuality: " + minNormalQuality + ", min region size: " + minRegionSize;
+      return "search radius: " + searchRadius + ", max distance from plane: " + maxDistanceFromPlane
+            + ", maxAngleFromPlane: " + maxAngleFromPlane + ", minNormalQuality: " + minNormalQuality + ", min region size: " + minRegionSize
+            + ", max standard deviation: " + maxStandardDeviation + ", min volumic density: " + minVolumicDensity;
    }
 
    public static PlanarRegionSegmentationParameters parse(String parametersAsString)
    {
       parametersAsString = parametersAsString.replace(",", "");
       Scanner scanner = new Scanner(parametersAsString);
-      while (!scanner.hasNextDouble())
-         scanner.next();
-      double searchRadius = scanner.nextDouble();
-      while (!scanner.hasNextDouble())
-         scanner.next();
-      double maxDistanceFromPlane = scanner.nextDouble();
-      while (!scanner.hasNextDouble())
-         scanner.next();
-      double maxAngleFromPlane = scanner.nextDouble();
-      while (!scanner.hasNextDouble())
-         scanner.next();
-      double minNormalQuality = scanner.nextDouble();
-      while (!scanner.hasNextInt())
-         scanner.next();
-      int minRegionSize = scanner.nextInt();
-      scanner.close();
       PlanarRegionSegmentationParameters parameters = new PlanarRegionSegmentationParameters();
-      parameters.setSearchRadius(searchRadius);
-      parameters.setMaxDistanceFromPlane(maxDistanceFromPlane);
-      parameters.setMaxAngleFromPlane(maxAngleFromPlane);
-      parameters.setMinNormalQuality(minNormalQuality);
-      parameters.setMinRegionSize(minRegionSize);
+      parameters.setSearchRadius(ScannerTools.readNextDouble(scanner, parameters.getSearchRadius()));
+      parameters.setMaxDistanceFromPlane(ScannerTools.readNextDouble(scanner, parameters.getMaxDistanceFromPlane()));
+      parameters.setMaxAngleFromPlane(ScannerTools.readNextDouble(scanner, parameters.getMaxAngleFromPlane()));
+      parameters.setMinNormalQuality(ScannerTools.readNextDouble(scanner, parameters.getMinNormalQuality()));
+      parameters.setMinRegionSize(ScannerTools.readNextInt(scanner, parameters.getMinRegionSize()));
+      parameters.setMaxStandardDeviation(ScannerTools.readNextDouble(scanner, parameters.getMaxStandardDeviation()));
+      parameters.setMinVolumicDensity(ScannerTools.readNextDouble(scanner, parameters.getMinVolumicDensity()));
+      scanner.close();
       return parameters;
    }
 }

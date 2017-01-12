@@ -25,12 +25,12 @@ import us.ihmc.jOctoMap.tools.OcTreeNearestNeighborTools.NeighborActionRule;
 import us.ihmc.robotEnvironmentAwareness.exception.PlanarRegionSegmentationException;
 import us.ihmc.robotics.geometry.PlanarRegion;
 
-public class OcTreeNodePlanarRegionCalculator
+public class PlanarRegionSegmentationCalculator
 {
    private final Random random = new Random(234324L);
 
    private final Set<NormalOcTreeNode> allRegionNodes = new HashSet<>();
-   private List<OcTreeNodePlanarRegion> ocTreeNodePlanarRegions = new ArrayList<>();
+   private List<PlanarRegionSegmentationNodeData> regionsNodeData = new ArrayList<>();
    private final List<NormalOcTreeNode> nodesWithoutRegion = new ArrayList<>();
 
    private PlanarRegionSegmentationParameters parameters;
@@ -40,14 +40,12 @@ public class OcTreeNodePlanarRegionCalculator
    {
       allRegionNodes.clear();
 
-      ocTreeNodePlanarRegions.stream().forEach(region -> removeBadNodesFromRegion(boundingBox, parameters, region));
-      ocTreeNodePlanarRegions = ocTreeNodePlanarRegions.stream().filter(region -> !region.isEmpty()).collect(Collectors.toList());
-      ocTreeNodePlanarRegions.stream().forEach(region -> region.nodeStream().forEach(allRegionNodes::add));
-      ocTreeNodePlanarRegions.stream().forEach(region -> growPlanarRegion(root, region, boundingBox, parameters));
-      ocTreeNodePlanarRegions = ocTreeNodePlanarRegions.stream().filter(region -> region.getNumberOfNodes() > parameters.getMinRegionSize()).collect(Collectors.toList());
-      ocTreeNodePlanarRegions.parallelStream().forEach(OcTreeNodePlanarRegion::recomputeNormalAndOrigin);
-      ocTreeNodePlanarRegions.parallelStream().forEach(OcTreeNodePlanarRegionCalculator::flipNormalOfOutliers);
-      
+      regionsNodeData.parallelStream().forEach(region -> removeBadNodesFromRegion(boundingBox, parameters, region));
+      regionsNodeData = regionsNodeData.parallelStream().filter(region -> !region.isEmpty()).collect(Collectors.toList());
+      regionsNodeData.forEach(region -> region.nodeStream().forEach(allRegionNodes::add));
+      regionsNodeData.forEach(region -> growPlanarRegion(root, region, boundingBox, parameters));
+      regionsNodeData = regionsNodeData.stream().filter(region -> region.getNumberOfNodes() > parameters.getMinRegionSize()).collect(Collectors.toList());
+
       Set<NormalOcTreeNode> nodeSet = new HashSet<>();
       nodeSet.clear();
       new OcTreeIterable<>(root, leafInBoundingBoxWithNormalSetRule(boundingBox)).forEach(nodeSet::add);
@@ -56,23 +54,43 @@ public class OcTreeNodePlanarRegionCalculator
       nodesWithoutRegion.clear();
       nodesWithoutRegion.addAll(nodeSet);
 
-      ocTreeNodePlanarRegions.addAll(searchNewPlanarRegions(root, boundingBox, parameters, random));
-      ocTreeNodePlanarRegions = mergePlanarRegionsIfPossible(root, ocTreeNodePlanarRegions, parameters);
+      regionsNodeData.addAll(searchNewPlanarRegions(root, boundingBox, parameters, random));
+      regionsNodeData.parallelStream().forEach(PlanarRegionSegmentationNodeData::recomputeNormalAndOrigin);
+      regionsNodeData.parallelStream().forEach(PlanarRegionSegmentationCalculator::flipNormalOfOutliers);
+      regionsNodeData = regionsNodeData.parallelStream().filter(region -> !isRegionSparse(region)).collect(Collectors.toList());
+
+      regionsNodeData = mergePlanarRegionsIfPossible(root, regionsNodeData, parameters);
+   }
+
+   public boolean isRegionSparse(PlanarRegionSegmentationNodeData region)
+   {
+      Vector3d standardDeviationPrincipalValues = region.getStandardDeviationPrincipalValues();
+      if (standardDeviationPrincipalValues.getZ() > parameters.getMaxStandardDeviation())
+         return true;
+      double density = region.getNumberOfNodes() / PolygonizerTools.computeEllipsoidVolume(standardDeviationPrincipalValues);
+      return density < parameters.getMinVolumicDensity();
    }
 
    public void removeDeadNodes()
    {
-      ocTreeNodePlanarRegions.stream().forEach(region -> removeDeadNodesFromRegion(region));
+      regionsNodeData.stream().forEach(region -> removeDeadNodesFromRegion(region));
    }
 
-   public List<OcTreeNodePlanarRegion> getOcTreeNodePlanarRegions()
+   public List<PlanarRegionSegmentationNodeData> getSegmentationNodeData()
    {
-      return ocTreeNodePlanarRegions;
+      return regionsNodeData;
+   }
+
+   public List<PlanarRegionSegmentationRawData> getSegmentationRawData()
+   {
+      return regionsNodeData.stream()
+                            .map(region -> new PlanarRegionSegmentationRawData(region))
+                            .collect(Collectors.toList());
    }
 
    public void clear()
    {
-      ocTreeNodePlanarRegions.clear();
+      regionsNodeData.clear();
    }
 
    private IteratorSelectionRule<NormalOcTreeNode> leafInBoundingBoxWithNormalSetRule(OcTreeBoundingBoxInterface boundingBox)
@@ -81,18 +99,18 @@ public class OcTreeNodePlanarRegionCalculator
       return OcTreeIteratorFactory.multipleRule(OcTreeIteratorFactory.leavesInsideBoundingBoxOnly(boundingBox), isNormalSetRule);
    }
 
-   public static void flipNormalOfOutliers(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
+   public static void flipNormalOfOutliers(PlanarRegionSegmentationNodeData region)
    {
-      Vector3d regionNormal = ocTreeNodePlanarRegion.getNormal();
-      int numberOfNormalsFlipped = (int) ocTreeNodePlanarRegion.nodeParallelStream().filter(node -> isNodeNormalFlipped(node, regionNormal)).count();
-      int numberOfNormalsNotFlipped = ocTreeNodePlanarRegion.getNumberOfNodes() - numberOfNormalsFlipped;
+      Vector3d regionNormal = region.getNormal();
+      int numberOfNormalsFlipped = (int) region.nodeParallelStream().filter(node -> isNodeNormalFlipped(node, regionNormal)).count();
+      int numberOfNormalsNotFlipped = region.getNumberOfNodes() - numberOfNormalsFlipped;
 
       // The majority of the nodes are flipped => flip the region normal
       if (numberOfNormalsFlipped > numberOfNormalsNotFlipped)
          regionNormal.negate();
 
       // Flip the nodes that upside down
-      ocTreeNodePlanarRegion.nodeParallelStream().filter(node -> isNodeNormalFlipped(node, regionNormal)).forEach(NormalOcTreeNode::negateNormal);
+      region.nodeParallelStream().filter(node -> isNodeNormalFlipped(node, regionNormal)).forEach(NormalOcTreeNode::negateNormal);
    }
 
    private static boolean isNodeNormalFlipped(NormalOcTreeNode node, Vector3d referenceNormal)
@@ -100,13 +118,13 @@ public class OcTreeNodePlanarRegionCalculator
       return node.getNormalX() * referenceNormal.getX() + node.getNormalY() * referenceNormal.getY() + node.getNormalZ() * referenceNormal.getZ() < 0.0;
    }
 
-   public static List<OcTreeNodePlanarRegion> mergePlanarRegionsIfPossible(NormalOcTreeNode root, List<OcTreeNodePlanarRegion> inputRegions, PlanarRegionSegmentationParameters parameters)
+   public static List<PlanarRegionSegmentationNodeData> mergePlanarRegionsIfPossible(NormalOcTreeNode root, List<PlanarRegionSegmentationNodeData> inputRegions, PlanarRegionSegmentationParameters parameters)
    {
-      List<OcTreeNodePlanarRegion> mergedRegions = new ArrayList<>();
+      List<PlanarRegionSegmentationNodeData> mergedRegions = new ArrayList<>();
       while (!inputRegions.isEmpty())
       {
-         OcTreeNodePlanarRegion candidateForMergeOtherRegions = inputRegions.get(0);
-         Map<Boolean, List<OcTreeNodePlanarRegion>> mergeableAndNonMergeableGroups = inputRegions.subList(1, inputRegions.size()).parallelStream()
+         PlanarRegionSegmentationNodeData candidateForMergeOtherRegions = inputRegions.get(0);
+         Map<Boolean, List<PlanarRegionSegmentationNodeData>> mergeableAndNonMergeableGroups = inputRegions.subList(1, inputRegions.size()).parallelStream()
                      // Group each region according to the result of areRegionsMergeable.
                     .collect(Collectors.groupingBy(other -> areRegionsMergeable(root, candidateForMergeOtherRegions, other, parameters)));
 
@@ -120,7 +138,7 @@ public class OcTreeNodePlanarRegionCalculator
       return mergedRegions;
    }
 
-   public static boolean areRegionsMergeable(NormalOcTreeNode root, OcTreeNodePlanarRegion currentRegion, OcTreeNodePlanarRegion potentialRegionToMerge,
+   public static boolean areRegionsMergeable(NormalOcTreeNode root, PlanarRegionSegmentationNodeData currentRegion, PlanarRegionSegmentationNodeData potentialRegionToMerge,
          PlanarRegionSegmentationParameters parameters)
    {
       if (currentRegion == potentialRegionToMerge)
@@ -142,8 +160,8 @@ public class OcTreeNodePlanarRegionCalculator
       if (currentRegion.distanceSquaredFromOtherRegionBoundingBox(potentialRegionToMerge) > searchRadiusSquared)
          return false;
 
-      OcTreeNodePlanarRegion regionToNavigate;
-      OcTreeNodePlanarRegion otherRegion;
+      PlanarRegionSegmentationNodeData regionToNavigate;
+      PlanarRegionSegmentationNodeData otherRegion;
 
       if (potentialRegionToMerge.getNumberOfNodes() < currentRegion.getNumberOfNodes())
       {
@@ -163,7 +181,7 @@ public class OcTreeNodePlanarRegionCalculator
                              .isPresent();
    }
 
-   public static boolean isNodeInOtherRegionNeighborhood(NormalOcTreeNode root, NormalOcTreeNode nodeFromOneRegion, OcTreeNodePlanarRegion otherRegion, double searchRadius)
+   public static boolean isNodeInOtherRegionNeighborhood(NormalOcTreeNode root, NormalOcTreeNode nodeFromOneRegion, PlanarRegionSegmentationNodeData otherRegion, double searchRadius)
    {
       MutableBoolean foundNeighborFromOtherRegion = new MutableBoolean(false);
 
@@ -187,9 +205,9 @@ public class OcTreeNodePlanarRegionCalculator
       return foundNeighborFromOtherRegion.booleanValue();
    }
 
-   public List<OcTreeNodePlanarRegion> searchNewPlanarRegions(NormalOcTreeNode root, OcTreeBoundingBoxInterface boundingBox, PlanarRegionSegmentationParameters parameters, Random random)
+   public List<PlanarRegionSegmentationNodeData> searchNewPlanarRegions(NormalOcTreeNode root, OcTreeBoundingBoxInterface boundingBox, PlanarRegionSegmentationParameters parameters, Random random)
    {
-      List<OcTreeNodePlanarRegion> newRegions = new ArrayList<>();
+      List<PlanarRegionSegmentationNodeData> newRegions = new ArrayList<>();
 
       float minNormalQuality = (float) parameters.getMinNormalQuality();
 
@@ -201,7 +219,7 @@ public class OcTreeNodePlanarRegionCalculator
          int regionId = PlanarRegion.NO_REGION_ID;
          while (regionId == PlanarRegion.NO_REGION_ID)
             regionId = random.nextInt(Integer.MAX_VALUE);
-         OcTreeNodePlanarRegion region = createNewOcTreeNodePlanarRegion(root, node, regionId, boundingBox, parameters);
+         PlanarRegionSegmentationNodeData region = createNewOcTreeNodePlanarRegion(root, node, regionId, boundingBox, parameters);
 
          if (region.getNumberOfNodes() > parameters.getMinRegionSize())
             newRegions.add(region);
@@ -210,16 +228,16 @@ public class OcTreeNodePlanarRegionCalculator
       return newRegions;
    }
 
-   public OcTreeNodePlanarRegion createNewOcTreeNodePlanarRegion(NormalOcTreeNode root, NormalOcTreeNode seedNode, int regionId, OcTreeBoundingBoxInterface boundingBox,
+   public PlanarRegionSegmentationNodeData createNewOcTreeNodePlanarRegion(NormalOcTreeNode root, NormalOcTreeNode seedNode, int regionId, OcTreeBoundingBoxInterface boundingBox,
          PlanarRegionSegmentationParameters parameters)
    {
-      OcTreeNodePlanarRegion newRegion = new OcTreeNodePlanarRegion(regionId);
+      PlanarRegionSegmentationNodeData newRegion = new PlanarRegionSegmentationNodeData(regionId);
       newRegion.addNode(seedNode);
       growPlanarRegion(root, newRegion, boundingBox, parameters);
       return newRegion;
    }
 
-   public void growPlanarRegion(NormalOcTreeNode root, OcTreeNodePlanarRegion ocTreeNodePlanarRegion, OcTreeBoundingBoxInterface boundingBox,
+   public void growPlanarRegion(NormalOcTreeNode root, PlanarRegionSegmentationNodeData ocTreeNodePlanarRegion, OcTreeBoundingBoxInterface boundingBox,
          PlanarRegionSegmentationParameters parameters)
    {
       double searchRadius = parameters.getSearchRadius();
@@ -245,13 +263,13 @@ public class OcTreeNodePlanarRegionCalculator
       }
    }
 
-   public void recordCandidatesForRegion(NormalOcTreeNode neighborNode, OcTreeNodePlanarRegion ocTreeNodePlanarRegion, Set<NormalOcTreeNode> newSetToExplore, OcTreeBoundingBoxInterface boundingBox, PlanarRegionSegmentationParameters parameters)
+   public void recordCandidatesForRegion(NormalOcTreeNode neighborNode, PlanarRegionSegmentationNodeData region, Set<NormalOcTreeNode> newSetToExplore, OcTreeBoundingBoxInterface boundingBox, PlanarRegionSegmentationParameters parameters)
    {
       if (allRegionNodes.contains(neighborNode))
          return;
       if (!isNodeInBoundingBox(neighborNode, boundingBox))
          return;
-      if (!isNodePartOfRegion(neighborNode, ocTreeNodePlanarRegion, parameters.getMaxDistanceFromPlane(), Math.cos(parameters.getMaxAngleFromPlane())))
+      if (!isNodePartOfRegion(neighborNode, region, parameters.getMaxDistanceFromPlane(), Math.cos(parameters.getMaxAngleFromPlane())))
          return;
       if (!neighborNode.isNormalSet() || !neighborNode.isHitLocationSet())
          return;
@@ -260,22 +278,22 @@ public class OcTreeNodePlanarRegionCalculator
    }
 
    private static void removeBadNodesFromRegion(OcTreeBoundingBoxInterface boundingBox, PlanarRegionSegmentationParameters parameters,
-         OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
+         PlanarRegionSegmentationNodeData region)
    {
-      List<NormalOcTreeNode> nodesToRemove = ocTreeNodePlanarRegion.nodeStream()
-            .collect(Collectors.groupingBy(node -> isBadNode(node, ocTreeNodePlanarRegion, boundingBox, parameters)))
+      List<NormalOcTreeNode> nodesToRemove = region.nodeStream()
+            .collect(Collectors.groupingBy(node -> isBadNode(node, region, boundingBox, parameters)))
             .getOrDefault(true, Collections.emptyList());
 
-      ocTreeNodePlanarRegion.removeNodesAndUpdate(nodesToRemove);
+      region.removeNodesAndUpdate(nodesToRemove);
    }
 
-   private static void removeDeadNodesFromRegion(OcTreeNodePlanarRegion ocTreeNodePlanarRegion)
+   private static void removeDeadNodesFromRegion(PlanarRegionSegmentationNodeData region)
    {
-      List<NormalOcTreeNode> nodesToRemove = ocTreeNodePlanarRegion.nodeStream()
+      List<NormalOcTreeNode> nodesToRemove = region.nodeStream()
             .collect(Collectors.groupingBy(node -> isNodeDead(node)))
             .getOrDefault(true, Collections.emptyList());
 
-      ocTreeNodePlanarRegion.removeNodesAndUpdate(nodesToRemove);
+      region.removeNodesAndUpdate(nodesToRemove);
    }
 
    private static boolean isNodeInBoundingBox(NormalOcTreeNode node, OcTreeBoundingBoxInterface boundingBox)
@@ -283,14 +301,14 @@ public class OcTreeNodePlanarRegionCalculator
       return boundingBox == null || boundingBox.isInBoundingBox(node.getX(), node.getY(), node.getZ());
    }
 
-   private static boolean isBadNode(NormalOcTreeNode node, OcTreeNodePlanarRegion ocTreeNodePlanarRegion, OcTreeBoundingBoxInterface boundingBox, PlanarRegionSegmentationParameters parameters)
+   private static boolean isBadNode(NormalOcTreeNode node, PlanarRegionSegmentationNodeData region, OcTreeBoundingBoxInterface boundingBox, PlanarRegionSegmentationParameters parameters)
    {
       if (isNodeDead(node))
          return true;
 
       double maxDistanceFromPlane = parameters.getMaxDistanceFromPlane();
       double dotThreshold = Math.cos(parameters.getMaxAngleFromPlane());
-      return isNodeInBoundingBox(node, boundingBox) && !isNodePartOfRegion(node, ocTreeNodePlanarRegion, maxDistanceFromPlane, dotThreshold);
+      return isNodeInBoundingBox(node, boundingBox) && !isNodePartOfRegion(node, region, maxDistanceFromPlane, dotThreshold);
    }
 
    private static boolean isNodeDead(NormalOcTreeNode node)
@@ -298,13 +316,13 @@ public class OcTreeNodePlanarRegionCalculator
       return !node.isNormalSet();
    }
 
-   public static boolean isNodePartOfRegion(NormalOcTreeNode node, OcTreeNodePlanarRegion ocTreeNodePlanarRegion, double maxDistanceFromPlane, double dotThreshold)
+   public static boolean isNodePartOfRegion(NormalOcTreeNode node, PlanarRegionSegmentationNodeData region, double maxDistanceFromPlane, double dotThreshold)
    {
-      double absoluteOrthogonalDistance = ocTreeNodePlanarRegion.absoluteOrthogonalDistance(node);
+      double absoluteOrthogonalDistance = region.absoluteOrthogonalDistance(node);
       if (absoluteOrthogonalDistance > maxDistanceFromPlane)
          return false;
 
-      double absoluteDot = ocTreeNodePlanarRegion.absoluteDotWithNodeNormal(node);
+      double absoluteDot = region.absoluteDotWithNodeNormal(node);
       return absoluteDot > dotThreshold;
    }
 

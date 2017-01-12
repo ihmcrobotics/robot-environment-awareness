@@ -24,6 +24,9 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
    @FXML
    private Slider maxAverageDeviationRatioSlider;
 
+   @FXML
+   private Slider numberOfIterationsSlider;
+
    private final NormalEstimationParametersProperty normalEstimationParametersProperty = new NormalEstimationParametersProperty(this, "normalEstimationParameters");
 
    public NormalEstimationAnchorPaneController()
@@ -47,6 +50,7 @@ public class NormalEstimationAnchorPaneController extends REABasicUIController
       normalEstimationParametersProperty.bindBidirectionalMaxDistanceFromPlane(maxDistanceFromPlaneSlider.valueProperty());
       normalEstimationParametersProperty.bindBidirectionalMinConsensusRatio(minConsensusRatioSlider.valueProperty());
       normalEstimationParametersProperty.bindBidirectionalMaxAverageDeviationRatio(maxAverageDeviationRatioSlider.valueProperty());
+      normalEstimationParametersProperty.bindBidirectionalNumberOfIterations(numberOfIterationsSlider.valueProperty());
 
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.NormalEstimationParameters, normalEstimationParametersProperty);
    }

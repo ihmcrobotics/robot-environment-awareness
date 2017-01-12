@@ -7,9 +7,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.PacketDestination;
+import us.ihmc.communication.packets.PlanarRegionMessageConverter;
 import us.ihmc.communication.packets.PlanarRegionsListMessage;
 import us.ihmc.communication.packets.RequestPlanarRegionsListMessage;
-import us.ihmc.robotEnvironmentAwareness.communication.converters.REAPlanarRegionsConverter;
 
 public class REAPlanarRegionPublicNetworkProvider
 {
@@ -32,7 +32,7 @@ public class REAPlanarRegionPublicNetworkProvider
 
       boolean hasAtLeastOneListener = !listenersForContinuousUpdate.isEmpty() || !listenersForSingleUpdate.isEmpty();
 
-      if (!hasAtLeastOneListener)
+      if (!hasAtLeastOneListener || regionFeaturesProvider.getPlanarRegionsList() == null)
          return;
 
       // By doing so, this module does not flood the network with useless data.
@@ -40,7 +40,7 @@ public class REAPlanarRegionPublicNetworkProvider
       {
          for (PacketDestination packetDestination : listenersForContinuousUpdate)
          {
-            PlanarRegionsListMessage planarRegionsListMessage = REAPlanarRegionsConverter.createPlanarRegionsListMessage(regionFeaturesProvider);
+            PlanarRegionsListMessage planarRegionsListMessage = PlanarRegionMessageConverter.convertToPlanarRegionsListMessage(regionFeaturesProvider.getPlanarRegionsList());
             planarRegionsListMessage.setDestination(packetDestination);
             publicPacketCommunicator.send(planarRegionsListMessage);
          }
@@ -48,7 +48,7 @@ public class REAPlanarRegionPublicNetworkProvider
 
       for (PacketDestination packetDestination : listenersForSingleUpdate)
       {
-         PlanarRegionsListMessage planarRegionsListMessage = REAPlanarRegionsConverter.createPlanarRegionsListMessage(regionFeaturesProvider);
+         PlanarRegionsListMessage planarRegionsListMessage = PlanarRegionMessageConverter.convertToPlanarRegionsListMessage(regionFeaturesProvider.getPlanarRegionsList());
          planarRegionsListMessage.setDestination(packetDestination);
          publicPacketCommunicator.send(planarRegionsListMessage);
       }

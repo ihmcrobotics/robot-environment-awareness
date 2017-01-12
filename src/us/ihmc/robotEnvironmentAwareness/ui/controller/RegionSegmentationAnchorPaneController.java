@@ -21,6 +21,10 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
    private Slider minNormalQualitySlider;
    @FXML
    private Slider minRegionSizeSlider;
+   @FXML
+   private Slider maxStandardDeviationSlider;
+   @FXML
+   private Slider minVolumicDensitySlider;
 
    private final PlanarRegionSegmentationParametersProperty planarRegionSegmentationParametersProperty = new PlanarRegionSegmentationParametersProperty(this, "planarRegionSegmentationParameters");
 
@@ -34,6 +38,8 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
       maxDistanceFromPlaneSlider.setLabelFormatter(StringConverterTools.metersToRoundedCentimeters());
       maxAngleFromPlaneSlider.setLabelFormatter(StringConverterTools.radiansToRoundedDegrees());
       minNormalQualitySlider.setLabelFormatter(StringConverterTools.metersToRoundedCentimeters());
+      maxStandardDeviationSlider.setLabelFormatter(StringConverterTools.rounding(1000.0, 1));
+      minVolumicDensitySlider.setLabelFormatter(StringConverterTools.rounding(1.0e-6, 2));
    }
 
    @Override
@@ -48,6 +54,8 @@ public class RegionSegmentationAnchorPaneController extends REABasicUIController
       planarRegionSegmentationParametersProperty.bindBidirectionalMaxAngleFromPlane(maxAngleFromPlaneSlider.valueProperty());
       planarRegionSegmentationParametersProperty.bindBidirectionalMinNormalQuality(minNormalQualitySlider.valueProperty());
       planarRegionSegmentationParametersProperty.bindBidirectionalMinRegionSize(minRegionSizeSlider.valueProperty());
+      planarRegionSegmentationParametersProperty.bindBidirectionalMaxStandardDeviation(maxStandardDeviationSlider.valueProperty());
+      planarRegionSegmentationParametersProperty.bindBidirectionalMinVolumicDensity(minVolumicDensitySlider.valueProperty());
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.PlanarRegionsSegmentationParameters, planarRegionSegmentationParametersProperty);
    }
 

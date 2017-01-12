@@ -7,6 +7,7 @@ import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
 import us.ihmc.javaFXToolkit.StringConverterTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
+import us.ihmc.robotEnvironmentAwareness.ui.properties.ConcaveHullFactoryParametersProperty;
 import us.ihmc.robotEnvironmentAwareness.ui.properties.IntersectionEstimationParametersProperty;
 import us.ihmc.robotEnvironmentAwareness.ui.properties.PolygonizerParametersProperty;
 
@@ -33,6 +34,7 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
    @FXML
    private Spinner<Double> depthThresholdSpinner;
 
+   private final ConcaveHullFactoryParametersProperty concaveHullFactoryParametersProperty = new ConcaveHullFactoryParametersProperty(this, "concaveHullParameters");
    private final PolygonizerParametersProperty polygonizerParametersProperty = new PolygonizerParametersProperty(this, "polygonizerParameters");
 
    // Intersection calculator parameters
@@ -86,11 +88,13 @@ public class PolygonizerAnchorPaneController extends REABasicUIController
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.PlanarRegionsPolygonizerEnable, enablePolygonizerButton.selectedProperty());
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.PlanarRegionsIntersectionEnable, enableIntersectionCalculatorButton.selectedProperty());
 
-      polygonizerParametersProperty.bindBidirectionalConcaveHullThreshold(concaveHullThresholdSpinner.getValueFactory().valueProperty());
+      concaveHullFactoryParametersProperty.bindBidirectionalEdgeLengthThreshold(concaveHullThresholdSpinner.getValueFactory().valueProperty());
+      uiMessager.bindBidirectionalGlobal(REAModuleAPI.PlanarRegionsConcaveHullParameters, concaveHullFactoryParametersProperty);
+
       polygonizerParametersProperty.bindBidirectionalMinNumberOfNodes(minRegionSizePolygonizerSpinner.getValueFactory().valueProperty());
       polygonizerParametersProperty.bindBidirectionalPeakAngleThreshold(peakAngleThresholdSpinner.getValueFactory().valueProperty());
       polygonizerParametersProperty.bindBidirectionalShallowAngleThreshold(shallowAngleThresholdSpinner.getValueFactory().valueProperty());
-      polygonizerParametersProperty.bindBidirectionalMinNumberOfNodes(minEdgeLengthSpinner.getValueFactory().valueProperty());
+      polygonizerParametersProperty.bindBidirectionalLengthThreshold(minEdgeLengthSpinner.getValueFactory().valueProperty());
       polygonizerParametersProperty.bindBidirectionalDepthThreshold(depthThresholdSpinner.getValueFactory().valueProperty());
       uiMessager.bindBidirectionalGlobal(REAModuleAPI.PlanarRegionsPolygonizerParameters, polygonizerParametersProperty);
 

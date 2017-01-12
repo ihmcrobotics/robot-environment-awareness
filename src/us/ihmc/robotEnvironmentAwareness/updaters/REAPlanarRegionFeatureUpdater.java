@@ -2,7 +2,6 @@ package us.ihmc.robotEnvironmentAwareness.updaters;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.jOctoMap.ocTree.NormalOcTree;
@@ -11,16 +10,16 @@ import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullFactoryParameters;
 import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.IntersectionEstimationParameters;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegion;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.OcTreeNodePlanarRegionCalculator;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConcaveHull;
-import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionConvexPolygons;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionIntersectionCalculator;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionPolygonizer;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationCalculator;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationNodeData;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationParameters;
+import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationRawData;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
 import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataExporter;
 import us.ihmc.robotics.geometry.LineSegment3d;
+import us.ihmc.robotics.geometry.PlanarRegionsList;
 
 public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 {
@@ -34,11 +33,10 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private final TimeReporter timeReporter = new TimeReporter(this);
    private final NormalOcTree octree;
 
-   private final OcTreeNodePlanarRegionCalculator planarRegionCalculator = new OcTreeNodePlanarRegionCalculator();
-   private final PlanarRegionIntersectionCalculator intersectionCalculator = new PlanarRegionIntersectionCalculator();
+   private final PlanarRegionSegmentationCalculator segmentationCalculator = new PlanarRegionSegmentationCalculator();
 
-   private Map<OcTreeNodePlanarRegion, PlanarRegionConcaveHull> concaveHulls = null;
-   private Map<OcTreeNodePlanarRegion, PlanarRegionConvexPolygons> convexPolygons = null;
+   private PlanarRegionsList planarRegionsList = null;
+   private List<LineSegment3d> planarRegionsIntersections = null;
 
    private final AtomicReference<Boolean> isOcTreeEnabled;
    private final AtomicReference<Boolean> enableSegmentation;
@@ -78,8 +76,9 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       reaMessager.submitMessage(REAModuleAPI.PlanarRegionsIntersectionEnable, enableIntersectionCalulator.get());
 
       reaMessager.submitMessage(REAModuleAPI.PlanarRegionsSegmentationParameters, planarRegionSegmentationParameters.get());
-      reaMessager.submitMessage(REAModuleAPI.PlanarRegionsIntersectionParameters, intersectionEstimationParameters.get());
+      reaMessager.submitMessage(REAModuleAPI.PlanarRegionsConcaveHullParameters, concaveHullFactoryParameters.get());
       reaMessager.submitMessage(REAModuleAPI.PlanarRegionsPolygonizerParameters, polygonizerParameters.get());
+      reaMessager.submitMessage(REAModuleAPI.PlanarRegionsIntersectionParameters, intersectionEstimationParameters.get());
    }
 
    public void loadConfiguration(FilePropertyHelper filePropertyHelper)
@@ -101,6 +100,10 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       if (planarRegionSegmentationParametersFile != null)
          planarRegionSegmentationParameters.set(PlanarRegionSegmentationParameters.parse(planarRegionSegmentationParametersFile));
 
+      String planarRegionConcaveHullFactoryParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.PlanarRegionsConcaveHullParameters.getName());
+      if (planarRegionConcaveHullFactoryParametersFile != null)
+    	  concaveHullFactoryParameters.set(ConcaveHullFactoryParameters.parse(planarRegionConcaveHullFactoryParametersFile));
+
       String polygonizerParametersFile = filePropertyHelper.loadProperty(REAModuleAPI.PlanarRegionsPolygonizerParameters.getName());
       if (polygonizerParametersFile != null)
          polygonizerParameters.set(PolygonizerParameters.parse(polygonizerParametersFile));
@@ -117,6 +120,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       filePropertyHelper.saveProperty(REAModuleAPI.PlanarRegionsIntersectionEnable.getName(), enableIntersectionCalulator.get());
 
       filePropertyHelper.saveProperty(REAModuleAPI.PlanarRegionsSegmentationParameters.getName(), planarRegionSegmentationParameters.get().toString());
+      filePropertyHelper.saveProperty(REAModuleAPI.PlanarRegionsConcaveHullParameters.getName(), concaveHullFactoryParameters.get().toString());
       filePropertyHelper.saveProperty(REAModuleAPI.PlanarRegionsPolygonizerParameters.getName(), polygonizerParameters.get().toString());
       filePropertyHelper.saveProperty(REAModuleAPI.PlanarRegionsIntersectionParameters.getName(), intersectionEstimationParameters.get().toString());
    }
@@ -126,93 +130,80 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       if (!isOcTreeEnabled.get())
          return;
 
-      intersectionCalculator.clear();
-
       if (clearSegmentation.getAndSet(false))
       {
-         planarRegionCalculator.clear();
+         segmentationCalculator.clear();
          return;
       }
 
       if (!enableSegmentation.get())
       {
-         planarRegionCalculator.removeDeadNodes();
+         segmentationCalculator.removeDeadNodes();
          return;
       }
 
-      planarRegionCalculator.setBoundingBox(octree.getBoundingBox());
-      planarRegionCalculator.setParameters(planarRegionSegmentationParameters.get());
-      intersectionCalculator.setParameters(intersectionEstimationParameters.get());
+      segmentationCalculator.setBoundingBox(octree.getBoundingBox());
+      segmentationCalculator.setParameters(planarRegionSegmentationParameters.get());
 
-      timeReporter.run(() -> planarRegionCalculator.compute(octree.getRoot()), segmentationTimeReport);
+      timeReporter.run(() -> segmentationCalculator.compute(octree.getRoot()), segmentationTimeReport);
+
+      List<PlanarRegionSegmentationRawData> rawData = segmentationCalculator.getSegmentationRawData();
 
       if (clearPolygonizer.getAndSet(false))
       {
-         concaveHulls = null;
-         convexPolygons = null;
+         planarRegionsList = null;
       }
       else if (enablePolygonizer.get())
       {
-         timeReporter.run(this::updatePolygons, segmentationTimeReport);
+         timeReporter.run(() -> updatePolygons(rawData), segmentationTimeReport);
       }
 
       if (enableIntersectionCalulator.get())
-         timeReporter.run(() -> intersectionCalculator.compute(planarRegionCalculator.getOcTreeNodePlanarRegions()), intersectionsTimeReport);
+         timeReporter.run(() -> updateIntersections(rawData), intersectionsTimeReport);
    }
 
    public void clearOcTree()
    {
-      intersectionCalculator.clear();
-      planarRegionCalculator.clear();
+      segmentationCalculator.clear();
    }
 
-   private void updatePolygons()
+   private void updatePolygons(List<PlanarRegionSegmentationRawData> rawData)
    {
       ConcaveHullFactoryParameters concaveHullFactoryParameters = this.concaveHullFactoryParameters.get();
       PolygonizerParameters polygonizerParameters = this.polygonizerParameters.get();
-      List<OcTreeNodePlanarRegion> planarRegions = planarRegionCalculator.getOcTreeNodePlanarRegions();
 
       if (EXPORT_SEGMENTATION_ON_EXCEPTION)
-         concaveHulls = PlanarRegionPolygonizer.computeConcaveHulls(planarRegions, concaveHullFactoryParameters, polygonizerParameters, dataExporter);
+         planarRegionsList = PlanarRegionPolygonizer.createPlanarRegionsList(rawData, concaveHullFactoryParameters, polygonizerParameters, dataExporter);
       else
-         concaveHulls = PlanarRegionPolygonizer.computeConcaveHulls(planarRegions, concaveHullFactoryParameters, polygonizerParameters);
-
-      convexPolygons = PlanarRegionPolygonizer.computeConvexDecomposition(concaveHulls, polygonizerParameters);
+         planarRegionsList = PlanarRegionPolygonizer.createPlanarRegionsList(rawData, concaveHullFactoryParameters, polygonizerParameters);
+   }
+   
+   private void updateIntersections(List<PlanarRegionSegmentationRawData> rawData)
+   {
+      planarRegionsIntersections = PlanarRegionIntersectionCalculator.computeIntersections(rawData, intersectionEstimationParameters.get());
    }
 
    @Override
-   public List<OcTreeNodePlanarRegion> getOcTreePlanarRegions()
+   public List<PlanarRegionSegmentationNodeData> getSegmentationNodeData()
    {
-      return planarRegionCalculator.getOcTreeNodePlanarRegions();
+      return segmentationCalculator.getSegmentationNodeData();
    }
 
    @Override
-   public boolean hasPolygonizedOcTreeNodePlanarRegions()
+   public PlanarRegionsList getPlanarRegionsList()
    {
-      return concaveHulls != null;
-   }
-
-   @Override
-   public PlanarRegionConcaveHull getPlanarRegionConcaveHull(OcTreeNodePlanarRegion planarRegion)
-   {
-      return concaveHulls == null ? null : concaveHulls.get(planarRegion);
-   }
-
-   @Override
-   public PlanarRegionConvexPolygons getPlanarRegionConvexPolygons(OcTreeNodePlanarRegion planarRegion)
-   {
-      return convexPolygons == null ? null : convexPolygons.get(planarRegion);
+      return planarRegionsList;
    }
 
    @Override
    public int getNumberOfPlaneIntersections()
    {
-      return intersectionCalculator.getNumberOfIntersections();
+      return planarRegionsIntersections == null ? 0 : planarRegionsIntersections.size();
    }
 
    @Override
    public LineSegment3d getIntersection(int index)
    {
-      return intersectionCalculator.getIntersection(index);
+      return planarRegionsIntersections.get(index);
    }
 }

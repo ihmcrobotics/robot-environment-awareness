@@ -48,7 +48,7 @@ public class PlanarRegionsMeshBuilder implements Runnable
    @Override
    public void run()
    {
-      PlanarRegionsListMessage newMessage = planarRegionsListMessage.get();
+      PlanarRegionsListMessage newMessage = planarRegionsListMessage.getAndSet(null);
 
       // Reset both clears by using only one pipe
       if (clearOcTree.getAndSet(false) | clear.getAndSet(false))

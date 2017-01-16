@@ -1,9 +1,18 @@
 package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 
+import static us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory.createLeafIteratable;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Point3f;
@@ -13,17 +22,16 @@ import javax.vecmath.Vector3f;
 
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
+import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
-import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
-import javafx.util.Pair;
-import us.ihmc.graphics3DDescription.MeshDataHolder;
-import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
+import us.ihmc.graphicsDescription.MeshDataHolder;
 import us.ihmc.jOctoMap.key.OcTreeKey;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
-import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
@@ -33,12 +41,14 @@ import us.ihmc.robotEnvironmentAwareness.ui.UIOcTree;
 import us.ihmc.robotEnvironmentAwareness.ui.UIOcTreeNode;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
+import us.ihmc.tools.io.printing.PrintTools;
 
 /**
  * Created by adrien on 11/21/16.
  */
 public class OcTreeMeshBuilder implements Runnable
 {
+   private static final int FX_NODE_DEPTH = 8;
    private static final Color DEFAULT_COLOR = Color.DARKCYAN;
 
    public enum ColoringType
@@ -59,12 +69,12 @@ public class OcTreeMeshBuilder implements Runnable
    private final Property<Integer> treeDepthForDisplay;
    private final Property<Boolean> hidePlanarRegionNodes;
 
+   private final Group root = new Group();
+   private final ObservableList<Node> children = root.getChildren();
+
    private final JavaFXMultiColorMeshBuilder meshBuilder;
 
-   private final Material defaultOccupiedMaterial = new PhongMaterial(DEFAULT_COLOR);
-
    private final TextureColorPalette1D normalBasedColorPalette1D = new TextureColorPalette1D();
-   private final TextureColorPalette1D normalVariationBasedColorPalette1D = new TextureColorPalette1D();
 
    private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
    private final IntersectionPlaneBoxCalculator intersectionPlaneBoxCalculator = new IntersectionPlaneBoxCalculator();
@@ -74,7 +84,8 @@ public class OcTreeMeshBuilder implements Runnable
 
    private final AtomicBoolean processChange = new AtomicBoolean(false);
 
-   private final AtomicReference<Pair<Mesh, Material>> meshAndMaterialToRender = new AtomicReference<>(null);
+   private final AtomicReference<Set<UIOcTreeNodeMeshView>> newSubOcTreeMeshViews = new AtomicReference<>(null);
+   private final Deque<UIOcTreeNodeMeshView> meshViewsBeingProcessed = new ArrayDeque<>();
 
    private final REAUIMessager uiMessager;
    private final AtomicReference<UIOcTree> uiOcTree = new AtomicReference<UIOcTree>(null);
@@ -85,7 +96,7 @@ public class OcTreeMeshBuilder implements Runnable
       enable = uiMessager.createInput(REAModuleAPI.OcTreeEnable, false);
       clear = uiMessager.createInput(REAModuleAPI.OcTreeClear, false);
 
-      treeDepthForDisplay = uiMessager.createPropertyInput(REAModuleAPI.UIOcTreeDepth);
+      treeDepthForDisplay = uiMessager.createPropertyInput(REAModuleAPI.UIOcTreeDepth, Integer.MAX_VALUE);
       treeDepthForDisplay.addListener(this::setProcessChange);
       coloringType = uiMessager.createPropertyInput(REAModuleAPI.UIOcTreeColoringMode, ColoringType.DEFAULT);
       coloringType.addListener(this::setProcessChange);
@@ -99,10 +110,7 @@ public class OcTreeMeshBuilder implements Runnable
       planarRegionSegmentationState = uiMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationState);
 
       normalBasedColorPalette1D.setHueBased(0.9, 0.8);
-      normalVariationBasedColorPalette1D.setBrightnessBased(0.0, 0.0);
       meshBuilder = new JavaFXMultiColorMeshBuilder(normalBasedColorPalette1D);
-      TextureColorPalette2D regionColorPalette1D = new TextureColorPalette2D();
-      regionColorPalette1D.setHueBrightnessBased(0.9);
    }
 
    private <T> void setProcessChange(ObservableValue<? extends T> observableValue, T oldValue, T newValue)
@@ -117,12 +125,48 @@ public class OcTreeMeshBuilder implements Runnable
       }
    }
 
+   public void render()
+   {
+      if (clear.getAndSet(false) || displayType.getValue() == DisplayType.HIDE)
+      {
+         children.clear();
+         newSubOcTreeMeshViews.set(null);
+         meshViewsBeingProcessed.clear();
+         return;
+      }
+
+      if (!enable.get())
+         return;
+
+      Set<UIOcTreeNodeMeshView> newMeshViews = newSubOcTreeMeshViews.getAndSet(null);
+
+      if (newMeshViews != null)
+      {
+         List<Node> newChildren = children.stream()
+                                          .filter(newMeshViews::contains)
+                                          .collect(Collectors.toList());
+
+         children.clear();
+         children.addAll(newChildren);
+
+         meshViewsBeingProcessed.clear();
+         meshViewsBeingProcessed.addAll(newMeshViews);
+      }
+
+      if (meshViewsBeingProcessed.isEmpty())
+         return;
+
+      UIOcTreeNodeMeshView newMeshView = meshViewsBeingProcessed.pop();
+      children.remove(newMeshView);
+      children.add(newMeshView);
+   }
+
    @Override
    public void run()
    {
-      if (clear.getAndSet(false))
+      if (newSubOcTreeMeshViews.get() != null)
       {
-         meshAndMaterialToRender.set(new Pair<>(null, null));
+         PrintTools.warn("Rendering job is not done, waiting before creating new meshes.");
          return;
       }
 
@@ -131,7 +175,6 @@ public class OcTreeMeshBuilder implements Runnable
          uiMessager.submitStateRequestToModule(REAModuleAPI.RequestOctree);
          uiMessager.submitStateRequestToModule(REAModuleAPI.RequestPlanarRegionSegmentation);
 
-
          NormalOcTreeMessage newMessage = ocTreeState.get();
          Map<OcTreeKey, Integer> nodeKeyToRegionIdMap = createNodeKeyToRegionIdMap(planarRegionSegmentationState.getAndSet(null));
 
@@ -139,77 +182,87 @@ public class OcTreeMeshBuilder implements Runnable
             return;
 
          uiOcTree.set(new UIOcTree(ocTreeState.getAndSet(null), nodeKeyToRegionIdMap));
-         buildUIOcTreeMesh();
+         buildUIOcTreeMesh(uiOcTree.get());
       }
       else if (processChange.getAndSet(false) && uiOcTree.get() != null)
       {
-         buildUIOcTreeMesh();
+         buildUIOcTreeMesh(uiOcTree.get());
       }
    }
 
-   private void buildUIOcTreeMesh()
+   private void buildUIOcTreeMesh(UIOcTree ocTree)
+   {
+      Set<UIOcTreeNodeMeshView> meshViews = new HashSet<>();
+
+      List<UIOcTreeNode> rootNodes = new ArrayList<>();
+      createLeafIteratable(ocTree.getRoot(), FX_NODE_DEPTH).forEach(rootNodes::add);
+
+      for (UIOcTreeNode rootNode : rootNodes)
+         meshViews.add(createSubTreeMeshView(rootNode));
+
+      newSubOcTreeMeshViews.set(meshViews);
+   }
+
+   private UIOcTreeNodeMeshView createSubTreeMeshView(UIOcTreeNode subTreeRoot)
    {
       meshBuilder.clear();
 
-      addCellsToMeshBuilders(meshBuilder, uiOcTree.get());
-
-      Mesh mesh = meshBuilder.generateMesh();
-      Material material = getMaterial();
-      meshAndMaterialToRender.set(new Pair<>(mesh, material));
-   }
-
-   private void addCellsToMeshBuilders(JavaFXMultiColorMeshBuilder meshBuilder, UIOcTree octree)
-   {
-      if (displayType.getValue() == DisplayType.HIDE)
-         return;
-
-      Iterable<UIOcTreeNode> iterable;
-
-      if (treeDepthForDisplay.getValue() != null)
-         iterable = OcTreeIteratorFactory.createLeafIteratable(octree.getRoot(), treeDepthForDisplay.getValue());
-      else
-         iterable = octree;
+      Iterable<UIOcTreeNode> iterable = createLeafIteratable(subTreeRoot, treeDepthForDisplay.getValue());
 
       for (UIOcTreeNode node : iterable)
       {
-         if (node.isPartOfRegion() && hidePlanarRegionNodes.getValue())
-            continue;
-
-         Color color = getNodeColor(node);
-         double size = node.getSize();
-
-         switch (displayType.getValue())
-         {
-         case CELL:
-            meshBuilder.addCube(size, node.getX(), node.getY(), node.getZ(), color);
-            break;
-         case PLANE:
-            if (node.isNormalSet())
-               meshBuilder.addMesh(createNormalBasedPlane(node), color);
-            break;
-         case HIT_LOCATION:
-            if (node.isHitLocationSet())
-            {
-               Point3d hitLocation = new Point3d();
-               node.getHitLocation(hitLocation);
-               meshBuilder.addTetrahedron(0.0075, hitLocation, color);
-            }
-            break;
-         default:
-            throw new RuntimeException("Unexpected value for display type: " + displayType.getValue());
-         }
+         if (!node.isPartOfRegion() || !hidePlanarRegionNodes.getValue())
+            addNodeMesh(meshBuilder, displayType.getValue(), coloringType.getValue(), node);
       }
+
+      OcTreeKey rootKey = subTreeRoot.getKeyCopy();
+      Mesh mesh = meshBuilder.generateMesh();
+      Material material = meshBuilder.generateMaterial();
+      UIOcTreeNodeMeshView meshView = new UIOcTreeNodeMeshView(rootKey, mesh, material);
+      meshBuilder.clear();
+      return meshView;
    }
 
-   private Color getNodeColor(UIOcTreeNode node)
+   private void addNodeMesh(JavaFXMultiColorMeshBuilder meshBuilder, DisplayType displayType, ColoringType coloringType, UIOcTreeNode node)
    {
-      switch (coloringType.getValue())
+      Color color = getNodeColor(coloringType, node);
+      double size = node.getSize();
+
+      switch (displayType)
+      {
+      case CELL:
+         meshBuilder.addCube(size, node.getX(), node.getY(), node.getZ(), color);
+         break;
+      case PLANE:
+         if (node.isNormalSet())
+            meshBuilder.addMesh(createNormalBasedPlane(node), color);
+         break;
+      case HIT_LOCATION:
+         if (node.isHitLocationSet())
+         {
+            Point3d hitLocation = new Point3d();
+            node.getHitLocation(hitLocation);
+            meshBuilder.addTetrahedron(0.0075, hitLocation, color);
+         }
+         break;
+      default:
+         throw new RuntimeException("Unexpected value for display type: " + displayType);
+      }      
+   }
+
+   private Color getNodeColor(ColoringType coloringType, UIOcTreeNode node)
+   {
+      switch (coloringType)
       {
       case REGION:
          if (node.isPartOfRegion())
+         {
             return getRegionColor(node.getRegionId());
+         }
          else
+         {
             return DEFAULT_COLOR;
+         }
       case HAS_CENTER:
          return node.isHitLocationSet() ? Color.DARKGREEN : Color.RED;
       case NORMAL:
@@ -235,25 +288,6 @@ public class OcTreeMeshBuilder implements Runnable
    {
       java.awt.Color awtColor = new java.awt.Color(regionId);
       return Color.rgb(awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue());
-   }
-
-   private Material getMaterial()
-   {
-      if (displayType.getValue() == DisplayType.HIDE)
-         return null;
-
-      switch (coloringType.getValue())
-      {
-      case DEFAULT:
-         return defaultOccupiedMaterial;
-      case REGION:
-      case NORMAL:
-      case HAS_CENTER:
-         meshBuilder.changeColorPalette(normalBasedColorPalette1D);
-         return meshBuilder.generateMaterial();
-      default:
-         throw new RuntimeException("Unhandled ColoringType value: " + coloringType.getValue());
-      }
    }
 
    private MeshDataHolder createNormalBasedPlane(UIOcTreeNode node)
@@ -322,13 +356,8 @@ public class OcTreeMeshBuilder implements Runnable
       }
    }
 
-   public boolean hasNewMeshAndMaterial()
+   public Node getRoot()
    {
-      return meshAndMaterialToRender.get() != null;
-   }
-
-   public Pair<Mesh, Material> pollMeshAndMaterial()
-   {
-      return meshAndMaterialToRender.getAndSet(null);
+      return root;
    }
 }

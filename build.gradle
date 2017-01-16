@@ -26,7 +26,7 @@ apply plugin: "com.jfrog.artifactory"
 apply plugin: "us.ihmc.gradle.ihmc-build"
 
 sourceCompatibility = 1.8
-version = '0.2'
+version = '0.2.1'
 
 project.sourceSets {
     main {
@@ -195,7 +195,7 @@ repositories {
 // Added that set of dependencies after artifactoryPublish so they don't get published (otherwise it's all broken).
 dependencies {
     // TODO These needs to be references to snapshots of artifacts.
-    compile ihmc.getProjectDependency(":Graphics3DAdapter")
+    compile ihmc.getProjectDependency(":IHMCJMonkeyEngineToolkit")
     compile ihmc.getProjectDependency(":SimulationConstructionSet")
     compile ihmc.getProjectDependency(":IHMCCommunication")
     compile ihmc.getProjectDependency(":IHMCROSTools")

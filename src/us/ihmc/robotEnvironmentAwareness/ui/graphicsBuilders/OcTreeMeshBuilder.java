@@ -18,7 +18,7 @@ import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
-import us.ihmc.graphics3DDescription.MeshDataHolder;
+import us.ihmc.graphicsDescription.MeshDataHolder;
 import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.jOctoMap.key.OcTreeKey;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;

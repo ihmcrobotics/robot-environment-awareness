@@ -86,8 +86,9 @@ public class PolygonizerVisualizer extends Application
    private static final boolean VISUALIZE_BORDER_VERTICES = false;
    private static final boolean VISUALIZE_CONCAVE_POCKETS = false;
    private static final boolean VISUALIZE_ORDERED_BORDER_EDGES = true;
-   private static final boolean VISUALIZE_INTERSECTIONS = true;
+   private static final boolean VISUALIZE_INTERSECTIONS = false;
 
+   private static final TextureColorAdaptivePalette orderedBorderEdgesColorPalette = new TextureColorAdaptivePalette(1024, false);
    private static final double scaleX = 1.0;
    private static final double scaleY = 1.0;
 
@@ -629,7 +630,7 @@ public class PolygonizerVisualizer extends Application
    private static Node createOrderedBorderEdgesGraphics(PlanarRegionSegmentationRawData rawData,
          ConcaveHullFactoryResult concaveHullFactoryResult)
    {
-      JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(1024));
+      JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(orderedBorderEdgesColorPalette);
       Point3d planeOrigin = rawData.getOrigin();
       Quat4d planeOrientation = rawData.getOrientation();
 
@@ -681,6 +682,7 @@ public class PolygonizerVisualizer extends Application
       }
 
       MeshView meshView = new MeshView(meshBuilder.generateMesh());
+      meshView.setMouseTransparent(true);
       meshView.setMaterial(meshBuilder.generateMaterial());
       return meshView;
    }

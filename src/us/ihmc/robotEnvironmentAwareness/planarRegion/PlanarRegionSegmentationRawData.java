@@ -1,7 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.planarRegion;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -27,60 +27,68 @@ public class PlanarRegionSegmentationRawData
 
    public PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin)
    {
-      this.regionId = regionId;
-      this.normal = new Vector3d(normal);
-      this.origin = new Point3d(origin);
-      pointCloud = new ArrayList<>();
-      orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
+      this(regionId, normal, origin, Collections.emptyList());
    }
 
    public PlanarRegionSegmentationRawData(int regionId, Vector3d normal, Point3d origin)
    {
-      this.regionId = regionId;
-      this.normal = new Vector3d(normal);
-      this.origin = new Point3d(origin);
-      pointCloud = new ArrayList<>();
-      orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
+      this(regionId, normal, origin, Collections.emptyList());
    }
 
-   public PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin, List<Point3f> pointCloud)
+   public PlanarRegionSegmentationRawData(PlanarRegionSegmentationNodeData nodeData)
    {
-      this.regionId = regionId;
-      this.normal = new Vector3d(normal);
-      this.origin = new Point3d(origin);
-      this.pointCloud = pointCloud.stream().map(point3f -> new Point3d(point3f)).collect(Collectors.toList());
-      orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
-   }
-
-   public PlanarRegionSegmentationRawData(int regionId, Vector3d normal, Point3d origin, List<Point3d> pointCloud)
-   {
-      this.regionId = regionId;
-      this.normal = new Vector3d(normal);
-      this.origin = new Point3d(origin);
-      this.pointCloud = pointCloud.stream().map(point -> new Point3d(point)).collect(Collectors.toList());
-      orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
-   }
-
-   public PlanarRegionSegmentationRawData(PlanarRegionSegmentationNodeData ocTreeNodePlanarRegion)
-   {
-      regionId = ocTreeNodePlanarRegion.getId();
-      normal = new Vector3d(ocTreeNodePlanarRegion.getNormal());
-      origin = new Point3d(ocTreeNodePlanarRegion.getOrigin());
-      orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
-      pointCloud = ocTreeNodePlanarRegion.nodeStream()
-                                         .map(NormalOcTreeNode::getHitLocationCopy)
-                                         .collect(Collectors.toList());
+      this(nodeData.getId(), nodeData.getNormal(), nodeData.getOrigin(), nodeData.nodeStream());
    }
 
    public PlanarRegionSegmentationRawData(PlanarRegionSegmentationMessage message)
    {
-      regionId = message.getRegionId();
-      normal = new Vector3d(message.getNormal());
-      origin = new Point3d(message.getOrigin());
+      this(message.getRegionId(), message.getNormal(), message.getOrigin(), Arrays.stream(message.getHitLocations()));
+   }
+
+   public PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin, List<Point3f> pointCloud)
+   {
+      this(regionId, normal, origin, pointCloud.stream());
+   }
+
+   public PlanarRegionSegmentationRawData(int regionId, Vector3d normal, Point3d origin, List<Point3d> pointCloud)
+   {
+      this(regionId, normal, origin, pointCloud.stream());
+   }
+
+   private <T> PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin, Stream<T> streamToConvert)
+   {
+      this(regionId, new Vector3d(normal), new Point3d(origin), streamToConvert);
+   }
+
+   private <T> PlanarRegionSegmentationRawData(int regionId, Vector3d normal, Point3d origin, Stream<T> streamToConvert)
+   {
+      this.regionId = regionId;
+      this.normal = new Vector3d(normal);
+      this.origin = new Point3d(origin);
+      this.pointCloud = toListOfPoint3d(streamToConvert);
       orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
-      pointCloud = Arrays.stream(message.getHitLocations())
-                         .map(point3f -> new Point3d(point3f))
-                         .collect(Collectors.toList());
+   }
+
+   private static <T> List<Point3d> toListOfPoint3d(Stream<T> inputStream)
+   {
+      if (inputStream == null)
+         return Collections.emptyList();
+      else
+         return inputStream.map(PlanarRegionSegmentationRawData::convertToPoint3d).collect(Collectors.toList());
+   }
+
+   private static <T> Point3d convertToPoint3d(T input)
+   {
+      if (input instanceof Point3d)
+         return new Point3d((Point3d) input);
+      
+      if (input instanceof Point3f)
+         return new Point3d((Point3f) input);
+
+      if (input instanceof NormalOcTreeNode)
+         return new Point3d(((NormalOcTreeNode) input).getHitLocationCopy());
+
+      throw new RuntimeException("Unhandled type: " + input.getClass().getSimpleName());
    }
 
    public int getRegionId()

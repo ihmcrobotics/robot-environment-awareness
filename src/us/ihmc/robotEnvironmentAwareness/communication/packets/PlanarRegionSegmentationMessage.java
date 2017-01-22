@@ -29,9 +29,7 @@ public class PlanarRegionSegmentationMessage extends Packet<PlanarRegionSegmenta
       this.origin = new Point3f(origin);
       this.normal = new Vector3f(normal);
       this.nodeKeys = regionNodeKeys;
-      this.hitLocations = hitLocations.stream()
-                                      .map(point3d -> new Point3f(point3d))
-                                      .toArray(size -> new Point3f[size]);
+      this.hitLocations = hitLocations.stream().map(Point3f::new).toArray(Point3f[]::new);
    }
 
    public PlanarRegionSegmentationMessage(int id, Point3f origin, Vector3f normal, OcTreeKeyMessage[] regionNodeKeys, Point3f[] hitLocations)

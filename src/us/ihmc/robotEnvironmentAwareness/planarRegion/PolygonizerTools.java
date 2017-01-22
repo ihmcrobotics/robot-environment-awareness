@@ -1,6 +1,5 @@
 package us.ihmc.robotEnvironmentAwareness.planarRegion;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,7 +11,6 @@ import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
 import us.ihmc.jOctoMap.tools.JOctoMapGeometryTools;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
 
 public class PolygonizerTools
 {
@@ -24,13 +22,6 @@ public class PolygonizerTools
    public static List<Point2d> toPointsInPlane(List<Point3d> pointsToTransform, Point3d planeOrigin, Quat4d planeOrientation)
    {
       return pointsToTransform.stream().map(point -> toPointInPlane(point, planeOrigin, planeOrientation)).collect(Collectors.toList());
-   }
-
-   public static List<Point2d> extractPointsInPlane(PlanarRegionSegmentationMessage planarRegionSegmentationMessage)
-   {
-      Point3d planeOrigin = new Point3d(planarRegionSegmentationMessage.getOrigin());
-      Quat4d planeOrientation = getRotationBasedOnNormal(planarRegionSegmentationMessage.getNormal());
-      return Arrays.stream(planarRegionSegmentationMessage.getHitLocations()).map(point -> toPointInPlane(point, planeOrigin, planeOrientation)).collect(Collectors.toList());
    }
 
    public static Point2d toPointInPlane(Point3d pointToTransform, Point3d planeOrigin, Quat4d planeOrientation)

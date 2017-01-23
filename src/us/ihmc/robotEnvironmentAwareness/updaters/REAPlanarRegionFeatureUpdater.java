@@ -149,6 +149,9 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
 
       List<PlanarRegionSegmentationRawData> rawData = segmentationCalculator.getSegmentationRawData();
 
+      if (enableIntersectionCalulator.get())
+         timeReporter.run(() -> updateIntersections(rawData), intersectionsTimeReport);
+
       if (clearPolygonizer.getAndSet(false))
       {
          planarRegionsList = null;
@@ -157,9 +160,6 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
       {
          timeReporter.run(() -> updatePolygons(rawData), segmentationTimeReport);
       }
-
-      if (enableIntersectionCalulator.get())
-         timeReporter.run(() -> updateIntersections(rawData), intersectionsTimeReport);
    }
 
    public void clearOcTree()

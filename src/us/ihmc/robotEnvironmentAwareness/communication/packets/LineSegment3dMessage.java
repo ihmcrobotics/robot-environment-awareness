@@ -21,8 +21,8 @@ public class LineSegment3dMessage extends Packet<LineSegment3dMessage>
 
    public LineSegment3dMessage(LineSegment3d lineSegment3d)
    {
-      start = new Point3f(lineSegment3d.getPointA());
-      end = new Point3f(lineSegment3d.getPointB());
+      start = new Point3f(lineSegment3d.getFirstEndpoint());
+      end = new Point3f(lineSegment3d.getSecondEndpoint());
    }
 
    public Point3f getStart()

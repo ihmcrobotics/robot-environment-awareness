@@ -53,8 +53,8 @@ public class PolygonizerTools
 
    public static LineSegment2d toLineSegmentInPlane(LineSegment3d lineSegmentToTransform, Point3d planeOrigin, Quat4d planeOrientation)
    {
-      Point2d lineSemgentStart = toPointInPlane(lineSegmentToTransform.getPointA(), planeOrigin, planeOrientation);
-      Point2d lineSemgentEnd = toPointInPlane(lineSegmentToTransform.getPointB(), planeOrigin, planeOrientation);
+      Point2d lineSemgentStart = toPointInPlane(lineSegmentToTransform.getFirstEndpoint(), planeOrigin, planeOrientation);
+      Point2d lineSemgentEnd = toPointInPlane(lineSegmentToTransform.getSecondEndpoint(), planeOrigin, planeOrientation);
       return new LineSegment2d(lineSemgentStart, lineSemgentEnd);
    }
 

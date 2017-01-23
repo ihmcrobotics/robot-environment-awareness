@@ -10,6 +10,7 @@ import javax.vecmath.Vector3d;
 import us.ihmc.robotics.geometry.GeometryTools;
 import us.ihmc.robotics.geometry.Line3d;
 import us.ihmc.robotics.geometry.LineSegment1d;
+import us.ihmc.robotics.geometry.LineSegment2d;
 import us.ihmc.robotics.geometry.LineSegment3d;
 
 public class PlanarRegionIntersectionCalculator
@@ -46,28 +47,14 @@ public class PlanarRegionIntersectionCalculator
 
             if (intersectionList != null)
             {
-               Vector3d intersectionLength = new Vector3d();
-
                result.addAll(intersectionList);
 
                if (parameters.isAddIntersectionsToRegions())
                {
-                  for (LineSegment3d intersection : intersectionList)
-                  {
-                     intersectionLength.sub(intersection.getPointB(), intersection.getPointA());
-                     double length = intersectionLength.length();
-                     double delta = 0.01;
-                     int numberOfPointsToAdd = (int) (length / delta);
-                     for (int k = 0; k < numberOfPointsToAdd; k++)
-                     {
-                        Point3d newPoint = new Point3d();
-                        double alpha = k / (double) numberOfPointsToAdd;
-                        newPoint.scaleAdd(alpha, intersectionLength, intersection.getPointA());
-                        // FIXME Figure out something less hackish
-                        //                        currentRegion.addPoint(new Point3d(newPoint));
-                        //                        currentNeighbor.addPoint(new Point3d(newPoint));
-                     }
-                  }
+                  List<LineSegment2d> intersectionsForCurrentRegion = PolygonizerTools.toLineSegmentsInPlane(intersectionList, currentRegion.getOrigin(), currentRegion.getNormal());
+                  currentRegion.addIntersections(intersectionsForCurrentRegion);
+                  List<LineSegment2d> intersectionsForCurrentNeighbor = PolygonizerTools.toLineSegmentsInPlane(intersectionList, currentNeighbor.getOrigin(), currentNeighbor.getNormal());
+                  currentNeighbor.addIntersections(intersectionsForCurrentNeighbor);
                }
             }
          }

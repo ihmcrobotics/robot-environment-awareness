@@ -10,13 +10,15 @@ import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
-import us.ihmc.jOctoMap.tools.JOctoMapGeometryTools;
+import us.ihmc.robotics.geometry.GeometryTools;
+import us.ihmc.robotics.geometry.LineSegment2d;
+import us.ihmc.robotics.geometry.LineSegment3d;
 
 public class PolygonizerTools
 {
    public static List<Point2d> toPointsInPlane(List<Point3d> pointsToTransform, Point3d planeOrigin, Vector3d planeNormal)
    {
-      return toPointsInPlane(pointsToTransform, planeOrigin, getRotationBasedOnNormal(planeNormal));
+      return toPointsInPlane(pointsToTransform, planeOrigin, getQuaternionFromZUpToVector(planeNormal));
    }
 
    public static List<Point2d> toPointsInPlane(List<Point3d> pointsToTransform, Point3d planeOrigin, Quat4d planeOrientation)
@@ -32,6 +34,28 @@ public class PolygonizerTools
    public static Point2d toPointInPlane(Point3f pointToTransform, Point3d planeOrigin, Quat4d planeOrientation)
    {
       return toPointInPlane(pointToTransform.getX(), pointToTransform.getY(), pointToTransform.getZ(), planeOrigin, planeOrientation);
+   }
+
+   public static List<LineSegment2d> toLineSegmentsInPlane(List<LineSegment3d> lineSegmentsToTransform, Point3d planeOrigin, Vector3d planeNormal)
+   {
+      return lineSegmentsToTransform.stream().map(lineSegment -> toLineSegmentInPlane(lineSegment, planeOrigin, planeNormal)).collect(Collectors.toList());
+   }
+
+   public static List<LineSegment2d> toLineSegmentsInPlane(List<LineSegment3d> lineSegmentsToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   {
+      return lineSegmentsToTransform.stream().map(lineSegment -> toLineSegmentInPlane(lineSegment, planeOrigin, planeOrientation)).collect(Collectors.toList());
+   }
+
+   public static LineSegment2d toLineSegmentInPlane(LineSegment3d lineSegmentToTransform, Point3d planeOrigin, Vector3d planeNormal)
+   {
+      return toLineSegmentInPlane(lineSegmentToTransform, planeOrigin, getQuaternionFromZUpToVector(planeNormal));
+   }
+
+   public static LineSegment2d toLineSegmentInPlane(LineSegment3d lineSegmentToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   {
+      Point2d lineSemgentStart = toPointInPlane(lineSegmentToTransform.getPointA(), planeOrigin, planeOrientation);
+      Point2d lineSemgentEnd = toPointInPlane(lineSegmentToTransform.getPointB(), planeOrigin, planeOrientation);
+      return new LineSegment2d(lineSemgentStart, lineSemgentEnd);
    }
 
    public static Point2d toPointInPlane(double xToTransform, double yToTransform, double zToTransform, Point3d planeOrigin, Quat4d planeOrientation)
@@ -64,7 +88,7 @@ public class PolygonizerTools
 
    public static List<Point3d> toPointsInWorld(List<Point2d> pointsInPlane, Point3d planeOrigin, Vector3d planeNormal)
    {
-      return toPointsInWorld(pointsInPlane, planeOrigin, getRotationBasedOnNormal(planeNormal));
+      return toPointsInWorld(pointsInPlane, planeOrigin, getQuaternionFromZUpToVector(planeNormal));
    }
 
    public static List<Point3d> toPointsInWorld(List<Point2d> pointsInPlane, Point3d planeOrigin, Quat4d planeOrientation)
@@ -75,6 +99,28 @@ public class PolygonizerTools
    public static Point3d toPointInWorld(Point2d pointInPlane, Point3d planeOrigin, Quat4d planeOrientation)
    {
       return toPointInWorld(pointInPlane.getX(), pointInPlane.getY(), planeOrigin, planeOrientation);
+   }
+
+   public static List<LineSegment3d> toLineSegmentsInWorld(List<LineSegment2d> lineSegmentsToTransform, Point3d planeOrigin, Vector3d planeNormal)
+   {
+      return lineSegmentsToTransform.stream().map(lineSegment -> toLineSegmentInWorld(lineSegment, planeOrigin, planeNormal)).collect(Collectors.toList());
+   }
+
+   public static List<LineSegment3d> toLineSegmentsInWorld(List<LineSegment2d> lineSegmentsToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   {
+      return lineSegmentsToTransform.stream().map(lineSegment -> toLineSegmentInWorld(lineSegment, planeOrigin, planeOrientation)).collect(Collectors.toList());
+   }
+
+   public static LineSegment3d toLineSegmentInWorld(LineSegment2d lineSegmentToTransform, Point3d planeOrigin, Vector3d planeNormal)
+   {
+      return toLineSegmentInWorld(lineSegmentToTransform, planeOrigin, getQuaternionFromZUpToVector(planeNormal));
+   }
+
+   public static LineSegment3d toLineSegmentInWorld(LineSegment2d lineSegmentToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   {
+      Point3d lineSemgentStart = toPointInWorld(lineSegmentToTransform.getFirstEndpoint(), planeOrigin, planeOrientation);
+      Point3d lineSemgentEnd = toPointInWorld(lineSegmentToTransform.getSecondEndpoint(), planeOrigin, planeOrientation);
+      return new LineSegment3d(lineSemgentStart, lineSemgentEnd);
    }
 
    public static Point3d toPointInWorld(double xToTransform, double yToTransform, Point3d planeOrigin, Quat4d planeOrientation)
@@ -108,15 +154,15 @@ public class PolygonizerTools
       return pointInWorld;
    }
 
-   public static Quat4d getRotationBasedOnNormal(Vector3f normal)
+   public static Quat4d getQuaternionFromZUpToVector(Vector3f normal)
    {
-      return getRotationBasedOnNormal(new Vector3d(normal));
+      return getQuaternionFromZUpToVector(new Vector3d(normal));
    }
 
-   public static Quat4d getRotationBasedOnNormal(Vector3d normal)
+   public static Quat4d getQuaternionFromZUpToVector(Vector3d normal)
    {
       Quat4d orientation = new Quat4d();
-      orientation.set(JOctoMapGeometryTools.getRotationBasedOnNormal(normal));
+      orientation.set(GeometryTools.getAxisAngleFromZUpToVector(normal));
       return orientation;
    }
 

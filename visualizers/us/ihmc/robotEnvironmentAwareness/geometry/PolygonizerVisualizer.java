@@ -31,9 +31,11 @@ import com.vividsolutions.jts.triangulate.quadedge.Vertex;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
@@ -69,6 +71,7 @@ import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerTools;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationRawDataImporter;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
+import us.ihmc.robotics.geometry.LineSegment2d;
 import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.geometry.RigidBodyTransform;
 import us.ihmc.robotics.linearAlgebra.PrincipalComponentAnalysis3D;
@@ -79,14 +82,13 @@ public class PolygonizerVisualizer extends Application
    private static final boolean VISUALIZE_POINT_CLOUD = true;
    private static final boolean VISUALIZE_DELAUNAY_TRIANGULATION = true;
    private static final boolean VISUALIZE_CONCAVE_HULL = false;
-   private static final boolean VISUALIZE_BORDER_EDGES = true;
+   private static final boolean VISUALIZE_BORDER_EDGES = false;
    private static final boolean VISUALIZE_BORDER_TRIANGLES = false;
    private static final boolean VISUALIZE_PRIORITY_QUEUE = false;
    private static final boolean VISUALIZE_CONVEX_DECOMPOSITION = false;
    private static final boolean VISUALIZE_BORDER_VERTICES = false;
    private static final boolean VISUALIZE_CONCAVE_POCKETS = false;
    private static final boolean VISUALIZE_ORDERED_BORDER_EDGES = true;
-   private static final boolean VISUALIZE_INTERSECTIONS = false;
 
    private static final TextureColorAdaptivePalette orderedBorderEdgesColorPalette = new TextureColorAdaptivePalette(1024, false);
    private static final double scaleX = 1.0;
@@ -96,7 +98,7 @@ public class PolygonizerVisualizer extends Application
 
    private static final int[] onlyRegionWithId = {};
 
-   private File defaultFile = null;// new File("DataThrowingException/20161213_220649_PlanarRegionSegmentation");
+   private File defaultFile = null;// new File("Data/20161210_185643_PlanarRegionSegmentation_Atlas_CB");
 
    private final Random random = new Random(54645L);
    private final ConcaveHullFactoryParameters parameters = new ConcaveHullFactoryParameters();
@@ -106,12 +108,15 @@ public class PolygonizerVisualizer extends Application
    private final Map<Integer, PlanarRegionSegmentationRawData> idToRawData = new HashMap<>();
    private final IntegerProperty currentRegionIdProperty = new SimpleIntegerProperty(this, "currentRegionId", -1);
 
+   private final BooleanProperty showIntersections = new SimpleBooleanProperty(this, "showIntersections", true);
+   private final BooleanProperty showConstraintEdges = new SimpleBooleanProperty(this, "showConstraintEdges", false);
+
    public PolygonizerVisualizer() throws IOException
    {
       parameters.setEdgeLengthThreshold(0.05);
       //      parameters.setAllowSplittingConcaveHull(false);
       //      parameters.setRemoveAllTrianglesWithTwoBorderEdges(false);
-//      parameters.setMaxNumberOfIterations(0);
+      //      parameters.setMaxNumberOfIterations(0);
    }
 
    @Override
@@ -160,6 +165,8 @@ public class PolygonizerVisualizer extends Application
          Point3d average = computeAverage(regionsRawData, regionIdFilterSet);
          average.negate();
 
+         PlanarRegionIntersectionCalculator.computeIntersections(regionsRawData, intersectionParameters);
+
          for (PlanarRegionSegmentationRawData rawData : regionsRawData)
          {
             if (regionIdFilterSet.isEmpty() || regionIdFilterSet.contains(rawData.getRegionId()))
@@ -170,13 +177,6 @@ public class PolygonizerVisualizer extends Application
                nodeToRegionId.put(regionGraphics, rawData.getRegionId());
                view3dFactory.addNodeToView(regionGraphics);
             }
-         }
-
-         if (VISUALIZE_INTERSECTIONS)
-         {
-            Node intersectionsNode = createIntersectionsGraphics(regionsRawData);
-            translateNode(intersectionsNode, average);
-            view3dFactory.addNodeToView(intersectionsNode);
          }
 
          view3dFactory.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>()
@@ -213,6 +213,14 @@ public class PolygonizerVisualizer extends Application
          primaryStage.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.F5)
                nodeToRegionId.keySet().stream().forEach(node -> node.setVisible(true));
+         });
+         primaryStage.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.I)
+               showIntersections.set(!showIntersections.get());
+         });
+         primaryStage.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.C)
+               showConstraintEdges.set(!showConstraintEdges.get());
          });
       }
 
@@ -286,7 +294,7 @@ public class PolygonizerVisualizer extends Application
       stdDensity.setEditable(false);
 
       NumberFormat formatter2 = new DecimalFormat("0.###E0");
-      
+
       currentRegionIdProperty.addListener((Observable o) -> regionId.setText(Integer.toString(currentRegionIdProperty.get())));
       standardDeviationProperty.addListener((Observable o) -> stdx.setText(formatter2.format(standardDeviationProperty.get().getX())));
       standardDeviationProperty.addListener((Observable o) -> stdy.setText(formatter2.format(standardDeviationProperty.get().getY())));
@@ -350,7 +358,9 @@ public class PolygonizerVisualizer extends Application
       ObservableList<Node> children = regionGroup.getChildren();
 
       List<Point2d> pointsInPlane = rawData.getPointCloudInPlane();
-      ConcaveHullFactoryResult concaveHullFactoryResult = SimpleConcaveHullFactory.createConcaveHull(pointsInPlane, parameters);
+      List<LineSegment2d> intersections = rawData.getIntersections();
+      System.out.println("Region id: " + rawData.getRegionId());
+      ConcaveHullFactoryResult concaveHullFactoryResult = SimpleConcaveHullFactory.createConcaveHull(pointsInPlane, intersections, parameters);
 
       if (VISUALIZE_CONCAVE_HULL)
          children.add(createConcaveHullGraphics(rawData, concaveHullFactoryResult));
@@ -372,6 +382,8 @@ public class PolygonizerVisualizer extends Application
          children.add(createConcavePocketsGraphics(rawData, concaveHullFactoryResult));
       if (VISUALIZE_ORDERED_BORDER_EDGES)
          children.add(createOrderedBorderEdgesGraphics(rawData, concaveHullFactoryResult));
+      children.add(createIntersectionsGraphics(rawData));
+      children.add(createConstraintEdgesGraphics(rawData, concaveHullFactoryResult));
 
       return regionGroup;
    }
@@ -389,7 +401,7 @@ public class PolygonizerVisualizer extends Application
          for (ConcaveHullPocket pocket : pockets)
          {
             List<Point2d> pocketVertices = ListWrappingIndexTools.subListInclusive(pocket.getStartBridgeIndex(), pocket.getEndBridgeIndex(),
-                  concaveHull.getConcaveHullVertices());
+                                                                                   concaveHull.getConcaveHullVertices());
             Point2d average = new Point2d();
             average.interpolate(pocket.getStartBridgeVertex(), pocket.getEndBridgeVertex(), 0.5);
             pocketVertices.add(0, average);
@@ -504,7 +516,7 @@ public class PolygonizerVisualizer extends Application
    }
 
    private Node createDelaunayTriangulationGraphics(PlanarRegionSegmentationRawData rawData,
-         ConcaveHullFactoryResult concaveHullFactoryResult)
+                                                    ConcaveHullFactoryResult concaveHullFactoryResult)
    {
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(512));
 
@@ -534,7 +546,7 @@ public class PolygonizerVisualizer extends Application
    }
 
    private Node createBorderTrianglesGraphics(PlanarRegionSegmentationRawData rawData,
-         ConcaveHullFactoryResult concaveHullFactoryResult)
+                                              ConcaveHullFactoryResult concaveHullFactoryResult)
    {
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(512));
 
@@ -602,7 +614,7 @@ public class PolygonizerVisualizer extends Application
    }
 
    private Node createConvexDecompositionGraphics(PlanarRegionSegmentationRawData rawData,
-         ConcaveHullFactoryResult concaveHullFactoryResult)
+                                                  ConcaveHullFactoryResult concaveHullFactoryResult)
    {
       ConcaveHullCollection concaveHullCollection = concaveHullFactoryResult.getConcaveHullCollection();
       double depthThreshold = polygonizerParameters.getDepthThreshold();
@@ -628,7 +640,7 @@ public class PolygonizerVisualizer extends Application
    }
 
    private static Node createOrderedBorderEdgesGraphics(PlanarRegionSegmentationRawData rawData,
-         ConcaveHullFactoryResult concaveHullFactoryResult)
+                                                        ConcaveHullFactoryResult concaveHullFactoryResult)
    {
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(orderedBorderEdgesColorPalette);
       Point3d planeOrigin = rawData.getOrigin();
@@ -687,19 +699,46 @@ public class PolygonizerVisualizer extends Application
       return meshView;
    }
 
-   private Node createIntersectionsGraphics(List<PlanarRegionSegmentationRawData> regionsRawData)
+   private Node createIntersectionsGraphics(PlanarRegionSegmentationRawData rawData)
    {
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(32));
-
-      List<LineSegment3d> intersections = PlanarRegionIntersectionCalculator.computeIntersections(regionsRawData, intersectionParameters);
+      List<LineSegment2d> intersections2d = rawData.getIntersections();
+      Point3d planeOrigin = rawData.getOrigin();
+      Vector3d planeNormal = rawData.getNormal();
+      List<LineSegment3d> intersections = PolygonizerTools.toLineSegmentsInWorld(intersections2d, planeOrigin, planeNormal);
 
       for (LineSegment3d intersection : intersections)
       {
-         meshBuilder.addLine(intersection.getPointA(), intersection.getPointB(), 0.01, Color.RED);
+         meshBuilder.addLine(intersection.getPointA(), intersection.getPointB(), 0.0025, Color.RED);
       }
 
       MeshView meshView = new MeshView(meshBuilder.generateMesh());
       meshView.setMaterial(meshBuilder.generateMaterial());
+      meshView.visibleProperty().bind(showIntersections);
+
+      return meshView;
+   }
+
+   private Node createConstraintEdgesGraphics(PlanarRegionSegmentationRawData rawData, ConcaveHullFactoryResult concaveHullFactoryResult)
+   {
+      JavaFXMeshBuilder meshBuilder = new JavaFXMeshBuilder();
+      Point3d planeOrigin = rawData.getOrigin();
+      Quat4d planeOrientation = rawData.getOrientation();
+
+      for (ConcaveHullVariables concaveHullVariables : concaveHullFactoryResult.getIntermediateVariables())
+      {
+         for (QuadEdge constraintEdge : concaveHullVariables.getConstraintEdges())
+         {
+            Point3d orig = PolygonizerTools.toPointInWorld(constraintEdge.orig().getX(), constraintEdge.orig().getY(), planeOrigin, planeOrientation);
+            Point3d dest = PolygonizerTools.toPointInWorld(constraintEdge.dest().getX(), constraintEdge.dest().getY(), planeOrigin, planeOrientation);
+            meshBuilder.addLine(orig, dest, 0.002);
+         }
+      }
+
+      MeshView meshView = new MeshView(meshBuilder.generateMesh());
+      meshView.setMaterial(new PhongMaterial(Color.BLACK));
+      meshView.visibleProperty().bind(showConstraintEdges);
+
       return meshView;
    }
 

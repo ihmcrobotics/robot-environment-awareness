@@ -189,7 +189,7 @@ public class DelaunayTriangulationVisualizer extends Application
    private static Node createOrderedBorderEdgesGraphics(QuadEdgeSubdivision quadEdgeSubdivision, PlanarRegionSegmentationRawData rawData)
    {
       List<QuadEdgeTriangle> delaunayTriangles = QuadEdgeTriangle.createOn(quadEdgeSubdivision);
-      List<QuadEdge> orderedBorderEdges = SimpleConcaveHullFactory.computeIntermediateVariables(delaunayTriangles).getOrderedBorderEdges();
+      List<QuadEdge> orderedBorderEdges = SimpleConcaveHullFactory.computeIntermediateVariables(delaunayTriangles, null).getOrderedBorderEdges();
 
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(16));
       Point3d planeOrigin = rawData.getOrigin();

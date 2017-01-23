@@ -22,6 +22,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.MultiLineString;
 import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.triangulate.ConformingDelaunayTriangulationBuilder;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdge;
@@ -29,7 +31,10 @@ import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeSubdivision;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeTriangle;
 import com.vividsolutions.jts.triangulate.quadedge.Vertex;
 
+import us.ihmc.robotics.geometry.GeometryTools;
+import us.ihmc.robotics.geometry.LineSegment2d;
 import us.ihmc.robotics.lists.ListWrappingIndexTools;
+import us.ihmc.robotics.math.Epsilons;
 import us.ihmc.robotics.time.TimeTools;
 
 /**
@@ -54,20 +59,31 @@ public abstract class SimpleConcaveHullFactory
 
    public static ConcaveHullCollection createConcaveHullCollection(List<Point2d> pointCloud2d, ConcaveHullFactoryParameters parameters)
    {
+      return createConcaveHullCollection(pointCloud2d, null, parameters);
+   }
+
+   public static ConcaveHullCollection createConcaveHullCollection(List<Point2d> pointCloud2d, List<LineSegment2d> lineConstraints, ConcaveHullFactoryParameters parameters)
+   {
       if (pointCloud2d.size() <= 3)
          return new ConcaveHullCollection(pointCloud2d);
 
-      return createConcaveHull(pointCloud2d, parameters).getConcaveHullCollection();
+      return createConcaveHull(pointCloud2d, lineConstraints, parameters).getConcaveHullCollection();
    }
 
    public static ConcaveHullFactoryResult createConcaveHull(List<Point2d> pointCloud2d, ConcaveHullFactoryParameters parameters)
    {
+      return createConcaveHull(pointCloud2d, null, parameters);
+   }
+
+   public static ConcaveHullFactoryResult createConcaveHull(List<Point2d> pointCloud2d, List<LineSegment2d> lineConstraints, ConcaveHullFactoryParameters parameters)
+   {
       if (pointCloud2d.size() <= 3)
          return null;
 
-      MultiPoint multiPoint = createMultiPoint(pointCloud2d);
+      MultiPoint sites = createMultiPoint(pointCloud2d);
+      MultiLineString constraintSegments = createMultiLineString(lineConstraints);
       ConcaveHullFactoryResult result = new ConcaveHullFactoryResult();
-      ConcaveHullVariables initialVariables = initializeTriangulation(multiPoint, result);
+      ConcaveHullVariables initialVariables = initializeTriangulation(sites, constraintSegments, result);
       List<ConcaveHullVariables> variablesList = computeConcaveHullBorderEdgesRecursive(parameters, initialVariables);
       result.intermediateVariables.addAll(variablesList);
 
@@ -97,6 +113,26 @@ public abstract class SimpleConcaveHullFactory
       return new GeometryFactory().createMultiPoint(coordinates);
    }
 
+   public static MultiLineString createMultiLineString(List<LineSegment2d> lineSegments)
+   {
+      if (lineSegments == null)
+         return null;
+
+      LineString[] lineStrings = lineSegments.stream()
+                                             .map(SimpleConcaveHullFactory::createLineString)
+                                             .toArray(LineString[]::new);
+      return new GeometryFactory().createMultiLineString(lineStrings);
+   }
+
+   public static LineString createLineString(LineSegment2d lineSegment)
+   {
+      Coordinate lineSegmentStart = new Coordinate(lineSegment.getFirstEndpointX(), lineSegment.getFirstEndpointY());
+      Coordinate lineSegmentEnd = new Coordinate(lineSegment.getSecondEndpointX(), lineSegment.getSecondEndpointY());
+      
+      Coordinate[] endPoints = {lineSegmentStart, lineSegmentEnd};
+      return new GeometryFactory().createLineString(endPoints);
+   }
+
    private static ConcaveHull computeConcaveHull(List<QuadEdge> orderedBorderEdges)
    {
       List<Point2d> orderedConcaveHullVertices = orderedBorderEdges.stream()
@@ -108,12 +144,13 @@ public abstract class SimpleConcaveHullFactory
 
    /**
     * 
-    * @param multiPoint the point cloud from which a concave hull is to be computed.
+    * @param sites the point cloud from which a concave hull is to be computed.
+    * @param constraintSegments 
     * @param concaveHullFactoryResult
     * @return
     */
    @SuppressWarnings("unchecked")
-   private static ConcaveHullVariables initializeTriangulation(MultiPoint multiPoint, ConcaveHullFactoryResult concaveHullFactoryResult)
+   private static ConcaveHullVariables initializeTriangulation(MultiPoint sites, MultiLineString constraintSegments, ConcaveHullFactoryResult concaveHullFactoryResult)
    {
       StopWatch stopWatch = REPORT_TIME ? new StopWatch() : null;
 
@@ -125,7 +162,9 @@ public abstract class SimpleConcaveHullFactory
 
       // NOTE: The DelaunayTriangulatorBuilder is 30% to 40% faster than the ConformingDelaunayTriangulationBuilder.
       ConformingDelaunayTriangulationBuilder conformingDelaunayTriangulationBuilder = new ConformingDelaunayTriangulationBuilder();
-      conformingDelaunayTriangulationBuilder.setSites(multiPoint);
+      conformingDelaunayTriangulationBuilder.setSites(sites);
+      if (constraintSegments != null)
+         conformingDelaunayTriangulationBuilder.setConstraints(constraintSegments);
       QuadEdgeSubdivision subdivision = conformingDelaunayTriangulationBuilder.getSubdivision();
       // All the triangles resulting from the triangulation.
       List<QuadEdgeTriangle> allTriangles = concaveHullFactoryResult.allTriangles;
@@ -136,10 +175,10 @@ public abstract class SimpleConcaveHullFactory
          System.out.println("Triangulation took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()) + " sec.");
       }
 
-      return computeIntermediateVariables(allTriangles);
+      return computeIntermediateVariables(allTriangles, constraintSegments);
    }
 
-   public static ConcaveHullVariables computeIntermediateVariables(List<QuadEdgeTriangle> delaunayTriangles)
+   public static ConcaveHullVariables computeIntermediateVariables(List<QuadEdgeTriangle> delaunayTriangles, MultiLineString constraintSegments)
    {
       ConcaveHullVariables variables = new ConcaveHullVariables();
       // Vertices of the concave hull
@@ -149,6 +188,7 @@ public abstract class SimpleConcaveHullFactory
       // The output of this method, the edges defining the concave hull
       Set<QuadEdge> borderEdges = variables.borderEdges;
       PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = variables.sortedByLengthQueue;
+      Set<QuadEdge> constraintEdges = variables.constraintEdges;
 
       QuadEdge firstBorderEdge = null;
 
@@ -172,6 +212,22 @@ public abstract class SimpleConcaveHullFactory
                   borderVertices.add(borderEdge.orig());
                   borderVertices.add(borderEdge.dest());
                   sortedByLengthQueue.add(new ImmutablePair<>(borderEdge, triangle));
+               }
+            }
+         }
+      }
+
+      if (constraintSegments != null)
+      {
+         for (QuadEdgeTriangle triangle : delaunayTriangles)
+         {
+            
+            for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
+            {
+               QuadEdge edge = triangle.getEdge(edgeIndex);
+               if (isEdgeCollinearWithALineSemgentOfMultiLineString(edge, constraintSegments))
+               {
+                  constraintEdges.add(edge.getPrimary());
                }
             }
          }
@@ -214,6 +270,55 @@ public abstract class SimpleConcaveHullFactory
          return variables;
    }
 
+   private static boolean isEdgeCollinearWithALineSemgentOfMultiLineString(QuadEdge query, MultiLineString multiLineString)
+   {
+      for (int i = 0; i < multiLineString.getNumGeometries(); i++)
+      {
+         LineString lineString = (LineString) multiLineString.getGeometryN(i);
+         if (isEdgeCollinearWithALineSemgentOfLineString(query, lineString))
+            return true;
+      }
+
+      return false;
+   }
+
+   private static boolean isEdgeCollinearWithALineSemgentOfLineString(QuadEdge query, LineString lineString)
+   {
+      int finalIndex = lineString.isClosed() ? lineString.getNumPoints() : lineString.getNumPoints() - 1;
+
+      for (int i = 0; i < finalIndex; i++)
+      {
+         Coordinate lineSegmentStart = lineString.getCoordinateN(i);
+         Coordinate lineSegmentEnd = lineString.getCoordinateN((i + 1) % lineString.getNumPoints());
+
+         if (isEdgeCollinearWithLineSegment(query, lineSegmentStart, lineSegmentEnd))
+            return true;
+      }
+
+      return false;
+   }
+
+   private static boolean isEdgeCollinearWithLineSegment(QuadEdge query, Coordinate lineSegmentStart, Coordinate lineSegmentEnd)
+   {
+      Point2d firstPointOnLine1 = toPoint2d(query.orig());
+      Point2d secondPointOnLine1 = toPoint2d(query.dest());
+      Point2d firstPointOnLine2 = toPoint2d(lineSegmentStart);
+      Point2d secondPointOnLine2 = toPoint2d(lineSegmentEnd);
+      double angleEpsilon = Epsilons.ONE_MILLIONTH;
+      double distanceEpsilon = Epsilons.ONE_TRILLIONTH;
+      return GeometryTools.areLinesCollinear(firstPointOnLine1, secondPointOnLine1, firstPointOnLine2, secondPointOnLine2, angleEpsilon, distanceEpsilon);
+   }
+
+   private static Point2d toPoint2d(Vertex vertex)
+   {
+      return new Point2d(vertex.getX(), vertex.getY());
+   }
+
+   private static Point2d toPoint2d(Coordinate coordinate)
+   {
+      return new Point2d(coordinate.x, coordinate.y);
+   }
+
    /**
     * Computes the border edges {@link QuadEdge} that will define the concave hull.
     * This is an iterative process that starts a first guess of the concave hull, and then each iteration consists "breaking" edges that are too long according to the {@code edgeLengthThreshold}.
@@ -246,6 +351,7 @@ public abstract class SimpleConcaveHullFactory
       Set<Vertex> borderVertices = variables.borderVertices;
       Set<QuadEdge> borderEdges = variables.borderEdges;
       Set<QuadEdgeTriangle> borderTriangles = variables.borderTriangles;
+      Set<QuadEdge> constraintEdges = variables.constraintEdges;
 
       QuadEdge candidateEdge = candidatePair.getLeft();
       QuadEdgeTriangle candidateTriangle = candidatePair.getRight();
@@ -254,12 +360,29 @@ public abstract class SimpleConcaveHullFactory
       int numberOfBorderVertices = numberOfBorderVertices(candidateTriangle, borderVertices);
       int numberOfBorderEdges = numberOfBorderEdges(candidateTriangle, borderEdges);
 
+      // Check if the triangle has a border that is a constraint.
+      for (QuadEdge edge : candidateTriangle.getEdges())
+      {
+         if (isConstraintEdge(edge, constraintEdges) && isBorderEdge(edge, borderEdges))
+            return Case.KEEP_TRIANGLE;
+      }
+
+      // Check if by removing the triangle, a constraint edge will become a border edge
+      boolean forceRemovalToRevealConstraint = false;
+      for (QuadEdge edge : candidateTriangle.getEdges())
+      {
+         if (isConstraintEdge(edge, constraintEdges))
+         {
+            forceRemovalToRevealConstraint = true;
+         }
+      }
+
       if (numberOfBorderVertices == 2)
       {
          if (numberOfBorderEdges != 1)
             throw new RuntimeException("Triangle should have one border edge, but has: " + numberOfBorderEdges);
 
-         return isEdgeTooLong ? Case.ONE_BORDER_EDGE_TWO_BORDER_VERTICES : Case.KEEP_TRIANGLE;
+         return isEdgeTooLong || forceRemovalToRevealConstraint ? Case.ONE_BORDER_EDGE_TWO_BORDER_VERTICES : Case.KEEP_TRIANGLE;
       }
 
       if (numberOfBorderEdges == 2)
@@ -518,6 +641,7 @@ public abstract class SimpleConcaveHullFactory
          Set<QuadEdgeTriangle> subBorderTriangles = subHullVariables.borderTriangles;
          Set<Vertex> subBorderVertices = subHullVariables.borderVertices;
          PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> subSortedByLengthQueue = subHullVariables.sortedByLengthQueue;
+         Set<QuadEdge> subConstraintEdges = subHullVariables.constraintEdges;
 
          subOrderedBorderEdges.addAll(ListWrappingIndexTools.subListInclusive(subHullStartIndex, subHullEndIndex, orderedBorderEdges));
          checkOrderedBorderEdgeListValid(subOrderedBorderEdges);
@@ -527,6 +651,7 @@ public abstract class SimpleConcaveHullFactory
                             .filter(pair -> isBorderEdge(pair.getLeft(), subBorderEdges))
                             .forEach(subSortedByLengthQueue::add);
          subSortedByLengthQueue.forEach(pair -> subBorderTriangles.add(pair.getRight()));
+         subConstraintEdges.addAll(variables.constraintEdges);
 
          dividedHullVariables.add(subHullVariables);
 
@@ -668,6 +793,11 @@ public abstract class SimpleConcaveHullFactory
       return borderEdges.contains(edge) || borderEdges.contains(edge.sym());
    }
 
+   private static boolean isConstraintEdge(QuadEdge edge, Set<QuadEdge> constraintEdges)
+   {
+      return constraintEdges.contains(edge) || constraintEdges.contains(edge.sym());
+   }
+
    private static int indexOfVertexOppositeToEdge(int edgeIndex)
    {
       if (edgeIndex < 0 || edgeIndex > 2)
@@ -742,6 +872,7 @@ public abstract class SimpleConcaveHullFactory
       private final Set<QuadEdgeTriangle> borderTriangles = new HashSet<>();
       private final QuadEdgeComparator quadEdgeComparator = new QuadEdgeComparator();
       private final PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> sortedByLengthQueue = new PriorityQueue<>(quadEdgeComparator);
+      private final Set<QuadEdge> constraintEdges = new HashSet<>();
 
       public ConcaveHullVariables()
       {
@@ -773,6 +904,12 @@ public abstract class SimpleConcaveHullFactory
       public PriorityQueue<Pair<QuadEdge, QuadEdgeTriangle>> getSortedByLengthQueue()
       {
          return sortedByLengthQueue;
+      }
+
+      /** @return the edges resulting from the constraint segments of the triangulation. */
+      public Set<QuadEdge> getConstraintEdges()
+      {
+         return constraintEdges;
       }
    }
 }

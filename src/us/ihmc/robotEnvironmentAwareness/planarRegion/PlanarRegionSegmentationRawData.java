@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.planarRegion;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +16,7 @@ import javax.vecmath.Vector3f;
 
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
+import us.ihmc.robotics.geometry.LineSegment2d;
 import us.ihmc.robotics.geometry.RigidBodyTransform;
 
 public class PlanarRegionSegmentationRawData
@@ -24,6 +26,7 @@ public class PlanarRegionSegmentationRawData
    private final Point3d origin;
    private final List<Point3d> pointCloud;
    private final Quat4d orientation;
+   private final List<LineSegment2d> intersections;
 
    public PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin)
    {
@@ -37,36 +40,40 @@ public class PlanarRegionSegmentationRawData
 
    public PlanarRegionSegmentationRawData(PlanarRegionSegmentationNodeData nodeData)
    {
-      this(nodeData.getId(), nodeData.getNormal(), nodeData.getOrigin(), nodeData.nodeStream());
+      this(nodeData.getId(), nodeData.getNormal(), nodeData.getOrigin(), nodeData.nodeStream(), null);
    }
 
    public PlanarRegionSegmentationRawData(PlanarRegionSegmentationMessage message)
    {
-      this(message.getRegionId(), message.getNormal(), message.getOrigin(), Arrays.stream(message.getHitLocations()));
+      this(message.getRegionId(), message.getNormal(), message.getOrigin(), Arrays.stream(message.getHitLocations()), null);
    }
 
    public PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin, List<Point3f> pointCloud)
    {
-      this(regionId, normal, origin, pointCloud.stream());
+      this(regionId, normal, origin, pointCloud.stream(), null);
    }
 
    public PlanarRegionSegmentationRawData(int regionId, Vector3d normal, Point3d origin, List<Point3d> pointCloud)
    {
-      this(regionId, normal, origin, pointCloud.stream());
+      this(regionId, normal, origin, pointCloud.stream(), null);
    }
 
-   private <T> PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin, Stream<T> streamToConvert)
+   private <T> PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin, Stream<T> streamToConvert, List<LineSegment2d> intersections)
    {
-      this(regionId, new Vector3d(normal), new Point3d(origin), streamToConvert);
+      this(regionId, new Vector3d(normal), new Point3d(origin), streamToConvert, intersections);
    }
 
-   private <T> PlanarRegionSegmentationRawData(int regionId, Vector3d normal, Point3d origin, Stream<T> streamToConvert)
+   private <T> PlanarRegionSegmentationRawData(int regionId, Vector3d normal, Point3d origin, Stream<T> streamToConvert, List<LineSegment2d> intersections)
    {
       this.regionId = regionId;
       this.normal = new Vector3d(normal);
       this.origin = new Point3d(origin);
       this.pointCloud = toListOfPoint3d(streamToConvert);
-      orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
+      orientation = PolygonizerTools.getQuaternionFromZUpToVector(normal);
+      if (intersections == null)
+         this.intersections = new ArrayList<>();
+      else
+         this.intersections = intersections.stream().map(LineSegment2d::new).collect(Collectors.toList());
    }
 
    private static <T> List<Point3d> toListOfPoint3d(Stream<T> inputStream)
@@ -153,6 +160,26 @@ public class PlanarRegionSegmentationRawData
       return new RigidBodyTransform(orientation, origin);
    }
 
+   public boolean hasIntersections()
+   {
+      return intersections != null;
+   }
+
+   public void addIntersections(List<LineSegment2d> intersectionsToAdd)
+   {
+      intersectionsToAdd.forEach(this::addIntersection);
+   }
+
+   public void addIntersection(LineSegment2d intersectionToAdd)
+   {
+      intersections.add(intersectionToAdd);
+   }
+
+   public List<LineSegment2d> getIntersections()
+   {
+      return intersections;
+   }
+
    public PlanarRegionSegmentationMessage toMessage()
    {
       return new PlanarRegionSegmentationMessage(regionId, origin, normal, null, pointCloud);
@@ -162,6 +189,6 @@ public class PlanarRegionSegmentationRawData
    {
       return rawData.stream()
                     .map(PlanarRegionSegmentationRawData::toMessage)
-                    .toArray(size -> new PlanarRegionSegmentationMessage[size]);
+                    .toArray(PlanarRegionSegmentationMessage[]::new);
    }
 }

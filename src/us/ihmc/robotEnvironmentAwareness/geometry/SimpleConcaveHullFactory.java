@@ -80,7 +80,7 @@ public abstract class SimpleConcaveHullFactory
       if (pointCloud2d.size() <= 3)
          return null;
 
-      MultiPoint sites = createMultiPoint(pointCloud2d);
+      MultiPoint sites = filterAndCreateMultiPoint(pointCloud2d, lineConstraints, 0.01);
       MultiLineString constraintSegments = createMultiLineString(lineConstraints);
       ConcaveHullFactoryResult result = new ConcaveHullFactoryResult();
       ConcaveHullVariables initialVariables = initializeTriangulation(sites, constraintSegments, result);
@@ -98,6 +98,28 @@ public abstract class SimpleConcaveHullFactory
       }
 
       return result;
+   }
+
+   public static MultiPoint filterAndCreateMultiPoint(List<Point2d> pointCloud2d, List<LineSegment2d> lineConstraints, double tolerance)
+   {
+      List<Point2d> filteredPointCloud2d = new ArrayList<>();
+
+      for (Point2d point : pointCloud2d)
+      {
+         if (!isTooCloseToConstraintSegments(point, lineConstraints, tolerance))
+            filteredPointCloud2d.add(point);
+      }
+      return createMultiPoint(filteredPointCloud2d);
+   }
+
+   public static boolean isTooCloseToConstraintSegments(Point2d point, List<LineSegment2d> lineConstraints, double tolerance)
+   {
+      for (LineSegment2d lineConstraint : lineConstraints)
+      {
+         if (lineConstraint.distance(point) < tolerance)
+            return true;
+      }
+      return false;
    }
 
    public static MultiPoint createMultiPoint(List<Point2d> pointCloud2d)

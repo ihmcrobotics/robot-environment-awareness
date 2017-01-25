@@ -359,7 +359,6 @@ public class PolygonizerVisualizer extends Application
 
       List<Point2d> pointsInPlane = rawData.getPointCloudInPlane();
       List<LineSegment2d> intersections = rawData.getIntersections();
-      System.out.println("Region id: " + rawData.getRegionId());
       ConcaveHullFactoryResult concaveHullFactoryResult = SimpleConcaveHullFactory.createConcaveHull(pointsInPlane, intersections, parameters);
 
       if (VISUALIZE_CONCAVE_HULL)

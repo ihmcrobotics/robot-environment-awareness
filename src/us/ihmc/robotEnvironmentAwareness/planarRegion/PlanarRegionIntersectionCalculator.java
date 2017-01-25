@@ -1,11 +1,17 @@
 package us.ihmc.robotEnvironmentAwareness.planarRegion;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.PriorityQueue;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import us.ihmc.robotics.geometry.GeometryTools;
 import us.ihmc.robotics.geometry.Line3d;
@@ -17,7 +23,8 @@ public class PlanarRegionIntersectionCalculator
 {
    public static List<LineSegment3d> computeIntersections(List<PlanarRegionSegmentationRawData> rawData, IntersectionEstimationParameters parameters)
    {
-      List<LineSegment3d> result = new ArrayList<>();
+      List<LineSegment3d> allIntersections = new ArrayList<>();
+      Map<List<LineSegment3d>, Pair<PlanarRegionSegmentationRawData, PlanarRegionSegmentationRawData>> intersectionsToRegionsMap = new HashMap<>();
 
       for (int i = 0; i < rawData.size(); i++)
       {
@@ -47,20 +54,68 @@ public class PlanarRegionIntersectionCalculator
 
             if (intersectionList != null)
             {
-               result.addAll(intersectionList);
-
-               if (parameters.isAddIntersectionsToRegions())
-               {
-                  List<LineSegment2d> intersectionsForCurrentRegion = PolygonizerTools.toLineSegmentsInPlane(intersectionList, currentRegion.getOrigin(), currentRegion.getNormal());
-                  currentRegion.addIntersections(intersectionsForCurrentRegion);
-                  List<LineSegment2d> intersectionsForCurrentNeighbor = PolygonizerTools.toLineSegmentsInPlane(intersectionList, currentNeighbor.getOrigin(), currentNeighbor.getNormal());
-                  currentNeighbor.addIntersections(intersectionsForCurrentNeighbor);
-               }
+               allIntersections.addAll(intersectionList);
+               intersectionsToRegionsMap.put(intersectionList, ImmutablePair.of(currentRegion, currentNeighbor));
             }
          }
       }
 
-      return result;
+      extendLinesToIntersection(allIntersections);
+
+      if (parameters.isAddIntersectionsToRegions())
+      {
+         for (Entry<List<LineSegment3d>, Pair<PlanarRegionSegmentationRawData, PlanarRegionSegmentationRawData>> entry : intersectionsToRegionsMap.entrySet())
+         {
+            List<LineSegment3d> intersections = entry.getKey();
+            PlanarRegionSegmentationRawData region1 = entry.getValue().getLeft();
+            PlanarRegionSegmentationRawData region2 = entry.getValue().getRight();
+
+            List<LineSegment2d> intersectionsForRegion1 = PolygonizerTools.toLineSegmentsInPlane(intersections, region1.getOrigin(), region1.getNormal());
+            region1.addIntersections(intersectionsForRegion1);
+            List<LineSegment2d> intersectionsForRegion2 = PolygonizerTools.toLineSegmentsInPlane(intersections, region2.getOrigin(), region2.getNormal());
+            region2.addIntersections(intersectionsForRegion2);
+         }
+      }
+
+      return allIntersections;
+   }
+
+   public static void extendLinesToIntersection(List<LineSegment3d> allIntersections)
+   {
+      Point3d closestPointOnCurrentLine = new Point3d();
+      Point3d closestPointOnOtherLine = new Point3d();
+
+      for (int i = 0; i < allIntersections.size(); i++)
+      {
+         LineSegment3d currentIntersectionSegment = allIntersections.get(i);
+         Line3d currentIntersectionLine = currentIntersectionSegment.getLineCopy();
+
+         for (int j = i + 1; j < allIntersections.size(); j++)
+         {
+            LineSegment3d otherIntersectionSegment = allIntersections.get(j);
+            Line3d otherIntersectionLine = otherIntersectionSegment.getLineCopy();
+
+            double distanceBetweenLines = currentIntersectionLine.getClosestPointsWith(otherIntersectionLine, closestPointOnCurrentLine, closestPointOnOtherLine);
+
+            if (distanceBetweenLines > 0.05)
+               continue;
+
+            if (currentIntersectionSegment.distance(closestPointOnCurrentLine) <= 0.05 && otherIntersectionSegment.distance(closestPointOnOtherLine) <= 0.05)
+            {
+               double alphaCurrent = currentIntersectionSegment.percentageAlongLineSegment(closestPointOnCurrentLine);
+               if (alphaCurrent < 0.0)
+                  currentIntersectionSegment.setFirstEndpoint(closestPointOnCurrentLine);
+               else if (alphaCurrent > 1.0)
+                  currentIntersectionSegment.setSecondEndpoint(closestPointOnCurrentLine);
+
+               double alphaOther = otherIntersectionSegment.percentageAlongLineSegment(closestPointOnOtherLine);
+               if (alphaOther < 0.0)
+                  otherIntersectionSegment.setFirstEndpoint(closestPointOnOtherLine);
+               else if (alphaOther > 1.0)
+                  otherIntersectionSegment.setSecondEndpoint(closestPointOnOtherLine);
+            }
+         }
+      }
    }
 
    private static Line3d computeIntersectionLine3d(PlanarRegionSegmentationRawData currentRegion, PlanarRegionSegmentationRawData currentNeighbor,

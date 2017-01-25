@@ -233,6 +233,7 @@ public abstract class SimpleConcaveHullFactory
 
       // NOTE: The DelaunayTriangulatorBuilder is 30% to 40% faster than the ConformingDelaunayTriangulationBuilder.
       ConformingDelaunayTriangulationBuilder conformingDelaunayTriangulationBuilder = new ConformingDelaunayTriangulationBuilder();
+      conformingDelaunayTriangulationBuilder.setTolerance(10.0e-3);
       conformingDelaunayTriangulationBuilder.setSites(sites);
       if (constraintSegments != null)
          conformingDelaunayTriangulationBuilder.setConstraints(constraintSegments);

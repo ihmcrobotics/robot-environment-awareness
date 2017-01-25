@@ -26,7 +26,7 @@ public class IntersectionEstimationParameters
       minRegionSize = 50;
       minIntersectionLength = 0.06;
       minRegionAngleDifference = Math.toRadians(15.0);
-      addIntersectionsToRegions = false;
+      addIntersectionsToRegions = true;
    }
 
    public void set(IntersectionEstimationParameters other)

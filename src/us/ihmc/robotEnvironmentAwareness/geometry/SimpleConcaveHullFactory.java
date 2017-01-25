@@ -118,10 +118,59 @@ public abstract class SimpleConcaveHullFactory
       if (lineSegments == null)
          return null;
 
-      LineString[] lineStrings = lineSegments.stream()
-                                             .map(SimpleConcaveHullFactory::createLineString)
-                                             .toArray(LineString[]::new);
-      return new GeometryFactory().createMultiLineString(lineStrings);
+      List<LineString> lineStrings = lineSegments.stream()
+                                                 .map(SimpleConcaveHullFactory::createLineString)
+                                                 .collect(Collectors.toList());
+
+      GeometryFactory geometryFactory = new GeometryFactory();
+
+      // Try to merge lineStrings
+      for (int i = 0; i < lineStrings.size(); i++)
+      {
+         LineString firstLineString = lineStrings.get(i);
+         List<Coordinate> firstCoordinates = new ArrayList<>(Arrays.asList(firstLineString.getCoordinates()));
+
+         for (int j = lineStrings.size() - 1; j >= i + 1; j--)
+         {
+            LineString secondLineString = lineStrings.get(j);
+            List<Coordinate> secondCoordinates = new ArrayList<>(Arrays.asList(secondLineString.getCoordinates()));
+
+            boolean concatenate = false;
+
+            double tolerance = 1.0e-3;
+            if (firstLineString.getEndPoint().equalsExact(secondLineString.getStartPoint(), tolerance))
+            {
+               concatenate = true;
+            }
+            else if (firstLineString.getEndPoint().equalsExact(secondLineString.getEndPoint(), tolerance))
+            {
+               concatenate = true;
+               Collections.reverse(secondCoordinates);
+            }
+            else if (firstLineString.getStartPoint().equalsExact(secondLineString.getEndPoint(), tolerance))
+            {
+               concatenate = true;
+               Collections.reverse(firstCoordinates);
+               Collections.reverse(secondCoordinates);
+            }
+            else if (firstLineString.getStartPoint().equalsExact(secondLineString.getStartPoint(), tolerance))
+            {
+               concatenate = true;
+               Collections.reverse(firstCoordinates);
+            }
+
+            if (concatenate)
+            {
+               lineStrings.remove(j);
+               secondCoordinates.remove(0);
+               firstCoordinates.addAll(secondCoordinates);
+               firstLineString = geometryFactory.createLineString(firstCoordinates.toArray(new Coordinate[firstCoordinates.size()]));
+               lineStrings.set(i, firstLineString);
+            }
+         }
+      }
+
+      return geometryFactory.createMultiLineString(lineStrings.toArray(new LineString[lineStrings.size()]));
    }
 
    public static LineString createLineString(LineSegment2d lineSegment)

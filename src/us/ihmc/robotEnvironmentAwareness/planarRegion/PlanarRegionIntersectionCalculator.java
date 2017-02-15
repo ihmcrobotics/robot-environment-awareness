@@ -53,7 +53,7 @@ public class PlanarRegionIntersectionCalculator
                {
                   for (LineSegment3d intersection : intersectionList)
                   {
-                     intersectionLength.sub(intersection.getPointB(), intersection.getPointA());
+                     intersectionLength.sub(intersection.getSecondEndpoint(), intersection.getFirstEndpoint());
                      double length = intersectionLength.length();
                      double delta = 0.01;
                      int numberOfPointsToAdd = (int) (length / delta);
@@ -61,7 +61,7 @@ public class PlanarRegionIntersectionCalculator
                      {
                         Point3d newPoint = new Point3d();
                         double alpha = k / (double) numberOfPointsToAdd;
-                        newPoint.scaleAdd(alpha, intersectionLength, intersection.getPointA());
+                        newPoint.scaleAdd(alpha, intersectionLength, intersection.getFirstEndpoint());
                         // FIXME Figure out something less hackish
 //                        currentRegion.addPoint(new Point3d(newPoint));
 //                        currentNeighbor.addPoint(new Point3d(newPoint));

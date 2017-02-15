@@ -695,7 +695,7 @@ public class PolygonizerVisualizer extends Application
 
       for (LineSegment3d intersection : intersections)
       {
-         meshBuilder.addLine(intersection.getPointA(), intersection.getPointB(), 0.01, Color.RED);
+         meshBuilder.addLine(intersection.getFirstEndpoint(), intersection.getSecondEndpoint(), 0.01, Color.RED);
       }
 
       MeshView meshView = new MeshView(meshBuilder.generateMesh());

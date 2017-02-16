@@ -11,6 +11,7 @@ import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.Sphere;
 import javafx.stage.Stage;
+import us.ihmc.commons.Conversions;
 import us.ihmc.jOctoMap.iterators.OcTreeIterable;
 import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
@@ -25,7 +26,6 @@ import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator
 import us.ihmc.robotics.geometry.RotationTools;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
-import us.ihmc.robotics.time.TimeTools;
 
 public class NormalOcTreeVisualizer extends Application
 {
@@ -54,7 +54,7 @@ public class NormalOcTreeVisualizer extends Application
       ocTree.update(new ScanCollection(pointcloud, lidarPosition));
       ocTree.update(new ScanCollection(pointcloud, lidarPosition));
       long endTime = System.nanoTime();
-      System.out.println("Done computing normals: time it took = " + TimeTools.nanoSecondstoSeconds(endTime - startTime));
+      System.out.println("Done computing normals: time it took = " + Conversions.nanoSecondstoSeconds(endTime - startTime));
    }
    
    PointCloud pointcloud = new PointCloud();

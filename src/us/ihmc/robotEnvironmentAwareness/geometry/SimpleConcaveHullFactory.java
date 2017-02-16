@@ -29,8 +29,8 @@ import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeSubdivision;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeTriangle;
 import com.vividsolutions.jts.triangulate.quadedge.Vertex;
 
+import us.ihmc.commons.Conversions;
 import us.ihmc.robotics.lists.ListWrappingIndexTools;
-import us.ihmc.robotics.time.TimeTools;
 
 /**
  * Computes the concave hull of a 2D point cloud based on the paper
@@ -133,7 +133,7 @@ public abstract class SimpleConcaveHullFactory
 
       if (REPORT_TIME)
       {
-         System.out.println("Triangulation took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()) + " sec.");
+         System.out.println("Triangulation took: " + Conversions.nanoSecondstoSeconds(stopWatch.getNanoTime()) + " sec.");
       }
 
       return computeIntermediateVariables(allTriangles);

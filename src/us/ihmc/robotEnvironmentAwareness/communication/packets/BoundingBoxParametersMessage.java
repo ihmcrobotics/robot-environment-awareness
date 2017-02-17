@@ -2,7 +2,7 @@ package us.ihmc.robotEnvironmentAwareness.communication.packets;
 
 import java.util.Scanner;
 
-import javax.vecmath.Point3d;
+import us.ihmc.euclid.tuple3D.Point3D;
 
 import us.ihmc.communication.packets.Packet;
 
@@ -95,14 +95,14 @@ public class BoundingBoxParametersMessage extends Packet<BoundingBoxParametersMe
       this.maxZ = maxZ;
    }
 
-   public Point3d getMin()
+   public Point3D getMin()
    {
-      return new Point3d(minX, minY, minZ);
+      return new Point3D(minX, minY, minZ);
    }
    
-   public Point3d getMax()
+   public Point3D getMax()
    {
-      return new Point3d(maxX, maxY, maxZ);
+      return new Point3D(maxX, maxY, maxZ);
    }
 
    @Override

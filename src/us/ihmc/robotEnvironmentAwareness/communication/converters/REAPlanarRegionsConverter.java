@@ -2,9 +2,8 @@ package us.ihmc.robotEnvironmentAwareness.communication.converters;
 
 import java.util.List;
 
-import javax.vecmath.Point3f;
-import javax.vecmath.Vector3f;
-
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple3D.Vector3D32;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OcTreeKeyMessage;
@@ -34,17 +33,17 @@ public class REAPlanarRegionsConverter
    public static PlanarRegionSegmentationMessage createPlanarRegionSegmentationMessage(PlanarRegionSegmentationNodeData nodeData)
    {
       int regionId = nodeData.getId();
-      Point3f origin = new Point3f(nodeData.getOrigin());
-      Vector3f normal = new Vector3f(nodeData.getNormal());
+      Point3D32 origin = new Point3D32(nodeData.getOrigin());
+      Vector3D32 normal = new Vector3D32(nodeData.getNormal());
       OcTreeKeyMessage[] nodeKeys = new OcTreeKeyMessage[nodeData.getNumberOfNodes()];
-      Point3f[] nodeHitLocations = new Point3f[nodeData.getNumberOfNodes()];
+      Point3D32[] nodeHitLocations = new Point3D32[nodeData.getNumberOfNodes()];
 
       for (int nodeIndex = 0; nodeIndex < nodeData.getNumberOfNodes(); nodeIndex++)
       {
          NormalOcTreeNode node = nodeData.getNode(nodeIndex);
          OcTreeKeyMessage nodeKey = new OcTreeKeyMessage(node.getKeyCopy());
          nodeKeys[nodeIndex] = nodeKey;
-         nodeHitLocations[nodeIndex] = new Point3f(node.getHitLocationCopy());
+         nodeHitLocations[nodeIndex] = new Point3D32(node.getHitLocationCopy());
       }
       PlanarRegionSegmentationMessage planarRegionNodeKeysMessage = new PlanarRegionSegmentationMessage(regionId, origin, normal, nodeKeys, nodeHitLocations);
       return planarRegionNodeKeysMessage;

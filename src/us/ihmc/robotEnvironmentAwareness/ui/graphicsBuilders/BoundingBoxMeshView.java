@@ -2,16 +2,15 @@ package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.vecmath.Point3f;
-import javax.vecmath.Quat4f;
-import javax.vecmath.Vector3f;
-
 import javafx.application.Platform;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple3D.Vector3D32;
+import us.ihmc.euclid.tuple4D.Quaternion32;
 import us.ihmc.graphicsDescription.MeshDataGenerator;
 import us.ihmc.graphicsDescription.MeshDataHolder;
 import us.ihmc.javaFXToolkit.graphics.JavaFXMeshDataInterpreter;
@@ -62,9 +61,9 @@ public class BoundingBoxMeshView extends MeshView implements Runnable
          return;
       }
 
-      Vector3f boxSize = newMessage.getSize();
-      Quat4f boxOrientation = newMessage.getOrientation();
-      Point3f boxCenter = newMessage.getCenter();
+      Vector3D32 boxSize = newMessage.getSize();
+      Quaternion32 boxOrientation = newMessage.getOrientation();
+      Point3D32 boxCenter = newMessage.getCenter();
 
       MeshDataHolder boxMeshDataHolder = MeshDataGenerator.Cube(boxSize.getX(), boxSize.getY(), boxSize.getZ(), true);
       boxMeshDataHolder = MeshDataHolder.rotate(boxMeshDataHolder, boxOrientation);

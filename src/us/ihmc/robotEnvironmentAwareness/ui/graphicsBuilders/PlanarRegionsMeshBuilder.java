@@ -8,6 +8,7 @@ import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
 import us.ihmc.communication.packets.PlanarRegionMessageConverter;
 import us.ihmc.communication.packets.PlanarRegionsListMessage;
+import us.ihmc.euclid.transform.RigidBodyTransform;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette2D;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
@@ -15,7 +16,6 @@ import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
 import us.ihmc.robotics.geometry.PlanarRegion;
 import us.ihmc.robotics.geometry.PlanarRegionsList;
-import us.ihmc.robotics.geometry.RigidBodyTransform;
 
 public class PlanarRegionsMeshBuilder implements Runnable
 {

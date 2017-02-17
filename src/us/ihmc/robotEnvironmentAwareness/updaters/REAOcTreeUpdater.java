@@ -4,10 +4,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.vecmath.Point3d;
-
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.interfaces.Point3DReadOnly;
+import us.ihmc.euclid.tuple4D.Quaternion;
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
@@ -130,7 +131,7 @@ public class REAOcTreeUpdater
       if (latestLidarPoseReference.get() == null)
          return;
 
-      Point3d sensorOrigin = latestLidarPoseReference.get().getPoint();
+      Point3DReadOnly sensorOrigin = latestLidarPoseReference.get().getPoint();
 
       boolean isBufferFull = reaOcTreeBuffer.isBufferFull();
       if (isBufferFull)
@@ -174,15 +175,15 @@ public class REAOcTreeUpdater
 
       OcTreeBoundingBoxWithCenterAndYaw boundingBox = new OcTreeBoundingBoxWithCenterAndYaw();
 
-      Point3d min = atomicBoundingBoxParameters.get().getMin();
-      Point3d max = atomicBoundingBoxParameters.get().getMax();
+      Point3D min = atomicBoundingBoxParameters.get().getMin();
+      Point3D max = atomicBoundingBoxParameters.get().getMax();
       boundingBox.setLocalMinMaxCoordinates(min, max);
 
       if (latestLidarPoseReference.get() != null)
       {
          Pose lidarPose = latestLidarPoseReference.get();
          boundingBox.setOffset(lidarPose.getPoint());
-         boundingBox.setYawFromQuaternion(lidarPose.getOrientation());
+         boundingBox.setYawFromQuaternion(new Quaternion(lidarPose.getOrientation()));
       }
 
       boundingBox.update(referenceOctree.getResolution(), referenceOctree.getTreeDepth());

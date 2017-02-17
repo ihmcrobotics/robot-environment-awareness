@@ -2,13 +2,12 @@ package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.vecmath.Point3d;
-
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
+import us.ihmc.euclid.tuple3D.Point3D;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
@@ -68,7 +67,7 @@ public class BufferOctreeMeshBuilder implements Runnable
 
       for (UIOcTreeNode uiOcTreeNode : uiOcTree)
       {
-         Point3d nodeCenter = new Point3d(uiOcTreeNode.getX(), uiOcTreeNode.getY(), uiOcTreeNode.getZ());
+         Point3D nodeCenter = new Point3D(uiOcTreeNode.getX(), uiOcTreeNode.getY(), uiOcTreeNode.getZ());
          bufferMeshBuilder.addTetrahedron(NODE_SCALE * uiOcTreeNode.getSize(), nodeCenter);
       }
 

@@ -1,8 +1,9 @@
 package us.ihmc.robotEnvironmentAwareness.communication.converters;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Quat4d;
-import javax.vecmath.Vector3d;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple4D.Quaternion;
+
+import us.ihmc.euclid.tuple3D.Vector3D;
 
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxInterface;
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxWithCenterAndYaw;
@@ -27,9 +28,9 @@ public class BoundingBoxMessageConverter
 
    public static BoxMessage convertToMessage(OcTreeSimpleBoundingBox boundingBox)
    {
-      Quat4d orientation = new Quat4d(0.0, 0.0, 0.0, 1.0);
-      Point3d center = new Point3d();
-      Vector3d size = new Vector3d();
+      Quaternion orientation = new Quaternion(0.0, 0.0, 0.0, 1.0);
+      Point3D center = new Point3D();
+      Vector3D size = new Vector3D();
       boundingBox.getSize(size);
       boundingBox.getCenterCoordinate(center);
 
@@ -42,11 +43,11 @@ public class BoundingBoxMessageConverter
    
    public static BoxMessage convertToMessage(OcTreeBoundingBoxWithCenterAndYaw boundingBox)
    {
-      Point3d center = new Point3d();
-      Vector3d size = new Vector3d();
+      Point3D center = new Point3D();
+      Vector3D size = new Vector3D();
       boundingBox.getLocalSize(size);
       boundingBox.getCenterCoordinate(center);
-      Quat4d orientation = new Quat4d(0.0, 0.0, Math.sin(0.5 * boundingBox.getYaw()), Math.cos(0.5 * boundingBox.getYaw()));
+      Quaternion orientation = new Quaternion(0.0, 0.0, Math.sin(0.5 * boundingBox.getYaw()), Math.cos(0.5 * boundingBox.getYaw()));
       
       BoxMessage boxMessage = new BoxMessage();
       boxMessage.setCenter(center);

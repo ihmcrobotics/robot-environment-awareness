@@ -1,8 +1,9 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
-
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Vector3D;
+import us.ihmc.euclid.tuple3D.interfaces.Point3DReadOnly;
+import us.ihmc.euclid.tuple3D.interfaces.Vector3DReadOnly;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree.RayMissProbabilityUpdater;
 import us.ihmc.jOctoMap.occupancy.OccupancyParameters;
@@ -18,9 +19,9 @@ public class AdaptiveRayMissProbabilityUpdater implements RayMissProbabilityUpda
    private double shallowAngleMissProbability = 0.45;
 
    @Override
-   public double computeRayMissProbability(Point3d rayOrigin, Point3d rayEnd, Vector3d rayDirection, NormalOcTreeNode node, OccupancyParameters parameters)
+   public double computeRayMissProbability(Point3DReadOnly rayOrigin, Point3DReadOnly rayEnd, Vector3DReadOnly rayDirection, NormalOcTreeNode node, OccupancyParameters parameters)
    {
-      Point3d hitLocation = new Point3d();
+      Point3D hitLocation = new Point3D();
       node.getHitLocation(hitLocation);
 
       if (hitLocation.distanceSquared(rayEnd) < distanceSquaredToEndThreshold)
@@ -29,8 +30,8 @@ public class AdaptiveRayMissProbabilityUpdater implements RayMissProbabilityUpda
       }
       else if (node.getNormalConsensusSize() > normalConsensusThreshold && node.isNormalSet())
       {
-         Point3d nodeHitLocation = new Point3d();
-         Vector3d nodeNormal = new Vector3d();
+         Point3D nodeHitLocation = new Point3D();
+         Vector3D nodeNormal = new Vector3D();
          node.getHitLocation(nodeHitLocation);
          node.getNormal(nodeNormal);
 

@@ -16,12 +16,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
-import javax.vecmath.Quat4d;
-import javax.vecmath.Tuple3d;
-import javax.vecmath.Vector3d;
-
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdge;
@@ -53,6 +47,12 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.MeshView;
 import javafx.stage.Stage;
+import us.ihmc.euclid.transform.RigidBodyTransform;
+import us.ihmc.euclid.tuple2D.Point2D;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Vector3D;
+import us.ihmc.euclid.tuple3D.interfaces.Tuple3DBasics;
+import us.ihmc.euclid.tuple4D.Quaternion;
 import us.ihmc.javaFXToolkit.JavaFXTools;
 import us.ihmc.javaFXToolkit.cameraControllers.FocusBasedCameraMouseEventHandler;
 import us.ihmc.javaFXToolkit.scenes.View3DFactory;
@@ -70,7 +70,6 @@ import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationRawDataImporter;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
 import us.ihmc.robotics.geometry.LineSegment3d;
-import us.ihmc.robotics.geometry.RigidBodyTransform;
 import us.ihmc.robotics.linearAlgebra.PrincipalComponentAnalysis3D;
 import us.ihmc.robotics.lists.ListWrappingIndexTools;
 
@@ -157,7 +156,7 @@ public class PolygonizerVisualizer extends Application
       {
          Map<Node, Integer> nodeToRegionId = new HashMap<>();
 
-         Point3d average = computeAverage(regionsRawData, regionIdFilterSet);
+         Point3D average = computeAverage(regionsRawData, regionIdFilterSet);
          average.negate();
 
          for (PlanarRegionSegmentationRawData rawData : regionsRawData)
@@ -256,7 +255,7 @@ public class PolygonizerVisualizer extends Application
 
       dataPane.getChildren().addAll(xFocusLabel, xFocus, yFocusLabel, yFocus, zFocusLabel, zFocus);
 
-      ObjectProperty<Vector3d> standardDeviationProperty = new SimpleObjectProperty<>(this, "standardDeviation", new Vector3d());
+      ObjectProperty<Vector3D> standardDeviationProperty = new SimpleObjectProperty<>(this, "standardDeviation", new Vector3D());
       currentRegionIdProperty.addListener((Observable o) -> standardDeviationProperty.set(computePrincipalStandardDeviationValues(idToRawData.get(currentRegionIdProperty.get()))));
 
       Label regionIdLabel = new Label("current region ID: ");
@@ -299,7 +298,7 @@ public class PolygonizerVisualizer extends Application
       return dataPane;
    }
 
-   public double ellipsoidVolume(Vector3d radii)
+   public double ellipsoidVolume(Vector3D radii)
    {
       return ellipsoidVolume(radii.getX(), radii.getY(), radii.getZ());
    }
@@ -309,17 +308,17 @@ public class PolygonizerVisualizer extends Application
       return 4.0 / 3.0 * Math.PI * xRadius * yRadius * zRadius * 100.0 * 100.0 * 100.0;
    }
 
-   public static Vector3d computePrincipalStandardDeviationValues(PlanarRegionSegmentationRawData rawData)
+   public static Vector3D computePrincipalStandardDeviationValues(PlanarRegionSegmentationRawData rawData)
    {
       PrincipalComponentAnalysis3D pca = new PrincipalComponentAnalysis3D();
       rawData.stream().forEach(point -> pca.addPoint(point.getX(), point.getY(), point.getZ()));
       pca.compute();
-      Vector3d principalStandardDeviation = new Vector3d();
+      Vector3D principalStandardDeviation = new Vector3D();
       pca.getStandardDeviation(principalStandardDeviation);
       return principalStandardDeviation;
    }
 
-   public static void translateNode(Node nodeToTranslate, Tuple3d translation)
+   public static void translateNode(Node nodeToTranslate, Tuple3DBasics translation)
    {
       nodeToTranslate.setTranslateX(nodeToTranslate.getTranslateX() + translation.getX());
       nodeToTranslate.setTranslateY(nodeToTranslate.getTranslateY() + translation.getY());
@@ -331,7 +330,7 @@ public class PolygonizerVisualizer extends Application
       nodeToTransform.getTransforms().add(JavaFXTools.convertRigidBodyTransformToAffine(transform));
    }
 
-   public static Point3d computeAverage(List<PlanarRegionSegmentationRawData> regionsRawData, Set<Integer> regionIdFilterSet)
+   public static Point3D computeAverage(List<PlanarRegionSegmentationRawData> regionsRawData, Set<Integer> regionIdFilterSet)
    {
       PointMean average = new PointMean();
 
@@ -349,7 +348,7 @@ public class PolygonizerVisualizer extends Application
       Group regionGroup = new Group();
       ObservableList<Node> children = regionGroup.getChildren();
 
-      List<Point2d> pointsInPlane = rawData.getPointCloudInPlane();
+      List<Point2D> pointsInPlane = rawData.getPointCloudInPlane();
       ConcaveHullFactoryResult concaveHullFactoryResult = SimpleConcaveHullFactory.createConcaveHull(pointsInPlane, parameters);
 
       if (VISUALIZE_CONCAVE_HULL)
@@ -388,9 +387,9 @@ public class PolygonizerVisualizer extends Application
 
          for (ConcaveHullPocket pocket : pockets)
          {
-            List<Point2d> pocketVertices = ListWrappingIndexTools.subListInclusive(pocket.getStartBridgeIndex(), pocket.getEndBridgeIndex(),
+            List<Point2D> pocketVertices = ListWrappingIndexTools.subListInclusive(pocket.getStartBridgeIndex(), pocket.getEndBridgeIndex(),
                   concaveHull.getConcaveHullVertices());
-            Point2d average = new Point2d();
+            Point2D average = new Point2D();
             average.interpolate(pocket.getStartBridgeVertex(), pocket.getEndBridgeVertex(), 0.5);
             pocketVertices.add(0, average);
             ConcaveHullTools.ensureClockwiseOrdering(pocketVertices);
@@ -407,8 +406,8 @@ public class PolygonizerVisualizer extends Application
    {
       int regionId = rawData.getRegionId();
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(16));
-      Point3d planeOrigin = rawData.getOrigin();
-      Quat4d planeOrientation = rawData.getOrientation();
+      Point3D planeOrigin = rawData.getOrigin();
+      Quaternion planeOrientation = rawData.getOrientation();
       Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
 
       for (ConcaveHullVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
@@ -417,8 +416,8 @@ public class PolygonizerVisualizer extends Application
 
          for (QuadEdge edge : borderEdges)
          {
-            Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
-            Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
+            Point3D dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
+            Point3D orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
             boolean isEdgeTooLong = dest.distance(orig) > parameters.getEdgeLengthThreshold();
             Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), isEdgeTooLong ? 0.25 : regionColor.getBrightness());
             meshBuilder.addLine(dest, orig, 0.0015, lineColor);
@@ -444,14 +443,14 @@ public class PolygonizerVisualizer extends Application
    private Node createBorderVerticesGraphics(PlanarRegionSegmentationRawData rawData, ConcaveHullFactoryResult concaveHullFactoryResult)
    {
       JavaFXMeshBuilder meshBuilder = new JavaFXMeshBuilder();
-      Point3d planeOrigin = rawData.getOrigin();
-      Quat4d planeOrientation = rawData.getOrientation();
+      Point3D planeOrigin = rawData.getOrigin();
+      Quaternion planeOrientation = rawData.getOrientation();
 
       for (ConcaveHullVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
       {
          for (Vertex vertex2d : intermediateVariables.getBorderVertices())
          {
-            Point3d vertex3d = PolygonizerTools.toPointInWorld(vertex2d.getX(), vertex2d.getY(), planeOrigin, planeOrientation);
+            Point3D vertex3d = PolygonizerTools.toPointInWorld(vertex2d.getX(), vertex2d.getY(), planeOrigin, planeOrientation);
             meshBuilder.addSphere(0.003, vertex3d);
          }
       }
@@ -465,8 +464,8 @@ public class PolygonizerVisualizer extends Application
    {
       int regionId = rawData.getRegionId();
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(16));
-      Point3d planeOrigin = rawData.getOrigin();
-      Vector3d planeNormal = rawData.getNormal();
+      Point3D planeOrigin = rawData.getOrigin();
+      Vector3D planeNormal = rawData.getNormal();
       ConcaveHullCollection concaveHullCollection = concaveHullFactoryResult.getConcaveHullCollection();
 
       for (ConcaveHull concaveHull : concaveHullCollection)
@@ -486,12 +485,12 @@ public class PolygonizerVisualizer extends Application
          }
          Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
 
-         List<Point3d> concaveHullVertices = concaveHull.toVerticesInWorld(planeOrigin, planeNormal);
+         List<Point3D> concaveHullVertices = concaveHull.toVerticesInWorld(planeOrigin, planeNormal);
 
          for (int vertexIndex = 0; vertexIndex < concaveHullVertices.size(); vertexIndex++)
          {
-            Point3d vertex = concaveHullVertices.get(vertexIndex);
-            Point3d nextVertex = ListWrappingIndexTools.getNext(vertexIndex, concaveHullVertices);
+            Point3D vertex = concaveHullVertices.get(vertexIndex);
+            Point3D nextVertex = ListWrappingIndexTools.getNext(vertexIndex, concaveHullVertices);
             boolean isEdgeTooLong = vertex.distance(nextVertex) > parameters.getEdgeLengthThreshold();
             Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), isEdgeTooLong ? 0.25 : regionColor.getBrightness());
             meshBuilder.addLine(vertex, nextVertex, 0.0015, lineColor);
@@ -508,19 +507,19 @@ public class PolygonizerVisualizer extends Application
    {
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(512));
 
-      Point3d planeOrigin = rawData.getOrigin();
-      Vector3d planeNormal = rawData.getNormal();
+      Point3D planeOrigin = rawData.getOrigin();
+      Vector3D planeNormal = rawData.getNormal();
 
       List<QuadEdgeTriangle> allTriangles = concaveHullFactoryResult.getAllTriangles();
 
       for (QuadEdgeTriangle triangle : allTriangles)
       {
-         List<Point2d> triangleVerticesLocal = Arrays.stream(triangle.getVertices()).map(v -> new Point2d(v.getX(), v.getY())).collect(Collectors.toList());
+         List<Point2D> triangleVerticesLocal = Arrays.stream(triangle.getVertices()).map(v -> new Point2D(v.getX(), v.getY())).collect(Collectors.toList());
          triangleVerticesLocal.forEach(vertex -> {
-            vertex.x *= scaleX;
-            vertex.y *= scaleY;
+            vertex.setX(vertex.getX() * scaleX);
+            vertex.setY(vertex.getY() * scaleY);
          });
-         List<Point3d> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeNormal);
+         List<Point3D> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeNormal);
          double hue = 360.0 * random.nextDouble();
          double saturation = 0.8 * random.nextDouble() + 0.1;
          double brightness = 0.9;
@@ -538,8 +537,8 @@ public class PolygonizerVisualizer extends Application
    {
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(512));
 
-      Point3d planeOrigin = rawData.getOrigin();
-      Vector3d planeNormal = rawData.getNormal();
+      Point3D planeOrigin = rawData.getOrigin();
+      Vector3D planeNormal = rawData.getNormal();
 
       for (ConcaveHullVariables intermediateVariables : concaveHullFactoryResult.getIntermediateVariables())
       {
@@ -547,9 +546,9 @@ public class PolygonizerVisualizer extends Application
 
          for (QuadEdgeTriangle borderTriangle : borderTriangles)
          {
-            List<Point2d> triangleVerticesLocal = Arrays.stream(borderTriangle.getVertices()).map(v -> new Point2d(v.getX(), v.getY()))
+            List<Point2D> triangleVerticesLocal = Arrays.stream(borderTriangle.getVertices()).map(v -> new Point2D(v.getX(), v.getY()))
                   .collect(Collectors.toList());
-            List<Point3d> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeNormal);
+            List<Point3D> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeNormal);
             double hue = 360.0 * random.nextDouble();
             double saturation = 0.8 * random.nextDouble() + 0.1;
             double brightness = 0.9;
@@ -567,8 +566,8 @@ public class PolygonizerVisualizer extends Application
    {
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(512));
 
-      Point3d planeOrigin = rawData.getOrigin();
-      Quat4d planeOrientation = rawData.getOrientation();
+      Point3D planeOrigin = rawData.getOrigin();
+      Quaternion planeOrientation = rawData.getOrientation();
 
       Color regionColor = OcTreeMeshBuilder.getRegionColor(rawData.getRegionId());
 
@@ -579,15 +578,15 @@ public class PolygonizerVisualizer extends Application
          for (Pair<QuadEdge, QuadEdgeTriangle> edgeAndTriangle : queue)
          {
             QuadEdge edge = edgeAndTriangle.getLeft();
-            Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
-            Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
+            Point3D dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
+            Point3D orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
             boolean isEdgeTooLong = dest.distance(orig) > parameters.getEdgeLengthThreshold();
             Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), isEdgeTooLong ? 0.25 : regionColor.getBrightness());
             meshBuilder.addLine(dest, orig, 0.0015, lineColor);
 
             QuadEdgeTriangle triangle = edgeAndTriangle.getRight();
-            List<Point2d> triangleVerticesLocal = Arrays.stream(triangle.getVertices()).map(v -> new Point2d(v.getX(), v.getY())).collect(Collectors.toList());
-            List<Point3d> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeOrientation);
+            List<Point2D> triangleVerticesLocal = Arrays.stream(triangle.getVertices()).map(v -> new Point2D(v.getX(), v.getY())).collect(Collectors.toList());
+            List<Point3D> triangleVerticesWorld = PolygonizerTools.toPointsInWorld(triangleVerticesLocal, planeOrigin, planeOrientation);
             double hue = 360.0 * random.nextDouble();
             double saturation = 0.8 * random.nextDouble() + 0.1;
             double brightness = 0.9;
@@ -631,8 +630,8 @@ public class PolygonizerVisualizer extends Application
          ConcaveHullFactoryResult concaveHullFactoryResult)
    {
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(orderedBorderEdgesColorPalette);
-      Point3d planeOrigin = rawData.getOrigin();
-      Quat4d planeOrientation = rawData.getOrientation();
+      Point3D planeOrigin = rawData.getOrigin();
+      Quaternion planeOrientation = rawData.getOrientation();
 
       double startHue = 0.0;
       double endHue = 240.0;
@@ -662,8 +661,8 @@ public class PolygonizerVisualizer extends Application
          for (int edgeIndex = 0; edgeIndex < orderedBorderEdges.size(); edgeIndex++)
          {
             QuadEdge edge = orderedBorderEdges.get(edgeIndex);
-            Point3d orig = PolygonizerTools.toPointInWorld(scaleX * edge.orig().getX(), scaleY * edge.orig().getY(), planeOrigin, planeOrientation);
-            Point3d dest = PolygonizerTools.toPointInWorld(scaleX * edge.dest().getX(), scaleY * edge.dest().getY(), planeOrigin, planeOrientation);
+            Point3D orig = PolygonizerTools.toPointInWorld(scaleX * edge.orig().getX(), scaleY * edge.orig().getY(), planeOrigin, planeOrientation);
+            Point3D dest = PolygonizerTools.toPointInWorld(scaleX * edge.dest().getX(), scaleY * edge.dest().getY(), planeOrigin, planeOrientation);
 
             if (orderedBorderEdges.size() == 1)
             {

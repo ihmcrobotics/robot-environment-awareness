@@ -13,8 +13,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import javax.vecmath.Point2d;
-
 import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -30,6 +28,7 @@ import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeTriangle;
 import com.vividsolutions.jts.triangulate.quadedge.Vertex;
 
 import us.ihmc.commons.Conversions;
+import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.robotics.lists.ListWrappingIndexTools;
 
 /**
@@ -52,7 +51,7 @@ public abstract class SimpleConcaveHullFactory
    private static final boolean VERBOSE = false;
    private static final boolean REPORT_TIME = false;
 
-   public static ConcaveHullCollection createConcaveHullCollection(List<Point2d> pointCloud2d, ConcaveHullFactoryParameters parameters)
+   public static ConcaveHullCollection createConcaveHullCollection(List<Point2D> pointCloud2d, ConcaveHullFactoryParameters parameters)
    {
       if (pointCloud2d.size() <= 3)
          return new ConcaveHullCollection(pointCloud2d);
@@ -60,7 +59,7 @@ public abstract class SimpleConcaveHullFactory
       return createConcaveHull(pointCloud2d, parameters).getConcaveHullCollection();
    }
 
-   public static ConcaveHullFactoryResult createConcaveHull(List<Point2d> pointCloud2d, ConcaveHullFactoryParameters parameters)
+   public static ConcaveHullFactoryResult createConcaveHull(List<Point2D> pointCloud2d, ConcaveHullFactoryParameters parameters)
    {
       if (pointCloud2d.size() <= 3)
          return null;
@@ -84,13 +83,13 @@ public abstract class SimpleConcaveHullFactory
       return result;
    }
 
-   public static MultiPoint createMultiPoint(List<Point2d> pointCloud2d)
+   public static MultiPoint createMultiPoint(List<Point2D> pointCloud2d)
    {
       Coordinate[] coordinates = new Coordinate[pointCloud2d.size()];
 
       for (int i = 0; i < pointCloud2d.size(); i++)
       {
-         Point2d point2d = pointCloud2d.get(i);
+         Point2D point2d = pointCloud2d.get(i);
          coordinates[i] = new Coordinate(point2d.getX(), point2d.getY());
       }
 
@@ -99,9 +98,9 @@ public abstract class SimpleConcaveHullFactory
 
    private static ConcaveHull computeConcaveHull(List<QuadEdge> orderedBorderEdges)
    {
-      List<Point2d> orderedConcaveHullVertices = orderedBorderEdges.stream()
+      List<Point2D> orderedConcaveHullVertices = orderedBorderEdges.stream()
                                                                    .map(QuadEdge::orig)
-                                                                   .map(vertex -> new Point2d(vertex.getX(), vertex.getY()))
+                                                                   .map(vertex -> new Point2D(vertex.getX(), vertex.getY()))
                                                                    .collect(Collectors.toList());
       return new ConcaveHull(orderedConcaveHullVertices);
    }

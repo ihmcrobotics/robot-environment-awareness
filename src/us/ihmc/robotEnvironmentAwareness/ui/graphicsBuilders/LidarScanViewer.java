@@ -3,8 +3,6 @@ package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.vecmath.Point3f;
-
 import javafx.collections.ObservableList;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -13,6 +11,7 @@ import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.MeshView;
 import us.ihmc.communication.packets.LidarScanMessage;
+import us.ihmc.euclid.tuple3D.Point3D32;
 import us.ihmc.graphicsDescription.MeshDataGenerator;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorAdaptivePalette;
@@ -94,7 +93,7 @@ public class LidarScanViewer implements Runnable
       if (message == null)
          return;
 
-      Point3f scanPoint = new Point3f();
+      Point3D32 scanPoint = new Point3D32();
       meshBuilder.clear();
       for (int i = 0; i < message.getNumberOfScanPoints(); i++)
       {

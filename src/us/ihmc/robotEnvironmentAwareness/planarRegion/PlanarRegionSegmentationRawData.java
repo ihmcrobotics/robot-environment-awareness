@@ -6,66 +6,65 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.Quat4d;
-import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
-
+import us.ihmc.euclid.transform.RigidBodyTransform;
+import us.ihmc.euclid.tuple2D.Point2D;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple3D.Vector3D;
+import us.ihmc.euclid.tuple3D.Vector3D32;
+import us.ihmc.euclid.tuple4D.Quaternion;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
-import us.ihmc.robotics.geometry.RigidBodyTransform;
 
 public class PlanarRegionSegmentationRawData
 {
    private final int regionId;
-   private final Vector3d normal;
-   private final Point3d origin;
-   private final List<Point3d> pointCloud;
-   private final Quat4d orientation;
+   private final Vector3D normal;
+   private final Point3D origin;
+   private final List<Point3D> pointCloud;
+   private final Quaternion orientation;
 
-   public PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin)
+   public PlanarRegionSegmentationRawData(int regionId, Vector3D32 normal, Point3D32 origin)
    {
       this.regionId = regionId;
-      this.normal = new Vector3d(normal);
-      this.origin = new Point3d(origin);
+      this.normal = new Vector3D(normal);
+      this.origin = new Point3D(origin);
       pointCloud = new ArrayList<>();
       orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
    }
 
-   public PlanarRegionSegmentationRawData(int regionId, Vector3d normal, Point3d origin)
+   public PlanarRegionSegmentationRawData(int regionId, Vector3D normal, Point3D origin)
    {
       this.regionId = regionId;
-      this.normal = new Vector3d(normal);
-      this.origin = new Point3d(origin);
+      this.normal = new Vector3D(normal);
+      this.origin = new Point3D(origin);
       pointCloud = new ArrayList<>();
       orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
    }
 
-   public PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin, List<Point3f> pointCloud)
+   public PlanarRegionSegmentationRawData(int regionId, Vector3D32 normal, Point3D32 origin, List<Point3D32> pointCloud)
    {
       this.regionId = regionId;
-      this.normal = new Vector3d(normal);
-      this.origin = new Point3d(origin);
-      this.pointCloud = pointCloud.stream().map(point3f -> new Point3d(point3f)).collect(Collectors.toList());
+      this.normal = new Vector3D(normal);
+      this.origin = new Point3D(origin);
+      this.pointCloud = pointCloud.stream().map(point3f -> new Point3D(point3f)).collect(Collectors.toList());
       orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
    }
 
-   public PlanarRegionSegmentationRawData(int regionId, Vector3d normal, Point3d origin, List<Point3d> pointCloud)
+   public PlanarRegionSegmentationRawData(int regionId, Vector3D normal, Point3D origin, List<Point3D> pointCloud)
    {
       this.regionId = regionId;
-      this.normal = new Vector3d(normal);
-      this.origin = new Point3d(origin);
-      this.pointCloud = pointCloud.stream().map(point -> new Point3d(point)).collect(Collectors.toList());
+      this.normal = new Vector3D(normal);
+      this.origin = new Point3D(origin);
+      this.pointCloud = pointCloud.stream().map(point -> new Point3D(point)).collect(Collectors.toList());
       orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
    }
 
    public PlanarRegionSegmentationRawData(PlanarRegionSegmentationNodeData ocTreeNodePlanarRegion)
    {
       regionId = ocTreeNodePlanarRegion.getId();
-      normal = new Vector3d(ocTreeNodePlanarRegion.getNormal());
-      origin = new Point3d(ocTreeNodePlanarRegion.getOrigin());
+      normal = new Vector3D(ocTreeNodePlanarRegion.getNormal());
+      origin = new Point3D(ocTreeNodePlanarRegion.getOrigin());
       orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
       pointCloud = ocTreeNodePlanarRegion.nodeStream()
                                          .map(NormalOcTreeNode::getHitLocationCopy)
@@ -75,11 +74,11 @@ public class PlanarRegionSegmentationRawData
    public PlanarRegionSegmentationRawData(PlanarRegionSegmentationMessage message)
    {
       regionId = message.getRegionId();
-      normal = new Vector3d(message.getNormal());
-      origin = new Point3d(message.getOrigin());
+      normal = new Vector3D(message.getNormal());
+      origin = new Point3D(message.getOrigin());
       orientation = PolygonizerTools.getRotationBasedOnNormal(normal);
       pointCloud = Arrays.stream(message.getHitLocations())
-                         .map(point3f -> new Point3d(point3f))
+                         .map(point3f -> new Point3D(point3f))
                          .collect(Collectors.toList());
    }
 
@@ -93,49 +92,49 @@ public class PlanarRegionSegmentationRawData
       return pointCloud.size();
    }
 
-   public List<Point2d> getPointCloudInPlane()
+   public List<Point2D> getPointCloudInPlane()
    {
       return pointCloud.stream()
                        .map(this::toPointInPlane)
                        .collect(Collectors.toList());
    }
 
-   private Point2d toPointInPlane(Point3d point3d)
+   private Point2D toPointInPlane(Point3D point3d)
    {
       return PolygonizerTools.toPointInPlane(point3d, origin, orientation);
    }
 
-   public List<Point3d> getPointCloudInWorld()
+   public List<Point3D> getPointCloudInWorld()
    {
       return pointCloud;
    }
 
-   public void getPoint(int index, Point3d pointToPack)
+   public void getPoint(int index, Point3D pointToPack)
    {
       pointToPack.set(pointCloud.get(index));
    }
 
-   public Point3d getOrigin()
+   public Point3D getOrigin()
    {
       return origin;
    }
 
-   public Vector3d getNormal()
+   public Vector3D getNormal()
    {
       return normal;
    }
 
-   public Quat4d getOrientation()
+   public Quaternion getOrientation()
    {
       return orientation;
    }
 
-   public Stream<Point3d> stream()
+   public Stream<Point3D> stream()
    {
       return pointCloud.stream();
    }
 
-   public Stream<Point3d> parallelStream()
+   public Stream<Point3D> parallelStream()
    {
       return pointCloud.parallelStream();
    }

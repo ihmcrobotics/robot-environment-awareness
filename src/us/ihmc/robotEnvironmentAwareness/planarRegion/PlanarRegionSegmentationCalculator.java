@@ -11,10 +11,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.vecmath.Vector3d;
-
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
+import us.ihmc.euclid.tuple3D.Vector3D;
 import us.ihmc.jOctoMap.boundingBox.OcTreeBoundingBoxInterface;
 import us.ihmc.jOctoMap.iterators.OcTreeIterable;
 import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
@@ -64,7 +63,7 @@ public class PlanarRegionSegmentationCalculator
 
    public boolean isRegionSparse(PlanarRegionSegmentationNodeData region)
    {
-      Vector3d standardDeviationPrincipalValues = region.getStandardDeviationPrincipalValues();
+      Vector3D standardDeviationPrincipalValues = region.getStandardDeviationPrincipalValues();
       if (standardDeviationPrincipalValues.getZ() > parameters.getMaxStandardDeviation())
          return true;
       double density = region.getNumberOfNodes() / PolygonizerTools.computeEllipsoidVolume(standardDeviationPrincipalValues);
@@ -101,7 +100,7 @@ public class PlanarRegionSegmentationCalculator
 
    public static void flipNormalOfOutliers(PlanarRegionSegmentationNodeData region)
    {
-      Vector3d regionNormal = region.getNormal();
+      Vector3D regionNormal = region.getNormal();
       int numberOfNormalsFlipped = (int) region.nodeParallelStream().filter(node -> isNodeNormalFlipped(node, regionNormal)).count();
       int numberOfNormalsNotFlipped = region.getNumberOfNodes() - numberOfNormalsFlipped;
 
@@ -113,7 +112,7 @@ public class PlanarRegionSegmentationCalculator
       region.nodeParallelStream().filter(node -> isNodeNormalFlipped(node, regionNormal)).forEach(NormalOcTreeNode::negateNormal);
    }
 
-   private static boolean isNodeNormalFlipped(NormalOcTreeNode node, Vector3d referenceNormal)
+   private static boolean isNodeNormalFlipped(NormalOcTreeNode node, Vector3D referenceNormal)
    {
       return node.getNormalX() * referenceNormal.getX() + node.getNormalY() * referenceNormal.getY() + node.getNormalZ() * referenceNormal.getZ() < 0.0;
    }

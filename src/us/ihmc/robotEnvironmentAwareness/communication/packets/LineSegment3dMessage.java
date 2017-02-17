@@ -1,19 +1,18 @@
 package us.ihmc.robotEnvironmentAwareness.communication.packets;
 
-import javax.vecmath.Point3f;
-
 import us.ihmc.communication.packets.Packet;
+import us.ihmc.euclid.tuple3D.Point3D32;
 import us.ihmc.robotics.geometry.LineSegment3d;
 
 public class LineSegment3dMessage extends Packet<LineSegment3dMessage>
 {
-   public Point3f start, end;
+   public Point3D32 start, end;
 
    public LineSegment3dMessage()
    {
    }
 
-   public LineSegment3dMessage(Point3f start, Point3f end)
+   public LineSegment3dMessage(Point3D32 start, Point3D32 end)
    {
       this.start = start;
       this.end = end;
@@ -21,26 +20,26 @@ public class LineSegment3dMessage extends Packet<LineSegment3dMessage>
 
    public LineSegment3dMessage(LineSegment3d lineSegment3d)
    {
-      start = new Point3f(lineSegment3d.getFirstEndpoint());
-      end = new Point3f(lineSegment3d.getSecondEndpoint());
+      start = new Point3D32(lineSegment3d.getFirstEndpoint());
+      end = new Point3D32(lineSegment3d.getSecondEndpoint());
    }
 
-   public Point3f getStart()
+   public Point3D32 getStart()
    {
       return start;
    }
 
-   public Point3f getEnd()
+   public Point3D32 getEnd()
    {
       return end;
    }
 
-   public void setStart(Point3f start)
+   public void setStart(Point3D32 start)
    {
       this.start = start;
    }
 
-   public void setEnd(Point3f end)
+   public void setEnd(Point3D32 end)
    {
       this.end = end;
    }

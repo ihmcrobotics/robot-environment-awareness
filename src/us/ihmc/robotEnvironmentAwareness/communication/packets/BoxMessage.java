@@ -1,20 +1,19 @@
 package us.ihmc.robotEnvironmentAwareness.communication.packets;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.Quat4d;
-import javax.vecmath.Quat4f;
-import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
-
 import us.ihmc.communication.packets.Packet;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple3D.Vector3D;
+import us.ihmc.euclid.tuple3D.Vector3D32;
+import us.ihmc.euclid.tuple4D.Quaternion;
+import us.ihmc.euclid.tuple4D.Quaternion32;
 
 public class BoxMessage extends Packet<BoxMessage>
 {
    public boolean isEmpty;
-   public Vector3f size;
-   public Point3f center;
-   public Quat4f orientation;
+   public Vector3D32 size;
+   public Point3D32 center;
+   public Quaternion32 orientation;
 
    public BoxMessage()
    {
@@ -35,53 +34,53 @@ public class BoxMessage extends Packet<BoxMessage>
       return isEmpty;
    }
 
-   public void setSize(Vector3d size)
+   public void setSize(Vector3D size)
    {
       isEmpty = false;
-      this.size = new Vector3f(size);
+      this.size = new Vector3D32(size);
    }
 
-   public void setSize(Vector3f size)
+   public void setSize(Vector3D32 size)
    {
       isEmpty = false;
       this.size = size;
    }
 
-   public void setCenter(Point3d center)
+   public void setCenter(Point3D center)
    {
       isEmpty = false;
-      this.center = new Point3f(center);
+      this.center = new Point3D32(center);
    }
 
-   public void setCenter(Point3f center)
+   public void setCenter(Point3D32 center)
    {
       isEmpty = false;
       this.center = center;
    }
 
-   public void setOrientation(Quat4d orientation)
+   public void setOrientation(Quaternion orientation)
    {
       isEmpty = false;
-      this.orientation = new Quat4f(orientation);
+      this.orientation = new Quaternion32(orientation);
    }
 
-   public void setOrientation(Quat4f orientation)
+   public void setOrientation(Quaternion32 orientation)
    {
       isEmpty = false;
       this.orientation = orientation;
    }
 
-   public Vector3f getSize()
+   public Vector3D32 getSize()
    {
       return size;
    }
 
-   public Point3f getCenter()
+   public Point3D32 getCenter()
    {
       return center;
    }
 
-   public Quat4f getOrientation()
+   public Quaternion32 getOrientation()
    {
       return orientation;
    }

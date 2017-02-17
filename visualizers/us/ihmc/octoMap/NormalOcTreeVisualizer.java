@@ -1,10 +1,5 @@
 package us.ihmc.octoMap;
 
-import javax.vecmath.Matrix3d;
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.Vector3d;
-
 import javafx.application.Application;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
@@ -12,6 +7,11 @@ import javafx.scene.shape.MeshView;
 import javafx.scene.shape.Sphere;
 import javafx.stage.Stage;
 import us.ihmc.commons.Conversions;
+import us.ihmc.euclid.matrix.RotationMatrix;
+import us.ihmc.euclid.rotationConversion.RotationMatrixConversion;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple3D.Vector3D;
 import us.ihmc.jOctoMap.iterators.OcTreeIterable;
 import us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
@@ -23,7 +23,6 @@ import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
 import us.ihmc.robotEnvironmentAwareness.geometry.IntersectionPlaneBoxCalculator;
-import us.ihmc.robotics.geometry.RotationTools;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
 
@@ -38,11 +37,11 @@ public class NormalOcTreeVisualizer extends Application
    public NormalOcTreeVisualizer()
    {
 
-      Point3d lidarPosition = new Point3d(0.0, 0.0, 2.0);
+      Point3D lidarPosition = new Point3D(0.0, 0.0, 2.0);
       //      callUpdateNode();
       //      callInsertPointCloud();
       createPlane(lidarPosition, 12.0, 0.0, -0.05);
-//      createBowl(0.5, new Point3d());
+//      createBowl(0.5, new Point3D());
       System.out.println("Number of leafs: " + ocTree.getNumberOfLeafNodes());
       System.out.println("Initialized octree");
       System.out.println("Computing normals");
@@ -61,16 +60,16 @@ public class NormalOcTreeVisualizer extends Application
 
    private void callInsertPointCloud()
    {
-      Point3d origin = new Point3d(0.01, 0.01, 0.02);
-      Point3d pointOnSurface = new Point3d(4.01, 0.01, 0.01);
+      Point3D origin = new Point3D(0.01, 0.01, 0.02);
+      Point3D pointOnSurface = new Point3D(4.01, 0.01, 0.01);
 
       for (int i = 0; i < 100; i++)
       {
          for (int j = 0; j < 100; j++)
          {
-            Point3d rotated = new Point3d(pointOnSurface);
-            Matrix3d rotation = new Matrix3d();
-            RotationTools.convertYawPitchRollToMatrix(Math.toRadians(i * 0.5), Math.toRadians(j * 0.5), 0.0, rotation);
+            Point3D rotated = new Point3D(pointOnSurface);
+            RotationMatrix rotation = new RotationMatrix();
+            RotationMatrixConversion.convertYawPitchRollToMatrix(Math.toRadians(i * 0.5), Math.toRadians(j * 0.5), 0.0, rotation);
             rotation.transform(rotated);
             pointcloud.add(rotated);
          }
@@ -79,7 +78,7 @@ public class NormalOcTreeVisualizer extends Application
       ocTree.update(new ScanCollection(pointcloud, origin));
    }
 
-   public void createPlane(Point3d lidarPosition, double pitch, double roll, double z)
+   public void createPlane(Point3D lidarPosition, double pitch, double roll, double z)
    {
       pointcloud.clear();
 
@@ -89,9 +88,9 @@ public class NormalOcTreeVisualizer extends Application
       {
          for (double y = -0.5 * planeSize; y < 0.5 * planeSize; y += 0.7 * ocTree.getResolution())
          {
-            Point3d point = new Point3d(x, y, 0.0);
-            Matrix3d rotation = new Matrix3d();
-            RotationTools.convertYawPitchRollToMatrix(0.0, Math.toRadians(pitch), Math.toRadians(roll), rotation);
+            Point3D point = new Point3D(x, y, 0.0);
+            RotationMatrix rotation = new RotationMatrix();
+            RotationMatrixConversion.convertYawPitchRollToMatrix(0.0, Math.toRadians(pitch), Math.toRadians(roll), rotation);
             rotation.transform(point);
             point.setZ(point.getZ() + z);
 
@@ -101,9 +100,9 @@ public class NormalOcTreeVisualizer extends Application
       ocTree.update(new ScanCollection(pointcloud, lidarPosition));
    }
 
-   public void createBowl(double radius, Point3d center)
+   public void createBowl(double radius, Point3D center)
    {
-      Point3d origin = new Point3d(0.0, 0.0, center.getZ() + 0.0);
+      Point3D origin = new Point3D(0.0, 0.0, center.getZ() + 0.0);
 
       double res = 0.05;
       for (double yaw = 0.0; yaw < 2.0 * Math.PI; yaw += res)
@@ -120,7 +119,7 @@ public class NormalOcTreeVisualizer extends Application
       ocTree.update(new ScanCollection(pointcloud, origin));
    }
 
-   private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
+   private final RecyclingArrayList<Point3D> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3D.class));
    private final IntersectionPlaneBoxCalculator intersectionPlaneBoxCalculator = new IntersectionPlaneBoxCalculator();
 
    @Override
@@ -137,22 +136,22 @@ public class NormalOcTreeVisualizer extends Application
       JavaFXMultiColorMeshBuilder occupiedMeshBuilder = new JavaFXMultiColorMeshBuilder(palette);
       JavaFXMeshBuilder freeMeshBuilder = new JavaFXMeshBuilder();
 
-      OcTreeIterable<NormalOcTreeNode> leafIterable = OcTreeIteratorFactory.createLeafIteratable(ocTree.getRoot(), 14);
+      OcTreeIterable<NormalOcTreeNode> leafIterable = OcTreeIteratorFactory.createLeafIterable(ocTree.getRoot(), 14);
       for (NormalOcTreeNode node : leafIterable)
       {
          double boxSize = node.getSize();
-         Point3d nodeCenter = new Point3d();
+         Point3D nodeCenter = new Point3D();
          node.getCoordinate(nodeCenter);
 
          if (ocTree.isNodeOccupied(node))
          {
-            Vector3d planeNormal = new Vector3d();
+            Vector3D planeNormal = new Vector3D();
             node.getNormal(planeNormal);
             boolean isNormalSet = node.isNormalSet();
             Color normalBasedColor = getNormalBasedColor(planeNormal, isNormalSet);
             if (isNormalSet)
             {
-               Point3d pointOnPlane = new Point3d();
+               Point3D pointOnPlane = new Point3D();
                if (node.isHitLocationSet())
                   node.getHitLocation(pointOnPlane);
                else
@@ -168,24 +167,24 @@ public class NormalOcTreeVisualizer extends Application
 
                for (int j = 0; j < plane.size(); j++)
                {
-                  Point3d intersection = plane.get(j);
+                  Point3D intersection = plane.get(j);
 
-                  Vector3d sub = new Vector3d();
+                  Vector3D sub = new Vector3D();
                   sub.sub(intersection, pointOnPlane);
 
-                  Vector3d v0 = new Vector3d();
-                  Vector3d v1 = new Vector3d();
-                  Vector3d v3 = new Vector3d();
-                  Point3d nextIntersection = plane.get((j + 1) % plane.size());
-                  Point3d previousIntersection = plane.get(j == 0 ? plane.size() - 1 : j - 1);
+                  Vector3D v0 = new Vector3D();
+                  Vector3D v1 = new Vector3D();
+                  Vector3D v3 = new Vector3D();
+                  Point3D nextIntersection = plane.get((j + 1) % plane.size());
+                  Point3D previousIntersection = plane.get(j == 0 ? plane.size() - 1 : j - 1);
                   v0.sub(intersection, nextIntersection);
                   v1.sub(intersection, previousIntersection);
                   v3.cross(v0, v1);
                   if (v3.dot(planeNormal) < 0.0 || Math.abs(sub.dot(planeNormal)) > 0.01)
                   {
                      System.err.println("node size: " + boxSize);
-                     System.err.println("      Point3d cubeCenter = new Point3d" + nodeCenter + ";");
-                     System.err.println("      Point3d pointOnPlane = new Point3d" + pointOnPlane + ";");
+                     System.err.println("      Point3D cubeCenter = new Point3D" + nodeCenter + ";");
+                     System.err.println("      Point3D pointOnPlane = new Point3D" + pointOnPlane + ";");
                      System.err.println("      Vector3d planeNormal = new Vector3d" + planeNormal + ";");
                      System.out.println();
                   }
@@ -196,11 +195,11 @@ public class NormalOcTreeVisualizer extends Application
                
             }
             else
-               occupiedMeshBuilder.addCube((float) boxSize, new Point3f(nodeCenter), normalBasedColor);
+               occupiedMeshBuilder.addCube((float) boxSize, new Point3D32(nodeCenter), normalBasedColor);
          }
          else if (SHOW_FREE_CELLS)
          {
-            freeMeshBuilder.addCube((float) boxSize, new Point3f(nodeCenter));
+            freeMeshBuilder.addCube((float) boxSize, new Point3D32(nodeCenter));
          }
       }
 
@@ -238,13 +237,13 @@ public class NormalOcTreeVisualizer extends Application
 
    private static final Color DEFAULT_COLOR = Color.DARKCYAN;
 
-   public Color getNormalBasedColor(Vector3d normal, boolean isNormalSet)
+   public Color getNormalBasedColor(Vector3D normal, boolean isNormalSet)
    {
       Color color = DEFAULT_COLOR;
 
       if (isNormalSet)
       {
-         Vector3d zUp = new Vector3d(0.0, 0.0, 1.0);
+         Vector3D zUp = new Vector3D(0.0, 0.0, 1.0);
          normal.normalize();
          double angle = Math.abs(zUp.dot(normal));
          double hue = 120.0 * angle;

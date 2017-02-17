@@ -1,6 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import javax.vecmath.Point2d;
+import us.ihmc.euclid.tuple2D.interfaces.Point2DReadOnly;
 
 /**
  * A pocket is a concave region.
@@ -16,11 +16,11 @@ public class ConcaveHullPocket
    private int startBridgeIndex;
    private int endBridgeIndex;
 
-   private Point2d startBridgeVertex;
-   private Point2d endBridgeVertex;
+   private Point2DReadOnly startBridgeVertex;
+   private Point2DReadOnly endBridgeVertex;
 
    private int deepestVertexIndex;
-   private Point2d deepestVertex;
+   private Point2DReadOnly deepestVertex;
 
    private double maxDepth;
 
@@ -54,7 +54,7 @@ public class ConcaveHullPocket
       this.endBridgeIndex = endBridgeIndex;
    }
 
-   public void setBridgeVertices(Point2d startBridgeVertex, Point2d endBridgeVertex)
+   public void setBridgeVertices(Point2DReadOnly startBridgeVertex, Point2DReadOnly endBridgeVertex)
    {
       this.startBridgeVertex = startBridgeVertex;
       this.endBridgeVertex = endBridgeVertex;
@@ -65,7 +65,7 @@ public class ConcaveHullPocket
       this.deepestVertexIndex = deepestVertexIndex;
    }
 
-   public void setDeepestVertex(Point2d deepestVertex)
+   public void setDeepestVertex(Point2DReadOnly deepestVertex)
    {
       this.deepestVertex = deepestVertex;
    }
@@ -85,12 +85,12 @@ public class ConcaveHullPocket
       return endBridgeIndex;
    }
 
-   public Point2d getStartBridgeVertex()
+   public Point2DReadOnly getStartBridgeVertex()
    {
       return startBridgeVertex;
    }
 
-   public Point2d getEndBridgeVertex()
+   public Point2DReadOnly getEndBridgeVertex()
    {
       return endBridgeVertex;
    }
@@ -100,7 +100,7 @@ public class ConcaveHullPocket
       return deepestVertexIndex;
    }
 
-   public Point2d getDeepestVertex()
+   public Point2DReadOnly getDeepestVertex()
    {
       return deepestVertex;
    }

@@ -3,11 +3,10 @@ package us.ihmc.robotEnvironmentAwareness.geometry;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
-
 import gnu.trove.list.array.TDoubleArrayList;
 import javafx.util.Pair;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Vector3D;
 import us.ihmc.robotics.lists.GenericTypeBuilder;
 import us.ihmc.robotics.lists.RecyclingArrayList;
 
@@ -15,26 +14,26 @@ public class IntersectionPlaneBoxCalculator
 {
    private static final double EPSILON = 1.0e-3;
 
-   private final Point3d[] boxVertices = new Point3d[8];
-   private final List<Pair<Point3d, Point3d>> boxEdges = new ArrayList<>();
+   private final Point3D[] boxVertices = new Point3D[8];
+   private final List<Pair<Point3D, Point3D>> boxEdges = new ArrayList<>();
 
-   private final Vector3d boxSize = new Vector3d();
-   private final Point3d boxCenter = new Point3d();
+   private final Vector3D boxSize = new Vector3D();
+   private final Point3D boxCenter = new Point3D();
 
-   private final Point3d pointOnPlane = new Point3d();
-   private final Vector3d planeNormal = new Vector3d();
+   private final Point3D pointOnPlane = new Point3D();
+   private final Vector3D planeNormal = new Vector3D();
 
    public IntersectionPlaneBoxCalculator()
    {
       // Index ordering as in http://paulbourke.net/geometry/polygonise/
-      boxVertices[0] = new Point3d( 0.5,  0.5, -0.5);
-      boxVertices[1] = new Point3d( 0.5, -0.5, -0.5);
-      boxVertices[2] = new Point3d(-0.5, -0.5, -0.5);
-      boxVertices[3] = new Point3d(-0.5,  0.5, -0.5);
-      boxVertices[4] = new Point3d( 0.5,  0.5,  0.5);
-      boxVertices[5] = new Point3d( 0.5, -0.5,  0.5);
-      boxVertices[6] = new Point3d(-0.5, -0.5,  0.5);
-      boxVertices[7] = new Point3d(-0.5,  0.5,  0.5);
+      boxVertices[0] = new Point3D( 0.5,  0.5, -0.5);
+      boxVertices[1] = new Point3D( 0.5, -0.5, -0.5);
+      boxVertices[2] = new Point3D(-0.5, -0.5, -0.5);
+      boxVertices[3] = new Point3D(-0.5,  0.5, -0.5);
+      boxVertices[4] = new Point3D( 0.5,  0.5,  0.5);
+      boxVertices[5] = new Point3D( 0.5, -0.5,  0.5);
+      boxVertices[6] = new Point3D(-0.5, -0.5,  0.5);
+      boxVertices[7] = new Point3D(-0.5,  0.5,  0.5);
 
       boxEdges.add(new Pair<>(boxVertices[0], boxVertices[1]));
       boxEdges.add(new Pair<>(boxVertices[1], boxVertices[2]));
@@ -50,7 +49,7 @@ public class IntersectionPlaneBoxCalculator
       boxEdges.add(new Pair<>(boxVertices[3], boxVertices[7]));
    }
 
-   public void setCube(double size, Point3d center)
+   public void setCube(double size, Point3D center)
    {
       setBox(size, size, size, center);
    }
@@ -60,7 +59,7 @@ public class IntersectionPlaneBoxCalculator
       setBox(size, size, size, centerX, centerY, centerZ);
    }
 
-   public void setBox(double lx, double ly, double lz, Point3d center)
+   public void setBox(double lx, double ly, double lz, Point3D center)
    {
       setBox(lx, ly, lz, center.getX(), center.getY(), center.getZ());
    }
@@ -71,33 +70,33 @@ public class IntersectionPlaneBoxCalculator
       boxCenter.set(centerX, centerY, centerZ);
    }
 
-   public void setPlane(Point3d pointOnPlane, Vector3d planeNormal)
+   public void setPlane(Point3D pointOnPlane, Vector3D planeNormal)
    {
       this.pointOnPlane.set(pointOnPlane);
       this.planeNormal.set(planeNormal);
    }
 
-   private final Vector3d edgeVector = new Vector3d();
-   private final Vector3d fromPlaneCenterToEdgeStart = new Vector3d();
-   private final RecyclingArrayList<Point3d> unorderedIntersections = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
+   private final Vector3D edgeVector = new Vector3D();
+   private final Vector3D fromPlaneCenterToEdgeStart = new Vector3D();
+   private final RecyclingArrayList<Point3D> unorderedIntersections = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3D.class));
 
-   public List<Point3d> computeIntersections()
+   public List<Point3D> computeIntersections()
    {
-      RecyclingArrayList<Point3d> intersections = new RecyclingArrayList<>(Point3d.class);
+      RecyclingArrayList<Point3D> intersections = new RecyclingArrayList<>(Point3D.class);
       computeIntersections(intersections);
       return intersections;
    }
 
-   private final Point3d intersection = new Point3d();
+   private final Point3D intersection = new Point3D();
 
-   public void computeIntersections(RecyclingArrayList<Point3d> intersectionsToPack)
+   public void computeIntersections(RecyclingArrayList<Point3D> intersectionsToPack)
    {
       unorderedIntersections.clear();
 
       for (int i = 0; i < 12; i++)
       {
-         Point3d edgeStart = boxEdges.get(i).getKey();
-         Point3d edgeEnd = boxEdges.get(i).getValue();
+         Point3D edgeStart = boxEdges.get(i).getKey();
+         Point3D edgeEnd = boxEdges.get(i).getValue();
          edgeVector.sub(edgeEnd, edgeStart);
 
          fromPlaneCenterToEdgeStart.sub(pointOnPlane, boxCenter);
@@ -130,12 +129,12 @@ public class IntersectionPlaneBoxCalculator
    }
 
    private final TDoubleArrayList orderedAngles = new TDoubleArrayList();
-   private final Vector3d v0 = new Vector3d();
-   private final Vector3d vi = new Vector3d();
-   private final Vector3d vCross = new Vector3d();
-   private final Point3d average = new Point3d();
+   private final Vector3D v0 = new Vector3D();
+   private final Vector3D vi = new Vector3D();
+   private final Vector3D vCross = new Vector3D();
+   private final Point3D average = new Point3D();
 
-   private void reorderIntersections(List<Point3d> unorderedIntersections, RecyclingArrayList<Point3d> intersectionsToPack)
+   private void reorderIntersections(List<Point3D> unorderedIntersections, RecyclingArrayList<Point3D> intersectionsToPack)
    {
       intersectionsToPack.clear();
       if (unorderedIntersections.isEmpty())
@@ -208,7 +207,7 @@ public class IntersectionPlaneBoxCalculator
       return 1;
    }
 
-   private boolean listContains(List<Point3d> listOfPoints, Point3d pointToCheck)
+   private boolean listContains(List<Point3D> listOfPoints, Point3D pointToCheck)
    {
       for (int i = 0; i < listOfPoints.size(); i++)
       {
@@ -218,7 +217,7 @@ public class IntersectionPlaneBoxCalculator
       return false;
    }
 
-   private boolean epsilonEquals(Point3d point1, Point3d point2)
+   private boolean epsilonEquals(Point3D point1, Point3D point2)
    {
       double diff;
 

@@ -3,38 +3,37 @@ package us.ihmc.robotEnvironmentAwareness.communication.packets;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
-
 import us.ihmc.communication.packets.Packet;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple3D.Vector3D;
+import us.ihmc.euclid.tuple3D.Vector3D32;
 import us.ihmc.jOctoMap.key.OcTreeKey;
 
 public class PlanarRegionSegmentationMessage extends Packet<PlanarRegionSegmentationMessage>
 {
    public int id;
-   public Point3f origin;
-   public Vector3f normal;
+   public Point3D32 origin;
+   public Vector3D32 normal;
    public OcTreeKeyMessage[] nodeKeys;
-   public Point3f[] hitLocations;
+   public Point3D32[] hitLocations;
 
    public PlanarRegionSegmentationMessage()
    {
    }
 
-   public PlanarRegionSegmentationMessage(int id, Point3d origin, Vector3d normal, OcTreeKeyMessage[] regionNodeKeys, List<Point3d> hitLocations)
+   public PlanarRegionSegmentationMessage(int id, Point3D origin, Vector3D normal, OcTreeKeyMessage[] regionNodeKeys, List<Point3D> hitLocations)
    {
       this.id = id;
-      this.origin = new Point3f(origin);
-      this.normal = new Vector3f(normal);
+      this.origin = new Point3D32(origin);
+      this.normal = new Vector3D32(normal);
       this.nodeKeys = regionNodeKeys;
       this.hitLocations = hitLocations.stream()
-                                      .map(point3d -> new Point3f(point3d))
-                                      .toArray(size -> new Point3f[size]);
+                                      .map(point3d -> new Point3D32(point3d))
+                                      .toArray(size -> new Point3D32[size]);
    }
 
-   public PlanarRegionSegmentationMessage(int id, Point3f origin, Vector3f normal, OcTreeKeyMessage[] regionNodeKeys, Point3f[] hitLocations)
+   public PlanarRegionSegmentationMessage(int id, Point3D32 origin, Vector3D32 normal, OcTreeKeyMessage[] regionNodeKeys, Point3D32[] hitLocations)
    {
       this.id = id;
       this.origin = origin;
@@ -48,12 +47,12 @@ public class PlanarRegionSegmentationMessage extends Packet<PlanarRegionSegmenta
       return id;
    }
 
-   public Point3f getOrigin()
+   public Point3D32 getOrigin()
    {
       return origin;
    }
 
-   public Vector3f getNormal()
+   public Vector3D32 getNormal()
    {
       return normal;
    }
@@ -68,12 +67,12 @@ public class PlanarRegionSegmentationMessage extends Packet<PlanarRegionSegmenta
       return nodeKeys[index];
    }
 
-   public Point3f[] getHitLocations()
+   public Point3D32[] getHitLocations()
    {
       return hitLocations;
    }
 
-   public Point3f getHitLocation(int index)
+   public Point3D32 getHitLocation(int index)
    {
       return hitLocations[index];
    }
@@ -83,7 +82,7 @@ public class PlanarRegionSegmentationMessage extends Packet<PlanarRegionSegmenta
       nodeKeyToPack.set(nodeKeys[index]);
    }
 
-   public void getHitLocation(int index, Point3d hitLocationToPack)
+   public void getHitLocation(int index, Point3D hitLocationToPack)
    {
       hitLocationToPack.set(hitLocations[index]);
    }

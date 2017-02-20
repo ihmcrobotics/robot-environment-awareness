@@ -8,13 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
-
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple3D.Vector3D;
+import us.ihmc.euclid.tuple3D.Vector3D32;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationRawData;
 
 public class PlanarRegionSegmentationRawDataImporter
@@ -67,8 +66,8 @@ public class PlanarRegionSegmentationRawDataImporter
          float yNormal = Float.parseFloat(values[5]);
          float zNormal = Float.parseFloat(values[6]);
 
-         Point3f origin = new Point3f(xOrigin, yOrigin, zOrigin);
-         Vector3f normal = new Vector3f(xNormal, yNormal, zNormal);
+         Point3D32 origin = new Point3D32(xOrigin, yOrigin, zOrigin);
+         Vector3D32 normal = new Vector3D32(xNormal, yNormal, zNormal);
          PlanarRegionSegmentationRawData rawData = new PlanarRegionSegmentationRawData(regionId, normal, origin);
          planarRegionSegmentationRawData.add(rawData);
       }
@@ -92,7 +91,7 @@ public class PlanarRegionSegmentationRawDataImporter
          String line = "";
          String cvsSplitBy = ",";
 
-         List<Point3d> loadedPoints = new ArrayList<>();
+         List<Point3D> loadedPoints = new ArrayList<>();
          
          while ((line = bufferedReader.readLine()) != null)
          {
@@ -100,14 +99,14 @@ public class PlanarRegionSegmentationRawDataImporter
             float x = Float.parseFloat(coordsAsString[0]);
             float y = Float.parseFloat(coordsAsString[1]);
             float z = Float.parseFloat(coordsAsString[2]);
-            loadedPoints.add(new Point3d(x, y, z));
+            loadedPoints.add(new Point3D(x, y, z));
          }
 
          bufferedReader.close();
 
          int regionId = regionToLoad.getRegionId();
-         Vector3d normal = regionToLoad.getNormal();
-         Point3d origin = regionToLoad.getOrigin();
+         Vector3D normal = regionToLoad.getNormal();
+         Point3D origin = regionToLoad.getOrigin();
          return new PlanarRegionSegmentationRawData(regionId, normal, origin, loadedPoints);
       }
       catch (IOException e)

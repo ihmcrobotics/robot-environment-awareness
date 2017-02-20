@@ -1,6 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 
-import static us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory.createLeafIteratable;
+import static us.ihmc.jOctoMap.iterators.OcTreeIteratorFactory.createLeafIterable;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -14,12 +14,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.TexCoord2f;
-import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
-
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -28,7 +22,12 @@ import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple3D.Vector3D;
+import us.ihmc.euclid.tuple3D.Vector3D32;
 import us.ihmc.graphicsDescription.MeshDataHolder;
+import us.ihmc.graphicsDescription.TexCoord2f;
 import us.ihmc.jOctoMap.key.OcTreeKey;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMultiColorMeshBuilder;
 import us.ihmc.javaFXToolkit.shapes.TextureColorPalette1D;
@@ -76,7 +75,7 @@ public class OcTreeMeshBuilder implements Runnable
 
    private final TextureColorPalette1D normalBasedColorPalette1D = new TextureColorPalette1D();
 
-   private final RecyclingArrayList<Point3d> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3d.class));
+   private final RecyclingArrayList<Point3D> plane = new RecyclingArrayList<>(GenericTypeBuilder.createBuilderWithEmptyConstructor(Point3D.class));
    private final IntersectionPlaneBoxCalculator intersectionPlaneBoxCalculator = new IntersectionPlaneBoxCalculator();
 
    private final AtomicReference<NormalOcTreeMessage> ocTreeState;
@@ -195,7 +194,7 @@ public class OcTreeMeshBuilder implements Runnable
       Set<UIOcTreeNodeMeshView> meshViews = new HashSet<>();
 
       List<UIOcTreeNode> rootNodes = new ArrayList<>();
-      createLeafIteratable(ocTree.getRoot(), FX_NODE_DEPTH).forEach(rootNodes::add);
+      createLeafIterable(ocTree.getRoot(), FX_NODE_DEPTH).forEach(rootNodes::add);
 
       for (UIOcTreeNode rootNode : rootNodes)
          meshViews.add(createSubTreeMeshView(rootNode));
@@ -207,7 +206,7 @@ public class OcTreeMeshBuilder implements Runnable
    {
       meshBuilder.clear();
 
-      Iterable<UIOcTreeNode> iterable = createLeafIteratable(subTreeRoot, treeDepthForDisplay.getValue());
+      Iterable<UIOcTreeNode> iterable = createLeafIterable(subTreeRoot, treeDepthForDisplay.getValue());
 
       for (UIOcTreeNode node : iterable)
       {
@@ -240,7 +239,7 @@ public class OcTreeMeshBuilder implements Runnable
       case HIT_LOCATION:
          if (node.isHitLocationSet())
          {
-            Point3d hitLocation = new Point3d();
+            Point3D hitLocation = new Point3D();
             node.getHitLocation(hitLocation);
             meshBuilder.addTetrahedron(0.0075, hitLocation, color);
          }
@@ -268,9 +267,9 @@ public class OcTreeMeshBuilder implements Runnable
       case NORMAL:
          if (node.isNormalSet())
          {
-            Vector3d normal = new Vector3d();
+            Vector3D normal = new Vector3D();
             node.getNormal(normal);
-            Vector3d zUp = new Vector3d(0.0, 0.0, 1.0);
+            Vector3D zUp = new Vector3D(0.0, 0.0, 1.0);
             normal.normalize();
             double angle = Math.abs(zUp.dot(normal));
             double hue = 120.0 * angle;
@@ -295,8 +294,8 @@ public class OcTreeMeshBuilder implements Runnable
       if (!node.isNormalSet() || !node.isHitLocationSet())
          return null;
 
-      Vector3d planeNormal = new Vector3d();
-      Point3d pointOnPlane = new Point3d();
+      Vector3D planeNormal = new Vector3D();
+      Point3D pointOnPlane = new Point3D();
       double size = node.getSize();
 
       node.getNormal(planeNormal);
@@ -319,15 +318,15 @@ public class OcTreeMeshBuilder implements Runnable
          triangleIndices[index++] = j;
       }
 
-      Point3f[] vertices = new Point3f[plane.size()];
+      Point3D32[] vertices = new Point3D32[plane.size()];
       TexCoord2f[] texCoords = new TexCoord2f[plane.size()];
-      Vector3f[] normals = new Vector3f[plane.size()];
+      Vector3D32[] normals = new Vector3D32[plane.size()];
 
       for (int i = 0; i < plane.size(); i++)
       {
-         vertices[i] = new Point3f(plane.get(i));
+         vertices[i] = new Point3D32(plane.get(i));
          texCoords[i] = new TexCoord2f(); // No need for real coordinates, the MultiColorMeshBuilder creates new ones.
-         normals[i] = new Vector3f(planeNormal);
+         normals[i] = new Vector3D32(planeNormal);
       }
 
       return new MeshDataHolder(vertices, texCoords, triangleIndices, normals);

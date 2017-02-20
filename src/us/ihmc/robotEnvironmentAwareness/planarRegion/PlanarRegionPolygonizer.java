@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.vecmath.Point2d;
-
+import us.ihmc.euclid.transform.RigidBodyTransform;
+import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHull;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullCollection;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullDecomposition;
@@ -16,7 +16,6 @@ import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataExpor
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
 import us.ihmc.robotics.geometry.PlanarRegion;
 import us.ihmc.robotics.geometry.PlanarRegionsList;
-import us.ihmc.robotics.geometry.RigidBodyTransform;
 import us.ihmc.tools.io.printing.PrintTools;
 
 public abstract class PlanarRegionPolygonizer
@@ -73,9 +72,9 @@ public abstract class PlanarRegionPolygonizer
 
          // Pack the data in PlanarRegion
          RigidBodyTransform transformToWorld = rawData.getTransformFromLocalToWorld();
-         List<Point2d[]> concaveHullsVertices = new ArrayList<>();
+         List<Point2D[]> concaveHullsVertices = new ArrayList<>();
          for (ConcaveHull concaveHull : concaveHullCollection)
-            concaveHullsVertices.add(concaveHull.getConcaveHullVertices().toArray(new Point2d[0]));
+            concaveHullsVertices.add(concaveHull.getConcaveHullVertices().toArray(new Point2D[0]));
          
          PlanarRegion planarRegion = new PlanarRegion(transformToWorld, concaveHullsVertices, decomposedPolygons);
          planarRegion.setRegionId(rawData.getRegionId());

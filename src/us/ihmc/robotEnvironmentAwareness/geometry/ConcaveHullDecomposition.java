@@ -1,13 +1,15 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools.*;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.*;
+import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools.findClosestIntersectionWithRay;
+import static us.ihmc.robotics.lists.ListWrappingIndexTools.next;
+import static us.ihmc.robotics.lists.ListWrappingIndexTools.removeAllExclusive;
+import static us.ihmc.robotics.lists.ListWrappingIndexTools.subListInclusive;
 
 import java.util.List;
 
-import javax.vecmath.Point2d;
-import javax.vecmath.Vector2d;
-
+import us.ihmc.euclid.tuple2D.Point2D;
+import us.ihmc.euclid.tuple2D.Vector2D;
+import us.ihmc.euclid.tuple2D.interfaces.Point2DReadOnly;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
 import us.ihmc.tools.io.printing.PrintTools;
 
@@ -58,7 +60,7 @@ public class ConcaveHullDecomposition
     *  Otherwise, the pocket vertices will be removed.
     *  @param convexPolygonsToPack [output] the convex polygons approximating the concave hull.
     */
-   public static void recursiveApproximateDecomposition(List<Point2d> concaveHullVertices, double depthThreshold, List<ConvexPolygon2d> convexPolygonsToPack)
+   public static void recursiveApproximateDecomposition(List<Point2D> concaveHullVertices, double depthThreshold, List<ConvexPolygon2d> convexPolygonsToPack)
    {
       ConcaveHullPocket pocket = null;
       boolean hasFoundDeepPocket = false;
@@ -99,17 +101,17 @@ public class ConcaveHullDecomposition
       }
 
       int deepestVertexIndex = pocket.getDeepestVertexIndex();
-      Vector2d cutDirection = new Vector2d();
-      Point2d endBridgeVertex = pocket.getEndBridgeVertex();
-      Point2d startBridgeVertex = pocket.getStartBridgeVertex();
+      Vector2D cutDirection = new Vector2D();
+      Point2DReadOnly endBridgeVertex = pocket.getEndBridgeVertex();
+      Point2DReadOnly startBridgeVertex = pocket.getStartBridgeVertex();
       cutDirection.sub(endBridgeVertex, startBridgeVertex);
       cutDirection.normalize();
-      cutDirection.set(cutDirection.y, -cutDirection.x); // Rotate 90 degrees to the right (inside polygon)
+      cutDirection.set(cutDirection.getY(), -cutDirection.getX()); // Rotate 90 degrees to the right (inside polygon)
 
-      Point2d deepestVertex = pocket.getDeepestVertex();
+      Point2DReadOnly deepestVertex = pocket.getDeepestVertex();
 
 
-      Point2d otherVertexForCutting = new Point2d();
+      Point2D otherVertexForCutting = new Point2D();
       int startBridgeIndex = pocket.getStartBridgeIndex();
       int endBridgeIndex = pocket.getEndBridgeIndex();
 
@@ -136,8 +138,8 @@ public class ConcaveHullDecomposition
       int p2StartIndex = otherVertexIndexForCutting;
       int p2EndIndex = deepestVertexIndex;
 
-      List<Point2d> p1 = subListInclusive(p1StartIndex, p1EndIndex, concaveHullVertices);
-      List<Point2d> p2 = subListInclusive(p2StartIndex, p2EndIndex, concaveHullVertices);
+      List<Point2D> p1 = subListInclusive(p1StartIndex, p1EndIndex, concaveHullVertices);
+      List<Point2D> p2 = subListInclusive(p2StartIndex, p2EndIndex, concaveHullVertices);
 
       if (p1.size() == concaveHullVertices.size() || p2.size() == concaveHullVertices.size())
       {

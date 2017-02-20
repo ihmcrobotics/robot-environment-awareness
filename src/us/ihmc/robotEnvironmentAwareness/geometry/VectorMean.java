@@ -1,9 +1,9 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import javax.vecmath.Tuple3d;
-import javax.vecmath.Vector3d;
+import us.ihmc.euclid.tuple3D.Vector3D;
+import us.ihmc.euclid.tuple3D.interfaces.Tuple3DBasics;
 
-public class VectorMean extends Vector3d
+public class VectorMean extends Vector3D
 {
    private static final long serialVersionUID = 2936790417418842327L;
 
@@ -13,12 +13,12 @@ public class VectorMean extends Vector3d
    {
    }
 
-   public void update(Tuple3d tuple)
+   public void update(Tuple3DBasics tuple)
    {
       update(tuple.getX(), tuple.getY(), tuple.getZ());
    }
 
-   public void update(Tuple3d tuple, int updateSize)
+   public void update(Tuple3DBasics tuple, int updateSize)
    {
       update(tuple.getX(), tuple.getY(), tuple.getZ(), updateSize);
    }
@@ -32,9 +32,9 @@ public class VectorMean extends Vector3d
    {
       sampleSize += updateSize;
       double nInv = (double) updateSize / (double) sampleSize;
-      this.x += (x - this.x) * nInv;
-      this.y += (y - this.y) * nInv;
-      this.z += (z - this.z) * nInv;
+      this.addX((x - this.getX()) * nInv);
+      this.addY((y - this.getY()) * nInv);
+      this.addZ((z - this.getZ()) * nInv);
    }
 
    public void clear()

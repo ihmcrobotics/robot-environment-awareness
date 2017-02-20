@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
-import javax.vecmath.Quat4d;
+import us.ihmc.euclid.tuple2D.Point2D;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple4D.Quaternion;
 
 import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.triangulate.ConformingDelaunayTriangulationBuilder;
@@ -61,7 +61,7 @@ public class DelaunayTriangulationVisualizer extends Application
 
       Map<Node, Integer> nodeToRegionId = new HashMap<>();
 
-      Point3d average = PolygonizerVisualizer.computeAverage(regionsRawData, Collections.emptySet());
+      Point3D average = PolygonizerVisualizer.computeAverage(regionsRawData, Collections.emptySet());
       average.negate();
 
       for (PlanarRegionSegmentationRawData rawData : regionsRawData)
@@ -131,7 +131,7 @@ public class DelaunayTriangulationVisualizer extends Application
 
    private static QuadEdgeSubdivision createQuadEdgeSubdivision(PlanarRegionSegmentationRawData rawData)
    {
-      List<Point2d> point2ds = rawData.getPointCloudInPlane();
+      List<Point2D> point2ds = rawData.getPointCloudInPlane();
       MultiPoint multiPoint = SimpleConcaveHullFactory.createMultiPoint(point2ds);
 
       ConformingDelaunayTriangulationBuilder conformingDelaunayTriangulationBuilder = new ConformingDelaunayTriangulationBuilder();
@@ -146,14 +146,14 @@ public class DelaunayTriangulationVisualizer extends Application
 
       int regionId = rawData.getRegionId();
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(16));
-      Point3d planeOrigin = rawData.getOrigin();
-      Quat4d planeOrientation = rawData.getOrientation();
+      Point3D planeOrigin = rawData.getOrigin();
+      Quaternion planeOrientation = rawData.getOrientation();
       Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
 
       for (QuadEdge edge : edges)
       {
-         Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
-         Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
+         Point3D dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
+         Point3D orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
          meshBuilder.addLine(dest, orig, 0.0015, regionColor);
       }
       MeshView meshView = new MeshView(meshBuilder.generateMesh());
@@ -169,14 +169,14 @@ public class DelaunayTriangulationVisualizer extends Application
 
       int regionId = rawData.getRegionId();
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(16));
-      Point3d planeOrigin = rawData.getOrigin();
-      Quat4d planeOrientation = rawData.getOrientation();
+      Point3D planeOrigin = rawData.getOrigin();
+      Quaternion planeOrientation = rawData.getOrientation();
       Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
 
       for (QuadEdge edge : primaryEdges)
       {
-         Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
-         Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
+         Point3D dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
+         Point3D orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
          meshBuilder.addLine(dest, orig, 0.0015, regionColor);
       }
       MeshView meshView = new MeshView(meshBuilder.generateMesh());
@@ -192,8 +192,8 @@ public class DelaunayTriangulationVisualizer extends Application
       List<QuadEdge> orderedBorderEdges = SimpleConcaveHullFactory.computeIntermediateVariables(delaunayTriangles).getOrderedBorderEdges();
 
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(16));
-      Point3d planeOrigin = rawData.getOrigin();
-      Quat4d planeOrientation = rawData.getOrientation();
+      Point3D planeOrigin = rawData.getOrigin();
+      Quaternion planeOrientation = rawData.getOrientation();
 
       double startHue = 0.0;
       double endHue = 240.0;
@@ -204,8 +204,8 @@ public class DelaunayTriangulationVisualizer extends Application
       for (int edgeIndex = 0; edgeIndex < orderedBorderEdges.size(); edgeIndex++)
       {
          QuadEdge edge = orderedBorderEdges.get(edgeIndex);
-         Point3d dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
-         Point3d orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
+         Point3D dest = PolygonizerTools.toPointInWorld(edge.dest().getX(), edge.dest().getY(), planeOrigin, planeOrientation);
+         Point3D orig = PolygonizerTools.toPointInWorld(edge.orig().getX(), edge.orig().getY(), planeOrigin, planeOrientation);
          double alpha = edgeIndex / (double) orderedBorderEdges.size();
          double lineHue = (1.0 - alpha) * startHue + alpha * endHue;
          Color startColor = Color.hsb(lineHue, 0.9, lineStartBirghtness);

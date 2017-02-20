@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
-
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Vector3D;
 import us.ihmc.robotics.MathTools;
 import us.ihmc.robotics.geometry.LineSegment1d;
 import us.ihmc.robotics.geometry.LineSegment3d;
@@ -17,8 +16,8 @@ public class PlanarRegionIntersectionCalculator
    {
       List<LineSegment3d> result = new ArrayList<>();
 
-      Point3d intersectionPoint = new Point3d();
-      Vector3d intersectionDirection = new Vector3d();
+      Point3D intersectionPoint = new Point3D();
+      Vector3D intersectionDirection = new Vector3D();
 
       for (int i = 0; i < rawData.size(); i++)
       {
@@ -45,7 +44,7 @@ public class PlanarRegionIntersectionCalculator
 
             if (intersectionList != null)
             {
-               Vector3d intersectionLength = new Vector3d();
+               Vector3D intersectionLength = new Vector3D();
 
                result.addAll(intersectionList);
 
@@ -59,12 +58,12 @@ public class PlanarRegionIntersectionCalculator
                      int numberOfPointsToAdd = (int) (length / delta);
                      for (int k = 0; k < numberOfPointsToAdd; k++)
                      {
-                        Point3d newPoint = new Point3d();
+                        Point3D newPoint = new Point3D();
                         double alpha = k / (double) numberOfPointsToAdd;
                         newPoint.scaleAdd(alpha, intersectionLength, intersection.getFirstEndpoint());
                         // FIXME Figure out something less hackish
-//                        currentRegion.addPoint(new Point3d(newPoint));
-//                        currentNeighbor.addPoint(new Point3d(newPoint));
+//                        currentRegion.addPoint(new Point3D(newPoint));
+//                        currentNeighbor.addPoint(new Point3D(newPoint));
                      }
                   }
                }
@@ -75,13 +74,13 @@ public class PlanarRegionIntersectionCalculator
       return result;
    }
 
-   private static boolean computeIntersectionPointAndDirection(PlanarRegionSegmentationRawData currentRegion, PlanarRegionSegmentationRawData currentNeighbor, Point3d intersectionPointToPack,
-         Vector3d intersectionDirectionToPack, double minRegionAngleDifference)
+   private static boolean computeIntersectionPointAndDirection(PlanarRegionSegmentationRawData currentRegion, PlanarRegionSegmentationRawData currentNeighbor, Point3D intersectionPointToPack,
+         Vector3D intersectionDirectionToPack, double minRegionAngleDifference)
    {
-      Point3d origin1 = currentRegion.getOrigin();
-      Vector3d normal1 = currentRegion.getNormal();
-      Point3d origin2 = currentNeighbor.getOrigin();
-      Vector3d normal2 = currentNeighbor.getNormal();
+      Point3D origin1 = currentRegion.getOrigin();
+      Vector3D normal1 = currentRegion.getNormal();
+      Point3D origin2 = currentNeighbor.getOrigin();
+      Vector3D normal2 = currentNeighbor.getNormal();
 
       double angle = normal1.angle(normal2);
 
@@ -91,29 +90,29 @@ public class PlanarRegionIntersectionCalculator
       intersectionDirectionToPack.cross(normal1, normal2);
       double det = intersectionDirectionToPack.lengthSquared();
 
-      double d1 = normal1.dot(new Vector3d(origin1));
-      double d2 = normal2.dot(new Vector3d(origin2));
+      double d1 = normal1.dot(new Vector3D(origin1));
+      double d2 = normal2.dot(new Vector3D(origin2));
 
-      Vector3d normal3Cross2 = new Vector3d();
+      Vector3D normal3Cross2 = new Vector3D();
       normal3Cross2.cross(intersectionDirectionToPack, normal2);
-      Vector3d normal1Cross3 = new Vector3d();
+      Vector3D normal1Cross3 = new Vector3D();
       normal1Cross3.cross(normal1, intersectionDirectionToPack);
-      Vector3d normal2Cross1 = new Vector3d();
+      Vector3D normal2Cross1 = new Vector3D();
       normal2Cross1.cross(normal2, normal1);
 
-      intersectionPointToPack.scale(d1, normal3Cross2);
+      intersectionPointToPack.setAndScale(d1, normal3Cross2);
       intersectionPointToPack.scaleAdd(d2, normal1Cross3, intersectionPointToPack);
       intersectionDirectionToPack.normalize();
 
-      double d3 = 0.5 * (intersectionDirectionToPack.dot(new Vector3d(origin1)) + intersectionDirectionToPack.dot(new Vector3d(origin2)));
+      double d3 = 0.5 * (intersectionDirectionToPack.dot(new Vector3D(origin1)) + intersectionDirectionToPack.dot(new Vector3D(origin2)));
       intersectionPointToPack.scaleAdd(d3, normal2Cross1, intersectionPointToPack);
 
       intersectionPointToPack.scale(-1.0 / det);
       return true;
    }
 
-   private static List<LineSegment3d> findIntersectionEndPoints(PlanarRegionSegmentationRawData currentRegion, PlanarRegionSegmentationRawData currentNeighbor, double maxDistance, double minIntersectionLength, Point3d intersectionPoint,
-         Vector3d intersectionDirection)
+   private static List<LineSegment3d> findIntersectionEndPoints(PlanarRegionSegmentationRawData currentRegion, PlanarRegionSegmentationRawData currentNeighbor, double maxDistance, double minIntersectionLength, Point3D intersectionPoint,
+         Vector3D intersectionDirection)
    {
 
       List<LineSegment1d> intersectionsFromRegion1 = findIntersectionLineSegments(currentRegion, maxDistance, minIntersectionLength, intersectionPoint, intersectionDirection);
@@ -146,14 +145,14 @@ public class PlanarRegionIntersectionCalculator
     * @param intersectionDirection
     * @return
     */
-   private static List<LineSegment1d> findIntersectionLineSegments(PlanarRegionSegmentationRawData currentRegion, double maxDistance, double minIntersectionLength, Point3d intersectionPoint, Vector3d intersectionDirection)
+   private static List<LineSegment1d> findIntersectionLineSegments(PlanarRegionSegmentationRawData currentRegion, double maxDistance, double minIntersectionLength, Point3D intersectionPoint, Vector3D intersectionDirection)
    {
-      Vector3d perpendicularToDirection = new Vector3d();
+      Vector3D perpendicularToDirection = new Vector3D();
       perpendicularToDirection.cross(currentRegion.getNormal(), intersectionDirection);
       perpendicularToDirection.normalize();
 
-      Vector3d distance = new Vector3d();
-      Point3d regionPoint = new Point3d();
+      Vector3D distance = new Vector3D();
+      Point3D regionPoint = new Point3D();
 
       // 1-D Coorsdinates along the intersection direction of all the region points that are close enough to the intersection.
       // By using a PriorityQueue the coordinates are sorted.

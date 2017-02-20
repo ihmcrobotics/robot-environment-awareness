@@ -2,7 +2,7 @@ package us.ihmc.octoMap;
 
 import java.util.List;
 
-import javax.vecmath.Point3d;
+import us.ihmc.euclid.tuple3D.Point3D;
 
 import javafx.application.Application;
 import javafx.scene.Group;
@@ -27,7 +27,7 @@ public class SearchNodeNeighborsVisualizer extends Application
    public SearchNodeNeighborsVisualizer()
    {
       double nodeSize = OcTreeKeyConversionTools.computeNodeSize(depth, resolution, treeDepth);
-      Point3d nodeCenter = new Point3d(nodeSize, nodeSize, nodeSize);
+      Point3D nodeCenter = new Point3D(nodeSize, nodeSize, nodeSize);
       nodeCenter.scale(0.5);
 
       OcTreeKey key = OcTreeKeyConversionTools.coordinateToKey(nodeCenter, depth, resolution, treeDepth);
@@ -47,7 +47,7 @@ public class SearchNodeNeighborsVisualizer extends Application
       {
          OcTreeKey ocTreeKey = neighbors.get(i);
          double boxSize = OcTreeKeyConversionTools.computeNodeSize(depth, resolution, treeDepth);
-         Point3d boxCenter = OcTreeKeyConversionTools.keyToCoordinate(ocTreeKey, depth, resolution, treeDepth);
+         Point3D boxCenter = OcTreeKeyConversionTools.keyToCoordinate(ocTreeKey, depth, resolution, treeDepth);
          addFreeBox(boxSize, boxCenter, view3dFactory.getRoot());
       }
 
@@ -55,12 +55,12 @@ public class SearchNodeNeighborsVisualizer extends Application
       primaryStage.show();
    }
 
-   public void addFreeBox(double size, Point3d center, Group root)
+   public void addFreeBox(double size, Point3D center, Group root)
    {
       addBox(size, center, root, NEIGHBOR_COLOR);
    }
 
-   private void addBox(double size, Point3d center, Group root, Color color)
+   private void addBox(double size, Point3D center, Group root, Color color)
    {
       Box box = new Box(size, size, size);
       box.setTranslateX(center.getX());

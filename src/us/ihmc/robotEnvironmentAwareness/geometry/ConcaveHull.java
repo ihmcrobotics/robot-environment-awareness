@@ -7,19 +7,18 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
-import javax.vecmath.Quat4d;
-import javax.vecmath.Vector3d;
-
+import us.ihmc.euclid.transform.RigidBodyTransform;
+import us.ihmc.euclid.tuple2D.Point2D;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Vector3D;
+import us.ihmc.euclid.tuple4D.Quaternion;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerTools;
-import us.ihmc.robotics.geometry.RigidBodyTransform;
 
-public class ConcaveHull implements Iterable<Point2d>
+public class ConcaveHull implements Iterable<Point2D>
 {
-   private final List<Point2d> hullVertices;
+   private final List<Point2D> hullVertices;
 
-   public ConcaveHull(List<Point2d> hullVertices)
+   public ConcaveHull(List<Point2D> hullVertices)
    {
       this.hullVertices = hullVertices;
    }
@@ -109,36 +108,36 @@ public class ConcaveHull implements Iterable<Point2d>
       return hullVertices.size();
    }
 
-   public List<Point2d> getConcaveHullVertices()
+   public List<Point2D> getConcaveHullVertices()
    {
       return hullVertices;
    }
 
-   public Point2d getVertex(int vertexIndex)
+   public Point2D getVertex(int vertexIndex)
    {
       return hullVertices.get(vertexIndex);
    }
 
-   public List<Point3d> toVerticesInWorld(Point3d hullOrigin, Quat4d hullOrientation)
+   public List<Point3D> toVerticesInWorld(Point3D hullOrigin, Quaternion hullOrientation)
    {
       return PolygonizerTools.toPointsInWorld(hullVertices, hullOrigin, hullOrientation);
    }
 
-   public List<Point3d> toVerticesInWorld(Point3d hullOrigin, Vector3d hullNormal)
+   public List<Point3D> toVerticesInWorld(Point3D hullOrigin, Vector3D hullNormal)
    {
       return PolygonizerTools.toPointsInWorld(hullVertices, hullOrigin, hullNormal);
    }
 
-   public List<Point3d> toVerticesInWorld(RigidBodyTransform transformToWorld)
+   public List<Point3D> toVerticesInWorld(RigidBodyTransform transformToWorld)
    {
-      List<Point3d> vertices3d = toVertices3d(0.0);
+      List<Point3D> vertices3d = toVertices3d(0.0);
       vertices3d.forEach(vertex -> transformToWorld.transform(vertex));
       return vertices3d;
    }
 
-   public List<Point3d> toVertices3d(double zOffset)
+   public List<Point3D> toVertices3d(double zOffset)
    {
-      return stream().map(vertex -> new Point3d(vertex.getX(), vertex.getY(), zOffset)).collect(Collectors.toList());
+      return stream().map(vertex -> new Point3D(vertex.getX(), vertex.getY(), zOffset)).collect(Collectors.toList());
    }
 
    public boolean epsilonEquals(ConcaveHull other, double epsilon)
@@ -154,13 +153,13 @@ public class ConcaveHull implements Iterable<Point2d>
       return true;
    }
 
-   public Stream<Point2d> stream()
+   public Stream<Point2D> stream()
    {
       return hullVertices.stream();
    }
 
    @Override
-   public Iterator<Point2d> iterator()
+   public Iterator<Point2D> iterator()
    {
       return hullVertices.iterator();
    }
@@ -169,7 +168,7 @@ public class ConcaveHull implements Iterable<Point2d>
    public int hashCode()
    {
       int hashCode = 1;
-      for (Point2d vertex : this)
+      for (Point2D vertex : this)
          hashCode = 31 * hashCode + (vertex == null ? 0 : vertex.hashCode());
       return hashCode;
    }

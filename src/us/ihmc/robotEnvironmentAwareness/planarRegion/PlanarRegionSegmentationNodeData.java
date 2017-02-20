@@ -9,9 +9,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
-
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Vector3D;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.geometry.PointMean;
 import us.ihmc.robotEnvironmentAwareness.geometry.VectorMean;
@@ -25,11 +24,11 @@ public class PlanarRegionSegmentationNodeData implements Iterable<NormalOcTreeNo
    private final PrincipalComponentAnalysis3D pca = new PrincipalComponentAnalysis3D();
    private final VectorMean normal = new VectorMean();
    private final PointMean point = new PointMean();
-   private final Vector3d standardDeviationPrincipalValues = new Vector3d();
-   private final Vector3d temporaryVector = new Vector3d();
+   private final Vector3D standardDeviationPrincipalValues = new Vector3D();
+   private final Vector3D temporaryVector = new Vector3D();
 
-   private final Point3d min = new Point3d(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
-   private final Point3d max = new Point3d(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
+   private final Point3D min = new Point3D(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+   private final Point3D max = new Point3D(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
 
    private final List<NormalOcTreeNode> nodes = new ArrayList<>();
    private final Set<NormalOcTreeNode> nodeSet = new HashSet<>();
@@ -92,13 +91,13 @@ public class PlanarRegionSegmentationNodeData implements Iterable<NormalOcTreeNo
       nodes.stream().forEach(node -> pca.addPoint(node.getHitLocationX(), node.getHitLocationY(), node.getHitLocationZ()));
       pca.compute();
 
-      Point3d mean = new Point3d();
+      Point3D mean = new Point3D();
       pca.getMean(mean);
 
       point.clear();
       point.update(mean, getNumberOfNodes());
 
-      Vector3d thirdVector = new Vector3d();
+      Vector3D thirdVector = new Vector3D();
       pca.getThirdVector(thirdVector);
       pca.getStandardDeviation(standardDeviationPrincipalValues);
 
@@ -241,7 +240,7 @@ public class PlanarRegionSegmentationNodeData implements Iterable<NormalOcTreeNo
       return id;
    }
 
-   public void getPoint(int index, Point3d pointToPack)
+   public void getPoint(int index, Point3D pointToPack)
    {
       nodes.get(index).getHitLocation(pointToPack);
    }
@@ -251,14 +250,14 @@ public class PlanarRegionSegmentationNodeData implements Iterable<NormalOcTreeNo
       return nodes.get(index);
    }
 
-   public double orthogonalDistance(Point3d point)
+   public double orthogonalDistance(Point3D point)
    {
       temporaryVector.set(point);
       temporaryVector.sub(this.point);
       return temporaryVector.dot(normal);
    }
 
-   public double absoluteOrthogonalDistance(Point3d point)
+   public double absoluteOrthogonalDistance(Point3D point)
    {
       return Math.abs(orthogonalDistance(point));
    }
@@ -275,22 +274,22 @@ public class PlanarRegionSegmentationNodeData implements Iterable<NormalOcTreeNo
       return Math.abs(orhtogonalDistance(node));
    }
 
-   public double angle(Vector3d normal)
+   public double angle(Vector3D normal)
    {
       return this.normal.angle(normal);
    }
 
-   public double absoluteAngle(Vector3d normal)
+   public double absoluteAngle(Vector3D normal)
    {
       return Math.abs(angle(normal));
    }
 
-   public double dot(Vector3d normal)
+   public double dot(Vector3D normal)
    {
       return this.normal.dot(normal);
    }
 
-   public double absoluteDot(Vector3d normal)
+   public double absoluteDot(Vector3D normal)
    {
       return Math.abs(dot(normal));
    }
@@ -315,17 +314,17 @@ public class PlanarRegionSegmentationNodeData implements Iterable<NormalOcTreeNo
       return Math.abs(dotWithNodeNormal(node));
    }
 
-   public Vector3d getNormal()
+   public Vector3D getNormal()
    {
       return normal;
    }
 
-   public Point3d getOrigin()
+   public Point3D getOrigin()
    {
       return point;
    }
 
-   public Vector3d getStandardDeviationPrincipalValues()
+   public Vector3D getStandardDeviationPrincipalValues()
    {
       return standardDeviationPrincipalValues;
    }

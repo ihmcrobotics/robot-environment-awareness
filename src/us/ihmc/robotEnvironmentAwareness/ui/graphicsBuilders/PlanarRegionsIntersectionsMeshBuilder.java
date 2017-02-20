@@ -2,13 +2,12 @@ package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.vecmath.Point3f;
-
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
+import us.ihmc.euclid.tuple3D.Point3D32;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
@@ -57,8 +56,8 @@ public class PlanarRegionsIntersectionsMeshBuilder implements Runnable
 
       for (LineSegment3dMessage intersection : newMessage)
       {
-         Point3f start = intersection.getStart();
-         Point3f end = intersection.getEnd();
+         Point3D32 start = intersection.getStart();
+         Point3D32 end = intersection.getEnd();
          float lineWidth = 0.025f;
          meshBuilder.addLine(start, end, lineWidth);
       }

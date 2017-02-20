@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.vecmath.Point2d;
+import us.ihmc.euclid.tuple2D.Point2D;
 
 public class ConcaveHullCollection implements Iterable<ConcaveHull>
 {
@@ -21,7 +21,7 @@ public class ConcaveHullCollection implements Iterable<ConcaveHull>
       add(concaveHull);
    }
 
-   public ConcaveHullCollection(List<Point2d> concaveHullVertices)
+   public ConcaveHullCollection(List<Point2D> concaveHullVertices)
    {
       add(concaveHullVertices);
    }
@@ -31,7 +31,7 @@ public class ConcaveHullCollection implements Iterable<ConcaveHull>
       other.forEach(concaveHull -> add(new ConcaveHull(concaveHull)));
    }
 
-   public boolean add(List<Point2d> newConcaveHullVertices)
+   public boolean add(List<Point2D> newConcaveHullVertices)
    {
       return add(new ConcaveHull(newConcaveHullVertices));
    }

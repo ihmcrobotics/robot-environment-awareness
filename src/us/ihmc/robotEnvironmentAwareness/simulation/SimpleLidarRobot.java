@@ -1,11 +1,10 @@
 package us.ihmc.robotEnvironmentAwareness.simulation;
 
-import javax.vecmath.Vector3d;
-
+import us.ihmc.euclid.transform.RigidBodyTransform;
+import us.ihmc.euclid.tuple3D.Vector3D;
 import us.ihmc.graphicsDescription.Graphics3DObject;
 import us.ihmc.graphicsDescription.appearance.YoAppearance;
 import us.ihmc.robotics.Axis;
-import us.ihmc.robotics.geometry.RigidBodyTransform;
 import us.ihmc.robotics.lidar.LidarScanParameters;
 import us.ihmc.simulationconstructionset.FloatingJoint;
 import us.ihmc.simulationconstructionset.Link;
@@ -29,12 +28,12 @@ public class SimpleLidarRobot extends Robot
 
       setDynamic(false);
 
-      rootJoint = new FloatingJoint("rootJoint", new Vector3d(0.0, 0.0, 1.0), this);
+      rootJoint = new FloatingJoint("rootJoint", new Vector3D(0.0, 0.0, 1.0), this);
       rootJoint.setLink(new Link("Dummy"));
       rootJoint.setDynamic(false);
       addRootJoint(rootJoint);
 
-      lidarJoint = new PinJoint("lidarJoint", new Vector3d(), this, Axis.X);
+      lidarJoint = new PinJoint("lidarJoint", new Vector3D(), this, Axis.X);
       
       Link link = new Link("lidar");
       link.setMassAndRadiiOfGyration(1.0, radius, radius, radius);
@@ -42,7 +41,7 @@ public class SimpleLidarRobot extends Robot
       link.setLinkGraphics(linkGraphics);
 
       RigidBodyTransform transform = new RigidBodyTransform();
-      transform.setTranslation(new Vector3d(radius + 0.001, 0.0, height / 2.0));
+      transform.setTranslation(new Vector3D(radius + 0.001, 0.0, height / 2.0));
       lidarScanParameters = new LidarScanParameters(720, -Math.PI / 2.0f, Math.PI / 2.0f, 0f, 0.1f, 30.0f, 0f);
       LidarMount lidarMount = new LidarMount(transform, lidarScanParameters, "lidar");
       lidarJoint.addLidarMount(lidarMount);

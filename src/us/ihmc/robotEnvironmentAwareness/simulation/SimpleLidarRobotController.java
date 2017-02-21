@@ -2,11 +2,6 @@ package us.ihmc.robotEnvironmentAwareness.simulation;
 
 import java.util.concurrent.ScheduledExecutorService;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.Quat4d;
-import javax.vecmath.Quat4f;
-
 import gnu.trove.list.array.TFloatArrayList;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
@@ -14,6 +9,11 @@ import us.ihmc.communication.packets.PlanarRegionMessageConverter;
 import us.ihmc.communication.packets.PlanarRegionsListMessage;
 import us.ihmc.communication.packets.RequestPlanarRegionsListMessage;
 import us.ihmc.communication.packets.RequestPlanarRegionsListMessage.RequestType;
+import us.ihmc.euclid.transform.RigidBodyTransform;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple4D.Quaternion;
+import us.ihmc.euclid.tuple4D.Quaternion32;
 import us.ihmc.graphicsDescription.yoGraphics.BagOfBalls;
 import us.ihmc.graphicsDescription.yoGraphics.YoGraphicPlanarRegionsList;
 import us.ihmc.graphicsDescription.yoGraphics.YoGraphicsListRegistry;
@@ -28,7 +28,6 @@ import us.ihmc.robotics.dataStructures.variable.BooleanYoVariable;
 import us.ihmc.robotics.dataStructures.variable.DoubleYoVariable;
 import us.ihmc.robotics.dataStructures.variable.YoVariable;
 import us.ihmc.robotics.geometry.FramePoint;
-import us.ihmc.robotics.geometry.RigidBodyTransform;
 import us.ihmc.robotics.lidar.LidarScan;
 import us.ihmc.robotics.lidar.LidarScanParameters;
 import us.ihmc.robotics.math.frames.YoFrameOrientation;
@@ -77,7 +76,7 @@ public class SimpleLidarRobotController implements RobotController
       final YoFrameOrientation lidarYawPitchRoll = new YoFrameOrientation("lidar", null, registry);
       lidarYawPitchRoll.attachVariableChangedListener(new VariableChangedListener()
       {
-         private final Quat4d localQuaternion = new Quat4d();
+         private final Quaternion localQuaternion = new Quaternion();
 
          @Override
          public void variableChanged(YoVariable<?> v)
@@ -113,8 +112,8 @@ public class SimpleLidarRobotController implements RobotController
       }
 
       RigidBodyTransform transform = new RigidBodyTransform();
-      Point3f lidarPosition = new Point3f();
-      Quat4f lidarOrientation = new Quat4f();
+      Point3D32 lidarPosition = new Point3D32();
+      Quaternion32 lidarOrientation = new Quaternion32();
 
       lidarJoint.getTransformToWorld(transform);
       transform.get(lidarOrientation, lidarPosition);
@@ -136,9 +135,9 @@ public class SimpleLidarRobotController implements RobotController
          TFloatArrayList newScan = new TFloatArrayList();
          for (int i = 0; i < scan.size(); i++)
          {
-            Point3d sensorOrigin = new Point3d();
+            Point3D sensorOrigin = new Point3D();
             transform.getTranslation(sensorOrigin);
-            Point3d scanPoint = scan.getPoint(i);
+            Point3D scanPoint = scan.getPoint(i);
             if (sensorOrigin.distance(scanPoint) < lidarRange.getDoubleValue())
             {
                newScan.add((float) scanPoint.getX());

@@ -26,7 +26,7 @@ apply plugin: "com.jfrog.artifactory"
 apply plugin: "us.ihmc.gradle.ihmc-build"
 
 sourceCompatibility = 1.8
-version = '0.2.2'
+version = '0.3'
 
 project.sourceSets {
     main {
@@ -161,8 +161,8 @@ publishing {
 // Set of dependencies to get published along with REA
 dependencies {
     compile group: 'com.vividsolutions', name: 'jts', version: '1.13'
-    compile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-    compile group: 'us.ihmc', name: 'JOctoMap', version: '1.5.0'
+    compile group: 'us.ihmc', name: 'euclid-core', version: '0.4.1'
+    compile group: 'us.ihmc', name: 'JOctoMap', version: '1.6.2'
 }
 
 // Not doing afterEvaluate for now, as we want to keep part of the dependencies out of the publishing.

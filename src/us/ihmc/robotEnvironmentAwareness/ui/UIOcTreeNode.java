@@ -1,9 +1,8 @@
 package us.ihmc.robotEnvironmentAwareness.ui;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
-
 import boofcv.misc.UnsupportedException;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Vector3D;
 import us.ihmc.jOctoMap.node.baseImplementation.AbstractOccupancyOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeNodeMessage;
 import us.ihmc.robotics.geometry.PlanarRegion;
@@ -132,7 +131,7 @@ public class UIOcTreeNode extends AbstractOccupancyOcTreeNode<UIOcTreeNode>
          return children[indexRegionWithHighestCount].regionId;
    }
 
-   public void getNormal(Vector3d normalToPack)
+   public void getNormal(Vector3D normalToPack)
    {
       normalToPack.set(normalX, normalY, normalZ);
    }
@@ -147,7 +146,7 @@ public class UIOcTreeNode extends AbstractOccupancyOcTreeNode<UIOcTreeNode>
       return normalConsensusSize;
    }
 
-   public void getHitLocation(Point3d hitLocationToPack)
+   public void getHitLocation(Point3D hitLocationToPack)
    {
       hitLocationToPack.set(hitLocationX, hitLocationY, hitLocationZ);
    }

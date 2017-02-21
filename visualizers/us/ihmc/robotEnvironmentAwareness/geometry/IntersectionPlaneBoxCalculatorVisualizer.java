@@ -2,8 +2,8 @@ package us.ihmc.robotEnvironmentAwareness.geometry;
 
 import java.util.List;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Vector3D;
 
 import javafx.application.Application;
 import javafx.scene.paint.Color;
@@ -29,9 +29,9 @@ public class IntersectionPlaneBoxCalculatorVisualizer extends Application
       double ly = 0.1;
       double lz = 0.1;
 
-      Point3d cubeCenter = new Point3d(-0.25, -0.45, -0.05);
-      Point3d pointOnPlane = new Point3d(-0.2242894023656845, -0.4647734463214874, -0.0023258039727807045);
-      Vector3d planeNormal = new Vector3d(0.20791170661191224, 1.503689309739766E-8, 0.9781475973766547);
+      Point3D cubeCenter = new Point3D(-0.25, -0.45, -0.05);
+      Point3D pointOnPlane = new Point3D(-0.2242894023656845, -0.4647734463214874, -0.0023258039727807045);
+      Vector3D planeNormal = new Vector3D(0.20791170661191224, 1.503689309739766E-8, 0.9781475973766547);
 
 //
 //      pointOnPlane.sub(cubeCenter);
@@ -42,7 +42,7 @@ public class IntersectionPlaneBoxCalculatorVisualizer extends Application
 
       colorPalette.setHueBased(0.9, 0.8);
 
-      List<Point3d> intersections = calculator.computeIntersections();
+      List<Point3D> intersections = calculator.computeIntersections();
       System.out.println(intersections);
       
       colorMeshBuilder.addPolyon(intersections, Color.DARKCYAN);
@@ -67,12 +67,12 @@ public class IntersectionPlaneBoxCalculatorVisualizer extends Application
       for (int i = 0; i < intersections.size(); i++)
       {
 
-         Point3d intersection = intersections.get(i);
-         Vector3d v0 = new Vector3d();
-         Vector3d v1 = new Vector3d();
-         Vector3d v3 = new Vector3d();
-         Point3d nextIntersection = intersections.get((i + 1) % intersections.size());
-         Point3d previousIntersection = intersections.get(i == 0 ? intersections.size() - 1 : i - 1);
+         Point3D intersection = intersections.get(i);
+         Vector3D v0 = new Vector3D();
+         Vector3D v1 = new Vector3D();
+         Vector3D v3 = new Vector3D();
+         Point3D nextIntersection = intersections.get((i + 1) % intersections.size());
+         Point3D previousIntersection = intersections.get(i == 0 ? intersections.size() - 1 : i - 1);
          v0.sub(intersection, nextIntersection);
          v1.sub(intersection, previousIntersection);
          v3.cross(v0, v1);

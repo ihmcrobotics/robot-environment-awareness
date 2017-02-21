@@ -1,10 +1,9 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Tuple3d;
-import javax.vecmath.Tuple3f;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.interfaces.Tuple3DBasics;
 
-public class PointMean extends Point3d
+public class PointMean extends Point3D
 {
    private static final long serialVersionUID = -3110940850302600107L;
 
@@ -14,22 +13,12 @@ public class PointMean extends Point3d
    {
    }
 
-   public void update(Tuple3d tuple)
+   public void update(Tuple3DBasics tuple)
    {
       update(tuple.getX(), tuple.getY(), tuple.getZ());
    }
 
-   public void update(Tuple3d tuple, int updateSize)
-   {
-      update(tuple.getX(), tuple.getY(), tuple.getZ(), updateSize);
-   }
-
-   public void update(Tuple3f tuple)
-   {
-      update(tuple.getX(), tuple.getY(), tuple.getZ());
-   }
-
-   public void update(Tuple3f tuple, int updateSize)
+   public void update(Tuple3DBasics tuple, int updateSize)
    {
       update(tuple.getX(), tuple.getY(), tuple.getZ(), updateSize);
    }
@@ -43,9 +32,9 @@ public class PointMean extends Point3d
    {
       sampleSize += updateSize;
       double nInv = (double) updateSize / (double) sampleSize;
-      this.x += (x - this.x) * nInv;
-      this.y += (y - this.y) * nInv;
-      this.z += (z - this.z) * nInv;
+      this.setX(this.getX() + (x - this.getX()) * nInv);
+      this.setY(this.getY() + (y - this.getY()) * nInv);
+      this.setZ(this.getZ() + (z - this.getZ()) * nInv);
    }
 
    public void clear()

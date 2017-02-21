@@ -4,15 +4,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import javax.vecmath.Point3d;
-import javax.vecmath.Quat4d;
-
 import geometry_msgs.Point;
-import geometry_msgs.Quaternion;
 import scan_to_cloud.PointCloud2WithSource;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.communication.util.NetworkPorts;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple4D.Quaternion;
 import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassLists;
 import us.ihmc.utilities.ros.RosMainNode;
 import us.ihmc.utilities.ros.subscriber.AbstractRosTopicSubscriber;
@@ -38,12 +36,12 @@ public class MultisensePointCloud2WithSourceReceiver extends AbstractRosTopicSub
    public void onNewMessage(PointCloud2WithSource cloudHolder)
    {
       UnpackedPointCloud pointCloudData = RosPointCloudSubscriber.unpackPointsAndIntensities(cloudHolder.getCloud());
-      Point3d[] points = pointCloudData.getPoints();
+      Point3D[] points = pointCloudData.getPoints();
 
       Point translation = cloudHolder.getTranslation();
-      Point3d lidarPosition = new Point3d(translation.getX(), translation.getY(), translation.getZ());
-      Quaternion orientation = cloudHolder.getOrientation();
-      Quat4d lidarQuaternion = new Quat4d(orientation.getX(), orientation.getY(), orientation.getZ(), orientation.getW());
+      Point3D lidarPosition = new Point3D(translation.getX(), translation.getY(), translation.getZ());
+      geometry_msgs.Quaternion orientation = cloudHolder.getOrientation();
+      Quaternion lidarQuaternion = new Quaternion(orientation.getX(), orientation.getY(), orientation.getZ(), orientation.getW());
 
       LidarScanMessage lidarScanMessage = new LidarScanMessage();
       lidarScanMessage.setLidarPosition(lidarPosition);

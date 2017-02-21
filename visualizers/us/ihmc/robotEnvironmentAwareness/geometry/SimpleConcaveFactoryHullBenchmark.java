@@ -4,8 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import javax.vecmath.Point2d;
-
+import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationRawData;
 import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationRawDataImporter;
 
@@ -27,7 +26,7 @@ public class SimpleConcaveFactoryHullBenchmark
       {
          for (PlanarRegionSegmentationRawData rawData : regionsRawData)
          {
-            List<Point2d> pointsInPlane = rawData.getPointCloudInPlane();
+            List<Point2D> pointsInPlane = rawData.getPointCloudInPlane();
             SimpleConcaveHullFactory.createConcaveHull(pointsInPlane, parameters);
          }
       }

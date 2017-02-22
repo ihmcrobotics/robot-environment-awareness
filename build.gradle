@@ -203,5 +203,5 @@ dependencies {
     compile ihmc.getProjectDependency(":IHMCJavaFXToolkit")
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    testCompile ihmc.getProjectDependency(":IHMCUnitTesting")
+	testCompile ihmc.getProjectTestDependency(":IHMCJavaExtensions")
 }

@@ -10,7 +10,7 @@ import us.ihmc.euclid.tuple3D.Vector3D;
 
 import org.junit.Test;
 
-import us.ihmc.robotics.random.RandomTools;
+import us.ihmc.robotics.random.RandomGeometry;
 
 public class IntersectionPlaneBoxCalculatorTest
 {
@@ -29,7 +29,7 @@ public class IntersectionPlaneBoxCalculatorTest
       for (int i = 0; i < NUMBER_OF_ITERATIONS; i++)
       {
          Point3D pointOnPlane = cubeCenter;
-         Vector3D planeNormal = RandomTools.generateRandomVector(random, 1.0);
+         Vector3D planeNormal = RandomGeometry.nextVector3D(random, 1.0);
          calculator.setCube(cubeSize, cubeCenter);
          calculator.setPlane(pointOnPlane, planeNormal);
          List<Point3D> intersections = calculator.computeIntersections();
@@ -65,8 +65,8 @@ public class IntersectionPlaneBoxCalculatorTest
 
       for (int i = 0; i < NUMBER_OF_ITERATIONS; i++)
       {
-         Point3D pointOnPlane = RandomTools.generateRandomPoint(random, 0.5, 0.5, 0.5);
-         Vector3D planeNormal = RandomTools.generateRandomVector(random, 1.0);
+         Point3D pointOnPlane = RandomGeometry.nextPoint3D(random, 0.5, 0.5, 0.5);
+         Vector3D planeNormal = RandomGeometry.nextVector3D(random, 1.0);
          calculator.setCube(cubeSize, cubeCenter);
          calculator.setPlane(pointOnPlane, planeNormal);
          List<Point3D> intersections = calculator.computeIntersections();
@@ -101,9 +101,9 @@ public class IntersectionPlaneBoxCalculatorTest
 
       for (int i = 0; i < NUMBER_OF_ITERATIONS; i++)
       {
-         Point3D cubeCenter = RandomTools.generateRandomPoint(random, 10.0, 10.0, 10.0);
-         Point3D pointOnPlane = RandomTools.generateRandomPoint(random, 0.5, 0.5, 0.5);
-         Vector3D planeNormal = RandomTools.generateRandomVector(random, 1.0);
+         Point3D cubeCenter = RandomGeometry.nextPoint3D(random, 10.0, 10.0, 10.0);
+         Point3D pointOnPlane = RandomGeometry.nextPoint3D(random, 0.5, 0.5, 0.5);
+         Vector3D planeNormal = RandomGeometry.nextVector3D(random, 1.0);
          pointOnPlane.add(cubeCenter);
          calculator.setCube(cubeSize, cubeCenter);
          calculator.setPlane(pointOnPlane, planeNormal);

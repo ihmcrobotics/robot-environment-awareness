@@ -1,12 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import static us.ihmc.robotics.geometry.GeometryTools.distanceFromPointToLine;
-import static us.ihmc.robotics.geometry.GeometryTools.isPointInsideTriangleABC;
-import static us.ihmc.robotics.geometry.GeometryTools.isPointOnLeftSideOfLine;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.getNext;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.getPrevious;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.next;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.previous;
+import static us.ihmc.robotics.geometry.GeometryTools.*;
+import static us.ihmc.robotics.lists.ListWrappingIndexTools.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -16,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import us.ihmc.euclid.geometry.tools.EuclidGeometryTools;
 import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.euclid.tuple2D.Vector2D;
 import us.ihmc.euclid.tuple2D.interfaces.Point2DReadOnly;
@@ -329,7 +325,7 @@ public class ConcaveHullTools
       for (int index = next(startBridgeIndex, concaveHullVertices); index != endBridgeIndex; index = next(index, concaveHullVertices))
       {
          Point2D vertex = concaveHullVertices.get(index);
-         double depth = distanceFromPointToLine(vertex, startBridgeVertex, endBridgeVertex);
+         double depth = EuclidGeometryTools.distanceFromPoint2DToLine2D(vertex, startBridgeVertex, endBridgeVertex);
 
          if (depth > pocketToModify.getMaxDepth())
          {

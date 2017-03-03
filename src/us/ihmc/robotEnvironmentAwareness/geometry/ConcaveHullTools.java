@@ -1,6 +1,5 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import static us.ihmc.robotics.geometry.GeometryTools.*;
 import static us.ihmc.robotics.lists.ListWrappingIndexTools.*;
 
 import java.io.File;
@@ -41,7 +40,7 @@ public class ConcaveHullTools
 
       while (currentIndex != vertexPreviousIndex)
       {
-         if (isPointInsideTriangleABC(concaveHullVertices.get(currentIndex), a, b, c))
+         if (EuclidGeometryTools.isPoint2DInsideTriangleABC(concaveHullVertices.get(currentIndex), a, b, c))
             return true;
          currentIndex = next(currentIndex, concaveHullVertices);
       }
@@ -240,7 +239,7 @@ public class ConcaveHullTools
       Point2D secondBridgeVertex = concaveHullVertices.get(secondBridgeIndex);
 
       // The polygon is convex at this vertex => no pocket => no bridge
-      if (isPointOnLeftSideOfLine(concaveVertex, firstBridgeVertex, secondBridgeVertex))
+      if (EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(concaveVertex, firstBridgeVertex, secondBridgeVertex))
          return false;
 
       int startIndexCandidate = firstBridgeIndex;
@@ -262,14 +261,14 @@ public class ConcaveHullTools
          Point2D startCandidate = concaveHullVertices.get(startIndexCandidate);
          Point2D endCandidate = concaveHullVertices.get(endIndexCandidate);
 
-         if (isPointOnLeftSideOfLine(startCandidate, firstBridgeVertex, secondBridgeVertex))
+         if (EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(startCandidate, firstBridgeVertex, secondBridgeVertex))
          { // startIndexCandidate is a potential firstBridgeIndex.
             boolean isBridgeCoveringPocket = true;
 
             // Make sure that the new bridge would go over all the pocket vertices
             for (int i = next(startIndexCandidate, concaveHullVertices); i != secondBridgeIndex
                   && isBridgeCoveringPocket; i = next(i, concaveHullVertices))
-               isBridgeCoveringPocket = !isPointOnLeftSideOfLine(concaveHullVertices.get(i), startCandidate, secondBridgeVertex);
+               isBridgeCoveringPocket = !EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(concaveHullVertices.get(i), startCandidate, secondBridgeVertex);
 
             if (isBridgeCoveringPocket)
             {
@@ -279,14 +278,14 @@ public class ConcaveHullTools
                endIndexCandidate = secondBridgeIndex;
             }
          }
-         else if (isPointOnLeftSideOfLine(endCandidate, firstBridgeVertex, secondBridgeVertex))
+         else if (EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(endCandidate, firstBridgeVertex, secondBridgeVertex))
          { // endIndexCandidate is the new secondBridgeIndex.
             boolean isBridgeCoveringPocket = true;
 
             // Make sure that the new bridge would go over all the pocket vertices
             for (int i = next(firstBridgeIndex, concaveHullVertices); i != endIndexCandidate
                   && isBridgeCoveringPocket; i = next(i, concaveHullVertices))
-               isBridgeCoveringPocket = !isPointOnLeftSideOfLine(concaveHullVertices.get(i), firstBridgeVertex, endCandidate);
+               isBridgeCoveringPocket = !EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(concaveHullVertices.get(i), firstBridgeVertex, endCandidate);
 
             if (isBridgeCoveringPocket)
             {
@@ -439,7 +438,7 @@ public class ConcaveHullTools
       Point2D previousVertex = concaveHullVertices.get(previous(vertexIndex, concaveHullVertices));
       Point2D nextVertex = concaveHullVertices.get(next(vertexIndex, concaveHullVertices));
 
-      return GeometryTools.isPointOnLeftSideOfLine(vertex, previousVertex, nextVertex);
+      return EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(vertex, previousVertex, nextVertex);
    }
 
    public static boolean isAlmostConvexAtVertex(int vertexIndex, double angleTolerance, List<Point2D> concaveHullVertices)
@@ -538,7 +537,7 @@ public class ConcaveHullTools
 
             // The line is inside the polygon if all the vertices in ]vertexIndex; candidateIndex[ are on the left side of the line (vertex, candidateClosestPoint)
             for (int index = startCheckIndex; index != endCheckIndex && isLineInsidePolygon; index = next(index, concaveHullVertices))
-               isLineInsidePolygon = isPointOnLeftSideOfLine(concaveHullVertices.get(index), vertex, candidateClosestPoint);
+               isLineInsidePolygon = EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(concaveHullVertices.get(index), vertex, candidateClosestPoint);
 
             if (isLineInsidePolygon)
             { // The line is inside, the candidate is the new closest point.

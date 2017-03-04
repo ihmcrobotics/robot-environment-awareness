@@ -16,7 +16,6 @@ import us.ihmc.euclid.tuple2D.Vector2D;
 import us.ihmc.euclid.tuple2D.interfaces.Point2DReadOnly;
 import us.ihmc.euclid.tuple2D.interfaces.Vector2DReadOnly;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
-import us.ihmc.robotics.geometry.GeometryTools;
 import us.ihmc.robotics.geometry.Line2d;
 import us.ihmc.robotics.geometry.LineSegment2d;
 
@@ -85,7 +84,7 @@ public class ConcaveHullTools
 
          previousEdge.sub(vertex, previousVertex);
          nextEdge.sub(nextVertex, vertex);
-         sumOfAngles += GeometryTools.getAngleFromFirstToSecondVector(previousEdge, nextEdge);
+         sumOfAngles += previousEdge.angle(nextEdge);
       }
 
       if (sumOfAngles > 0.0)
@@ -110,7 +109,7 @@ public class ConcaveHullTools
 
          previousEdge.sub(vertex, previousVertex);
          nextEdge.sub(nextVertex, vertex);
-         sumOfAngles += GeometryTools.getAngleFromFirstToSecondVector(previousEdge, nextEdge);
+         sumOfAngles += previousEdge.angle(nextEdge);
       }
 
       if (sumOfAngles < 0.0)
@@ -458,7 +457,7 @@ public class ConcaveHullTools
       double bcx = b.getX() - c.getX();
       double bcy = b.getY() - c.getY();
 
-      return GeometryTools.getAngleFromFirstToSecondVector(bax, bay, bcx, bcy);
+      return EuclidGeometryTools.angleFromFirstToSecondVector2D(bax, bay, bcx, bcy);
    }
 
    public static double getAngleFromPreviousEdgeToNextEdge(int vertexIndex, List<Point2D> concaveHullVertices)
@@ -471,7 +470,7 @@ public class ConcaveHullTools
       double previousEdgeY = vertex.getY() - previousVertex.getY();
       double nextEdgeX = nextVertex.getX() - vertex.getX();
       double nextEdgeY = nextVertex.getY() - vertex.getY();
-      return GeometryTools.getAngleFromFirstToSecondVector(previousEdgeX, previousEdgeY, nextEdgeX, nextEdgeY);
+      return EuclidGeometryTools.angleFromFirstToSecondVector2D(previousEdgeX, previousEdgeY, nextEdgeX, nextEdgeY);
    }
 
    public static boolean isHullConvex(List<Point2D> concaveHullVertices)

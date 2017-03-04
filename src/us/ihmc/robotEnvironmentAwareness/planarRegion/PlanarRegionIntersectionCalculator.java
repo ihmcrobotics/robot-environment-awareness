@@ -4,17 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
 
+import us.ihmc.euclid.geometry.LineSegment3D;
 import us.ihmc.euclid.tuple3D.Point3D;
 import us.ihmc.euclid.tuple3D.Vector3D;
 import us.ihmc.robotics.MathTools;
 import us.ihmc.robotics.geometry.LineSegment1d;
-import us.ihmc.robotics.geometry.LineSegment3d;
 
 public class PlanarRegionIntersectionCalculator
 {
-   public static List<LineSegment3d> computeIntersections(List<PlanarRegionSegmentationRawData> rawData, IntersectionEstimationParameters parameters)
+   public static List<LineSegment3D> computeIntersections(List<PlanarRegionSegmentationRawData> rawData, IntersectionEstimationParameters parameters)
    {
-      List<LineSegment3d> result = new ArrayList<>();
+      List<LineSegment3D> result = new ArrayList<>();
 
       Point3D intersectionPoint = new Point3D();
       Vector3D intersectionDirection = new Vector3D();
@@ -40,7 +40,7 @@ public class PlanarRegionIntersectionCalculator
             double maxDistanceToRegion = parameters.getMaxDistanceToRegion();
             double minIntersectionLength = parameters.getMinIntersectionLength();
 
-            List<LineSegment3d> intersectionList = findIntersectionEndPoints(currentRegion, currentNeighbor, maxDistanceToRegion, minIntersectionLength, intersectionPoint, intersectionDirection);
+            List<LineSegment3D> intersectionList = findIntersectionEndPoints(currentRegion, currentNeighbor, maxDistanceToRegion, minIntersectionLength, intersectionPoint, intersectionDirection);
 
             if (intersectionList != null)
             {
@@ -50,7 +50,7 @@ public class PlanarRegionIntersectionCalculator
 
                if (parameters.isAddIntersectionsToRegions())
                {
-                  for (LineSegment3d intersection : intersectionList)
+                  for (LineSegment3D intersection : intersectionList)
                   {
                      intersectionLength.sub(intersection.getSecondEndpoint(), intersection.getFirstEndpoint());
                      double length = intersectionLength.length();
@@ -111,7 +111,7 @@ public class PlanarRegionIntersectionCalculator
       return true;
    }
 
-   private static List<LineSegment3d> findIntersectionEndPoints(PlanarRegionSegmentationRawData currentRegion, PlanarRegionSegmentationRawData currentNeighbor, double maxDistance, double minIntersectionLength, Point3D intersectionPoint,
+   private static List<LineSegment3D> findIntersectionEndPoints(PlanarRegionSegmentationRawData currentRegion, PlanarRegionSegmentationRawData currentNeighbor, double maxDistance, double minIntersectionLength, Point3D intersectionPoint,
          Vector3D intersectionDirection)
    {
 
@@ -122,7 +122,7 @@ public class PlanarRegionIntersectionCalculator
       if (intersectionsFromRegion2 == null || intersectionsFromRegion2.isEmpty())
          return null;
 
-      List<LineSegment3d> intersections = new ArrayList<>();
+      List<LineSegment3D> intersections = new ArrayList<>();
 
       for (LineSegment1d intersectionFromRegion1 : intersectionsFromRegion1)
       {

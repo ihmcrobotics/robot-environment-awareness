@@ -11,7 +11,7 @@ import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.TopicTheme;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.TypedTopicTheme;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.BoundingBoxParametersMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.BoxMessage;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3DMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullFactoryParameters;
@@ -107,7 +107,7 @@ public class REAModuleAPI
    public static final Topic<NormalOcTreeMessage> OcTreeBufferState = OcTreeCategory.child(Buffer).topic(Data);
    public static final Topic<PlanarRegionsListMessage> PlanarRegionsState = PlanarRegionsCategory.topic(Data);
    public static final Topic<PlanarRegionSegmentationMessage[]> PlanarRegionsSegmentationState = PlanarRegionsCategory.child(Segmentation).topic(Data);
-   public static final Topic<LineSegment3dMessage[]> PlanarRegionsIntersectionState = PlanarRegionsCategory.child(Intersection).topic(Data);
+   public static final Topic<LineSegment3DMessage[]> PlanarRegionsIntersectionState = PlanarRegionsCategory.child(Intersection).topic(Data);
    public static final Topic<BoxMessage> OcTreeBoundingBoxState = OcTreeCategory.child(BoundingBox).topic(Data);
 
    public static final Topic<Boolean> RequestEntireModuleState = ModuleCategory.child(Request).topic(Data);

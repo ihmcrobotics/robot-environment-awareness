@@ -2,8 +2,8 @@ package us.ihmc.robotEnvironmentAwareness.updaters;
 
 import java.util.List;
 
+import us.ihmc.euclid.geometry.LineSegment3D;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationNodeData;
-import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.geometry.PlanarRegionsList;
 
 public interface RegionFeaturesProvider
@@ -14,6 +14,6 @@ public interface RegionFeaturesProvider
 
    int getNumberOfPlaneIntersections();
 
-   LineSegment3d getIntersection(int index);
+   LineSegment3D getIntersection(int index);
 
 }

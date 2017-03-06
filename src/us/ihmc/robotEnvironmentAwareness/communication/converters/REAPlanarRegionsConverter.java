@@ -5,7 +5,7 @@ import java.util.List;
 import us.ihmc.euclid.tuple3D.Point3D32;
 import us.ihmc.euclid.tuple3D.Vector3D32;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3DMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OcTreeKeyMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PlanarRegionSegmentationNodeData;
@@ -49,13 +49,13 @@ public class REAPlanarRegionsConverter
       return planarRegionNodeKeysMessage;
    }
 
-   public static LineSegment3dMessage[] createLineSegment3dMessages(RegionFeaturesProvider regionFeaturesProvider)
+   public static LineSegment3DMessage[] createLineSegment3dMessages(RegionFeaturesProvider regionFeaturesProvider)
    {
-      LineSegment3dMessage[] messages = new LineSegment3dMessage[regionFeaturesProvider.getNumberOfPlaneIntersections()];
+      LineSegment3DMessage[] messages = new LineSegment3DMessage[regionFeaturesProvider.getNumberOfPlaneIntersections()];
 
       for (int i = 0; i < regionFeaturesProvider.getNumberOfPlaneIntersections(); i++)
       {
-         messages[i] = new LineSegment3dMessage(regionFeaturesProvider.getIntersection(i));
+         messages[i] = new LineSegment3DMessage(regionFeaturesProvider.getIntersection(i));
       }
       return messages;
    }

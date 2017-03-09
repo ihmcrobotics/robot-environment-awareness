@@ -7,7 +7,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import us.ihmc.tools.io.printing.PrintTools;
+import us.ihmc.commons.PrintTools;
 import us.ihmc.tools.thread.ThreadTools;
 
 public class ExecutorServiceTools

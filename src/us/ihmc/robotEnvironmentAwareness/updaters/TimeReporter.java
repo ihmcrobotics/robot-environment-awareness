@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.time.StopWatch;
 
 import us.ihmc.commons.Conversions;
-import us.ihmc.tools.io.printing.PrintTools;
+import us.ihmc.commons.PrintTools;
 
 public class TimeReporter
 {

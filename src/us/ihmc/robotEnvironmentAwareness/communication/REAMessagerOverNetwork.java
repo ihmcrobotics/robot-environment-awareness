@@ -6,13 +6,13 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import us.ihmc.commons.PrintTools;
 import us.ihmc.communication.net.NetClassList;
 import us.ihmc.communication.net.NetStateListener;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.API;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.Topic;
-import us.ihmc.tools.io.printing.PrintTools;
 
 public class REAMessagerOverNetwork implements REAMessager
 {

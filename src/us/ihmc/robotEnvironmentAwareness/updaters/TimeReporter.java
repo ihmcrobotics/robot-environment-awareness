@@ -10,7 +10,7 @@ import us.ihmc.commons.PrintTools;
 
 public class TimeReporter
 {
-   private final AtomicLong minimumNanoTimeToReport = new AtomicLong(Conversions.milliSecondsToNanoSeconds(100L));
+   private final AtomicLong minimumNanoTimeToReport = new AtomicLong(Conversions.millisecondsToNanoseconds(100L));
    private final AtomicBoolean reportTimeEnabled = new AtomicBoolean(false);
    private final ThreadLocal<StopWatch> stopWatchLocal = ThreadLocal.withInitial(() -> new StopWatch());
    private final Object caller;
@@ -27,7 +27,7 @@ public class TimeReporter
 
    public void mininmumTimeToReport(long minTimeInMilliseconds)
    {
-      minimumNanoTimeToReport.set(Conversions.milliSecondsToNanoSeconds(minTimeInMilliseconds));
+      minimumNanoTimeToReport.set(Conversions.millisecondsToNanoseconds(minTimeInMilliseconds));
    }
 
    public void run(Runnable command, String timeReportPrefix)
@@ -40,7 +40,7 @@ public class TimeReporter
          command.run();
          long nanoTime = stopWatch.getNanoTime();
          if (nanoTime > minimumNanoTimeToReport.get())
-            PrintTools.info(caller, timeReportPrefix + Conversions.nanoSecondstoSeconds(nanoTime));
+            PrintTools.info(caller, timeReportPrefix + Conversions.nanosecondsToSeconds(nanoTime));
       }
       else
          command.run();

@@ -16,7 +16,7 @@ buildscript {
   dependencies {
     classpath "us.ihmc.gradle:licenseChecker:1.1.1"
     classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.4"
-    classpath group: 'gradle.plugin.us.ihmc.gradle', name: 'ihmc-build', version: '0.0.18'
+    classpath group: 'gradle.plugin.us.ihmc.gradle', name: 'ihmc-build', version: '0.0.19'
   }
 }
 
@@ -164,6 +164,7 @@ dependencies {
     compile group: 'us.ihmc', name: 'euclid-core', version: '0.4.2'
     compile group: 'us.ihmc', name: 'euclid', version: '0.1.0'
     compile group: 'us.ihmc', name: 'JOctoMap', version: '1.6.3'
+    compile group: 'us.ihmc', name: 'ihmc-commons', version: '0.9.1-alpha'
 }
 
 // Not doing afterEvaluate for now, as we want to keep part of the dependencies out of the publishing.

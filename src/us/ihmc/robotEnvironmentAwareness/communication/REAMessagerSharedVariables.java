@@ -7,10 +7,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import us.ihmc.commons.PrintTools;
 import us.ihmc.communication.net.NetStateListener;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.API;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.Topic;
-import us.ihmc.tools.io.printing.PrintTools;
 
 public class REAMessagerSharedVariables implements REAMessager
 {

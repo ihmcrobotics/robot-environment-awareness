@@ -7,11 +7,11 @@ import static us.ihmc.robotics.lists.ListWrappingIndexTools.subListInclusive;
 
 import java.util.List;
 
+import us.ihmc.commons.PrintTools;
 import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.euclid.tuple2D.Vector2D;
 import us.ihmc.euclid.tuple2D.interfaces.Point2DReadOnly;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
-import us.ihmc.tools.io.printing.PrintTools;
 
 public class ConcaveHullDecomposition
 {

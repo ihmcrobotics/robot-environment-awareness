@@ -47,6 +47,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.MeshView;
 import javafx.stage.Stage;
+import us.ihmc.euclid.geometry.LineSegment3D;
 import us.ihmc.euclid.transform.RigidBodyTransform;
 import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.euclid.tuple3D.Point3D;
@@ -69,7 +70,6 @@ import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerTools;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationRawDataImporter;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
-import us.ihmc.robotics.geometry.LineSegment3d;
 import us.ihmc.robotics.linearAlgebra.PrincipalComponentAnalysis3D;
 import us.ihmc.robotics.lists.ListWrappingIndexTools;
 
@@ -690,9 +690,9 @@ public class PolygonizerVisualizer extends Application
    {
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(32));
 
-      List<LineSegment3d> intersections = PlanarRegionIntersectionCalculator.computeIntersections(regionsRawData, intersectionParameters);
+      List<LineSegment3D> intersections = PlanarRegionIntersectionCalculator.computeIntersections(regionsRawData, intersectionParameters);
 
-      for (LineSegment3d intersection : intersections)
+      for (LineSegment3D intersection : intersections)
       {
          meshBuilder.addLine(intersection.getFirstEndpoint(), intersection.getSecondEndpoint(), 0.01, Color.RED);
       }

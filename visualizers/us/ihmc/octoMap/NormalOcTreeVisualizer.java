@@ -53,7 +53,7 @@ public class NormalOcTreeVisualizer extends Application
       ocTree.update(new ScanCollection(pointcloud, lidarPosition));
       ocTree.update(new ScanCollection(pointcloud, lidarPosition));
       long endTime = System.nanoTime();
-      System.out.println("Done computing normals: time it took = " + Conversions.nanoSecondstoSeconds(endTime - startTime));
+      System.out.println("Done computing normals: time it took = " + Conversions.nanosecondsToSeconds(endTime - startTime));
    }
    
    PointCloud pointcloud = new PointCloud();

@@ -132,7 +132,7 @@ public abstract class SimpleConcaveHullFactory
 
       if (REPORT_TIME)
       {
-         System.out.println("Triangulation took: " + Conversions.nanoSecondstoSeconds(stopWatch.getNanoTime()) + " sec.");
+         System.out.println("Triangulation took: " + Conversions.nanosecondsToSeconds(stopWatch.getNanoTime()) + " sec.");
       }
 
       return computeIntermediateVariables(allTriangles);

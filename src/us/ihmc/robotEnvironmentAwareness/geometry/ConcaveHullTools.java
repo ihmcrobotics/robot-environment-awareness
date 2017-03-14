@@ -1,12 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import static us.ihmc.robotics.geometry.GeometryTools.distanceFromPointToLine;
-import static us.ihmc.robotics.geometry.GeometryTools.isPointInsideTriangleABC;
-import static us.ihmc.robotics.geometry.GeometryTools.isPointOnLeftSideOfLine;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.getNext;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.getPrevious;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.next;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.previous;
+import static us.ihmc.robotics.lists.ListWrappingIndexTools.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -16,12 +10,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import us.ihmc.euclid.geometry.tools.EuclidGeometryTools;
 import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.euclid.tuple2D.Vector2D;
 import us.ihmc.euclid.tuple2D.interfaces.Point2DReadOnly;
 import us.ihmc.euclid.tuple2D.interfaces.Vector2DReadOnly;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
-import us.ihmc.robotics.geometry.GeometryTools;
 import us.ihmc.robotics.geometry.Line2d;
 import us.ihmc.robotics.geometry.LineSegment2d;
 
@@ -45,7 +39,7 @@ public class ConcaveHullTools
 
       while (currentIndex != vertexPreviousIndex)
       {
-         if (isPointInsideTriangleABC(concaveHullVertices.get(currentIndex), a, b, c))
+         if (EuclidGeometryTools.isPoint2DInsideTriangleABC(concaveHullVertices.get(currentIndex), a, b, c))
             return true;
          currentIndex = next(currentIndex, concaveHullVertices);
       }
@@ -90,7 +84,7 @@ public class ConcaveHullTools
 
          previousEdge.sub(vertex, previousVertex);
          nextEdge.sub(nextVertex, vertex);
-         sumOfAngles += GeometryTools.getAngleFromFirstToSecondVector(previousEdge, nextEdge);
+         sumOfAngles += previousEdge.angle(nextEdge);
       }
 
       if (sumOfAngles > 0.0)
@@ -115,7 +109,7 @@ public class ConcaveHullTools
 
          previousEdge.sub(vertex, previousVertex);
          nextEdge.sub(nextVertex, vertex);
-         sumOfAngles += GeometryTools.getAngleFromFirstToSecondVector(previousEdge, nextEdge);
+         sumOfAngles += previousEdge.angle(nextEdge);
       }
 
       if (sumOfAngles < 0.0)
@@ -244,7 +238,7 @@ public class ConcaveHullTools
       Point2D secondBridgeVertex = concaveHullVertices.get(secondBridgeIndex);
 
       // The polygon is convex at this vertex => no pocket => no bridge
-      if (isPointOnLeftSideOfLine(concaveVertex, firstBridgeVertex, secondBridgeVertex))
+      if (EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(concaveVertex, firstBridgeVertex, secondBridgeVertex))
          return false;
 
       int startIndexCandidate = firstBridgeIndex;
@@ -266,14 +260,14 @@ public class ConcaveHullTools
          Point2D startCandidate = concaveHullVertices.get(startIndexCandidate);
          Point2D endCandidate = concaveHullVertices.get(endIndexCandidate);
 
-         if (isPointOnLeftSideOfLine(startCandidate, firstBridgeVertex, secondBridgeVertex))
+         if (EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(startCandidate, firstBridgeVertex, secondBridgeVertex))
          { // startIndexCandidate is a potential firstBridgeIndex.
             boolean isBridgeCoveringPocket = true;
 
             // Make sure that the new bridge would go over all the pocket vertices
             for (int i = next(startIndexCandidate, concaveHullVertices); i != secondBridgeIndex
                   && isBridgeCoveringPocket; i = next(i, concaveHullVertices))
-               isBridgeCoveringPocket = !isPointOnLeftSideOfLine(concaveHullVertices.get(i), startCandidate, secondBridgeVertex);
+               isBridgeCoveringPocket = !EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(concaveHullVertices.get(i), startCandidate, secondBridgeVertex);
 
             if (isBridgeCoveringPocket)
             {
@@ -283,14 +277,14 @@ public class ConcaveHullTools
                endIndexCandidate = secondBridgeIndex;
             }
          }
-         else if (isPointOnLeftSideOfLine(endCandidate, firstBridgeVertex, secondBridgeVertex))
+         else if (EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(endCandidate, firstBridgeVertex, secondBridgeVertex))
          { // endIndexCandidate is the new secondBridgeIndex.
             boolean isBridgeCoveringPocket = true;
 
             // Make sure that the new bridge would go over all the pocket vertices
             for (int i = next(firstBridgeIndex, concaveHullVertices); i != endIndexCandidate
                   && isBridgeCoveringPocket; i = next(i, concaveHullVertices))
-               isBridgeCoveringPocket = !isPointOnLeftSideOfLine(concaveHullVertices.get(i), firstBridgeVertex, endCandidate);
+               isBridgeCoveringPocket = !EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(concaveHullVertices.get(i), firstBridgeVertex, endCandidate);
 
             if (isBridgeCoveringPocket)
             {
@@ -329,7 +323,7 @@ public class ConcaveHullTools
       for (int index = next(startBridgeIndex, concaveHullVertices); index != endBridgeIndex; index = next(index, concaveHullVertices))
       {
          Point2D vertex = concaveHullVertices.get(index);
-         double depth = distanceFromPointToLine(vertex, startBridgeVertex, endBridgeVertex);
+         double depth = EuclidGeometryTools.distanceFromPoint2DToLine2D(vertex, startBridgeVertex, endBridgeVertex);
 
          if (depth > pocketToModify.getMaxDepth())
          {
@@ -443,7 +437,7 @@ public class ConcaveHullTools
       Point2D previousVertex = concaveHullVertices.get(previous(vertexIndex, concaveHullVertices));
       Point2D nextVertex = concaveHullVertices.get(next(vertexIndex, concaveHullVertices));
 
-      return GeometryTools.isPointOnLeftSideOfLine(vertex, previousVertex, nextVertex);
+      return EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(vertex, previousVertex, nextVertex);
    }
 
    public static boolean isAlmostConvexAtVertex(int vertexIndex, double angleTolerance, List<Point2D> concaveHullVertices)
@@ -463,7 +457,7 @@ public class ConcaveHullTools
       double bcx = b.getX() - c.getX();
       double bcy = b.getY() - c.getY();
 
-      return GeometryTools.getAngleFromFirstToSecondVector(bax, bay, bcx, bcy);
+      return EuclidGeometryTools.angleFromFirstToSecondVector2D(bax, bay, bcx, bcy);
    }
 
    public static double getAngleFromPreviousEdgeToNextEdge(int vertexIndex, List<Point2D> concaveHullVertices)
@@ -476,7 +470,7 @@ public class ConcaveHullTools
       double previousEdgeY = vertex.getY() - previousVertex.getY();
       double nextEdgeX = nextVertex.getX() - vertex.getX();
       double nextEdgeY = nextVertex.getY() - vertex.getY();
-      return GeometryTools.getAngleFromFirstToSecondVector(previousEdgeX, previousEdgeY, nextEdgeX, nextEdgeY);
+      return EuclidGeometryTools.angleFromFirstToSecondVector2D(previousEdgeX, previousEdgeY, nextEdgeX, nextEdgeY);
    }
 
    public static boolean isHullConvex(List<Point2D> concaveHullVertices)
@@ -542,7 +536,7 @@ public class ConcaveHullTools
 
             // The line is inside the polygon if all the vertices in ]vertexIndex; candidateIndex[ are on the left side of the line (vertex, candidateClosestPoint)
             for (int index = startCheckIndex; index != endCheckIndex && isLineInsidePolygon; index = next(index, concaveHullVertices))
-               isLineInsidePolygon = isPointOnLeftSideOfLine(concaveHullVertices.get(index), vertex, candidateClosestPoint);
+               isLineInsidePolygon = EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(concaveHullVertices.get(index), vertex, candidateClosestPoint);
 
             if (isLineInsidePolygon)
             { // The line is inside, the candidate is the new closest point.

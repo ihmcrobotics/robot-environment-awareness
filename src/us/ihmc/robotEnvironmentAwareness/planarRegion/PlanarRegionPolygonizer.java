@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import us.ihmc.commons.PrintTools;
 import us.ihmc.euclid.transform.RigidBodyTransform;
 import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHull;
@@ -16,7 +17,6 @@ import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataExpor
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
 import us.ihmc.robotics.geometry.PlanarRegion;
 import us.ihmc.robotics.geometry.PlanarRegionsList;
-import us.ihmc.tools.io.printing.PrintTools;
 
 public abstract class PlanarRegionPolygonizer
 {

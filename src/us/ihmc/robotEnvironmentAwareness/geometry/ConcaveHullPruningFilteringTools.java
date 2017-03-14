@@ -1,21 +1,11 @@
 package us.ihmc.robotEnvironmentAwareness.geometry;
 
-import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools.computeConcaveHullPocket;
-import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools.findClosestIntersectionWithRay;
-import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools.findInnerClosestEdgeToVertex;
-import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools.isConvexAtVertex;
-import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools.isVertexPreventingKink;
-import static us.ihmc.robotics.geometry.GeometryTools.computeTriangleArea;
-import static us.ihmc.robotics.geometry.GeometryTools.isPointOnLeftSideOfLine;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.getNext;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.getPrevious;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.next;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.previous;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.removeAllExclusive;
-import static us.ihmc.robotics.lists.ListWrappingIndexTools.subLengthInclusive;
+import static us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullTools.*;
+import static us.ihmc.robotics.lists.ListWrappingIndexTools.*;
 
 import java.util.List;
 
+import us.ihmc.euclid.geometry.tools.EuclidGeometryTools;
 import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.euclid.tuple2D.Vector2D;
 
@@ -113,7 +103,7 @@ public class ConcaveHullPruningFilteringTools
       for (int currentIndex = 0; currentIndex < concaveHullVerticesToFilter.size();)
       {
          // If convex at b, then b should be on the outside of ac => on the left of the vector ac.
-         boolean isConvex = isPointOnLeftSideOfLine(b, a, c);
+         boolean isConvex = EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(b, a, c);
 
          int nextIndex = next(currentIndex, concaveHullVerticesToFilter);
          if (isConvex && a.distance(c) / (a.distance(b) + b.distance(c)) > percentageThreshold && !isVertexPreventingKink(nextIndex, concaveHullVerticesToFilter))
@@ -190,7 +180,7 @@ public class ConcaveHullPruningFilteringTools
          {
             Point2D vertexToCheck = concaveHullVerticesToFilter.get(checkIndex);
 
-            if (!isPointOnLeftSideOfLine(vertexToCheck, firstVertex, lastVertex))
+            if (!EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(vertexToCheck, firstVertex, lastVertex))
             {
                // Reducing the cutting line
                endCutIndex = checkIndex;
@@ -241,9 +231,9 @@ public class ConcaveHullPruningFilteringTools
       for (int currentIndex = 0; currentIndex < concaveHullVerticesToFilter.size();)
       {
          // If convex at b, then b should be on the outside of ac => on the left of the vector ac.
-         boolean isConvex = isPointOnLeftSideOfLine(b, a, c);
+         boolean isConvex = EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(b, a, c);
          int nextIndex = next(currentIndex, concaveHullVerticesToFilter);
-         if (isConvex && computeTriangleArea(a, b, c) < areaThreshold && !isVertexPreventingKink(nextIndex, concaveHullVerticesToFilter))
+         if (isConvex && EuclidGeometryTools.triangleArea(a, b, c) < areaThreshold && !isVertexPreventingKink(nextIndex, concaveHullVerticesToFilter))
          {
             concaveHullVerticesToFilter.remove(nextIndex);
             b = c;
@@ -365,8 +355,8 @@ public class ConcaveHullPruningFilteringTools
          Point2D beforeEdgeVertex = concaveHullVerticesToFilter.get(beforeEdgeVertexIndex);
          Point2D afterEdgeVertex = concaveHullVerticesToFilter.get(afterEdgeVertexIndex);
 
-         boolean isFirstEdgeVertexConvex = isPointOnLeftSideOfLine(firstEdgeVertex, beforeEdgeVertex, secondEdgeVertex);
-         boolean isSecondEdgeVertexConvex = isPointOnLeftSideOfLine(secondEdgeVertex, firstEdgeVertex, afterEdgeVertex);
+         boolean isFirstEdgeVertexConvex = EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(firstEdgeVertex, beforeEdgeVertex, secondEdgeVertex);
+         boolean isSecondEdgeVertexConvex = EuclidGeometryTools.isPoint2DOnLeftSideOfLine2D(secondEdgeVertex, firstEdgeVertex, afterEdgeVertex);
 
          // Both vertices are in a concavity, cannot remove any of them without expanding the concave hull.
          if (!isFirstEdgeVertexConvex && !isSecondEdgeVertexConvex)

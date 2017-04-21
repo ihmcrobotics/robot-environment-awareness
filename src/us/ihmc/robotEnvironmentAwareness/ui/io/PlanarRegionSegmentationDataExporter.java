@@ -6,10 +6,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
@@ -134,8 +132,7 @@ public class PlanarRegionSegmentationDataExporter
 
    private static String getDate()
    {
-      DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss_");
-      Date time = Calendar.getInstance().getTime();
-      return dateFormat.format(time);
+      DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_");
+      return LocalDateTime.now().format(dateTimeFormatter);
    }
 }

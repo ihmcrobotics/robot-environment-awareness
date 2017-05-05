@@ -26,7 +26,7 @@ apply plugin: "com.jfrog.artifactory"
 apply plugin: "us.ihmc.gradle.ihmc-build"
 
 sourceCompatibility = 1.8
-version = '0.4.3'
+version = '0.4.4'
 
 project.sourceSets {
     main {
@@ -162,7 +162,7 @@ publishing {
 dependencies {
     compile group: 'com.vividsolutions', name: 'jts', version: '1.13'
     compile group: 'us.ihmc', name: 'euclid-core', version: '0.4.3'
-    compile group: 'us.ihmc', name: 'euclid', version: '0.2.2'
+    compile group: 'us.ihmc', name: 'euclid', version: '0.3.3'
     compile group: 'us.ihmc', name: 'JOctoMap', version: '1.6.4'
     compile group: 'us.ihmc', name: 'ihmc-commons', version: '0.9.1-alpha'
 }
@@ -199,6 +199,7 @@ dependencies {
     // TODO These needs to be references to snapshots of artifacts.
     compile ihmc.getProjectDependency(":IHMCJMonkeyEngineToolkit")
     compile ihmc.getProjectDependency(":SimulationConstructionSet")
+    compile ihmc.getProjectDependency(":SimulationConstructionSetTools")
     compile ihmc.getProjectDependency(":IHMCCommunication")
     compile ihmc.getProjectDependency(":IHMCROSTools")
     compile ihmc.getProjectDependency(":IHMCRoboticsToolkit")

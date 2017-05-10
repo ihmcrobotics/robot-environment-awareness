@@ -16,7 +16,7 @@ import us.ihmc.euclid.tuple2D.Vector2D;
 import us.ihmc.euclid.tuple2D.interfaces.Point2DReadOnly;
 import us.ihmc.euclid.tuple2D.interfaces.Vector2DReadOnly;
 import us.ihmc.robotics.geometry.ConvexPolygon2d;
-import us.ihmc.robotics.geometry.Line2d;
+import us.ihmc.robotics.geometry.Line2D;
 import us.ihmc.robotics.geometry.LineSegment2d;
 
 public class ConcaveHullTools
@@ -557,7 +557,7 @@ public class ConcaveHullTools
       intersectionToPack.set(Double.NaN, Double.NaN);
 
       Vector2D rayOriginToCandidate = new Vector2D();
-      Line2d rayLine = new Line2d(rayOrigin, rayDirection);
+      Line2D rayLine = new Line2D(rayOrigin, rayDirection);
       LineSegment2d edge = new LineSegment2d();
 
       for (int currentIndex = startSearchIndex; currentIndex != endSearchIndex; currentIndex = next(currentIndex, concaveHullVertices))

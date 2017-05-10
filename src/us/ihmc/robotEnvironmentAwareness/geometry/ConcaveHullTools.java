@@ -521,7 +521,7 @@ public class ConcaveHullTools
          Point2D edgeSecondVertex = getNext(candidateIndex, concaveHullVertices);
 
          edge.set(edgeFirstVertex, edgeSecondVertex);
-         edge.getClosestPointOnLineSegment(candidateClosestPoint, vertex);
+         edge.orthogonalProjection(candidateClosestPoint, vertex);
 
          double distanceSquared = candidateClosestPoint.distanceSquared(vertex);
 

@@ -11,7 +11,7 @@ import us.ihmc.commons.PrintTools;
 import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.euclid.tuple2D.Vector2D;
 import us.ihmc.euclid.tuple2D.interfaces.Point2DReadOnly;
-import us.ihmc.robotics.geometry.ConvexPolygon2d;
+import us.ihmc.robotics.geometry.ConvexPolygon2D;
 
 public class ConcaveHullDecomposition
 {
@@ -29,7 +29,7 @@ public class ConcaveHullDecomposition
     *  Otherwise, the pocket vertices will be removed.
     *  @param convexPolygonsToPack [output] the convex polygons approximating the concave hull.
     */
-   public static void recursiveApproximateDecomposition(ConcaveHullCollection concaveHullCollection, double depthThreshold, List<ConvexPolygon2d> convexPolygonsToPack)
+   public static void recursiveApproximateDecomposition(ConcaveHullCollection concaveHullCollection, double depthThreshold, List<ConvexPolygon2D> convexPolygonsToPack)
    {
       for (ConcaveHull concaveHull : concaveHullCollection)
          recursiveApproximateDecomposition(concaveHull.getConcaveHullVertices(), depthThreshold, convexPolygonsToPack);
@@ -45,7 +45,7 @@ public class ConcaveHullDecomposition
     *  Otherwise, the pocket vertices will be removed.
     *  @param convexPolygonsToPack [output] the convex polygons approximating the concave hull.
     */
-   public static void recursiveApproximateDecomposition(ConcaveHull concaveHull, double depthThreshold, List<ConvexPolygon2d> convexPolygonsToPack)
+   public static void recursiveApproximateDecomposition(ConcaveHull concaveHull, double depthThreshold, List<ConvexPolygon2D> convexPolygonsToPack)
    {
       recursiveApproximateDecomposition(concaveHull.getConcaveHullVertices(), depthThreshold, convexPolygonsToPack);
    }
@@ -60,7 +60,7 @@ public class ConcaveHullDecomposition
     *  Otherwise, the pocket vertices will be removed.
     *  @param convexPolygonsToPack [output] the convex polygons approximating the concave hull.
     */
-   public static void recursiveApproximateDecomposition(List<Point2D> concaveHullVertices, double depthThreshold, List<ConvexPolygon2d> convexPolygonsToPack)
+   public static void recursiveApproximateDecomposition(List<Point2D> concaveHullVertices, double depthThreshold, List<ConvexPolygon2D> convexPolygonsToPack)
    {
       ConcaveHullPocket pocket = null;
       boolean hasFoundDeepPocket = false;
@@ -76,7 +76,7 @@ public class ConcaveHullDecomposition
          // The concave hull is actually convex, end of recursion
          if (ConcaveHullTools.isHullConvex(concaveHullVertices))
          {
-            convexPolygonsToPack.add(new ConvexPolygon2d(concaveHullVertices));
+            convexPolygonsToPack.add(new ConvexPolygon2D(concaveHullVertices));
             return;
          }
 

@@ -69,7 +69,7 @@ import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerParameters;
 import us.ihmc.robotEnvironmentAwareness.planarRegion.PolygonizerTools;
 import us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders.OcTreeMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationRawDataImporter;
-import us.ihmc.robotics.geometry.ConvexPolygon2d;
+import us.ihmc.robotics.geometry.ConvexPolygon2D;
 import us.ihmc.robotics.linearAlgebra.PrincipalComponentAnalysis3D;
 import us.ihmc.robotics.lists.ListWrappingIndexTools;
 
@@ -605,7 +605,7 @@ public class PolygonizerVisualizer extends Application
    {
       ConcaveHullCollection concaveHullCollection = concaveHullFactoryResult.getConcaveHullCollection();
       double depthThreshold = polygonizerParameters.getDepthThreshold();
-      List<ConvexPolygon2d> convexPolygons = new ArrayList<>();
+      List<ConvexPolygon2D> convexPolygons = new ArrayList<>();
       ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHullCollection, depthThreshold, convexPolygons);
 
       JavaFXMultiColorMeshBuilder meshBuilder = new JavaFXMultiColorMeshBuilder(new TextureColorAdaptivePalette(64));
@@ -616,7 +616,7 @@ public class PolygonizerVisualizer extends Application
 
       for (int i = 0; i < convexPolygons.size(); i++)
       {
-         ConvexPolygon2d convexPolygon = convexPolygons.get(i);
+         ConvexPolygon2D convexPolygon = convexPolygons.get(i);
          Color color = Color.hsb(regionColor.getHue(), 0.9, 0.5 + 0.5 * ((double) i / (double) convexPolygons.size()));
          meshBuilder.addPolygon(rigidBodyTransform, convexPolygon, color);
       }

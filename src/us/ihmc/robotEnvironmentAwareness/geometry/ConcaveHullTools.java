@@ -15,7 +15,7 @@ import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.euclid.tuple2D.Vector2D;
 import us.ihmc.euclid.tuple2D.interfaces.Point2DReadOnly;
 import us.ihmc.euclid.tuple2D.interfaces.Vector2DReadOnly;
-import us.ihmc.robotics.geometry.ConvexPolygon2d;
+import us.ihmc.robotics.geometry.ConvexPolygon2D;
 import us.ihmc.robotics.geometry.Line2D;
 import us.ihmc.robotics.geometry.LineSegment2D;
 
@@ -338,7 +338,7 @@ public class ConcaveHullTools
 
    public static ConcaveHullPocket findFirstConcaveHullPocketInefficient(List<Point2D> concaveHullVertices)
    {
-      ConvexPolygon2d convexHull = new ConvexPolygon2d(concaveHullVertices);
+      ConvexPolygon2D convexHull = new ConvexPolygon2D(concaveHullVertices);
 
       // Find first common vertex between the two hulls. 
       int convexStartIndex = 0;

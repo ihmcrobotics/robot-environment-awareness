@@ -4,8 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.vecmath.Point2d;
-
+import us.ihmc.commons.PrintTools;
+import us.ihmc.euclid.geometry.ConvexPolygon2D;
+import us.ihmc.euclid.geometry.LineSegment2D;
+import us.ihmc.euclid.transform.RigidBodyTransform;
+import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHull;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullCollection;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullDecomposition;
@@ -13,12 +16,8 @@ import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullFactoryParameters;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullPruningFilteringTools;
 import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory;
 import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataExporter;
-import us.ihmc.robotics.geometry.ConvexPolygon2d;
-import us.ihmc.robotics.geometry.LineSegment2d;
 import us.ihmc.robotics.geometry.PlanarRegion;
 import us.ihmc.robotics.geometry.PlanarRegionsList;
-import us.ihmc.robotics.geometry.RigidBodyTransform;
-import us.ihmc.tools.io.printing.PrintTools;
 
 public abstract class PlanarRegionPolygonizer
 {
@@ -53,8 +52,8 @@ public abstract class PlanarRegionPolygonizer
       try
       {
          // First compute the set of concave hulls for this region
-         List<Point2d> pointCloudInPlane = rawData.getPointCloudInPlane();
-         List<LineSegment2d> intersections = rawData.getIntersections();
+         List<Point2D> pointCloudInPlane = rawData.getPointCloudInPlane();
+         List<LineSegment2D> intersections = rawData.getIntersections();
          ConcaveHullCollection concaveHullCollection = SimpleConcaveHullFactory.createConcaveHullCollection(pointCloudInPlane, intersections,
                                                                                                             concaveHullFactoryParameters);
 
@@ -71,14 +70,14 @@ public abstract class PlanarRegionPolygonizer
 
          // Decompose the concave hulls into convex polygons
          double depthThreshold = polygonizerParameters.getDepthThreshold();
-         List<ConvexPolygon2d> decomposedPolygons = new ArrayList<>();
+         List<ConvexPolygon2D> decomposedPolygons = new ArrayList<>();
          ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHullCollection, depthThreshold, decomposedPolygons);
 
          // Pack the data in PlanarRegion
          RigidBodyTransform transformToWorld = rawData.getTransformFromLocalToWorld();
-         List<Point2d[]> concaveHullsVertices = new ArrayList<>();
+         List<Point2D[]> concaveHullsVertices = new ArrayList<>();
          for (ConcaveHull concaveHull : concaveHullCollection)
-            concaveHullsVertices.add(concaveHull.getConcaveHullVertices().toArray(new Point2d[0]));
+            concaveHullsVertices.add(concaveHull.getConcaveHullVertices().toArray(new Point2D[0]));
          
          PlanarRegion planarRegion = new PlanarRegion(transformToWorld, concaveHullsVertices, decomposedPolygons);
          planarRegion.setRegionId(rawData.getRegionId());

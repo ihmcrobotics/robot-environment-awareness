@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Random;
 
-import javax.vecmath.AxisAngle4d;
-import javax.vecmath.Vector3d;
-
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
+import us.ihmc.euclid.axisAngle.AxisAngle;
+import us.ihmc.euclid.transform.RigidBodyTransform;
+import us.ihmc.euclid.tuple3D.Vector3D;
 import us.ihmc.graphicsDescription.Graphics3DObject;
 import us.ihmc.graphicsDescription.appearance.YoAppearance;
 import us.ihmc.graphicsDescription.structure.Graphics3DNode;
@@ -18,13 +18,11 @@ import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetCl
 import us.ihmc.robotics.dataStructures.listener.VariableChangedListener;
 import us.ihmc.robotics.dataStructures.variable.EnumYoVariable;
 import us.ihmc.robotics.dataStructures.variable.YoVariable;
-import us.ihmc.robotics.geometry.GeometryTools;
-import us.ihmc.robotics.geometry.RigidBodyTransform;
+import us.ihmc.simulationConstructionSetTools.util.environments.CinderBlockFieldEnvironment;
+import us.ihmc.simulationConstructionSetTools.util.environments.DefaultCommonAvatarEnvironment;
+import us.ihmc.simulationConstructionSetTools.util.environments.FlatGroundEnvironment;
 import us.ihmc.simulationconstructionset.SimulationConstructionSet;
 import us.ihmc.simulationconstructionset.SimulationConstructionSetParameters;
-import us.ihmc.simulationconstructionset.util.environments.CinderBlockFieldEnvironment;
-import us.ihmc.simulationconstructionset.util.environments.DefaultCommonAvatarEnvironment;
-import us.ihmc.simulationconstructionset.util.environments.FlatGroundEnvironment;
 import us.ihmc.simulationconstructionset.util.ground.CombinedTerrainObject3D;
 import us.ihmc.util.RealtimeTools;
 
@@ -100,20 +98,20 @@ public class LidarFastSimulation
    {
       CombinedTerrainObject3D blocksTerrain = new CombinedTerrainObject3D("Block");
 
-      AxisAngle4d axisAngle = new AxisAngle4d(0.0, 0.0, 1.0, Math.PI / 4.0);
-      RigidBodyTransform configuration = new RigidBodyTransform(axisAngle, new Vector3d(0.65, 0.0, 0.5));
+      AxisAngle axisAngle = new AxisAngle(0.0, 0.0, 1.0, Math.PI / 4.0);
+      RigidBodyTransform configuration = new RigidBodyTransform(axisAngle, new Vector3D(0.65, 0.0, 0.5));
       blocksTerrain.addRotatableBox(configuration, 0.5, 0.5, 0.5, YoAppearance.DarkGray());
       
-      Vector3d offset = new Vector3d(0.0, -0.5, 0.25);
-      GeometryTools.rotateTuple3d(axisAngle, offset, offset);
+      Vector3D offset = new Vector3D(0.0, -0.5, 0.25);
+      axisAngle.transform(offset);
       RigidBodyTransform configuration2 = new RigidBodyTransform(configuration);
-      configuration2.setTranslation(configuration2.mat03 + offset.getX(), configuration2.mat13 + offset.getY(), configuration2.mat23 + offset.getZ());
+      configuration2.setTranslation(configuration2.getM03() + offset.getX(), configuration2.getM13() + offset.getY(), configuration2.getM23() + offset.getZ());
       blocksTerrain.addRotatableBox(configuration2, 0.5, 0.5, 1.0, YoAppearance.DarkCyan());
 
-      offset = new Vector3d(0.5, 0.0, 0.25);
-      GeometryTools.rotateTuple3d(axisAngle, offset, offset);
+      offset = new Vector3D(0.5, 0.0, 0.25);
+      axisAngle.transform(offset);
       RigidBodyTransform configuration3 = new RigidBodyTransform(configuration);
-      configuration3.setTranslation(configuration3.mat03 + offset.getX(), configuration3.mat13 + offset.getY(), configuration3.mat23 + offset.getZ());
+      configuration3.setTranslation(configuration3.getM03() + offset.getX(), configuration3.getM13() + offset.getY(), configuration3.getM23() + offset.getZ());
       blocksTerrain.addRotatableBox(configuration3, 0.5, 0.5, 1.0, YoAppearance.DarkCyan());
 
       return blocksTerrain.getLinkGraphics();

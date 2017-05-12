@@ -7,33 +7,32 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.Quat4d;
-import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
-
+import us.ihmc.euclid.geometry.LineSegment2D;
+import us.ihmc.euclid.transform.RigidBodyTransform;
+import us.ihmc.euclid.tuple2D.Point2D;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple3D.Vector3D;
+import us.ihmc.euclid.tuple3D.Vector3D32;
+import us.ihmc.euclid.tuple4D.Quaternion;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.PlanarRegionSegmentationMessage;
-import us.ihmc.robotics.geometry.LineSegment2d;
-import us.ihmc.robotics.geometry.RigidBodyTransform;
 
 public class PlanarRegionSegmentationRawData
 {
    private final int regionId;
-   private final Vector3d normal;
-   private final Point3d origin;
-   private final List<Point3d> pointCloud;
-   private final Quat4d orientation;
-   private final List<LineSegment2d> intersections;
+   private final Vector3D normal;
+   private final Point3D origin;
+   private final List<Point3D> pointCloud;
+   private final Quaternion orientation;
+   private final List<LineSegment2D> intersections;
 
-   public PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin)
+   public PlanarRegionSegmentationRawData(int regionId, Vector3D32 normal, Point3D32 origin)
    {
       this(regionId, normal, origin, Collections.emptyList());
    }
 
-   public PlanarRegionSegmentationRawData(int regionId, Vector3d normal, Point3d origin)
+   public PlanarRegionSegmentationRawData(int regionId, Vector3D normal, Point3D origin)
    {
       this(regionId, normal, origin, Collections.emptyList());
    }
@@ -48,35 +47,35 @@ public class PlanarRegionSegmentationRawData
       this(message.getRegionId(), message.getNormal(), message.getOrigin(), Arrays.stream(message.getHitLocations()), null);
    }
 
-   public PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin, List<Point3f> pointCloud)
+   public PlanarRegionSegmentationRawData(int regionId, Vector3D32 normal, Point3D32 origin, List<Point3D32> pointCloud)
    {
       this(regionId, normal, origin, pointCloud.stream(), null);
    }
 
-   public PlanarRegionSegmentationRawData(int regionId, Vector3d normal, Point3d origin, List<Point3d> pointCloud)
+   public PlanarRegionSegmentationRawData(int regionId, Vector3D normal, Point3D origin, List<Point3D> pointCloud)
    {
       this(regionId, normal, origin, pointCloud.stream(), null);
    }
 
-   private <T> PlanarRegionSegmentationRawData(int regionId, Vector3f normal, Point3f origin, Stream<T> streamToConvert, List<LineSegment2d> intersections)
+   private <T> PlanarRegionSegmentationRawData(int regionId, Vector3D32 normal, Point3D32 origin, Stream<T> streamToConvert, List<LineSegment2D> intersections)
    {
-      this(regionId, new Vector3d(normal), new Point3d(origin), streamToConvert, intersections);
+      this(regionId, new Vector3D(normal), new Point3D(origin), streamToConvert, intersections);
    }
 
-   private <T> PlanarRegionSegmentationRawData(int regionId, Vector3d normal, Point3d origin, Stream<T> streamToConvert, List<LineSegment2d> intersections)
+   private <T> PlanarRegionSegmentationRawData(int regionId, Vector3D normal, Point3D origin, Stream<T> streamToConvert, List<LineSegment2D> intersections)
    {
       this.regionId = regionId;
-      this.normal = new Vector3d(normal);
-      this.origin = new Point3d(origin);
+      this.normal = new Vector3D(normal);
+      this.origin = new Point3D(origin);
       this.pointCloud = toListOfPoint3d(streamToConvert);
       orientation = PolygonizerTools.getQuaternionFromZUpToVector(normal);
       if (intersections == null)
          this.intersections = new ArrayList<>();
       else
-         this.intersections = intersections.stream().map(LineSegment2d::new).collect(Collectors.toList());
+         this.intersections = intersections.stream().map(LineSegment2D::new).collect(Collectors.toList());
    }
 
-   private static <T> List<Point3d> toListOfPoint3d(Stream<T> inputStream)
+   private static <T> List<Point3D> toListOfPoint3d(Stream<T> inputStream)
    {
       if (inputStream == null)
          return Collections.emptyList();
@@ -84,16 +83,16 @@ public class PlanarRegionSegmentationRawData
          return inputStream.map(PlanarRegionSegmentationRawData::convertToPoint3d).collect(Collectors.toList());
    }
 
-   private static <T> Point3d convertToPoint3d(T input)
+   private static <T> Point3D convertToPoint3d(T input)
    {
-      if (input instanceof Point3d)
-         return new Point3d((Point3d) input);
+      if (input instanceof Point3D)
+         return new Point3D((Point3D) input);
       
-      if (input instanceof Point3f)
-         return new Point3d((Point3f) input);
+      if (input instanceof Point3D32)
+         return new Point3D((Point3D32) input);
 
       if (input instanceof NormalOcTreeNode)
-         return new Point3d(((NormalOcTreeNode) input).getHitLocationCopy());
+         return new Point3D(((NormalOcTreeNode) input).getHitLocationCopy());
 
       throw new RuntimeException("Unhandled type: " + input.getClass().getSimpleName());
    }
@@ -108,49 +107,49 @@ public class PlanarRegionSegmentationRawData
       return pointCloud.size();
    }
 
-   public List<Point2d> getPointCloudInPlane()
+   public List<Point2D> getPointCloudInPlane()
    {
       return pointCloud.stream()
                        .map(this::toPointInPlane)
                        .collect(Collectors.toList());
    }
 
-   private Point2d toPointInPlane(Point3d point3d)
+   private Point2D toPointInPlane(Point3D point3d)
    {
       return PolygonizerTools.toPointInPlane(point3d, origin, orientation);
    }
 
-   public List<Point3d> getPointCloudInWorld()
+   public List<Point3D> getPointCloudInWorld()
    {
       return pointCloud;
    }
 
-   public void getPoint(int index, Point3d pointToPack)
+   public void getPoint(int index, Point3D pointToPack)
    {
       pointToPack.set(pointCloud.get(index));
    }
 
-   public Point3d getOrigin()
+   public Point3D getOrigin()
    {
       return origin;
    }
 
-   public Vector3d getNormal()
+   public Vector3D getNormal()
    {
       return normal;
    }
 
-   public Quat4d getOrientation()
+   public Quaternion getOrientation()
    {
       return orientation;
    }
 
-   public Stream<Point3d> stream()
+   public Stream<Point3D> stream()
    {
       return pointCloud.stream();
    }
 
-   public Stream<Point3d> parallelStream()
+   public Stream<Point3D> parallelStream()
    {
       return pointCloud.parallelStream();
    }
@@ -165,17 +164,17 @@ public class PlanarRegionSegmentationRawData
       return intersections != null;
    }
 
-   public void addIntersections(List<LineSegment2d> intersectionsToAdd)
+   public void addIntersections(List<LineSegment2D> intersectionsToAdd)
    {
       intersectionsToAdd.forEach(this::addIntersection);
    }
 
-   public void addIntersection(LineSegment2d intersectionToAdd)
+   public void addIntersection(LineSegment2D intersectionToAdd)
    {
       intersections.add(intersectionToAdd);
    }
 
-   public List<LineSegment2d> getIntersections()
+   public List<LineSegment2D> getIntersections()
    {
       return intersections;
    }

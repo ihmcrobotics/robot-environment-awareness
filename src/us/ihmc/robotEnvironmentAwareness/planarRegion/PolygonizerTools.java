@@ -3,69 +3,69 @@ package us.ihmc.robotEnvironmentAwareness.planarRegion;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.Quat4d;
-import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
-
-import us.ihmc.robotics.geometry.GeometryTools;
-import us.ihmc.robotics.geometry.LineSegment2d;
-import us.ihmc.robotics.geometry.LineSegment3d;
+import us.ihmc.euclid.geometry.LineSegment2D;
+import us.ihmc.euclid.geometry.LineSegment3D;
+import us.ihmc.euclid.geometry.tools.EuclidGeometryTools;
+import us.ihmc.euclid.tuple2D.Point2D;
+import us.ihmc.euclid.tuple2D.interfaces.Point2DReadOnly;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple3D.Vector3D;
+import us.ihmc.euclid.tuple3D.Vector3D32;
+import us.ihmc.euclid.tuple4D.Quaternion;
 
 public class PolygonizerTools
 {
-   public static List<Point2d> toPointsInPlane(List<Point3d> pointsToTransform, Point3d planeOrigin, Vector3d planeNormal)
+   public static List<Point2D> toPointsInPlane(List<Point3D> pointsToTransform, Point3D planeOrigin, Vector3D planeNormal)
    {
       return toPointsInPlane(pointsToTransform, planeOrigin, getQuaternionFromZUpToVector(planeNormal));
    }
 
-   public static List<Point2d> toPointsInPlane(List<Point3d> pointsToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   public static List<Point2D> toPointsInPlane(List<Point3D> pointsToTransform, Point3D planeOrigin, Quaternion planeOrientation)
    {
       return pointsToTransform.stream().map(point -> toPointInPlane(point, planeOrigin, planeOrientation)).collect(Collectors.toList());
    }
 
-   public static Point2d toPointInPlane(Point3d pointToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   public static Point2D toPointInPlane(Point3D pointToTransform, Point3D planeOrigin, Quaternion planeOrientation)
    {
       return toPointInPlane(pointToTransform.getX(), pointToTransform.getY(), pointToTransform.getZ(), planeOrigin, planeOrientation);
    }
 
-   public static Point2d toPointInPlane(Point3f pointToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   public static Point2D toPointInPlane(Point3D32 pointToTransform, Point3D planeOrigin, Quaternion planeOrientation)
    {
       return toPointInPlane(pointToTransform.getX(), pointToTransform.getY(), pointToTransform.getZ(), planeOrigin, planeOrientation);
    }
 
-   public static List<LineSegment2d> toLineSegmentsInPlane(List<LineSegment3d> lineSegmentsToTransform, Point3d planeOrigin, Vector3d planeNormal)
+   public static List<LineSegment2D> toLineSegmentsInPlane(List<LineSegment3D> lineSegmentsToTransform, Point3D planeOrigin, Vector3D planeNormal)
    {
       return lineSegmentsToTransform.stream().map(lineSegment -> toLineSegmentInPlane(lineSegment, planeOrigin, planeNormal)).collect(Collectors.toList());
    }
 
-   public static List<LineSegment2d> toLineSegmentsInPlane(List<LineSegment3d> lineSegmentsToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   public static List<LineSegment2D> toLineSegmentsInPlane(List<LineSegment3D> lineSegmentsToTransform, Point3D planeOrigin, Quaternion planeOrientation)
    {
       return lineSegmentsToTransform.stream().map(lineSegment -> toLineSegmentInPlane(lineSegment, planeOrigin, planeOrientation)).collect(Collectors.toList());
    }
 
-   public static LineSegment2d toLineSegmentInPlane(LineSegment3d lineSegmentToTransform, Point3d planeOrigin, Vector3d planeNormal)
+   public static LineSegment2D toLineSegmentInPlane(LineSegment3D lineSegmentToTransform, Point3D planeOrigin, Vector3D planeNormal)
    {
       return toLineSegmentInPlane(lineSegmentToTransform, planeOrigin, getQuaternionFromZUpToVector(planeNormal));
    }
 
-   public static LineSegment2d toLineSegmentInPlane(LineSegment3d lineSegmentToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   public static LineSegment2D toLineSegmentInPlane(LineSegment3D lineSegmentToTransform, Point3D planeOrigin, Quaternion planeOrientation)
    {
-      Point2d lineSemgentStart = toPointInPlane(lineSegmentToTransform.getFirstEndpoint(), planeOrigin, planeOrientation);
-      Point2d lineSemgentEnd = toPointInPlane(lineSegmentToTransform.getSecondEndpoint(), planeOrigin, planeOrientation);
-      return new LineSegment2d(lineSemgentStart, lineSemgentEnd);
+      Point2D lineSemgentStart = toPointInPlane(lineSegmentToTransform.getFirstEndpoint(), planeOrigin, planeOrientation);
+      Point2D lineSemgentEnd = toPointInPlane(lineSegmentToTransform.getSecondEndpoint(), planeOrigin, planeOrientation);
+      return new LineSegment2D(lineSemgentStart, lineSemgentEnd);
    }
 
-   public static Point2d toPointInPlane(double xToTransform, double yToTransform, double zToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   public static Point2D toPointInPlane(double xToTransform, double yToTransform, double zToTransform, Point3D planeOrigin, Quaternion planeOrientation)
    {
-      Point2d pointInPlane = new Point2d();
+      Point2D pointInPlane = new Point2D();
 
       double qx = -planeOrientation.getX();
       double qy = -planeOrientation.getY();
       double qz = -planeOrientation.getZ();
-      double qs = planeOrientation.getW();
+      double qs = planeOrientation.getS();
 
       // t = 2.0 * cross(q.xyz, v);
       // v' = v + q.s * t + cross(q.xyz, t);
@@ -86,51 +86,51 @@ public class PolygonizerTools
       return pointInPlane;
    }
 
-   public static List<Point3d> toPointsInWorld(List<Point2d> pointsInPlane, Point3d planeOrigin, Vector3d planeNormal)
+   public static List<Point3D> toPointsInWorld(List<Point2D> pointsInPlane, Point3D planeOrigin, Vector3D planeNormal)
    {
       return toPointsInWorld(pointsInPlane, planeOrigin, getQuaternionFromZUpToVector(planeNormal));
    }
 
-   public static List<Point3d> toPointsInWorld(List<Point2d> pointsInPlane, Point3d planeOrigin, Quat4d planeOrientation)
+   public static List<Point3D> toPointsInWorld(List<Point2D> pointsInPlane, Point3D planeOrigin, Quaternion planeOrientation)
    {
       return pointsInPlane.stream().map(point -> toPointInWorld(point, planeOrigin, planeOrientation)).collect(Collectors.toList());
    }
 
-   public static Point3d toPointInWorld(Point2d pointInPlane, Point3d planeOrigin, Quat4d planeOrientation)
+   public static Point3D toPointInWorld(Point2DReadOnly point2dReadOnly, Point3D planeOrigin, Quaternion planeOrientation)
    {
-      return toPointInWorld(pointInPlane.getX(), pointInPlane.getY(), planeOrigin, planeOrientation);
+      return toPointInWorld(point2dReadOnly.getX(), point2dReadOnly.getY(), planeOrigin, planeOrientation);
    }
 
-   public static List<LineSegment3d> toLineSegmentsInWorld(List<LineSegment2d> lineSegmentsToTransform, Point3d planeOrigin, Vector3d planeNormal)
+   public static List<LineSegment3D> toLineSegmentsInWorld(List<LineSegment2D> lineSegmentsToTransform, Point3D planeOrigin, Vector3D planeNormal)
    {
       return lineSegmentsToTransform.stream().map(lineSegment -> toLineSegmentInWorld(lineSegment, planeOrigin, planeNormal)).collect(Collectors.toList());
    }
 
-   public static List<LineSegment3d> toLineSegmentsInWorld(List<LineSegment2d> lineSegmentsToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   public static List<LineSegment3D> toLineSegmentsInWorld(List<LineSegment2D> lineSegmentsToTransform, Point3D planeOrigin, Quaternion planeOrientation)
    {
       return lineSegmentsToTransform.stream().map(lineSegment -> toLineSegmentInWorld(lineSegment, planeOrigin, planeOrientation)).collect(Collectors.toList());
    }
 
-   public static LineSegment3d toLineSegmentInWorld(LineSegment2d lineSegmentToTransform, Point3d planeOrigin, Vector3d planeNormal)
+   public static LineSegment3D toLineSegmentInWorld(LineSegment2D lineSegmentToTransform, Point3D planeOrigin, Vector3D planeNormal)
    {
       return toLineSegmentInWorld(lineSegmentToTransform, planeOrigin, getQuaternionFromZUpToVector(planeNormal));
    }
 
-   public static LineSegment3d toLineSegmentInWorld(LineSegment2d lineSegmentToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   public static LineSegment3D toLineSegmentInWorld(LineSegment2D lineSegmentToTransform, Point3D planeOrigin, Quaternion planeOrientation)
    {
-      Point3d lineSemgentStart = toPointInWorld(lineSegmentToTransform.getFirstEndpoint(), planeOrigin, planeOrientation);
-      Point3d lineSemgentEnd = toPointInWorld(lineSegmentToTransform.getSecondEndpoint(), planeOrigin, planeOrientation);
-      return new LineSegment3d(lineSemgentStart, lineSemgentEnd);
+      Point3D lineSemgentStart = toPointInWorld(lineSegmentToTransform.getFirstEndpoint(), planeOrigin, planeOrientation);
+      Point3D lineSemgentEnd = toPointInWorld(lineSegmentToTransform.getSecondEndpoint(), planeOrigin, planeOrientation);
+      return new LineSegment3D(lineSemgentStart, lineSemgentEnd);
    }
 
-   public static Point3d toPointInWorld(double xToTransform, double yToTransform, Point3d planeOrigin, Quat4d planeOrientation)
+   public static Point3D toPointInWorld(double xToTransform, double yToTransform, Point3D planeOrigin, Quaternion planeOrientation)
    {
-      Point3d pointInWorld = new Point3d();
+      Point3D pointInWorld = new Point3D();
 
       double qx = planeOrientation.getX();
       double qy = planeOrientation.getY();
       double qz = planeOrientation.getZ();
-      double qs = planeOrientation.getW();
+      double qs = planeOrientation.getS();
 
       // t = 2.0 * cross(q.xyz, v);
       // v' = v + q.s * t + cross(q.xyz, t);
@@ -154,19 +154,19 @@ public class PolygonizerTools
       return pointInWorld;
    }
 
-   public static Quat4d getQuaternionFromZUpToVector(Vector3f normal)
+   public static Quaternion getRotationBasedOnNormal(Vector3D32 normal)
    {
-      return getQuaternionFromZUpToVector(new Vector3d(normal));
+      return getQuaternionFromZUpToVector(new Vector3D(normal));
    }
 
-   public static Quat4d getQuaternionFromZUpToVector(Vector3d normal)
+   public static Quaternion getQuaternionFromZUpToVector(Vector3D normal)
    {
-      Quat4d orientation = new Quat4d();
-      orientation.set(GeometryTools.getAxisAngleFromZUpToVector(normal));
+      Quaternion orientation = new Quaternion();
+      orientation.set(EuclidGeometryTools.axisAngleFromZUpToVector3D(normal));
       return orientation;
    }
 
-   public static double computeEllipsoidVolume(Vector3d radii)
+   public static double computeEllipsoidVolume(Vector3D radii)
    {
       return computeEllipsoidVolume(radii.getX(), radii.getY(), radii.getZ());
    }

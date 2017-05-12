@@ -2,24 +2,23 @@ package us.ihmc.robotEnvironmentAwareness.ui.graphicsBuilders;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.vecmath.Point3f;
-
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Material;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Mesh;
 import javafx.util.Pair;
+import us.ihmc.euclid.tuple3D.Point3D32;
 import us.ihmc.javaFXToolkit.shapes.JavaFXMeshBuilder;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3DMessage;
 
 public class PlanarRegionsIntersectionsMeshBuilder implements Runnable
 {
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> clear;
 
-   private final AtomicReference<LineSegment3dMessage[]> intersectionsMessage;
+   private final AtomicReference<LineSegment3DMessage[]> intersectionsMessage;
 
    private final JavaFXMeshBuilder meshBuilder = new JavaFXMeshBuilder();
    private final Material material = new PhongMaterial(Color.BLACK);
@@ -39,7 +38,7 @@ public class PlanarRegionsIntersectionsMeshBuilder implements Runnable
    @Override
    public void run()
    {
-      LineSegment3dMessage[] newMessage = intersectionsMessage.getAndSet(null);
+      LineSegment3DMessage[] newMessage = intersectionsMessage.getAndSet(null);
 
       if (clear.getAndSet(false))
       {
@@ -55,10 +54,10 @@ public class PlanarRegionsIntersectionsMeshBuilder implements Runnable
       if (newMessage == null)
          return;
 
-      for (LineSegment3dMessage intersection : newMessage)
+      for (LineSegment3DMessage intersection : newMessage)
       {
-         Point3f start = intersection.getStart();
-         Point3f end = intersection.getEnd();
+         Point3D32 start = intersection.getStart();
+         Point3D32 end = intersection.getEnd();
          float lineWidth = 0.025f;
          meshBuilder.addLine(start, end, lineWidth);
       }

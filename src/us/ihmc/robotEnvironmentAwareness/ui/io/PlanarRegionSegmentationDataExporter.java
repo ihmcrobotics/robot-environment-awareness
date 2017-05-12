@@ -6,17 +6,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.vecmath.Point3f;
-import javax.vecmath.Vector3f;
-
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple3D.Vector3D32;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.converters.REAPlanarRegionsConverter;
@@ -103,8 +100,8 @@ public class PlanarRegionSegmentationDataExporter
 
       for (PlanarRegionSegmentationMessage message : segmentationData)
       {
-         Point3f origin = message.getOrigin();
-         Vector3f normal = message.getNormal();
+         Point3D32 origin = message.getOrigin();
+         Vector3D32 normal = message.getNormal();
          fileWriter.write("regionId: ");
          fileWriter.write(Integer.toString(message.getRegionId()));
          fileWriter.write(", origin: ");
@@ -124,7 +121,7 @@ public class PlanarRegionSegmentationDataExporter
          File regionFile = new File(folderPath.toFile(), "region" + message.getRegionId());
          FileWriter fileWriter = new FileWriter(regionFile);
 
-         for (Point3f hitLocation : message.getHitLocations())
+         for (Point3D32 hitLocation : message.getHitLocations())
          {
             fileWriter.write(hitLocation.getX() + ", " + hitLocation.getY() + ", " + hitLocation.getZ() + "\n");
          }
@@ -135,8 +132,7 @@ public class PlanarRegionSegmentationDataExporter
 
    private static String getDate()
    {
-      DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss_");
-      Date time = Calendar.getInstance().getTime();
-      return dateFormat.format(time);
+      DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_");
+      return LocalDateTime.now().format(dateTimeFormatter);
    }
 }

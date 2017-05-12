@@ -13,8 +13,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import javax.vecmath.Point2d;
-
 import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -31,11 +29,12 @@ import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeSubdivision;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeTriangle;
 import com.vividsolutions.jts.triangulate.quadedge.Vertex;
 
-import us.ihmc.robotics.geometry.GeometryTools;
-import us.ihmc.robotics.geometry.LineSegment2d;
+import us.ihmc.commons.Conversions;
+import us.ihmc.commons.Epsilons;
+import us.ihmc.euclid.geometry.LineSegment2D;
+import us.ihmc.euclid.geometry.tools.EuclidGeometryTools;
+import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.robotics.lists.ListWrappingIndexTools;
-import us.ihmc.robotics.math.Epsilons;
-import us.ihmc.robotics.time.TimeTools;
 
 /**
  * Computes the concave hull of a 2D point cloud based on the paper
@@ -57,12 +56,12 @@ public abstract class SimpleConcaveHullFactory
    private static final boolean VERBOSE = false;
    private static final boolean REPORT_TIME = false;
 
-   public static ConcaveHullCollection createConcaveHullCollection(List<Point2d> pointCloud2d, ConcaveHullFactoryParameters parameters)
+   public static ConcaveHullCollection createConcaveHullCollection(List<Point2D> pointCloud2d, ConcaveHullFactoryParameters parameters)
    {
       return createConcaveHullCollection(pointCloud2d, null, parameters);
    }
 
-   public static ConcaveHullCollection createConcaveHullCollection(List<Point2d> pointCloud2d, List<LineSegment2d> lineConstraints, ConcaveHullFactoryParameters parameters)
+   public static ConcaveHullCollection createConcaveHullCollection(List<Point2D> pointCloud2d, List<LineSegment2D> lineConstraints, ConcaveHullFactoryParameters parameters)
    {
       if (pointCloud2d.size() <= 3)
          return new ConcaveHullCollection(pointCloud2d);
@@ -70,12 +69,12 @@ public abstract class SimpleConcaveHullFactory
       return createConcaveHull(pointCloud2d, lineConstraints, parameters).getConcaveHullCollection();
    }
 
-   public static ConcaveHullFactoryResult createConcaveHull(List<Point2d> pointCloud2d, ConcaveHullFactoryParameters parameters)
+   public static ConcaveHullFactoryResult createConcaveHull(List<Point2D> pointCloud2d, ConcaveHullFactoryParameters parameters)
    {
       return createConcaveHull(pointCloud2d, null, parameters);
    }
 
-   public static ConcaveHullFactoryResult createConcaveHull(List<Point2d> pointCloud2d, List<LineSegment2d> lineConstraints, ConcaveHullFactoryParameters parameters)
+   public static ConcaveHullFactoryResult createConcaveHull(List<Point2D> pointCloud2d, List<LineSegment2D> lineConstraints, ConcaveHullFactoryParameters parameters)
    {
       if (pointCloud2d.size() <= 3)
          return null;
@@ -100,11 +99,11 @@ public abstract class SimpleConcaveHullFactory
       return result;
    }
 
-   public static MultiPoint filterAndCreateMultiPoint(List<Point2d> pointCloud2d, List<LineSegment2d> lineConstraints, double tolerance)
+   public static MultiPoint filterAndCreateMultiPoint(List<Point2D> pointCloud2d, List<LineSegment2D> lineConstraints, double tolerance)
    {
-      List<Point2d> filteredPointCloud2d = new ArrayList<>();
+      List<Point2D> filteredPointCloud2d = new ArrayList<>();
 
-      for (Point2d point : pointCloud2d)
+      for (Point2D point : pointCloud2d)
       {
          if (!isTooCloseToConstraintSegments(point, lineConstraints, tolerance))
             filteredPointCloud2d.add(point);
@@ -112,9 +111,9 @@ public abstract class SimpleConcaveHullFactory
       return createMultiPoint(filteredPointCloud2d);
    }
 
-   public static boolean isTooCloseToConstraintSegments(Point2d point, List<LineSegment2d> lineConstraints, double tolerance)
+   public static boolean isTooCloseToConstraintSegments(Point2D point, List<LineSegment2D> lineConstraints, double tolerance)
    {
-      for (LineSegment2d lineConstraint : lineConstraints)
+      for (LineSegment2D lineConstraint : lineConstraints)
       {
          if (lineConstraint.distance(point) < tolerance)
             return true;
@@ -122,20 +121,20 @@ public abstract class SimpleConcaveHullFactory
       return false;
    }
 
-   public static MultiPoint createMultiPoint(List<Point2d> pointCloud2d)
+   public static MultiPoint createMultiPoint(List<Point2D> pointCloud2d)
    {
       Coordinate[] coordinates = new Coordinate[pointCloud2d.size()];
 
       for (int i = 0; i < pointCloud2d.size(); i++)
       {
-         Point2d point2d = pointCloud2d.get(i);
+         Point2D point2d = pointCloud2d.get(i);
          coordinates[i] = new Coordinate(point2d.getX(), point2d.getY());
       }
 
       return new GeometryFactory().createMultiPoint(coordinates);
    }
 
-   public static MultiLineString createMultiLineString(List<LineSegment2d> lineSegments)
+   public static MultiLineString createMultiLineString(List<LineSegment2D> lineSegments)
    {
       if (lineSegments == null)
          return null;
@@ -195,7 +194,7 @@ public abstract class SimpleConcaveHullFactory
       return geometryFactory.createMultiLineString(lineStrings.toArray(new LineString[lineStrings.size()]));
    }
 
-   public static LineString createLineString(LineSegment2d lineSegment)
+   public static LineString createLineString(LineSegment2D lineSegment)
    {
       Coordinate lineSegmentStart = new Coordinate(lineSegment.getFirstEndpointX(), lineSegment.getFirstEndpointY());
       Coordinate lineSegmentEnd = new Coordinate(lineSegment.getSecondEndpointX(), lineSegment.getSecondEndpointY());
@@ -206,9 +205,9 @@ public abstract class SimpleConcaveHullFactory
 
    private static ConcaveHull computeConcaveHull(List<QuadEdge> orderedBorderEdges)
    {
-      List<Point2d> orderedConcaveHullVertices = orderedBorderEdges.stream()
+      List<Point2D> orderedConcaveHullVertices = orderedBorderEdges.stream()
                                                                    .map(QuadEdge::orig)
-                                                                   .map(vertex -> new Point2d(vertex.getX(), vertex.getY()))
+                                                                   .map(vertex -> new Point2D(vertex.getX(), vertex.getY()))
                                                                    .collect(Collectors.toList());
       return new ConcaveHull(orderedConcaveHullVertices);
    }
@@ -244,7 +243,7 @@ public abstract class SimpleConcaveHullFactory
 
       if (REPORT_TIME)
       {
-         System.out.println("Triangulation took: " + TimeTools.nanoSecondstoSeconds(stopWatch.getNanoTime()) + " sec.");
+         System.out.println("Triangulation took: " + Conversions.nanosecondsToSeconds(stopWatch.getNanoTime()) + " sec.");
       }
 
       return computeIntermediateVariables(allTriangles, constraintSegments);
@@ -372,23 +371,23 @@ public abstract class SimpleConcaveHullFactory
 
    private static boolean isEdgeCollinearWithLineSegment(QuadEdge query, Coordinate lineSegmentStart, Coordinate lineSegmentEnd)
    {
-      Point2d firstPointOnLine1 = toPoint2d(query.orig());
-      Point2d secondPointOnLine1 = toPoint2d(query.dest());
-      Point2d firstPointOnLine2 = toPoint2d(lineSegmentStart);
-      Point2d secondPointOnLine2 = toPoint2d(lineSegmentEnd);
+      Point2D firstPointOnLine1 = toPoint2d(query.orig());
+      Point2D secondPointOnLine1 = toPoint2d(query.dest());
+      Point2D firstPointOnLine2 = toPoint2d(lineSegmentStart);
+      Point2D secondPointOnLine2 = toPoint2d(lineSegmentEnd);
       double angleEpsilon = Epsilons.ONE_MILLIONTH;
       double distanceEpsilon = Epsilons.ONE_TRILLIONTH;
-      return GeometryTools.areLinesCollinear(firstPointOnLine1, secondPointOnLine1, firstPointOnLine2, secondPointOnLine2, angleEpsilon, distanceEpsilon);
+      return EuclidGeometryTools.areLine2DsCollinear(firstPointOnLine1, secondPointOnLine1, firstPointOnLine2, secondPointOnLine2, angleEpsilon, distanceEpsilon);
    }
 
-   private static Point2d toPoint2d(Vertex vertex)
+   private static Point2D toPoint2d(Vertex vertex)
    {
-      return new Point2d(vertex.getX(), vertex.getY());
+      return new Point2D(vertex.getX(), vertex.getY());
    }
 
-   private static Point2d toPoint2d(Coordinate coordinate)
+   private static Point2D toPoint2d(Coordinate coordinate)
    {
-      return new Point2d(coordinate.x, coordinate.y);
+      return new Point2D(coordinate.x, coordinate.y);
    }
 
    /**

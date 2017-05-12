@@ -2,13 +2,6 @@ package us.ihmc.robotEnvironmentAwareness.communication;
 
 import java.util.ArrayList;
 
-import javax.vecmath.Point2f;
-import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
-import javax.vecmath.Quat4d;
-import javax.vecmath.Quat4f;
-import javax.vecmath.Vector3f;
-
 import us.ihmc.communication.net.NetClassList;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.communication.packets.Packet;
@@ -18,11 +11,17 @@ import us.ihmc.communication.packets.PlanarRegionsListMessage;
 import us.ihmc.communication.packets.RequestLidarScanMessage;
 import us.ihmc.communication.packets.RequestPlanarRegionsListMessage;
 import us.ihmc.communication.packets.RequestPlanarRegionsListMessage.RequestType;
+import us.ihmc.euclid.tuple2D.Point2D32;
+import us.ihmc.euclid.tuple3D.Point3D;
+import us.ihmc.euclid.tuple3D.Point3D32;
+import us.ihmc.euclid.tuple3D.Vector3D32;
+import us.ihmc.euclid.tuple4D.Quaternion;
+import us.ihmc.euclid.tuple4D.Quaternion32;
 import us.ihmc.jOctoMap.normalEstimation.NormalEstimationParameters;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.APIElementId;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.BoundingBoxParametersMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.BoxMessage;
-import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3dMessage;
+import us.ihmc.robotEnvironmentAwareness.communication.packets.LineSegment3DMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.NormalOcTreeNodeMessage;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.OcTreeKeyMessage;
@@ -48,16 +47,16 @@ public class REACommunicationKryoNetClassLists
       privateNetClassList.registerPacketField(float[].class);
       privateNetClassList.registerPacketField(int[].class);
       privateNetClassList.registerPacketField(ArrayList.class);
-      privateNetClassList.registerPacketField(Point3d.class);
-      privateNetClassList.registerPacketField(Point3f.class);
-      privateNetClassList.registerPacketField(Point2f.class);
-      privateNetClassList.registerPacketField(Vector3f.class);
-      privateNetClassList.registerPacketField(Quat4d.class);
-      privateNetClassList.registerPacketField(Quat4f.class);
-      privateNetClassList.registerPacketField(Point3f[].class);
-      privateNetClassList.registerPacketField(Point2f[].class);
-      privateNetClassList.registerPacketField(LineSegment3dMessage.class);
-      privateNetClassList.registerPacketField(LineSegment3dMessage[].class);
+      privateNetClassList.registerPacketField(Point3D.class);
+      privateNetClassList.registerPacketField(Point3D32.class);
+      privateNetClassList.registerPacketField(Point2D32.class);
+      privateNetClassList.registerPacketField(Vector3D32.class);
+      privateNetClassList.registerPacketField(Quaternion.class);
+      privateNetClassList.registerPacketField(Quaternion32.class);
+      privateNetClassList.registerPacketField(Point3D32[].class);
+      privateNetClassList.registerPacketField(Point2D32[].class);
+      privateNetClassList.registerPacketField(LineSegment3DMessage.class);
+      privateNetClassList.registerPacketField(LineSegment3DMessage[].class);
       privateNetClassList.registerPacketField(APIElementId.class);
       privateNetClassList.registerPacketField(LidarScanMessage.class);
       privateNetClassList.registerPacketField(BoxMessage.class);
@@ -91,11 +90,11 @@ public class REACommunicationKryoNetClassLists
 
       publicNetClassList.registerPacketField(float[].class);
       publicNetClassList.registerPacketField(ArrayList.class);
-      publicNetClassList.registerPacketField(Point3f.class);
-      publicNetClassList.registerPacketField(Point2f.class);
-      publicNetClassList.registerPacketField(Vector3f.class);
-      publicNetClassList.registerPacketField(Quat4f.class);
-      publicNetClassList.registerPacketField(Point2f[].class);
+      publicNetClassList.registerPacketField(Point3D32.class);
+      publicNetClassList.registerPacketField(Point2D32.class);
+      publicNetClassList.registerPacketField(Vector3D32.class);
+      publicNetClassList.registerPacketField(Quaternion32.class);
+      publicNetClassList.registerPacketField(Point2D32[].class);
       publicNetClassList.registerPacketField(RequestType.class);
 
       publicNetClassList.registerPacketField(PlanarRegionMessage.class);

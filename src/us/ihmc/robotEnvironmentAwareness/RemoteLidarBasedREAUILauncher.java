@@ -4,8 +4,8 @@ import java.util.Map;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
+import us.ihmc.commons.PrintTools;
 import us.ihmc.robotEnvironmentAwareness.ui.LIDARBasedEnvironmentAwarenessUI;
-import us.ihmc.tools.io.printing.PrintTools;
 
 public class RemoteLidarBasedREAUILauncher extends Application
 {

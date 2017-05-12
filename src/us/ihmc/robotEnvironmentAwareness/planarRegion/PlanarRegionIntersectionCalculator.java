@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
 
+import us.ihmc.euclid.geometry.LineSegment1D;
 import us.ihmc.euclid.geometry.LineSegment3D;
 import us.ihmc.euclid.tuple3D.Point3D;
 import us.ihmc.euclid.tuple3D.Vector3D;
 import us.ihmc.robotics.MathTools;
-import us.ihmc.robotics.geometry.LineSegment1D;
 
 public class PlanarRegionIntersectionCalculator
 {

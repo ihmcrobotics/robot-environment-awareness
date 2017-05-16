@@ -10,14 +10,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import us.ihmc.euclid.geometry.ConvexPolygon2D;
+import us.ihmc.euclid.geometry.Line2D;
+import us.ihmc.euclid.geometry.LineSegment2D;
 import us.ihmc.euclid.geometry.tools.EuclidGeometryTools;
 import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.euclid.tuple2D.Vector2D;
 import us.ihmc.euclid.tuple2D.interfaces.Point2DReadOnly;
 import us.ihmc.euclid.tuple2D.interfaces.Vector2DReadOnly;
-import us.ihmc.robotics.geometry.ConvexPolygon2d;
-import us.ihmc.robotics.geometry.Line2d;
-import us.ihmc.robotics.geometry.LineSegment2d;
 
 public class ConcaveHullTools
 {
@@ -49,8 +49,8 @@ public class ConcaveHullTools
 
    public static Point2D intersectionFromEndPoints(Point2D firstSegment0, Point2D firstSegment1, Point2D secondSegment0, Point2D secondSegment1)
    {
-      LineSegment2d first = new LineSegment2d(firstSegment0, firstSegment1);
-      LineSegment2d second = new LineSegment2d(secondSegment0, secondSegment1);
+      LineSegment2D first = new LineSegment2D(firstSegment0, firstSegment1);
+      LineSegment2D second = new LineSegment2D(secondSegment0, secondSegment1);
 
       Point2D ret = first.intersectionWith(second);
       if (ret == null)
@@ -61,8 +61,8 @@ public class ConcaveHullTools
 
    public static boolean areLineSegmentsIntersecting(Point2D firstSegment0, Point2D firstSegment1, Point2D secondSegment0, Point2D secondSegment1)
    {
-      LineSegment2d first = new LineSegment2d(firstSegment0, firstSegment1);
-      LineSegment2d second = new LineSegment2d(secondSegment0, secondSegment1);
+      LineSegment2D first = new LineSegment2D(firstSegment0, firstSegment1);
+      LineSegment2D second = new LineSegment2D(secondSegment0, secondSegment1);
       return first.intersectionWith(second) != null;
    }
 
@@ -338,7 +338,7 @@ public class ConcaveHullTools
 
    public static ConcaveHullPocket findFirstConcaveHullPocketInefficient(List<Point2D> concaveHullVertices)
    {
-      ConvexPolygon2d convexHull = new ConvexPolygon2d(concaveHullVertices);
+      ConvexPolygon2D convexHull = new ConvexPolygon2D(concaveHullVertices);
 
       // Find first common vertex between the two hulls. 
       int convexStartIndex = 0;
@@ -397,7 +397,7 @@ public class ConcaveHullTools
 
       Point2DReadOnly firstBridgeVertex = convexHull.getVertex(startBridgeConvexIndex);
       Point2DReadOnly secondBridgeVertex = convexHull.getNextVertex(startBridgeConvexIndex);
-      LineSegment2d bridgeSegment = new LineSegment2d(firstBridgeVertex, secondBridgeVertex);
+      LineSegment2D bridgeSegment = new LineSegment2D(firstBridgeVertex, secondBridgeVertex);
 
       int currentConcaveIndex = (startBridgeConcaveIndex + 1) % concaveHullVertices.size();
       Point2D currentConcaveVertex = concaveHullVertices.get(currentConcaveIndex);
@@ -511,7 +511,7 @@ public class ConcaveHullTools
       vertexIndex %= concaveHullVertices.size();
       Point2D vertex = concaveHullVertices.get(vertexIndex);
 
-      LineSegment2d edge = new LineSegment2d();
+      LineSegment2D edge = new LineSegment2D();
       Point2D candidateClosestPoint = new Point2D();
 
       // The loop skips the edges to which the given vertex belongs.
@@ -521,7 +521,7 @@ public class ConcaveHullTools
          Point2D edgeSecondVertex = getNext(candidateIndex, concaveHullVertices);
 
          edge.set(edgeFirstVertex, edgeSecondVertex);
-         edge.getClosestPointOnLineSegment(candidateClosestPoint, vertex);
+         edge.orthogonalProjection(candidateClosestPoint, vertex);
 
          double distanceSquared = candidateClosestPoint.distanceSquared(vertex);
 
@@ -557,8 +557,8 @@ public class ConcaveHullTools
       intersectionToPack.set(Double.NaN, Double.NaN);
 
       Vector2D rayOriginToCandidate = new Vector2D();
-      Line2d rayLine = new Line2d(rayOrigin, rayDirection);
-      LineSegment2d edge = new LineSegment2d();
+      Line2D rayLine = new Line2D(rayOrigin, rayDirection);
+      LineSegment2D edge = new LineSegment2D();
 
       for (int currentIndex = startSearchIndex; currentIndex != endSearchIndex; currentIndex = next(currentIndex, concaveHullVertices))
       {

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import us.ihmc.commons.PrintTools;
+import us.ihmc.euclid.geometry.ConvexPolygon2D;
 import us.ihmc.euclid.transform.RigidBodyTransform;
 import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHull;
@@ -14,7 +15,6 @@ import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullFactoryParameters;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHullPruningFilteringTools;
 import us.ihmc.robotEnvironmentAwareness.geometry.SimpleConcaveHullFactory;
 import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataExporter;
-import us.ihmc.robotics.geometry.ConvexPolygon2d;
 import us.ihmc.robotics.geometry.PlanarRegion;
 import us.ihmc.robotics.geometry.PlanarRegionsList;
 
@@ -67,7 +67,7 @@ public abstract class PlanarRegionPolygonizer
 
          // Decompose the concave hulls into convex polygons
          double depthThreshold = polygonizerParameters.getDepthThreshold();
-         List<ConvexPolygon2d> decomposedPolygons = new ArrayList<>();
+         List<ConvexPolygon2D> decomposedPolygons = new ArrayList<>();
          ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHullCollection, depthThreshold, decomposedPolygons);
 
          // Pack the data in PlanarRegion

@@ -24,6 +24,7 @@ import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.MultiLineString;
 import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.triangulate.ConformingDelaunayTriangulationBuilder;
+import com.vividsolutions.jts.triangulate.ConstraintEnforcementException;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdge;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeSubdivision;
 import com.vividsolutions.jts.triangulate.quadedge.QuadEdgeTriangle;
@@ -31,6 +32,7 @@ import com.vividsolutions.jts.triangulate.quadedge.Vertex;
 
 import us.ihmc.commons.Conversions;
 import us.ihmc.commons.Epsilons;
+import us.ihmc.commons.PrintTools;
 import us.ihmc.euclid.geometry.LineSegment2D;
 import us.ihmc.euclid.geometry.tools.EuclidGeometryTools;
 import us.ihmc.euclid.tuple2D.Point2D;
@@ -234,9 +236,20 @@ public abstract class SimpleConcaveHullFactory
       ConformingDelaunayTriangulationBuilder conformingDelaunayTriangulationBuilder = new ConformingDelaunayTriangulationBuilder();
       conformingDelaunayTriangulationBuilder.setTolerance(10.0e-3);
       conformingDelaunayTriangulationBuilder.setSites(sites);
-      if (constraintSegments != null)
-         conformingDelaunayTriangulationBuilder.setConstraints(constraintSegments);
-      QuadEdgeSubdivision subdivision = conformingDelaunayTriangulationBuilder.getSubdivision();
+      QuadEdgeSubdivision subdivision;
+      try
+      {
+         if (constraintSegments != null)
+            conformingDelaunayTriangulationBuilder.setConstraints(constraintSegments);
+         subdivision = conformingDelaunayTriangulationBuilder.getSubdivision();
+      }
+      catch (ConstraintEnforcementException e)
+      { // Adding the line segments as constraints failed, removing them.
+         if (VERBOSE)
+            PrintTools.warn(SimpleConcaveHullFactory.class, "Delaunay triangulation failed, removing line segment constraints.");
+         conformingDelaunayTriangulationBuilder.setConstraints(null);
+         subdivision = conformingDelaunayTriangulationBuilder.getSubdivision();
+      }
       // All the triangles resulting from the triangulation.
       List<QuadEdgeTriangle> allTriangles = concaveHullFactoryResult.allTriangles;
       allTriangles.addAll(QuadEdgeTriangle.createOn(subdivision));

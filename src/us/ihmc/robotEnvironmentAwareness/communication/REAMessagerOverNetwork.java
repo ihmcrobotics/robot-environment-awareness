@@ -134,7 +134,7 @@ public class REAMessagerOverNetwork implements REAMessager
    {
       inputVariablesMap.clear();
       packetCommunicator.closeConnection();
-      packetCommunicator.close();
+      packetCommunicator.disconnect();
    }
 
    @Override

@@ -3,7 +3,7 @@ package us.ihmc.robotEnvironmentAwareness.communication;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import us.ihmc.communication.net.NetStateListener;
+import us.ihmc.communication.net.ConnectionStateListener;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.API;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.Topic;
 
@@ -38,7 +38,7 @@ public interface REAMessager
 
    void notifyConnectionStateListeners();
 
-   void registerConnectionStateListener(NetStateListener listener);
+   void registerConnectionStateListener(ConnectionStateListener listener);
 
    API getMessagerAPI();
 }

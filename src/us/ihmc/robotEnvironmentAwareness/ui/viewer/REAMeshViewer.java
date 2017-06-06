@@ -13,7 +13,7 @@ import javafx.scene.paint.Material;
 import javafx.scene.shape.Mesh;
 import javafx.scene.shape.MeshView;
 import javafx.util.Pair;
-import us.ihmc.communication.net.NetStateListener;
+import us.ihmc.communication.net.ConnectionStateListener;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
@@ -84,7 +84,7 @@ public class REAMeshViewer
          }
       };
 
-      uiMessager.registerModuleConnectionStateListener(new NetStateListener()
+      uiMessager.registerModuleConnectionStateListener(new ConnectionStateListener()
       {
          @Override
          public void disconnected()

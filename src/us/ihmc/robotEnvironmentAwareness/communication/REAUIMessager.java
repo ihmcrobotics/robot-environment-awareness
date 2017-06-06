@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
-import us.ihmc.communication.net.NetStateListener;
+import us.ihmc.communication.net.ConnectionStateListener;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.Topic;
 import us.ihmc.robotEnvironmentAwareness.communication.MessageBidirectionalBinding.PropertyToMessageTypeConverter;
 
@@ -177,7 +177,7 @@ public class REAUIMessager
       return reaMessagerToModule.isMessagerOpen();
    }
 
-   public void registerModuleConnectionStateListener(NetStateListener listener)
+   public void registerModuleConnectionStateListener(ConnectionStateListener listener)
    {
       reaMessagerToModule.registerConnectionStateListener(listener);
    }

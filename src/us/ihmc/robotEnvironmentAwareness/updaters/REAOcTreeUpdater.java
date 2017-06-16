@@ -19,7 +19,7 @@ import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.BoundingBoxParametersMessage;
 import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
-import us.ihmc.robotics.geometry.transformables.Pose;
+import us.ihmc.robotics.geometry.transformables.Pose3D;
 
 public class REAOcTreeUpdater
 {
@@ -27,7 +27,7 @@ public class REAOcTreeUpdater
    private final NormalOcTree referenceOctree;
    private final REAOcTreeBuffer reaOcTreeBuffer;
 
-   private final AtomicReference<Pose> latestLidarPoseReference = new AtomicReference<>(null);
+   private final AtomicReference<Pose3D> latestLidarPoseReference = new AtomicReference<>(null);
 
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> enableNormalEstimation;
@@ -181,7 +181,7 @@ public class REAOcTreeUpdater
 
       if (latestLidarPoseReference.get() != null)
       {
-         Pose lidarPose = latestLidarPoseReference.get();
+         Pose3D lidarPose = latestLidarPoseReference.get();
          boundingBox.setOffset(lidarPose.getPosition());
          boundingBox.setYawFromQuaternion(new Quaternion(lidarPose.getOrientation()));
       }
@@ -192,6 +192,6 @@ public class REAOcTreeUpdater
 
    private void handlePacket(LidarScanMessage lidarScanMessage)
    {
-      latestLidarPoseReference.set(new Pose(lidarScanMessage.lidarPosition, lidarScanMessage.lidarOrientation));
+      latestLidarPoseReference.set(new Pose3D(lidarScanMessage.lidarPosition, lidarScanMessage.lidarOrientation));
    }
 }

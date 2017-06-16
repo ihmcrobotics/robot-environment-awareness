@@ -131,7 +131,7 @@ public class REAOcTreeUpdater
       if (latestLidarPoseReference.get() == null)
          return;
 
-      Point3DReadOnly sensorOrigin = latestLidarPoseReference.get().getPoint();
+      Point3DReadOnly sensorOrigin = latestLidarPoseReference.get().getPosition();
 
       boolean isBufferFull = reaOcTreeBuffer.isBufferFull();
       if (isBufferFull)
@@ -182,7 +182,7 @@ public class REAOcTreeUpdater
       if (latestLidarPoseReference.get() != null)
       {
          Pose lidarPose = latestLidarPoseReference.get();
-         boundingBox.setOffset(lidarPose.getPoint());
+         boundingBox.setOffset(lidarPose.getPosition());
          boundingBox.setYawFromQuaternion(new Quaternion(lidarPose.getOrientation()));
       }
 

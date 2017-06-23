@@ -22,11 +22,6 @@ import us.ihmc.jMonkeyEngineToolkit.GPULidarScanBuffer;
 import us.ihmc.jMonkeyEngineToolkit.Graphics3DAdapter;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
-import us.ihmc.robotics.dataStructures.listener.VariableChangedListener;
-import us.ihmc.robotics.dataStructures.registry.YoVariableRegistry;
-import us.ihmc.robotics.dataStructures.variable.BooleanYoVariable;
-import us.ihmc.robotics.dataStructures.variable.DoubleYoVariable;
-import us.ihmc.robotics.dataStructures.variable.YoVariable;
 import us.ihmc.robotics.geometry.FramePoint;
 import us.ihmc.robotics.lidar.LidarScan;
 import us.ihmc.robotics.lidar.LidarScanParameters;
@@ -36,6 +31,11 @@ import us.ihmc.robotics.robotController.RobotController;
 import us.ihmc.simulationconstructionset.FloatingJoint;
 import us.ihmc.simulationconstructionset.PinJoint;
 import us.ihmc.tools.thread.ThreadTools;
+import us.ihmc.yoVariables.listener.VariableChangedListener;
+import us.ihmc.yoVariables.registry.YoVariableRegistry;
+import us.ihmc.yoVariables.variable.YoBoolean;
+import us.ihmc.yoVariables.variable.YoDouble;
+import us.ihmc.yoVariables.variable.YoVariable;
 
 public class SimpleLidarRobotController implements RobotController
 {
@@ -43,9 +43,9 @@ public class SimpleLidarRobotController implements RobotController
 
    private final ScheduledExecutorService executorService = ExecutorServiceTools.newSingleThreadScheduledExecutor(ThreadTools.getNamedThreadFactory("Messaging"), ExceptionHandling.CATCH_AND_REPORT);
 
-   private final BooleanYoVariable spinLidar = new BooleanYoVariable("spinLidar", registry);
-   private final DoubleYoVariable desiredLidarVelocity = new DoubleYoVariable("desiredLidarVelocity", registry);
-   private final DoubleYoVariable lidarRange = new DoubleYoVariable("lidarRange", registry);
+   private final YoBoolean spinLidar = new YoBoolean("spinLidar", registry);
+   private final YoDouble desiredLidarVelocity = new YoDouble("desiredLidarVelocity", registry);
+   private final YoDouble lidarRange = new YoDouble("lidarRange", registry);
 
    private final PinJoint lidarJoint;
    private final double dt;

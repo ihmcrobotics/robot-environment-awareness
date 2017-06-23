@@ -6,7 +6,7 @@ import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Window;
-import us.ihmc.communication.net.NetStateListener;
+import us.ihmc.communication.net.ConnectionStateListener;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.tools.thread.ThreadTools;
@@ -21,7 +21,7 @@ public class UIConnectionHandler
    {
       this.mainWindow = mainWindow;
       this.uiMessager = uiMessager;
-      uiMessager.registerModuleConnectionStateListener(new NetStateListener()
+      uiMessager.registerModuleConnectionStateListener(new ConnectionStateListener()
       {
          @Override
          public void disconnected()

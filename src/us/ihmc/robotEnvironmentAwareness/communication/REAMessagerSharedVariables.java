@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.commons.PrintTools;
-import us.ihmc.communication.net.NetStateListener;
+import us.ihmc.communication.net.ConnectionStateListener;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.API;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.Topic;
 
@@ -19,7 +19,7 @@ public class REAMessagerSharedVariables implements REAMessager
    private final AtomicBoolean isConnected = new AtomicBoolean(false);
    private final ConcurrentHashMap<Topic<?>, List<AtomicReference<Object>>> boundVariables = new ConcurrentHashMap<>();
    private final ConcurrentHashMap<Topic<?>, List<REATopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
-   private final List<NetStateListener> connectionStateListeners = new ArrayList<>();
+   private final List<ConnectionStateListener> connectionStateListeners = new ArrayList<>();
 
    public REAMessagerSharedVariables(API messagerAPI)
    {
@@ -82,14 +82,14 @@ public class REAMessagerSharedVariables implements REAMessager
    public void startMessager() throws IOException
    {
       isConnected.set(true);
-      connectionStateListeners.forEach(NetStateListener::connected);
+      connectionStateListeners.forEach(ConnectionStateListener::connected);
    }
 
    @Override
    public void closeMessager()
    {
       isConnected.set(false);
-      connectionStateListeners.forEach(NetStateListener::disconnected);
+      connectionStateListeners.forEach(ConnectionStateListener::disconnected);
       boundVariables.clear();
    }
 
@@ -100,7 +100,7 @@ public class REAMessagerSharedVariables implements REAMessager
    }
 
    @Override
-   public void registerConnectionStateListener(NetStateListener listener)
+   public void registerConnectionStateListener(ConnectionStateListener listener)
    {
       connectionStateListeners.add(listener);
    }
@@ -109,9 +109,9 @@ public class REAMessagerSharedVariables implements REAMessager
    public void notifyConnectionStateListeners()
    {
       if (isMessagerOpen())
-         connectionStateListeners.forEach(NetStateListener::connected);
+         connectionStateListeners.forEach(ConnectionStateListener::connected);
       else
-         connectionStateListeners.forEach(NetStateListener::disconnected);
+         connectionStateListeners.forEach(ConnectionStateListener::disconnected);
    }
 
    @Override

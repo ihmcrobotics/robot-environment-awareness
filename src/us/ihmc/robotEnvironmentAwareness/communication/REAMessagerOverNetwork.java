@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.commons.PrintTools;
 import us.ihmc.communication.net.NetClassList;
-import us.ihmc.communication.net.NetStateListener;
+import us.ihmc.communication.net.ConnectionStateListener;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.robotEnvironmentAwareness.communication.APIFactory.API;
@@ -22,7 +22,7 @@ public class REAMessagerOverNetwork implements REAMessager
 
    private final ConcurrentHashMap<Topic<?>, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
    private final ConcurrentHashMap<Topic<?>, List<REATopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
-   private final List<NetStateListener> connectionStateListeners = new ArrayList<>();
+   private final List<ConnectionStateListener> connectionStateListeners = new ArrayList<>();
 
    private final PacketCommunicator packetCommunicator;
 
@@ -134,7 +134,7 @@ public class REAMessagerOverNetwork implements REAMessager
    {
       inputVariablesMap.clear();
       packetCommunicator.closeConnection();
-      packetCommunicator.close();
+      packetCommunicator.disconnect();
    }
 
    @Override
@@ -144,7 +144,7 @@ public class REAMessagerOverNetwork implements REAMessager
    }
 
    @Override
-   public void registerConnectionStateListener(NetStateListener listener)
+   public void registerConnectionStateListener(ConnectionStateListener listener)
    {
       packetCommunicator.attachStateListener(listener);
       connectionStateListeners.add(listener);
@@ -154,9 +154,9 @@ public class REAMessagerOverNetwork implements REAMessager
    public void notifyConnectionStateListeners()
    {
       if (isMessagerOpen())
-         connectionStateListeners.forEach(NetStateListener::connected);
+         connectionStateListeners.forEach(ConnectionStateListener::connected);
       else
-         connectionStateListeners.forEach(NetStateListener::disconnected);
+         connectionStateListeners.forEach(ConnectionStateListener::disconnected);
    }
 
    @Override

@@ -26,7 +26,7 @@ apply plugin: "com.jfrog.artifactory"
 apply plugin: "us.ihmc.gradle.ihmc-build"
 
 sourceCompatibility = 1.8
-version = '0.4.5'
+version = '0.4.6'
 
 project.sourceSets {
     main {
@@ -161,10 +161,11 @@ publishing {
 // Set of dependencies to get published along with REA
 dependencies {
     compile group: 'com.vividsolutions', name: 'jts', version: '1.13'
-    compile group: 'us.ihmc', name: 'euclid-core', version: '0.4.3'
-    compile group: 'us.ihmc', name: 'euclid', version: '0.4.0'
-    compile group: 'us.ihmc', name: 'JOctoMap', version: '1.6.4'
-    compile group: 'us.ihmc', name: 'ihmc-commons', version: '0.9.1-alpha'
+    compile group: 'us.ihmc', name: 'euclid-core', version: '0.4.5'
+    compile group: 'us.ihmc', name: 'euclid', version: '0.5.0'
+    compile group: 'us.ihmc', name: 'JOctoMap', version: '1.6.5'
+    compile group: 'us.ihmc', name: 'ihmc-commons', version: '0.11.0-alpha'
+    compile group: 'us.ihmc', name: 'ihmc-yovariables', version: '0.1.0'
 }
 
 // Not doing afterEvaluate for now, as we want to keep part of the dependencies out of the publishing.

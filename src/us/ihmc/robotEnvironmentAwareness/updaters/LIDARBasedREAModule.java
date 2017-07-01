@@ -162,7 +162,7 @@ public class LIDARBasedREAModule
    {
       PrintTools.info("REA Module is going down.");
       publicPacketCommunicator.closeConnection();
-      publicPacketCommunicator.close();
+      publicPacketCommunicator.disconnect();
 
       reaMessager.closeMessager();
 

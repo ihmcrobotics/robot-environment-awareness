@@ -10,14 +10,14 @@ import us.ihmc.graphicsDescription.structure.Graphics3DNode;
 import us.ihmc.graphicsDescription.yoGraphics.YoGraphicsListRegistry;
 import us.ihmc.jMonkeyEngineToolkit.Graphics3DAdapter;
 import us.ihmc.robotEnvironmentAwareness.communication.REACommunicationKryoNetClassLists;
-import us.ihmc.robotics.dataStructures.listener.VariableChangedListener;
-import us.ihmc.robotics.dataStructures.variable.EnumYoVariable;
-import us.ihmc.robotics.dataStructures.variable.YoVariable;
 import us.ihmc.simulationConstructionSetTools.util.environments.DefaultCommonAvatarEnvironment;
 import us.ihmc.simulationConstructionSetTools.util.environments.FlatGroundEnvironment;
 import us.ihmc.simulationconstructionset.SimulationConstructionSet;
 import us.ihmc.simulationconstructionset.SimulationConstructionSetParameters;
 import us.ihmc.util.RealtimeTools;
+import us.ihmc.yoVariables.listener.VariableChangedListener;
+import us.ihmc.yoVariables.variable.YoEnum;
+import us.ihmc.yoVariables.variable.YoVariable;
 
 public class LidarFastSimulation
 {
@@ -58,7 +58,7 @@ public class LidarFastSimulation
 
    private void createGroundTypeListener(final SimulationConstructionSet scs)
    {
-      final EnumYoVariable<GroundType> groundType = new EnumYoVariable<>("GroundType", scs.getRootRegistry(), GroundType.class, false);
+      final YoEnum<GroundType> groundType = new YoEnum<>("GroundType", scs.getRootRegistry(), GroundType.class, false);
 
       final EnumMap<GroundType, Graphics3DObject> environmentsGraphics = new EnumMap<>(GroundType.class);
       environmentsGraphics.put(GroundType.OBSTACLE_COURSE, new DefaultCommonAvatarEnvironment().getTerrainObject3D().getLinkGraphics());

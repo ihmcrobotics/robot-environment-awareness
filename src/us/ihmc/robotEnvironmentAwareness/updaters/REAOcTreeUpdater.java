@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
+import us.ihmc.euclid.geometry.Pose3D;
 import us.ihmc.euclid.tuple3D.Point3D;
 import us.ihmc.euclid.tuple3D.interfaces.Point3DReadOnly;
 import us.ihmc.euclid.tuple4D.Quaternion;
@@ -19,7 +20,6 @@ import us.ihmc.robotEnvironmentAwareness.communication.REAMessager;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.packets.BoundingBoxParametersMessage;
 import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
-import us.ihmc.robotics.geometry.transformables.Pose;
 
 public class REAOcTreeUpdater
 {
@@ -27,7 +27,7 @@ public class REAOcTreeUpdater
    private final NormalOcTree referenceOctree;
    private final REAOcTreeBuffer reaOcTreeBuffer;
 
-   private final AtomicReference<Pose> latestLidarPoseReference = new AtomicReference<>(null);
+   private final AtomicReference<Pose3D> latestLidarPoseReference = new AtomicReference<>(null);
 
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> enableNormalEstimation;
@@ -131,7 +131,7 @@ public class REAOcTreeUpdater
       if (latestLidarPoseReference.get() == null)
          return;
 
-      Point3DReadOnly sensorOrigin = latestLidarPoseReference.get().getPoint();
+      Point3DReadOnly sensorOrigin = latestLidarPoseReference.get().getPosition();
 
       boolean isBufferFull = reaOcTreeBuffer.isBufferFull();
       if (isBufferFull)
@@ -181,8 +181,8 @@ public class REAOcTreeUpdater
 
       if (latestLidarPoseReference.get() != null)
       {
-         Pose lidarPose = latestLidarPoseReference.get();
-         boundingBox.setOffset(lidarPose.getPoint());
+         Pose3D lidarPose = latestLidarPoseReference.get();
+         boundingBox.setOffset(lidarPose.getPosition());
          boundingBox.setYawFromQuaternion(new Quaternion(lidarPose.getOrientation()));
       }
 
@@ -192,6 +192,6 @@ public class REAOcTreeUpdater
 
    private void handlePacket(LidarScanMessage lidarScanMessage)
    {
-      latestLidarPoseReference.set(new Pose(lidarScanMessage.lidarPosition, lidarScanMessage.lidarOrientation));
+      latestLidarPoseReference.set(new Pose3D(lidarScanMessage.lidarPosition, lidarScanMessage.lidarOrientation));
    }
 }

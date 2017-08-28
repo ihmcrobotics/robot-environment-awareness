@@ -253,7 +253,7 @@ public class PlanarRegionSegmentationCalculator
       while (!nodesToExplore.isEmpty())
       {
          NormalOcTreeNode currentNode = nodesToExplore.poll();
-         if (!ocTreeNodePlanarRegion.addNode(currentNode))
+         if (!ocTreeNodePlanarRegion.addNode(currentNode)) // TODO This updates the region normal based on the average of the nodes' normals, can very likely be improved.
             continue;
          allRegionNodes.add(currentNode);
          newSetToExplore.clear();

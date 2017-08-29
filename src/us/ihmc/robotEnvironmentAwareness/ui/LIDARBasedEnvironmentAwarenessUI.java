@@ -75,7 +75,7 @@ public class LIDARBasedEnvironmentAwarenessUI
       initializeControllers(uiMessager);
 
       View3DFactory view3dFactory = View3DFactory.createSubscene();
-      view3dFactory.addCameraController();
+      view3dFactory.addCameraController(true);
       view3dFactory.addWorldCoordinateSystem(0.3);
       mainPane.setCenter(view3dFactory.getSubSceneWrappedInsidePane());
 

@@ -17,11 +17,12 @@ public class PlanarRegionsIntersectionsMeshBuilder implements Runnable
 {
    private final AtomicReference<Boolean> enable;
    private final AtomicReference<Boolean> clear;
+   private final AtomicReference<Boolean> clearOcTree;
 
    private final AtomicReference<LineSegment3DMessage[]> intersectionsMessage;
 
    private final JavaFXMeshBuilder meshBuilder = new JavaFXMeshBuilder();
-   private final Material material = new PhongMaterial(Color.BLACK);
+   private final Material material = new PhongMaterial(Color.RED);
    private final REAUIMessager uiMessager;
 
    private final AtomicReference<Pair<Mesh, Material>> meshAndMaterialToRender = new AtomicReference<>(null);
@@ -31,6 +32,7 @@ public class PlanarRegionsIntersectionsMeshBuilder implements Runnable
       this.uiMessager = uiMessager;
       enable = uiMessager.createInput(REAModuleAPI.OcTreeEnable, false);
       clear = uiMessager.createInput(REAModuleAPI.OcTreeClear, false);
+      clearOcTree = uiMessager.createInput(REAModuleAPI.OcTreeClear, false);
 
       intersectionsMessage = uiMessager.createInput(REAModuleAPI.PlanarRegionsIntersectionState);
    }
@@ -40,7 +42,8 @@ public class PlanarRegionsIntersectionsMeshBuilder implements Runnable
    {
       LineSegment3DMessage[] newMessage = intersectionsMessage.getAndSet(null);
 
-      if (clear.getAndSet(false))
+      // Reset both clears by using only one pipe
+      if (clearOcTree.getAndSet(false) | clear.getAndSet(false))
       {
          meshAndMaterialToRender.set(new Pair<>(null, null));
          return;
@@ -54,11 +57,13 @@ public class PlanarRegionsIntersectionsMeshBuilder implements Runnable
       if (newMessage == null)
          return;
 
+      meshBuilder.clear();
+
       for (LineSegment3DMessage intersection : newMessage)
       {
          Point3D32 start = intersection.getStart();
          Point3D32 end = intersection.getEnd();
-         float lineWidth = 0.025f;
+         float lineWidth = 0.01f;
          meshBuilder.addLine(start, end, lineWidth);
       }
 

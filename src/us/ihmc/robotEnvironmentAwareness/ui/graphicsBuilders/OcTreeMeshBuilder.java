@@ -126,16 +126,13 @@ public class OcTreeMeshBuilder implements Runnable
 
    public void render()
    {
-      if (clear.getAndSet(false) || displayType.getValue() == DisplayType.HIDE)
+      if (clear.getAndSet(false))
       {
          children.clear();
          newSubOcTreeMeshViews.set(null);
          meshViewsBeingProcessed.clear();
          return;
       }
-
-      if (!enable.get())
-         return;
 
       Set<UIOcTreeNodeMeshView> newMeshViews = newSubOcTreeMeshViews.getAndSet(null);
 
@@ -168,6 +165,9 @@ public class OcTreeMeshBuilder implements Runnable
          PrintTools.warn("Rendering job is not done, waiting before creating new meshes.");
          return;
       }
+
+      if (displayType.getValue() == DisplayType.HIDE)
+         return;
 
       if (enable.get())
       {

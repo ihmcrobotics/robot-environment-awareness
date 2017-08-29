@@ -22,11 +22,11 @@ public class IntersectionEstimationParameters
 
    public void setDefaultParameters()
    {
-      maxDistanceToRegion = 0.05;
-      minRegionSize = 100;
+      maxDistanceToRegion = 0.10;
+      minRegionSize = 50;
       minIntersectionLength = 0.06;
       minRegionAngleDifference = Math.toRadians(15.0);
-      addIntersectionsToRegions = false;
+      addIntersectionsToRegions = true;
    }
 
    public void set(IntersectionEstimationParameters other)

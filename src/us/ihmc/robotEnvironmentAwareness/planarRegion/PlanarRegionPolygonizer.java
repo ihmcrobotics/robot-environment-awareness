@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import us.ihmc.commons.PrintTools;
 import us.ihmc.euclid.geometry.ConvexPolygon2D;
+import us.ihmc.euclid.geometry.LineSegment2D;
 import us.ihmc.euclid.transform.RigidBodyTransform;
 import us.ihmc.euclid.tuple2D.Point2D;
 import us.ihmc.robotEnvironmentAwareness.geometry.ConcaveHull;
@@ -21,21 +22,22 @@ import us.ihmc.robotics.geometry.PlanarRegionsList;
 public abstract class PlanarRegionPolygonizer
 {
    public static PlanarRegionsList createPlanarRegionsList(List<PlanarRegionSegmentationRawData> rawData,
-         ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters)
+                                                           ConcaveHullFactoryParameters concaveHullFactoryParameters,
+                                                           PolygonizerParameters polygonizerParameters)
    {
       return createPlanarRegionsList(rawData, concaveHullFactoryParameters, polygonizerParameters, null);
    }
 
    public static PlanarRegionsList createPlanarRegionsList(List<PlanarRegionSegmentationRawData> rawData,
-         ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters,
-         PlanarRegionSegmentationDataExporter dataExporter)
+                                                           ConcaveHullFactoryParameters concaveHullFactoryParameters,
+                                                           PolygonizerParameters polygonizerParameters, PlanarRegionSegmentationDataExporter dataExporter)
    {
       return new PlanarRegionsList(createPlanarRegions(rawData, concaveHullFactoryParameters, polygonizerParameters, dataExporter));
    }
 
    private static List<PlanarRegion> createPlanarRegions(List<PlanarRegionSegmentationRawData> rawData,
-         ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters,
-         PlanarRegionSegmentationDataExporter dataExporter)
+                                                         ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters,
+                                                         PlanarRegionSegmentationDataExporter dataExporter)
    {
       return rawData.parallelStream()
                     .filter(data -> data.size() >= polygonizerParameters.getMinNumberOfNodes())
@@ -44,15 +46,16 @@ public abstract class PlanarRegionPolygonizer
                     .collect(Collectors.toList());
    }
 
-   private static PlanarRegion createPlanarRegion(PlanarRegionSegmentationRawData rawData,
-         ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters,
-         PlanarRegionSegmentationDataExporter dataExporter)
+   private static PlanarRegion createPlanarRegion(PlanarRegionSegmentationRawData rawData, ConcaveHullFactoryParameters concaveHullFactoryParameters,
+                                                  PolygonizerParameters polygonizerParameters, PlanarRegionSegmentationDataExporter dataExporter)
    {
       try
       {
          // First compute the set of concave hulls for this region
-         ConcaveHullCollection concaveHullCollection = SimpleConcaveHullFactory.createConcaveHullCollection(rawData.getPointCloudInPlane(),
-               concaveHullFactoryParameters);
+         List<Point2D> pointCloudInPlane = rawData.getPointCloudInPlane();
+         List<LineSegment2D> intersections = rawData.getIntersections();
+         ConcaveHullCollection concaveHullCollection = SimpleConcaveHullFactory.createConcaveHullCollection(pointCloudInPlane, intersections,
+                                                                                                            concaveHullFactoryParameters);
 
          // Apply some simple filtering to reduce the number of vertices and hopefully the number of convex polygons.
          double shallowAngleThreshold = polygonizerParameters.getShallowAngleThreshold();

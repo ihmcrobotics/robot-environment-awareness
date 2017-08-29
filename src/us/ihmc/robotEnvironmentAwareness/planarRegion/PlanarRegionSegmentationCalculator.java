@@ -83,7 +83,7 @@ public class PlanarRegionSegmentationCalculator
    public List<PlanarRegionSegmentationRawData> getSegmentationRawData()
    {
       return regionsNodeData.stream()
-                            .map(region -> new PlanarRegionSegmentationRawData(region))
+                            .map(PlanarRegionSegmentationRawData::new)
                             .collect(Collectors.toList());
    }
 

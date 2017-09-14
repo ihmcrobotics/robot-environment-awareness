@@ -12,7 +12,7 @@ apply plugin: "us.ihmc.ihmc-build"
 
 ihmc {
    group = "us.ihmc"
-   version = "0.4.7-build-config-test"
+   version = "0.4.7"
    vcsUrl = "https://stash.ihmc.us/users/sbertrand/repos/robotenvironmentawareness"
    description "Robot Environment Awareness is a library meant to provide interpretation to point cloud data such as identifying planar regions that can be used to planify footsteps for a bipedal robot."
    openSource = false

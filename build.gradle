@@ -21,6 +21,10 @@ ihmc {
    configurePublications()
 }
 
+testSuites {
+   bambooPlanKeys = ["LIBS-ROBOTENVIRONMENTAWARENESS"]
+}
+
 mainDependencies {
    compile group: 'com.vividsolutions', name: 'jts', version: '1.13'
    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'

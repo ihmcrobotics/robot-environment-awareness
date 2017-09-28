@@ -97,7 +97,7 @@ public class PolygonizerVisualizer extends Application
 
    private static final int[] onlyRegionWithId = {};
 
-   private File defaultFile = null;// new File("Data/20161210_185643_PlanarRegionSegmentation_Atlas_CB");
+   private File defaultFile = null;// new File("../../Data/20161210_185643_PlanarRegionSegmentation_Atlas_CB");
 
    private final Random random = new Random(54645L);
    private final ConcaveHullFactoryParameters parameters = new ConcaveHullFactoryParameters();

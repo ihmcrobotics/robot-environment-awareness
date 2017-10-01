@@ -48,7 +48,7 @@ public class DelaunayTriangulationVisualizer extends Application
    {
       primaryStage.setTitle(getClass().getSimpleName());
 
-//    PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("Data/20161210_184102_PlanarRegionSegmentation_Sim_CB"));
+//    PlanarRegionSegmentationDataImporter dataImporter = new PlanarRegionSegmentationDataImporter(new File("../../Data/20161210_184102_PlanarRegionSegmentation_Sim_CB"));
       PlanarRegionSegmentationRawDataImporter dataImporter = PlanarRegionSegmentationRawDataImporter.createImporterWithFileChooser(primaryStage);
       if (dataImporter == null)
          Platform.exit();

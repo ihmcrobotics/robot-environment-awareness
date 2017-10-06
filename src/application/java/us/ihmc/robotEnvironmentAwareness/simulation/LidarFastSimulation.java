@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Random;
 
+import us.ihmc.communication.PacketRouter;
+import us.ihmc.communication.net.NetClassList;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
+import us.ihmc.communication.packets.PacketDestination;
 import us.ihmc.communication.util.NetworkPorts;
 import us.ihmc.euclid.axisAngle.AxisAngle;
 import us.ihmc.euclid.transform.RigidBodyTransform;
@@ -36,9 +39,20 @@ public class LidarFastSimulation
    public static final int POINT_CLOUD_PUBLISHING_PERIOD_MILLSECONDS = 100;
    public static final double DEFAULT_SPIN_VELOCITY = 0.3;
    public static final boolean VISUALIZE_GPU_LIDAR = false;
-   private static final GroundType DEFAULT_GROUND = GroundType.BLOCK;
+   private static final GroundType DEFAULT_GROUND = GroundType.OBSTACLE_COURSE;
+
+   private final PacketRouter<PacketDestination> packetRouter = new PacketRouter<>(PacketDestination.class);
+   private final PacketCommunicator reaPacketCommunicator;
 
    public LidarFastSimulation() throws IOException
+   {
+      reaPacketCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.REA_MODULE_PORT,
+                                                                                   REACommunicationKryoNetClassLists.getPublicNetClassList());
+      reaPacketCommunicator.connect();
+      packetRouter.attachPacketCommunicator(PacketDestination.REA_MODULE, reaPacketCommunicator);
+   }
+
+   public void startSimulation()
    {
       SimpleLidarRobot robot = new SimpleLidarRobot();
       SimulationConstructionSetParameters parameters = new SimulationConstructionSetParameters(true, RealtimeTools.nextPowerOfTwo(200000));
@@ -50,10 +64,9 @@ public class LidarFastSimulation
 
       Graphics3DAdapter graphics3dAdapter = scs.getGraphics3dAdapter();
       YoGraphicsListRegistry yoGraphicsListRegistry = new YoGraphicsListRegistry();
-      PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(NetworkPorts.REA_MODULE_PORT, REACommunicationKryoNetClassLists.getPublicNetClassList());
-      packetCommunicator.connect();
 
-      SimpleLidarRobotController controller = new SimpleLidarRobotController(robot, controlDT, packetCommunicator, graphics3dAdapter, yoGraphicsListRegistry);
+      SimpleLidarRobotController controller = new SimpleLidarRobotController(robot, controlDT, reaPacketCommunicator, graphics3dAdapter,
+                                                                             yoGraphicsListRegistry);
       robot.setController(controller, (int) (controlDT / simDT));
       scs.addYoGraphicsListRegistry(yoGraphicsListRegistry);
 
@@ -62,6 +75,13 @@ public class LidarFastSimulation
       scs.setGroundVisible(false);
       scs.startOnAThread();
       scs.simulate();
+   }
+
+   public void registerServer(PacketDestination destination, NetworkPorts networkPort, NetClassList netClassList) throws IOException
+   {
+      PacketCommunicator packetCommunicator = PacketCommunicator.createTCPPacketCommunicatorServer(networkPort, netClassList);
+      packetCommunicator.connect();
+      packetRouter.attachPacketCommunicator(destination, packetCommunicator);
    }
 
    private void createGroundTypeListener(final SimulationConstructionSet scs)
@@ -101,7 +121,7 @@ public class LidarFastSimulation
       AxisAngle axisAngle = new AxisAngle(0.0, 0.0, 1.0, Math.PI / 4.0);
       RigidBodyTransform configuration = new RigidBodyTransform(axisAngle, new Vector3D(0.65, 0.0, 0.5));
       blocksTerrain.addRotatableBox(configuration, 0.5, 0.5, 0.5, YoAppearance.DarkGray());
-      
+
       Vector3D offset = new Vector3D(0.0, -0.5, 0.25);
       axisAngle.transform(offset);
       RigidBodyTransform configuration2 = new RigidBodyTransform(configuration);
@@ -139,7 +159,7 @@ public class LidarFastSimulation
             blocksTerrain.addBox(x - lx / 2.0, y - ly / 2.0, x + lx / 2.0, y + ly / 2.0, height, YoAppearance.DarkGrey());
          }
       }
-      
+
       return blocksTerrain.getLinkGraphics();
    }
 
@@ -161,12 +181,13 @@ public class LidarFastSimulation
             blocksTerrain.addBox(x - lx / 2.0, y - ly / 2.0, x + lx / 2.0, y + ly / 2.0, zOffset, height + zOffset, YoAppearance.DarkGrey());
          }
       }
-      
+
       return blocksTerrain.getLinkGraphics();
    }
 
    public static void main(String[] args) throws IOException
    {
-      new LidarFastSimulation();
+      LidarFastSimulation lidarFastSimulation = new LidarFastSimulation();
+      lidarFastSimulation.startSimulation();
    }
 }

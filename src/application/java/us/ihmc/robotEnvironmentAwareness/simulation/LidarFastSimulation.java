@@ -83,7 +83,7 @@ public class LidarFastSimulation
          private Graphics3DNode groundGraphicsNode = null;
 
          @Override
-         public void variableChanged(YoVariable<?> v)
+         public void notifyOfVariableChange(YoVariable<?> v)
          {
             if (groundGraphicsNode != null)
                scs.removeGraphics3dNode(groundGraphicsNode);
@@ -91,7 +91,7 @@ public class LidarFastSimulation
          }
       };
       groundType.addVariableChangedListener(listener);
-      listener.variableChanged(null);
+      listener.notifyOfVariableChange(null);
    }
 
    private Graphics3DObject createBlock()

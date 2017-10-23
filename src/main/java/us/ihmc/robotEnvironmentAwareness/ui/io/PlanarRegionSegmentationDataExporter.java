@@ -33,8 +33,8 @@ public class PlanarRegionSegmentationDataExporter
    public PlanarRegionSegmentationDataExporter(REAUIMessager uiMessager)
    {
       planarRegionSegmentationState = uiMessager.createInput(REAModuleAPI.PlanarRegionsSegmentationState);
-      dataDirectoryPath = uiMessager.createInput(REAModuleAPI.UIDataExporterDirectory, new File("Data/").getAbsolutePath());
-      uiMessager.registerTopicListener(REAModuleAPI.UIPlanarRegionExportSegmentation, this::exportSegmentationData);
+      dataDirectoryPath = uiMessager.createInput(REAModuleAPI.UISegmentationDataExporterDirectory, new File("Data/").getAbsolutePath());
+      uiMessager.registerTopicListener(REAModuleAPI.UISegmentationDataExportRequest, this::exportSegmentationData);
    }
    
    public PlanarRegionSegmentationDataExporter(File dataDirectoryPath)

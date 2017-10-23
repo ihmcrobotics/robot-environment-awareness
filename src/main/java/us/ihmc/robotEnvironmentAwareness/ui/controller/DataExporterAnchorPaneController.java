@@ -38,13 +38,13 @@ public class DataExporterAnchorPaneController extends REABasicUIController
    private void browseOutputFolder()
    {
       String newPath = directoryChooser.showDialog(ownerWindow).getAbsolutePath();
-      uiMessager.submitMessageInternal(REAModuleAPI.UIDataExporterDirectory, newPath);
+      uiMessager.submitMessageInternal(REAModuleAPI.UISegmentationDataExporterDirectory, newPath);
       Platform.runLater(() -> currentDataFolderTextField.setText(newPath));
    }
 
    @FXML
    private void exportSegmentation()
    {
-      uiMessager.submitMessageInternal(REAModuleAPI.UIPlanarRegionExportSegmentation, true);
+      uiMessager.submitMessageInternal(REAModuleAPI.UISegmentationDataExportRequest, true);
    }
 }

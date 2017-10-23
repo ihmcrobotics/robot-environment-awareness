@@ -36,7 +36,7 @@ public class PlanarRegionSegmentationDataExporter
       dataDirectoryPath = uiMessager.createInput(REAModuleAPI.UISegmentationDataExporterDirectory, new File("Data/Segmentation/").getAbsolutePath());
       uiMessager.registerTopicListener(REAModuleAPI.UISegmentationDataExportRequest, this::exportSegmentationData);
    }
-   
+
    public PlanarRegionSegmentationDataExporter(File dataDirectoryPath)
    {
       planarRegionSegmentationState = new AtomicReference<>(null);
@@ -51,7 +51,7 @@ public class PlanarRegionSegmentationDataExporter
 
    public void exportSegmentationRawData(PlanarRegionSegmentationRawData rawData)
    {
-      planarRegionSegmentationState.set(new PlanarRegionSegmentationMessage[]{rawData.toMessage()});
+      planarRegionSegmentationState.set(new PlanarRegionSegmentationMessage[] {rawData.toMessage()});
       exportSegmentationData(true);
    }
 
@@ -64,7 +64,7 @@ public class PlanarRegionSegmentationDataExporter
    public void exportSegmentationData(PlanarRegionSegmentationNodeData nodeData)
    {
       PlanarRegionSegmentationMessage message = REAPlanarRegionsConverter.createPlanarRegionSegmentationMessage(nodeData);
-      planarRegionSegmentationState.set(new PlanarRegionSegmentationMessage[]{message});
+      planarRegionSegmentationState.set(new PlanarRegionSegmentationMessage[] {message});
       exportSegmentationData(true);
    }
 

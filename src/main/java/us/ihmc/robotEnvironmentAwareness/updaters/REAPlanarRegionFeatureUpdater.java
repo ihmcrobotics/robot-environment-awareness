@@ -28,7 +28,7 @@ public class REAPlanarRegionFeatureUpdater implements RegionFeaturesProvider
    private static final String segmentationTimeReport = "Segmentation took: ";
    private static final String intersectionsTimeReport = "Processing intersections took: ";
 
-   private final PlanarRegionSegmentationDataExporter dataExporter = EXPORT_SEGMENTATION_ON_EXCEPTION ? new PlanarRegionSegmentationDataExporter(new File("DataThrowingException/")) : null;
+   private final PlanarRegionSegmentationDataExporter dataExporter = EXPORT_SEGMENTATION_ON_EXCEPTION ? new PlanarRegionSegmentationDataExporter(new File("DataThrowingException/Segmentation")) : null;
 
    private final TimeReporter timeReporter = new TimeReporter(this);
    private final NormalOcTree octree;

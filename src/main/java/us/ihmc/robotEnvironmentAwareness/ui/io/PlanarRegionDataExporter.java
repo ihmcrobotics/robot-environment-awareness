@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
-import us.ihmc.commons.PrintTools;
 import us.ihmc.communication.packets.PlanarRegionMessage;
 import us.ihmc.communication.packets.PlanarRegionMessageConverter;
 import us.ihmc.communication.packets.PlanarRegionsListMessage;
@@ -37,7 +36,7 @@ public class PlanarRegionDataExporter
    public PlanarRegionDataExporter(REAUIMessager uiMessager)
    {
       planarRegionsState = uiMessager.createInput(REAModuleAPI.PlanarRegionsState);
-      dataDirectoryPath = uiMessager.createInput(REAModuleAPI.UIPlanarRegionDataExporterDirectory, new File("Data/PlanarRegions/").getAbsolutePath());
+      dataDirectoryPath = uiMessager.createInput(REAModuleAPI.UIPlanarRegionDataExporterDirectory, new File("Data/PlanarRegion/").getAbsolutePath());
       uiMessager.registerTopicListener(REAModuleAPI.UIPlanarRegionDataExportRequest, this::exportPlanarRegionData);
    }
 
@@ -106,16 +105,16 @@ public class PlanarRegionDataExporter
          for (int i = 0; i < concaveHulls.size(); i++)
             concaveHullsSizes[i] = concaveHulls.get(i).length;
 
-         fileWriter.write(concaveHulls.size() + " " + Arrays.toString(concaveHullsSizes));
+         fileWriter.write(concaveHulls.size() + ", " + Arrays.toString(concaveHullsSizes));
 
          fileWriter.write(", number of convex polygons: ");
 
-         List<Point2D32[]> convexPolygons = message.getConcaveHullsVertices();
+         List<Point2D32[]> convexPolygons = message.getConvexPolygonsVertices();
          int[] convexPolygonsSizes = new int[convexPolygons.size()];
          for (int i = 0; i < convexPolygons.size(); i++)
             convexPolygonsSizes[i] = convexPolygons.get(i).length;
 
-         fileWriter.write(convexPolygons.size() + " " + Arrays.toString(convexPolygonsSizes));
+         fileWriter.write(convexPolygons.size() + ", " + Arrays.toString(convexPolygonsSizes));
 
          fileWriter.write("\n");
       }
@@ -139,7 +138,7 @@ public class PlanarRegionDataExporter
             }
          }
 
-         List<Point2D32[]> convexPolygonsVertices = message.getConcaveHullsVertices();
+         List<Point2D32[]> convexPolygonsVertices = message.getConvexPolygonsVertices();
          for (Point2D32[] convexPolygonVertices : convexPolygonsVertices)
          {
             for (Point2D32 vertex : convexPolygonVertices)

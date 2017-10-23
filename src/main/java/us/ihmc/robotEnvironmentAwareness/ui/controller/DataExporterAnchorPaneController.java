@@ -7,14 +7,21 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
+import us.ihmc.commons.PrintTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 
 public class DataExporterAnchorPaneController extends REABasicUIController
 {
-   @FXML
-   private TextField currentDataFolderTextField;
+   private final File defaultSegmentationDataFile = new File("Data/Segmentation/");
+   private final File defaultPlanarRegionDataFile = new File("Data/PlanarRegion/");
 
-   private final DirectoryChooser directoryChooser = new DirectoryChooser();
+   @FXML
+   private TextField currentSegmentationDataFolderTextField;
+   @FXML
+   private TextField currentPlanarRegionDataFolderTextField;
+
+   private final DirectoryChooser segmentationDirectoryChooser = new DirectoryChooser();
+   private final DirectoryChooser planarRegionDirectoryChooser = new DirectoryChooser();
    private Window ownerWindow;
 
    public DataExporterAnchorPaneController()
@@ -29,22 +36,38 @@ public class DataExporterAnchorPaneController extends REABasicUIController
    @Override
    public void bindControls()
    {
-      File defaultDataFile = new File("Data");
-      directoryChooser.setInitialDirectory(defaultDataFile);
-      currentDataFolderTextField.setText(defaultDataFile.getAbsolutePath());
+      currentSegmentationDataFolderTextField.setText(defaultSegmentationDataFile.getAbsolutePath());
+      currentPlanarRegionDataFolderTextField.setText(defaultPlanarRegionDataFile.getAbsolutePath());
    }
 
    @FXML
-   private void browseOutputFolder()
+   private void browseSegmentationOutputFolder()
    {
-      String newPath = directoryChooser.showDialog(ownerWindow).getAbsolutePath();
+      segmentationDirectoryChooser.setInitialDirectory(defaultSegmentationDataFile);
+      String newPath = segmentationDirectoryChooser.showDialog(ownerWindow).getAbsolutePath();
       uiMessager.submitMessageInternal(REAModuleAPI.UISegmentationDataExporterDirectory, newPath);
-      Platform.runLater(() -> currentDataFolderTextField.setText(newPath));
+      Platform.runLater(() -> currentSegmentationDataFolderTextField.setText(newPath));
+   }
+
+   @FXML
+   private void browsePlanarRegionOutputFolder()
+   {
+      planarRegionDirectoryChooser.setInitialDirectory(defaultPlanarRegionDataFile);
+      String newPath = planarRegionDirectoryChooser.showDialog(ownerWindow).getAbsolutePath();
+      uiMessager.submitMessageInternal(REAModuleAPI.UIPlanarRegionDataExporterDirectory, newPath);
+      Platform.runLater(() -> currentPlanarRegionDataFolderTextField.setText(newPath));
    }
 
    @FXML
    private void exportSegmentation()
    {
       uiMessager.submitMessageInternal(REAModuleAPI.UISegmentationDataExportRequest, true);
+   }
+
+   @FXML
+   private void exportPlanarRegion()
+   {
+      PrintTools.info("Request exporting planar region data");
+      uiMessager.submitMessageInternal(REAModuleAPI.UIPlanarRegionDataExportRequest, true);
    }
 }

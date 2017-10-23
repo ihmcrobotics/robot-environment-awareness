@@ -7,7 +7,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
-import us.ihmc.commons.PrintTools;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 
 public class DataExporterAnchorPaneController extends REABasicUIController
@@ -67,7 +66,6 @@ public class DataExporterAnchorPaneController extends REABasicUIController
    @FXML
    private void exportPlanarRegion()
    {
-      PrintTools.info("Request exporting planar region data");
       uiMessager.submitMessageInternal(REAModuleAPI.UIPlanarRegionDataExportRequest, true);
    }
 }

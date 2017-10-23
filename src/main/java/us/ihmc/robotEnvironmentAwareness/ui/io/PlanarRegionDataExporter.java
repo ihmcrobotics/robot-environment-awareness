@@ -61,7 +61,6 @@ public class PlanarRegionDataExporter
 
    private void exportPlanarRegionData(boolean export)
    {
-      PrintTools.info("Processing request exporting planar region data");
       PlanarRegionsListMessage planarRegionData = planarRegionsState.get();
       if (planarRegionData != null)
          executor.execute(() -> executeOnThread(planarRegionData));

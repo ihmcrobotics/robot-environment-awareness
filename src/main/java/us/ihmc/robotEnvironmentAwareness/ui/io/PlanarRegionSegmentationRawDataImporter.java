@@ -24,7 +24,7 @@ public class PlanarRegionSegmentationRawDataImporter
    public static PlanarRegionSegmentationRawDataImporter createImporterWithFileChooser(Window ownerWindow)
    {
       DirectoryChooser directoryChooser = new DirectoryChooser();
-      directoryChooser.setInitialDirectory(new File("..\\..\\Data"));
+      directoryChooser.setInitialDirectory(new File("..\\..\\Data\\Segmentation"));
       File result = directoryChooser.showDialog(ownerWindow);
       if (result == null)
          return null;

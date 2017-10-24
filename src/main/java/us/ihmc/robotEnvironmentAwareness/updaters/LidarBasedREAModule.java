@@ -24,7 +24,7 @@ import us.ihmc.robotEnvironmentAwareness.io.FilePropertyHelper;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
 
-public class LIDARBasedREAModule
+public class LidarBasedREAModule
 {
    private static final String ocTreeTimeReport = "OcTree update took: ";
    private static final String reportOcTreeStateTimeReport = "Reporting OcTree state took: ";
@@ -56,7 +56,7 @@ public class LIDARBasedREAModule
    private ScheduledFuture<?> scheduled;
    private final REAMessager reaMessager;
 
-   private LIDARBasedREAModule(REAMessager reaMessager, File configurationFile) throws IOException
+   private LidarBasedREAModule(REAMessager reaMessager, File configurationFile) throws IOException
    {
       this.reaMessager = reaMessager;
 
@@ -134,7 +134,7 @@ public class LIDARBasedREAModule
          }
          else
          {
-            PrintTools.error(LIDARBasedREAModule.class, e.getClass().getSimpleName());
+            PrintTools.error(LidarBasedREAModule.class, e.getClass().getSimpleName());
          }
       }
 
@@ -179,17 +179,17 @@ public class LIDARBasedREAModule
       }
    }
 
-   public static LIDARBasedREAModule createRemoteModule(String configurationFilePath) throws IOException
+   public static LidarBasedREAModule createRemoteModule(String configurationFilePath) throws IOException
    {
       REAMessager server = REAMessagerOverNetwork.createTCPServer(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, REACommunicationKryoNetClassLists.getPrivateNetClassList());
       server.startMessager();
-      return new LIDARBasedREAModule(server, new File(configurationFilePath));
+      return new LidarBasedREAModule(server, new File(configurationFilePath));
    }
 
-   public static LIDARBasedREAModule createIntraprocessModule(String configurationFilePath) throws IOException
+   public static LidarBasedREAModule createIntraprocessModule(String configurationFilePath) throws IOException
    {
       REAMessager messager = REAMessagerOverNetwork.createIntraprocess(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, REACommunicationKryoNetClassLists.getPrivateNetClassList());
       messager.startMessager();
-      return new LIDARBasedREAModule(messager, new File(configurationFilePath));
+      return new LidarBasedREAModule(messager, new File(configurationFilePath));
    }
 }

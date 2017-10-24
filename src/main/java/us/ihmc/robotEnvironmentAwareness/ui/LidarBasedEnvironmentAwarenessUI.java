@@ -17,7 +17,7 @@ import us.ihmc.robotEnvironmentAwareness.communication.REAMessagerOverNetwork;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.DataExporterAnchorPaneController;
-import us.ihmc.robotEnvironmentAwareness.ui.controller.LIDARFilterAnchorPaneController;
+import us.ihmc.robotEnvironmentAwareness.ui.controller.LidarFilterAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.NormalEstimationAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.OcTreeBasicsAnchorPaneController;
 import us.ihmc.robotEnvironmentAwareness.ui.controller.PointCloudAnchorPaneController;
@@ -28,7 +28,7 @@ import us.ihmc.robotEnvironmentAwareness.ui.io.PlanarRegionSegmentationDataExpor
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.LidarFrameViewer;
 import us.ihmc.robotEnvironmentAwareness.ui.viewer.REAMeshViewer;
 
-public class LIDARBasedEnvironmentAwarenessUI
+public class LidarBasedEnvironmentAwarenessUI
 {
    private static final String UI_CONFIGURATION_FILE_NAME = "./Configurations/defaultREAUIConfiguration.txt";
 
@@ -43,7 +43,7 @@ public class LIDARBasedEnvironmentAwarenessUI
    @FXML
    private OcTreeBasicsAnchorPaneController ocTreeBasicsAnchorPaneController;
    @FXML
-   private LIDARFilterAnchorPaneController lidarFilterAnchorPaneController;
+   private LidarFilterAnchorPaneController lidarFilterAnchorPaneController;
    @FXML
    private NormalEstimationAnchorPaneController normalEstimationAnchorPaneController;
    @FXML
@@ -57,7 +57,7 @@ public class LIDARBasedEnvironmentAwarenessUI
 
    private final UIConnectionHandler uiConnectionHandler;
 
-   private LIDARBasedEnvironmentAwarenessUI(REAUIMessager uiMessager, Stage primaryStage) throws IOException
+   private LidarBasedEnvironmentAwarenessUI(REAUIMessager uiMessager, Stage primaryStage) throws IOException
    {
       this.primaryStage = primaryStage;
       FXMLLoader loader = new FXMLLoader();
@@ -163,17 +163,17 @@ public class LIDARBasedEnvironmentAwarenessUI
       }
    }
 
-   public static LIDARBasedEnvironmentAwarenessUI creatIntraprocessUI(Stage primaryStage) throws IOException
+   public static LidarBasedEnvironmentAwarenessUI createIntraprocessUI(Stage primaryStage) throws IOException
    {
       REAMessager moduleMessager = REAMessagerOverNetwork.createIntraprocess(REAModuleAPI.API, NetworkPorts.REA_MODULE_UI_PORT, REACommunicationKryoNetClassLists.getPrivateNetClassList());
       REAUIMessager uiMessager = new REAUIMessager(moduleMessager);
-      return new LIDARBasedEnvironmentAwarenessUI(uiMessager, primaryStage);
+      return new LidarBasedEnvironmentAwarenessUI(uiMessager, primaryStage);
    }
 
-   public static LIDARBasedEnvironmentAwarenessUI creatRemoteUI(Stage primaryStage, String host) throws IOException
+   public static LidarBasedEnvironmentAwarenessUI createRemoteUI(Stage primaryStage, String host) throws IOException
    {
       REAMessager moduleMessager = REAMessagerOverNetwork.createTCPClient(REAModuleAPI.API, host, NetworkPorts.REA_MODULE_UI_PORT, REACommunicationKryoNetClassLists.getPrivateNetClassList());
       REAUIMessager uiMessager = new REAUIMessager(moduleMessager);
-      return new LIDARBasedEnvironmentAwarenessUI(uiMessager, primaryStage);
+      return new LidarBasedEnvironmentAwarenessUI(uiMessager, primaryStage);
    }
 }

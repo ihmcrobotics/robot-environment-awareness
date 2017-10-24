@@ -9,7 +9,7 @@ import us.ihmc.robotEnvironmentAwareness.communication.MessageBidirectionalBindi
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.ui.properties.BoundingBoxParametersProperty;
 
-public class LIDARFilterAnchorPaneController extends REABasicUIController
+public class LidarFilterAnchorPaneController extends REABasicUIController
 {
    @FXML
    private ToggleButton enableBoundingBoxButton;
@@ -51,7 +51,7 @@ public class LIDARFilterAnchorPaneController extends REABasicUIController
       }
    };
 
-   public LIDARFilterAnchorPaneController()
+   public LidarFilterAnchorPaneController()
    {
    }
 

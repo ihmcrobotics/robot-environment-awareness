@@ -30,11 +30,11 @@
                   </AnchorPane>
                </content>
             </Tab>
-            <Tab text="LIDAR Filter">
+            <Tab text="Lidar Filter">
                <content>
                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <fx:include fx:id="lidarFilterAnchorPane" source="LIDARFilterAnchorPane.fxml" />
+                        <fx:include fx:id="lidarFilterAnchorPane" source="LidarFilterAnchorPane.fxml" />
                      </children>
                   </AnchorPane>
                </content>

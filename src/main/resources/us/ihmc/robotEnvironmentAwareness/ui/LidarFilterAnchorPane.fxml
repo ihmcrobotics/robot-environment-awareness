@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="192.0" prefWidth="577.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="us.ihmc.robotEnvironmentAwareness.ui.controller.LIDARFilterAnchorPaneController">
+<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="192.0" prefWidth="577.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="us.ihmc.robotEnvironmentAwareness.ui.controller.LidarFilterAnchorPaneController">
    <children>
       <HBox layoutX="14.0" layoutY="11.0" spacing="15.0">
          <children>

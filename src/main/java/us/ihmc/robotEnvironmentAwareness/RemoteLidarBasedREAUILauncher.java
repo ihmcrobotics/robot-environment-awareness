@@ -5,7 +5,7 @@ import java.util.Map;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import us.ihmc.commons.PrintTools;
-import us.ihmc.robotEnvironmentAwareness.ui.LIDARBasedEnvironmentAwarenessUI;
+import us.ihmc.robotEnvironmentAwareness.ui.LidarBasedEnvironmentAwarenessUI;
 
 public class RemoteLidarBasedREAUILauncher extends Application
 {
@@ -24,7 +24,7 @@ public class RemoteLidarBasedREAUILauncher extends Application
       if (!parameters.getRaw().isEmpty())
          PrintTools.info("Received the program arguments: " + parameters.getRaw());
 
-      LIDARBasedEnvironmentAwarenessUI remoteUI = LIDARBasedEnvironmentAwarenessUI.creatRemoteUI(primaryStage, host);
+      LidarBasedEnvironmentAwarenessUI remoteUI = LidarBasedEnvironmentAwarenessUI.createRemoteUI(primaryStage, host);
       remoteUI.show();
    }
 

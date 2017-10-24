@@ -1,6 +1,0 @@
-float64 concaveHullThreshold
-uint32 min_number_of_nodes
-float64 shallow_angle_threshold
-float64 peak_angle_threshold
-float64 length_threshold
-float64 depth_threshold

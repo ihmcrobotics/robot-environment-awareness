@@ -75,22 +75,20 @@ public class PlanarRegionDataImporterVisualizer extends Application
       RigidBodyTransform transform = new RigidBodyTransform();
       data.getTransformToWorld(transform);
 
-      for (Point2D[] concaveHullVerticesLocal : data.getConcaveHulls())
+      Point2D[] concaveHullVerticesLocal = data.getConcaveHull();
+      Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
+
+      List<Point3D> concaveHullVertices = Arrays.stream(concaveHullVerticesLocal).map(Point3D::new).map(p -> {
+         transform.transform(p);
+         return p;
+      }).collect(Collectors.toList());
+
+      for (int vertexIndex = 0; vertexIndex < concaveHullVertices.size(); vertexIndex++)
       {
-         Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
-
-         List<Point3D> concaveHullVertices = Arrays.stream(concaveHullVerticesLocal).map(Point3D::new).map(p -> {
-            transform.transform(p);
-            return p;
-         }).collect(Collectors.toList());
-
-         for (int vertexIndex = 0; vertexIndex < concaveHullVertices.size(); vertexIndex++)
-         {
-            Point3D vertex = concaveHullVertices.get(vertexIndex);
-            Point3D nextVertex = ListWrappingIndexTools.getNext(vertexIndex, concaveHullVertices);
-            Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), regionColor.getBrightness());
-            meshBuilder.addLine(vertex, nextVertex, 0.0015, lineColor);
-         }
+         Point3D vertex = concaveHullVertices.get(vertexIndex);
+         Point3D nextVertex = ListWrappingIndexTools.getNext(vertexIndex, concaveHullVertices);
+         Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), regionColor.getBrightness());
+         meshBuilder.addLine(vertex, nextVertex, 0.0015, lineColor);
       }
       MeshView meshView = new MeshView(meshBuilder.generateMesh());
       meshView.setMaterial(meshBuilder.generateMaterial());

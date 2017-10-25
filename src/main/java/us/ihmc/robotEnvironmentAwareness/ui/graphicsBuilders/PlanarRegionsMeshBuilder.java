@@ -85,9 +85,7 @@ public class PlanarRegionsMeshBuilder implements Runnable
          Color regionColor = getRegionColor(regionId);
          planarRegion.getTransformToWorld(transformToWorld);
 
-         for (int hullIndex = 0; hullIndex < planarRegion.getNumberOfConcaveHulls(); hullIndex++)
-            meshBuilder.addMultiLine(transformToWorld, planarRegion.getConcaveHull(hullIndex), lineWidth, regionColor, true);
-
+         meshBuilder.addMultiLine(transformToWorld, planarRegion.getConcaveHull(), lineWidth, regionColor, true);
 
          for (int polygonIndex = 0; polygonIndex < planarRegion.getNumberOfConvexPolygons(); polygonIndex++)
          {

@@ -39,15 +39,22 @@ public abstract class PlanarRegionPolygonizer
                                                          ConcaveHullFactoryParameters concaveHullFactoryParameters, PolygonizerParameters polygonizerParameters,
                                                          PlanarRegionSegmentationDataExporter dataExporter)
    {
-      return rawData.parallelStream()
-                    .filter(data -> data.size() >= polygonizerParameters.getMinNumberOfNodes())
-                    .map(data -> createPlanarRegion(data, concaveHullFactoryParameters, polygonizerParameters, dataExporter))
-                    .filter(region -> region != null)
-                    .collect(Collectors.toList());
+      List<List<PlanarRegion>> regions = rawData.parallelStream()
+                                                .filter(data -> data.size() >= polygonizerParameters.getMinNumberOfNodes())
+                                                .map(data -> createPlanarRegion(data, concaveHullFactoryParameters, polygonizerParameters, dataExporter))
+                                                .filter(region -> region != null)
+                                                .collect(Collectors.toList());
+
+      List<PlanarRegion> flattenedRegions = new ArrayList<>();
+      for (List<PlanarRegion> regionsSublist : regions)
+      {
+         regionsSublist.forEach(flattenedRegions::add);
+      }
+      return flattenedRegions;
    }
 
-   private static PlanarRegion createPlanarRegion(PlanarRegionSegmentationRawData rawData, ConcaveHullFactoryParameters concaveHullFactoryParameters,
-                                                  PolygonizerParameters polygonizerParameters, PlanarRegionSegmentationDataExporter dataExporter)
+   private static List<PlanarRegion> createPlanarRegion(PlanarRegionSegmentationRawData rawData, ConcaveHullFactoryParameters concaveHullFactoryParameters,
+                                                        PolygonizerParameters polygonizerParameters, PlanarRegionSegmentationDataExporter dataExporter)
    {
       try
       {
@@ -68,21 +75,26 @@ public abstract class PlanarRegionPolygonizer
             ConcaveHullPruningFilteringTools.filterOutShortEdges(lengthThreshold, concaveHullCollection);
          }
 
-         // Decompose the concave hulls into convex polygons
-         double depthThreshold = polygonizerParameters.getDepthThreshold();
-         List<ConvexPolygon2D> decomposedPolygons = new ArrayList<>();
-         ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHullCollection, depthThreshold, decomposedPolygons);
+         List<PlanarRegion> planarRegions = new ArrayList<>();
 
-         // Pack the data in PlanarRegion
-         RigidBodyTransform transformToWorld = rawData.getTransformFromLocalToWorld();
-         List<Point2D[]> concaveHullsVertices = new ArrayList<>();
          for (ConcaveHull concaveHull : concaveHullCollection)
-            concaveHullsVertices.add(concaveHull.getConcaveHullVertices().toArray(new Point2D[0]));
-         
-         PlanarRegion planarRegion = new PlanarRegion(transformToWorld, concaveHullsVertices, decomposedPolygons);
-         planarRegion.setRegionId(rawData.getRegionId());
+         {
+            // Decompose the concave hulls into convex polygons
+            double depthThreshold = polygonizerParameters.getDepthThreshold();
+            List<ConvexPolygon2D> decomposedPolygons = new ArrayList<>();
+            ConcaveHullDecomposition.recursiveApproximateDecomposition(concaveHull, depthThreshold, decomposedPolygons);
 
-         return planarRegion;
+            // Pack the data in PlanarRegion
+            RigidBodyTransform transformToWorld = rawData.getTransformFromLocalToWorld();
+            Point2D[] concaveHullsVertices = new Point2D[concaveHull.getNumberOfVertices()];
+            concaveHull.getConcaveHullVertices().toArray(concaveHullsVertices);
+
+            PlanarRegion planarRegion = new PlanarRegion(transformToWorld, concaveHullsVertices, decomposedPolygons);
+            planarRegion.setRegionId(rawData.getRegionId());
+            planarRegions.add(planarRegion);
+         }
+
+         return planarRegions;
       }
       catch (RuntimeException e)
       {

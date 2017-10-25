@@ -81,11 +81,7 @@ public class PlanarRegionDataImporter
          float zNormal = Float.parseFloat(values[i++]);
          data.regionNormal = new Vector3D32(xNormal, yNormal, zNormal);
 
-         int nConvaceHulls = Integer.parseInt(values[i++]);
-         data.concaveHullsVertices = new ArrayList<>();
-
-         for (int hullIndex = 0; hullIndex < nConvaceHulls; hullIndex++)
-            data.concaveHullsVertices.add(new Point2D32[Integer.parseInt(values[i++])]);
+         data.concaveHullVertices = new Point2D32[Integer.parseInt(values[i++])];
 
          int nConvexPolygons = Integer.parseInt(values[i++]);
          data.convexPolygonsVertices = new ArrayList<>();
@@ -127,22 +123,14 @@ public class PlanarRegionDataImporter
 
          bufferedReader.close();
 
-         int index = 0;
-         while (index < regionToLoad.concaveHullsVertices.size())
-         {
-            Point2D32[] currentArrayToFill = regionToLoad.concaveHullsVertices.get(index);
-            for (int i = 0; i < currentArrayToFill.length; i++)
-               currentArrayToFill[i] = loadedPoints.remove(0);
-            index++;
-         }
+         for (int i = 0; i < regionToLoad.concaveHullVertices.length; i++)
+            regionToLoad.concaveHullVertices[i] = loadedPoints.remove(0);
 
-         index = 0;
-         while (index < regionToLoad.convexPolygonsVertices.size())
+         for (int polygonIndex = 0; polygonIndex < regionToLoad.convexPolygonsVertices.size(); polygonIndex++)
          {
-            Point2D32[] currentArrayToFill = regionToLoad.convexPolygonsVertices.get(index);
+            Point2D32[] currentArrayToFill = regionToLoad.convexPolygonsVertices.get(polygonIndex);
             for (int i = 0; i < currentArrayToFill.length; i++)
                currentArrayToFill[i] = loadedPoints.remove(0);
-            index++;
          }
       }
       catch (IOException e)

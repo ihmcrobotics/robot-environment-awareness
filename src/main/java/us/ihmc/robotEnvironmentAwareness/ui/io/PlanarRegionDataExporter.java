@@ -98,14 +98,7 @@ public class PlanarRegionDataExporter
          fileWriter.write(origin.getX() + ", " + origin.getY() + ", " + origin.getZ());
          fileWriter.write(", normal: ");
          fileWriter.write(normal.getX() + ", " + normal.getY() + ", " + normal.getZ());
-         fileWriter.write(", number of concave hulls: ");
-
-         List<Point2D32[]> concaveHulls = message.getConcaveHullsVertices();
-         int[] concaveHullsSizes = new int[concaveHulls.size()];
-         for (int i = 0; i < concaveHulls.size(); i++)
-            concaveHullsSizes[i] = concaveHulls.get(i).length;
-
-         fileWriter.write(concaveHulls.size() + ", " + Arrays.toString(concaveHullsSizes));
+         fileWriter.write(", concave hull size: " + message.getConcaveHullSize());
 
          fileWriter.write(", number of convex polygons: ");
 
@@ -129,13 +122,10 @@ public class PlanarRegionDataExporter
          File regionFile = new File(folderPath.toFile(), "region" + message.getRegionId());
          FileWriter fileWriter = new FileWriter(regionFile);
 
-         List<Point2D32[]> concaveHullsVertices = message.getConcaveHullsVertices();
-         for (Point2D32[] concaveHullVertices : concaveHullsVertices)
+         Point2D32[] concaveHullVertices = message.getConcaveHullVertices();
+         for (Point2D32 vertex : concaveHullVertices)
          {
-            for (Point2D32 vertex : concaveHullVertices)
-            {
-               fileWriter.write(vertex.getX() + ", " + vertex.getY() + "\n");
-            }
+            fileWriter.write(vertex.getX() + ", " + vertex.getY() + "\n");
          }
 
          List<Point2D32[]> convexPolygonsVertices = message.getConvexPolygonsVertices();

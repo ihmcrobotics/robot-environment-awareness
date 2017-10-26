@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
@@ -44,12 +46,14 @@ public class PlanarRegionDataImporter
       planarRegionData.planarRegions = new ArrayList<>();
 
       File headerFile = new File(dataFolder, "header.txt");
-      loadHeader(headerFile);
-      loadAllRegions();
+      Map<PlanarRegionMessage, String> regionIdToFilename = loadHeader(headerFile);
+      loadAllRegions(regionIdToFilename);
    }
 
-   private void loadHeader(File headerFile) throws IOException
+   private Map<PlanarRegionMessage, String> loadHeader(File headerFile) throws IOException
    {
+      Map<PlanarRegionMessage, String> regionIdToFilename = new HashMap<>();
+
       FileReader fileReader = new FileReader(headerFile);
       BufferedReader bufferedReader = new BufferedReader(fileReader);
       String line = "";
@@ -58,6 +62,7 @@ public class PlanarRegionDataImporter
       while ((line = bufferedReader.readLine()) != null)
       {
          line = line.replaceAll("regionId: ", "");
+         line = line.replaceAll("index: ", "");
          line = line.replaceAll("origin: ", "");
          line = line.replaceAll("normal: ", "");
          line = line.replaceAll("\\[", "");
@@ -70,6 +75,8 @@ public class PlanarRegionDataImporter
          int i = 0;
          PlanarRegionMessage data = new PlanarRegionMessage();
          data.regionId = Integer.parseInt(values[i++]);
+         int regionIndex = Integer.parseInt(values[i++]);
+         regionIdToFilename.put(data, "region" + data.regionId + "_" + regionIndex);
 
          float xOrigin = Float.parseFloat(values[i++]);
          float yOrigin = Float.parseFloat(values[i++]);
@@ -93,18 +100,21 @@ public class PlanarRegionDataImporter
       }
 
       bufferedReader.close();
+
+      return regionIdToFilename;
    }
 
-   private void loadAllRegions()
+   private void loadAllRegions(Map<PlanarRegionMessage, String> regionIdToFilename)
    {
-      planarRegionData.planarRegions.parallelStream().forEach(this::loadRegion);
+      planarRegionData.planarRegions.parallelStream().forEach(region -> loadRegion(region, regionIdToFilename));
    }
 
-   private void loadRegion(PlanarRegionMessage regionToLoad)
+   private void loadRegion(PlanarRegionMessage regionToLoad, Map<PlanarRegionMessage, String> regionIdToFilename)
    {
       try
       {
-         File regionFile = new File(dataFolder, "region" + Integer.toString(regionToLoad.getRegionId()));
+         String fileName = regionIdToFilename.remove(regionToLoad);
+         File regionFile = new File(dataFolder, fileName);
          FileReader fileReader = new FileReader(regionFile);
          BufferedReader bufferedReader = new BufferedReader(fileReader);
 
@@ -124,7 +134,9 @@ public class PlanarRegionDataImporter
          bufferedReader.close();
 
          for (int i = 0; i < regionToLoad.concaveHullVertices.length; i++)
+         {
             regionToLoad.concaveHullVertices[i] = loadedPoints.remove(0);
+         }
 
          for (int polygonIndex = 0; polygonIndex < regionToLoad.convexPolygonsVertices.size(); polygonIndex++)
          {

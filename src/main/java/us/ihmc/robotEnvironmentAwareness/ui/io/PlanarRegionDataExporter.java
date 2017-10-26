@@ -9,9 +9,13 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.apache.commons.lang3.mutable.MutableInt;
 
 import us.ihmc.communication.packets.PlanarRegionMessage;
 import us.ihmc.communication.packets.PlanarRegionMessageConverter;
@@ -88,12 +92,20 @@ public class PlanarRegionDataExporter
    {
       FileWriter fileWriter = new FileWriter(header);
 
+      Map<Integer, MutableInt> regionIdToIndex = new HashMap<>();
+
       for (PlanarRegionMessage message : planarRegionData.getPlanarRegions())
       {
          Point3D32 origin = message.getRegionOrigin();
          Vector3D32 normal = message.getRegionNormal();
          fileWriter.write("regionId: ");
-         fileWriter.write(Integer.toString(message.getRegionId()));
+         int regionId = message.getRegionId();
+         MutableInt regiondIndex = regionIdToIndex.getOrDefault(regionId, new MutableInt(0));
+         regionIdToIndex.put(regionId, regiondIndex);
+         regiondIndex.increment();
+         fileWriter.write(Integer.toString(regionId));
+         fileWriter.write(", index: ");
+         fileWriter.write(Integer.toString(regiondIndex.getValue().intValue()));
          fileWriter.write(", origin: ");
          fileWriter.write(origin.getX() + ", " + origin.getY() + ", " + origin.getZ());
          fileWriter.write(", normal: ");
@@ -117,9 +129,16 @@ public class PlanarRegionDataExporter
 
    private void writePlanarRegionData(Path folderPath, PlanarRegionsListMessage planarRegionData) throws IOException
    {
+      Map<Integer, MutableInt> regionIdToIndex = new HashMap<>();
+
       for (PlanarRegionMessage message : planarRegionData.getPlanarRegions())
       {
-         File regionFile = new File(folderPath.toFile(), "region" + message.getRegionId());
+         int regionId = message.getRegionId();
+         MutableInt regionIndex = regionIdToIndex.getOrDefault(regionId, new MutableInt(0));
+         regionIdToIndex.put(regionId, regionIndex);
+         regionIndex.increment();
+
+         File regionFile = new File(folderPath.toFile(), "region" + message.getRegionId() + "_" + regionIndex.intValue());
          FileWriter fileWriter = new FileWriter(regionFile);
 
          Point2D32[] concaveHullVertices = message.getConcaveHullVertices();

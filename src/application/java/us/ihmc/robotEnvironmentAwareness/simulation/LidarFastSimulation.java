@@ -33,7 +33,7 @@ public class LidarFastSimulation
 {
    private enum GroundType
    {
-      OBSTACLE_COURSE, FLAT, NOTHING, CINDER_BLOCKS, BLOCK, BLOCKS, BLOCKS2
+      OBSTACLE_COURSE, FLAT, NOTHING, CINDER_BLOCKS, BLOCK, BLOCKS, BLOCKS2, L_SHAPE
    }
 
    public static final int POINT_CLOUD_PUBLISHING_PERIOD_MILLSECONDS = 100;
@@ -97,6 +97,7 @@ public class LidarFastSimulation
       environmentsGraphics.put(GroundType.BLOCK, createBlock());
       environmentsGraphics.put(GroundType.BLOCKS, createBlocks());
       environmentsGraphics.put(GroundType.BLOCKS2, createBlocks2());
+      environmentsGraphics.put(GroundType.L_SHAPE, createLShapedGround());
 
       VariableChangedListener listener = new VariableChangedListener()
       {
@@ -112,6 +113,16 @@ public class LidarFastSimulation
       };
       groundType.addVariableChangedListener(listener);
       listener.notifyOfVariableChange(null);
+   }
+
+   private Graphics3DObject createLShapedGround()
+   {
+      CombinedTerrainObject3D terrain = new CombinedTerrainObject3D("LShapedGround");
+
+      terrain.addBox(-0.5, -0.5, 1.0, 0.0, 0.05, YoAppearance.DarkCyan());
+      terrain.addBox(1.0, -0.5, 1.5, 1.5, 0.05, YoAppearance.DarkCyan());
+
+      return terrain.getLinkGraphics();
    }
 
    private Graphics3DObject createBlock()

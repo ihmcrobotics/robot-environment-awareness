@@ -62,7 +62,7 @@ public class PlanarRegionDataImporter
          line = line.replaceAll("normal: ", "");
          line = line.replaceAll("\\[", "");
          line = line.replaceAll("\\]", "");
-         line = line.replaceAll("number of concave hulls: ", "");
+         line = line.replaceAll("concave hull size: ", "");
          line = line.replaceAll("number of convex polygons: ", "");
          line = line.replaceAll(" ", "");
          String[] values = line.split(cvsSplitBy);

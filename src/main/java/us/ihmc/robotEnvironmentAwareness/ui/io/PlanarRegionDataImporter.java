@@ -27,7 +27,11 @@ public class PlanarRegionDataImporter
    public static PlanarRegionDataImporter createImporterWithFileChooser(Window ownerWindow)
    {
       DirectoryChooser directoryChooser = new DirectoryChooser();
-      directoryChooser.setInitialDirectory(new File("..\\..\\\\Data\\\\PlanarRegion"));
+      File initialDirectory = new File("../../Data/PlanarRegion");
+      if (!initialDirectory.exists() || !initialDirectory.isDirectory())
+         initialDirectory = new File(".");
+      directoryChooser.setInitialDirectory(initialDirectory);
+
       File result = directoryChooser.showDialog(ownerWindow);
       if (result == null)
          return null;

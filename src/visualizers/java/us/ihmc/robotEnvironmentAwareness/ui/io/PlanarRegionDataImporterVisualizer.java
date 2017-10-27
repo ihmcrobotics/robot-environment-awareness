@@ -14,7 +14,6 @@ import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.MeshView;
 import javafx.stage.Stage;
-import us.ihmc.communication.packets.PlanarRegionMessageConverter;
 import us.ihmc.euclid.geometry.ConvexPolygon2D;
 import us.ihmc.euclid.transform.RigidBodyTransform;
 import us.ihmc.euclid.tuple2D.Point2D;
@@ -36,15 +35,14 @@ public class PlanarRegionDataImporterVisualizer extends Application
    {
       primaryStage.setTitle(getClass().getSimpleName());
 
-      PlanarRegionDataImporter dataImporter;
+      PlanarRegionsList planarRegionData;
+
       if (defaultFile != null)
-         dataImporter = new PlanarRegionDataImporter(defaultFile);
+         planarRegionData = PlanarRegionDataImporter.importPlanRegionData(defaultFile);
       else
-         dataImporter = PlanarRegionDataImporter.createImporterWithFileChooser(primaryStage);
-      if (dataImporter == null)
+         planarRegionData = PlanarRegionDataImporter.importUsingFileChooser(primaryStage);
+      if (planarRegionData == null)
          Platform.exit();
-      dataImporter.loadPlanarRegionData();
-      PlanarRegionsList planarRegionData = PlanarRegionMessageConverter.convertToPlanarRegionsList(dataImporter.getPlanarRegionData());
 
       View3DFactory view3dFactory = new View3DFactory(600, 480);
       planarRegionData.getPlanarRegionsAsList().stream().map(this::createRegionGraphics).forEach(view3dFactory::addNodeToView);

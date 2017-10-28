@@ -4,7 +4,6 @@ import java.io.File;
 
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
-import us.ihmc.robotics.PlanarRegionFileTools;
 import us.ihmc.robotics.geometry.PlanarRegionsList;
 
 public class PlanarRegionDataImporter
@@ -21,11 +20,11 @@ public class PlanarRegionDataImporter
       if (result == null)
          return null;
       else
-         return PlanarRegionFileTools.importPlanRegionData(result);
+         return null; // TODO PlanarRegionFileTools.importPlanRegionData(result);
    }
 
    public static PlanarRegionsList importPlanRegionData(File dataFolder)
    {
-      return PlanarRegionFileTools.importPlanRegionData(dataFolder);
+      return null; // TODO PlanarRegionFileTools.importPlanRegionData(dataFolder);
    }
 }

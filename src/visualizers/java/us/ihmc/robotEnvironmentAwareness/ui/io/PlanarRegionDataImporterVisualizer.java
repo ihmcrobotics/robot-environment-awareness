@@ -73,6 +73,7 @@ public class PlanarRegionDataImporterVisualizer extends Application
       RigidBodyTransform transform = new RigidBodyTransform();
       data.getTransformToWorld(transform);
 
+      /* TODO
       Point2D[] concaveHullVerticesLocal = data.getConcaveHull();
       Color regionColor = OcTreeMeshBuilder.getRegionColor(regionId);
 
@@ -88,6 +89,7 @@ public class PlanarRegionDataImporterVisualizer extends Application
          Color lineColor = Color.hsb(regionColor.getHue(), regionColor.getSaturation(), regionColor.getBrightness());
          meshBuilder.addLine(vertex, nextVertex, 0.0015, lineColor);
       }
+      */
       MeshView meshView = new MeshView(meshBuilder.generateMesh());
       meshView.setMaterial(meshBuilder.generateMaterial());
       meshView.setMouseTransparent(true);

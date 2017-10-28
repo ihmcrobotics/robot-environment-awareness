@@ -1,6 +1,8 @@
 package us.ihmc.robotEnvironmentAwareness.ui.io;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -10,6 +12,7 @@ import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools;
 import us.ihmc.robotEnvironmentAwareness.tools.ExecutorServiceTools.ExceptionHandling;
+import us.ihmc.robotics.PlanarRegionFileTools;
 import us.ihmc.robotics.geometry.PlanarRegion;
 import us.ihmc.robotics.geometry.PlanarRegionsList;
 
@@ -54,9 +57,7 @@ public class PlanarRegionDataExporter
 
    private void executeOnThread(PlanarRegionsListMessage planarRegionData)
    {
-      /* TODO
       Path folderPath = Paths.get(dataDirectoryPath.get() + File.separator + PlanarRegionFileTools.createDefaultTimeStampedFolderName());
       PlanarRegionFileTools.exportPlanarRegionData(folderPath, PlanarRegionMessageConverter.convertToPlanarRegionsList(planarRegionData));
-      */
    }
 }

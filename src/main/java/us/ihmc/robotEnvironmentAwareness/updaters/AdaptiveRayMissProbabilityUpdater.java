@@ -7,7 +7,7 @@ import us.ihmc.euclid.tuple3D.interfaces.Vector3DReadOnly;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree.RayMissProbabilityUpdater;
 import us.ihmc.jOctoMap.occupancy.OccupancyParameters;
-import us.ihmc.robotics.MathTools;
+import us.ihmc.commons.MathTools;
 
 public class AdaptiveRayMissProbabilityUpdater implements RayMissProbabilityUpdater
 {

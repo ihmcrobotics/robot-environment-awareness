@@ -1,7 +1,7 @@
 package us.ihmc.robotEnvironmentAwareness.communication.packets;
 
+import us.ihmc.commons.MathTools;
 import us.ihmc.communication.packets.Packet;
-import us.ihmc.robotics.MathTools;
 
 public class NormalOcTreeMessage extends Packet<NormalOcTreeMessage>
 {

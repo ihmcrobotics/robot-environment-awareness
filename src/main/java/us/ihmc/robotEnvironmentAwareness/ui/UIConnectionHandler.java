@@ -6,10 +6,10 @@ import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Window;
+import us.ihmc.commons.thread.ThreadTools;
 import us.ihmc.communication.net.ConnectionStateListener;
 import us.ihmc.robotEnvironmentAwareness.communication.REAModuleAPI;
 import us.ihmc.robotEnvironmentAwareness.communication.REAUIMessager;
-import us.ihmc.tools.thread.ThreadTools;
 
 public class UIConnectionHandler
 {

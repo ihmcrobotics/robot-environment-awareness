@@ -1,5 +1,6 @@
 package us.ihmc.robotEnvironmentAwareness.updaters;
 
+import us.ihmc.commons.MathTools;
 import us.ihmc.euclid.tuple3D.Point3D;
 import us.ihmc.euclid.tuple3D.Vector3D;
 import us.ihmc.euclid.tuple3D.interfaces.Point3DReadOnly;
@@ -7,7 +8,6 @@ import us.ihmc.euclid.tuple3D.interfaces.Vector3DReadOnly;
 import us.ihmc.jOctoMap.node.NormalOcTreeNode;
 import us.ihmc.jOctoMap.ocTree.NormalOcTree.RayMissProbabilityUpdater;
 import us.ihmc.jOctoMap.occupancy.OccupancyParameters;
-import us.ihmc.robotics.MathTools;
 
 public class AdaptiveRayMissProbabilityUpdater implements RayMissProbabilityUpdater
 {

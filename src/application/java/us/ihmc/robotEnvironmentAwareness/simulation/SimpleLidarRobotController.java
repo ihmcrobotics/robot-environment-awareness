@@ -3,6 +3,7 @@ package us.ihmc.robotEnvironmentAwareness.simulation;
 import java.util.concurrent.ScheduledExecutorService;
 
 import gnu.trove.list.array.TFloatArrayList;
+import us.ihmc.commons.thread.ThreadTools;
 import us.ihmc.communication.packetCommunicator.PacketCommunicator;
 import us.ihmc.communication.packets.LidarScanMessage;
 import us.ihmc.communication.packets.PlanarRegionMessageConverter;
@@ -30,7 +31,6 @@ import us.ihmc.robotics.math.frames.YoFrameOrientation;
 import us.ihmc.robotics.robotController.RobotController;
 import us.ihmc.simulationconstructionset.FloatingJoint;
 import us.ihmc.simulationconstructionset.PinJoint;
-import us.ihmc.tools.thread.ThreadTools;
 import us.ihmc.yoVariables.listener.VariableChangedListener;
 import us.ihmc.yoVariables.registry.YoVariableRegistry;
 import us.ihmc.yoVariables.variable.YoBoolean;

@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.util.List;
 import java.util.Random;
 
+import us.ihmc.continuousIntegration.ContinuousIntegrationAnnotations;
 import us.ihmc.euclid.tuple3D.Point3D;
 import us.ihmc.euclid.tuple3D.Vector3D;
 
@@ -17,7 +18,7 @@ public class IntersectionPlaneBoxCalculatorTest
    private static final int NUMBER_OF_ITERATIONS = 10000;
    private static final double EPS = 1.0e-7;
 
-   @Test
+   @Test(timeout = 30000)
    public void testRandomNormals() throws Exception
    {
       Random random = new Random(3424L);
@@ -54,7 +55,7 @@ public class IntersectionPlaneBoxCalculatorTest
       }
    }
 
-   @Test
+   @Test(timeout = 30000)
    public void testRandomNormalsAndPointOnPlane() throws Exception
    {
       Random random = new Random(34424L);
@@ -91,7 +92,7 @@ public class IntersectionPlaneBoxCalculatorTest
       }
    }
 
-   @Test
+   @Test(timeout = 30000)
    public void testRandomNormalsPointOnPlaneAndCubeCenters() throws Exception
    {
       Random random = new Random(3424L);
@@ -135,7 +136,7 @@ public class IntersectionPlaneBoxCalculatorTest
       }
    }
 
-   @Test
+   @Test(timeout = 30000)
    public void testBug1() throws Exception
    {
       double cubeSize = 0.1;
@@ -168,7 +169,7 @@ public class IntersectionPlaneBoxCalculatorTest
       }
    }
 
-   @Test
+   @Test(timeout = 30000)
    public void testBug2() throws Exception
    {
       double cubeSize = 0.1;
@@ -201,7 +202,7 @@ public class IntersectionPlaneBoxCalculatorTest
       }
    }
 
-   @Test
+   @Test(timeout = 30000)
    public void testBug3() throws Exception
    {
       double cubeSize = 0.1;

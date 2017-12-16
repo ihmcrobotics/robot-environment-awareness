@@ -5,6 +5,7 @@ import static us.ihmc.robotics.lists.ListWrappingIndexTools.next;
 import static us.ihmc.robotics.lists.ListWrappingIndexTools.removeAllExclusive;
 import static us.ihmc.robotics.lists.ListWrappingIndexTools.subListInclusive;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import us.ihmc.commons.PrintTools;
@@ -60,8 +61,14 @@ public class ConcaveHullDecomposition
     *  Otherwise, the pocket vertices will be removed.
     *  @param convexPolygonsToPack [output] the convex polygons approximating the concave hull.
     */
-   public static void recursiveApproximateDecomposition(List<Point2D> concaveHullVertices, double depthThreshold, List<ConvexPolygon2D> convexPolygonsToPack)
+   public static void recursiveApproximateDecomposition(List<? extends Point2DReadOnly> concaveHullVertices, double depthThreshold, List<ConvexPolygon2D> convexPolygonsToPack)
    {
+      recursiveApproximateDecompositionInternal(new ArrayList<>(concaveHullVertices), depthThreshold, convexPolygonsToPack);
+   }
+
+   private static void recursiveApproximateDecompositionInternal(List<Point2DReadOnly> concaveHullVertices, double depthThreshold, List<ConvexPolygon2D> convexPolygonsToPack)
+   {
+      
       ConcaveHullPocket pocket = null;
       boolean hasFoundDeepPocket = false;
 
@@ -138,8 +145,8 @@ public class ConcaveHullDecomposition
       int p2StartIndex = otherVertexIndexForCutting;
       int p2EndIndex = deepestVertexIndex;
 
-      List<Point2D> p1 = subListInclusive(p1StartIndex, p1EndIndex, concaveHullVertices);
-      List<Point2D> p2 = subListInclusive(p2StartIndex, p2EndIndex, concaveHullVertices);
+      List<Point2DReadOnly> p1 = subListInclusive(p1StartIndex, p1EndIndex, concaveHullVertices);
+      List<Point2DReadOnly> p2 = subListInclusive(p2StartIndex, p2EndIndex, concaveHullVertices);
 
       if (p1.size() == concaveHullVertices.size() || p2.size() == concaveHullVertices.size())
       {

@@ -91,7 +91,7 @@ public class ConcaveHullDecomposition
 
          if (pocket == null)
          {
-            System.err.println("Did not find any pocket.");
+            PrintTools.error("Did not find any pocket.");
             if (EXPORT_BAD_POLYGONS_TO_FILE)
                ConcaveHullTools.exportVertexListToFile(concaveHullVertices, BAD_POLYGONS_FILE_NAME + (badPolygonsFileIndex++));
             return;
@@ -127,7 +127,7 @@ public class ConcaveHullDecomposition
       
       if (otherVertexIndexForCutting == -1)
       {
-         System.err.println("Something went wrong finding the other vertex for cutting. Pocket vertex: " + deepestVertex + ", bridge: start: "
+         PrintTools.error("Something went wrong finding the other vertex for cutting. Pocket vertex: " + deepestVertex + ", bridge: start: "
                + startBridgeVertex + ", end: " + endBridgeVertex);
          if (EXPORT_BAD_POLYGONS_TO_FILE)
             ConcaveHullTools.exportVertexListToFile(concaveHullVertices, BAD_POLYGONS_FILE_NAME + (badPolygonsFileIndex++));
@@ -152,7 +152,7 @@ public class ConcaveHullDecomposition
       {
          if (EXPORT_BAD_POLYGONS_TO_FILE)
             ConcaveHullTools.exportVertexListToFile(concaveHullVertices, BAD_POLYGONS_FILE_NAME + (badPolygonsFileIndex++));
-         System.err.println("Something went wrong splitting the polygon");
+         PrintTools.error("Something went wrong splitting the polygon");
          return;
       }
 

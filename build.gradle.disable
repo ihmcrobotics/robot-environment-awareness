@@ -39,7 +39,7 @@ mainDependencies {
 }
 
 applicationDependencies {
-   compile rootProject
+   compile ihmc.sourceSetProject("main")
    compile group: 'us.ihmc', name: 'ihmc-ros-tools', version: groupDependencyVersion
    compile group: 'us.ihmc', name: 'ihmc-jmonkey-engine-toolkit', version: groupDependencyVersion
    compile group: 'us.ihmc', name: 'simulation-construction-set', version: groupDependencyVersion
@@ -53,5 +53,5 @@ testDependencies {
 }
 
 visualizersDependencies {
-   compile rootProject
+   compile ihmc.sourceSetProject("main")
 }
